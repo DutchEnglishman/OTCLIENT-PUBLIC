@@ -1,0 +1,25 @@
+Module
+  name: game_autoloot
+  description: Custom AutoLoot system
+  author: Viaro
+  sandboxed: true
+
+  dependencies:
+    - game_interface
+    - client_topmenu
+    - game_mainpanel
+
+  scripts:
+    - state
+    - unlocks
+    - loot_slots
+    - protocol
+    - containers
+    - filters
+    - presets
+    - items
+    - search
+    - autoloot
+
+  @onLoad: init()
+  @onUnload: terminate()

@@ -1,0 +1,509 @@
+AutoLootSlot < Item
+  size: 32 32
+  border-width: 1
+  border-color: #606060
+
+
+AutoLootPresetButton < CheckBoxCircle
+  size: 14 14
+
+  $disabled:
+    color: #777777
+    image-color: #777777
+
+  $disabled !checked:
+    color: #666666
+    
+MainWindow
+  id: autoLootWindow
+  !text: tr('Autoloot')
+  size: 340 455
+  @onEscape: modules.game_autoloot.hide()
+
+  MiniPanel
+    id: presetsPanel
+    text: Presets
+    anchors.top: parent.top
+    anchors.left: parent.left
+    anchors.right: parent.right
+    height: 66
+    margin-left: 4
+    margin-right: 4
+
+    Panel
+      id: presetButtonsPanel
+      anchors.top: parent.top
+      anchors.horizontalCenter: parent.horizontalCenter
+      height: 38
+      width: 300
+      margin-top: 2
+
+      layout:
+        type: horizontalBox
+        spacing: 1
+
+      Panel
+        width: 28
+        height: 38
+
+        AutoLootPresetButton
+          id: presetButton1
+          size: 14 14
+          anchors.top: parent.top
+          anchors.horizontalCenter: parent.horizontalCenter
+          checked: true
+          @onCheckChange: if self:isChecked() then modules.game_autoloot.selectPreset(1) end
+
+        Label
+          id: presetName1
+          text: 1
+          anchors.top: presetButton1.bottom
+          anchors.horizontalCenter: parent.horizontalCenter
+          margin-top: 2
+          @onClick: modules.game_autoloot.openPresetRename(1)
+
+      Panel
+        width: 28
+        height: 38
+
+        AutoLootPresetButton
+          id: presetButton2
+          size: 14 14
+          anchors.top: parent.top
+          anchors.horizontalCenter: parent.horizontalCenter
+          @onCheckChange: if self:isChecked() then modules.game_autoloot.selectPreset(2) end
+
+        Label
+          id: presetLabel2
+          text: 2
+          anchors.top: presetButton2.bottom
+          anchors.horizontalCenter: parent.horizontalCenter
+          margin-top: 2
+          @onClick: modules.game_autoloot.openPresetRename(2)
+
+      Panel
+        width: 28
+        height: 38
+
+        AutoLootPresetButton
+          id: presetButton3
+          size: 14 14
+          anchors.top: parent.top
+          anchors.horizontalCenter: parent.horizontalCenter
+          @onCheckChange: if self:isChecked() then modules.game_autoloot.selectPreset(3) end
+
+        Label
+          id: presetLabel3
+          text: 3
+          anchors.top: presetButton3.bottom
+          anchors.horizontalCenter: parent.horizontalCenter
+          margin-top: 2
+          @onClick: modules.game_autoloot.openPresetRename(3)
+
+      Panel
+        width: 28
+        height: 38
+
+        AutoLootPresetButton
+          id: presetButton4
+          size: 14 14
+          anchors.top: parent.top
+          anchors.horizontalCenter: parent.horizontalCenter
+          @onCheckChange: if self:isChecked() then modules.game_autoloot.selectPreset(4) end
+
+        Label
+          id: presetLabel4
+          text: 4
+          anchors.top: presetButton4.bottom
+          anchors.horizontalCenter: parent.horizontalCenter
+          margin-top: 2
+          @onClick: modules.game_autoloot.openPresetRename(4)
+
+      Panel
+        width: 28
+        height: 38
+
+        AutoLootPresetButton
+          id: presetButton5
+          size: 14 14
+          anchors.top: parent.top
+          anchors.horizontalCenter: parent.horizontalCenter
+          @onCheckChange: if self:isChecked() then modules.game_autoloot.selectPreset(5) end
+
+        Label
+          id: presetLabel5
+          text: 5
+          anchors.top: presetButton5.bottom
+          anchors.horizontalCenter: parent.horizontalCenter
+          margin-top: 2
+          @onClick: modules.game_autoloot.openPresetRename(5)
+
+      Panel
+        width: 28
+        height: 38
+
+        AutoLootPresetButton
+          id: presetButton6
+          size: 14 14
+          anchors.top: parent.top
+          anchors.horizontalCenter: parent.horizontalCenter
+          @onCheckChange: if self:isChecked() then modules.game_autoloot.selectPreset(6) end
+
+        Label
+          id: presetLabel6
+          text: 6
+          anchors.top: presetButton6.bottom
+          anchors.horizontalCenter: parent.horizontalCenter
+          margin-top: 2
+          @onClick: modules.game_autoloot.openPresetRename(6)
+
+      Panel
+        width: 28
+        height: 38
+
+        AutoLootPresetButton
+          id: presetButton7
+          size: 14 14
+          anchors.top: parent.top
+          anchors.horizontalCenter: parent.horizontalCenter
+          @onCheckChange: if self:isChecked() then modules.game_autoloot.selectPreset(7) end
+
+        Label
+          id: presetLabel7
+          text: 7
+          anchors.top: presetButton7.bottom
+          anchors.horizontalCenter: parent.horizontalCenter
+          margin-top: 2
+          @onClick: modules.game_autoloot.openPresetRename(7)
+
+      Panel
+        width: 28
+        height: 38
+
+        AutoLootPresetButton
+          id: presetButton8
+          size: 14 14
+          anchors.top: parent.top
+          anchors.horizontalCenter: parent.horizontalCenter
+          @onCheckChange: if self:isChecked() then modules.game_autoloot.selectPreset(8) end
+
+        Label
+          id: presetLabel8
+          text: 8
+          anchors.top: presetButton8.bottom
+          anchors.horizontalCenter: parent.horizontalCenter
+          margin-top: 2
+          @onClick: modules.game_autoloot.openPresetRename(8)
+
+      Panel
+        width: 28
+        height: 38
+
+        AutoLootPresetButton
+          id: presetButton9
+          size: 14 14
+          anchors.top: parent.top
+          anchors.horizontalCenter: parent.horizontalCenter
+          @onCheckChange: if self:isChecked() then modules.game_autoloot.selectPreset(9) end
+
+        Label
+          id: presetLabel9
+          text: 9
+          anchors.top: presetButton9.bottom
+          anchors.horizontalCenter: parent.horizontalCenter
+          margin-top: 2
+          @onClick: modules.game_autoloot.openPresetRename(9)
+
+      Panel
+        width: 28
+        height: 38
+
+        AutoLootPresetButton
+          id: presetButton10
+          size: 14 14
+          anchors.top: parent.top
+          anchors.horizontalCenter: parent.horizontalCenter
+          @onCheckChange: if self:isChecked() then modules.game_autoloot.selectPreset(10) end
+
+        Label
+          id: presetLabel10
+          text: 10
+          anchors.top: presetButton10.bottom
+          anchors.horizontalCenter: parent.horizontalCenter
+          margin-top: 2
+          @onClick: modules.game_autoloot.openPresetRename(10)
+
+  MiniPanel
+    id: slotsPanel
+    text: Slots
+    anchors.top: presetsPanel.bottom
+    anchors.left: parent.left
+    anchors.bottom: bottomSeparator.top
+    width: 180
+    margin-top: 5
+    margin-left: 4
+    margin-bottom: 5
+
+
+    Label
+      id: slotsDescription
+      text: Drag and drop items into
+      anchors.top: parent.top
+      anchors.horizontalCenter: parent.horizontalCenter
+      margin-top: 7
+
+    Label
+      id: slotsDescriptionSecondLine
+      text: the slots below to add
+      anchors.top: slotsDescription.bottom
+      anchors.horizontalCenter: parent.horizontalCenter
+      margin-top: 1
+
+    Label
+      id: slotsDescriptionThirdLine
+      text: them to the autoloot list
+      anchors.top: slotsDescriptionSecondLine.bottom
+      anchors.horizontalCenter: parent.horizontalCenter
+      margin-top: 1
+
+    HorizontalSeparator
+      id: slotsSeparator
+      anchors.top: slotsDescriptionThirdLine.bottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      margin-top: 10
+      margin-left: 16
+      margin-right: 16
+
+    Panel
+      id: itemSlotsPanel
+      anchors.top: slotsSeparator.bottom
+      anchors.horizontalCenter: parent.horizontalCenter
+      width: 134
+      height: 168
+      margin-top: 15
+
+      layout:
+        type: grid
+        cell-size: 32 32
+        cell-spacing: 2
+        num-columns: 4
+        flow: true
+
+      AutoLootSlot
+        id: autoLootSlot1
+
+      AutoLootSlot
+        id: autoLootSlot2
+
+      AutoLootSlot
+        id: autoLootSlot3
+
+      AutoLootSlot
+        id: autoLootSlot4
+
+      AutoLootSlot
+        id: autoLootSlot5
+
+      AutoLootSlot
+        id: autoLootSlot6
+
+      AutoLootSlot
+        id: autoLootSlot7
+
+      AutoLootSlot
+        id: autoLootSlot8
+
+      AutoLootSlot
+        id: autoLootSlot9
+
+      AutoLootSlot
+        id: autoLootSlot10
+
+      AutoLootSlot
+        id: autoLootSlot11
+
+      AutoLootSlot
+        id: autoLootSlot12
+
+      AutoLootSlot
+        id: autoLootSlot13
+
+      AutoLootSlot
+        id: autoLootSlot14
+
+      AutoLootSlot
+        id: autoLootSlot15
+
+      AutoLootSlot
+        id: autoLootSlot16
+
+      AutoLootSlot
+        id: autoLootSlot17
+
+      AutoLootSlot
+        id: autoLootSlot18
+
+      AutoLootSlot
+        id: autoLootSlot19
+
+      AutoLootSlot
+        id: autoLootSlot20
+  Panel
+    id: rightPanel
+    anchors.top: presetsPanel.bottom
+    anchors.left: slotsPanel.right
+    anchors.right: parent.right
+    anchors.bottom: bottomSeparator.top
+    margin-top: 5
+    margin-left: 5
+    margin-right: 4
+    margin-bottom: 5
+
+    MiniPanel
+      id: filterPanel
+      text: Filter
+      anchors.top: parent.top
+      anchors.left: parent.left
+      anchors.right: parent.right
+      height: 82
+      size: 40 65
+
+      CheckBoxCircle
+        id: acceptFilter
+        text: Accept
+        width: 100
+        checked: true
+        anchors.top: parent.top
+        anchors.left: parent.left
+        margin-left: 12
+        margin-top: 2
+        @onCheckChange: AutoLoot.onAcceptFilterChange(self:isChecked())
+
+      CheckBoxCircle
+        id: ignoreFilter
+        text: Ignore
+        width: 100
+        anchors.top: acceptFilter.bottom
+        anchors.left: acceptFilter.left
+        margin-top: 4
+        @onCheckChange: AutoLoot.onIgnoreFilterChange(self:isChecked())
+
+    MiniPanel
+      id: containersPanel
+      text: Containers
+      anchors.top: filterPanel.bottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.bottom: parent.bottom
+      margin-top: 2
+
+      MiniPanel
+        id: mainContainerPanel
+        text: Main
+        anchors.top: parent.top
+        anchors.horizontalCenter: parent.horizontalCenter
+        width: 70
+        height: 62
+
+        AutoLootSlot
+          id: mainContainer
+          anchors.horizontalCenter: parent.horizontalCenter
+          anchors.verticalCenter: parent.verticalCenter
+          size: 32 32
+
+      MiniPanel
+        id: stackablesContainerPanel
+        text: Stackables
+        anchors.top: mainContainerPanel.bottom
+        anchors.horizontalCenter: parent.horizontalCenter
+        width: 70
+        height: 62
+        margin-top: 3
+
+        AutoLootSlot
+          id: stackablesContainer
+          anchors.horizontalCenter: parent.horizontalCenter
+          anchors.verticalCenter: parent.verticalCenter
+          size: 32 32
+
+      MiniPanel
+        id: usablesContainerPanel
+        text: Usables
+        anchors.top: stackablesContainerPanel.bottom
+        anchors.horizontalCenter: parent.horizontalCenter
+        width: 70
+        height: 62
+        margin-top: 2
+
+        AutoLootSlot
+          id: usablesContainer
+          anchors.horizontalCenter: parent.horizontalCenter
+          anchors.verticalCenter: parent.verticalCenter
+          size: 32 32
+
+  HorizontalSeparator
+    id: bottomSeparator
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: bottomButtons.top
+    margin-left: 4
+    margin-right: 4
+    margin-bottom: 5
+
+  Panel
+    id: bottomButtons
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    height: 30
+    margin-left: 4
+    margin-right: 4
+    margin-bottom: 3
+
+    QtButton
+      id: searchButton
+      text: Search
+      size: 100 20
+      anchors.left: parent.left
+      anchors.verticalCenter: parent.verticalCenter
+      @onClick: modules.game_autoloot.openSearchWindow()
+
+    Panel
+      id: dailyBankPanel
+      height: 20
+      anchors.left: searchButton.right
+      anchors.right: closeButton.left
+      anchors.verticalCenter: parent.verticalCenter
+      margin-left: 5
+      margin-right: 5
+      border-width: 1
+      border-color: #606060
+      background-color: #00000080
+      UIWidget
+        id: dailyBankIcon
+        size: 16 16
+        anchors.right: parent.right
+        anchors.verticalCenter: parent.verticalCenter
+        margin-right: 4
+        image-source: /images/game/gold
+      Label
+        id: dailyBankLabel
+        anchors.left: parent.left
+        anchors.right: dailyBankIcon.left
+        anchors.verticalCenter: parent.verticalCenter
+        margin-left: 4
+        margin-right: 4
+        text: 0 / 0
+        text-align: right
+        color: #d8d8d8
+      UIWidget
+        id: dailyBankTooltipArea
+        anchors.fill: parent
+    QtButton
+      id: closeButton
+      text: Close
+      size: 95 20
+      anchors.right: parent.right
+      anchors.verticalCenter: parent.verticalCenter
+      @onClick: modules.game_autoloot.hide()

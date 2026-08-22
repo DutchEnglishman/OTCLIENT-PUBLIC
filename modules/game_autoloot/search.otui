@@ -1,0 +1,61 @@
+MainWindow
+  id: autoLootSearchWindow
+  !text: tr('Search')
+  size: 190 305
+  @onEscape: modules.game_autoloot.closeSearchWindow()
+
+  Label
+    id: searchLabel
+    text: Type to search:
+    anchors.top: parent.top
+    anchors.left: parent.left
+    margin-top: 8
+    margin-left: 8
+
+  TextEdit
+    id: searchEdit
+    anchors.top: searchLabel.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    height: 20
+    margin-top: 4
+    margin-left: 8
+    margin-right: 8
+
+  ScrollablePanel
+    id: resultsPanel
+    anchors.top: searchEdit.bottom
+    anchors.left: parent.left
+    anchors.right: resultsScrollBar.left
+    anchors.bottom: closeButton.top
+    margin-top: 8
+    margin-left: 8
+    margin-right: 4
+    margin-bottom: 8
+    vertical-scrollbar: resultsScrollBar
+
+    layout:
+      type: grid
+      cell-size: 32 32
+      cell-spacing: 2
+      num-columns: 5
+      flow: true
+
+  VerticalScrollBar
+    id: resultsScrollBar
+    anchors.top: searchEdit.bottom
+    anchors.right: parent.right
+    anchors.bottom: closeButton.top
+    margin-top: 8
+    margin-right: 8
+    margin-bottom: 8
+    step: 34
+
+  QtButton
+    id: closeButton
+    text: Close
+    size: 80 20
+    anchors.bottom: parent.bottom
+    anchors.horizontalCenter: parent.horizontalCenter
+    margin-bottom: 5
+    @onClick: modules.game_autoloot.closeSearchWindow()
