@@ -17,6 +17,10 @@ local DEFAULT_CONFIG = {
   manifestSha256Url = nil,
   versionUrl = nil,
   timeout = 30,
+  -- A STALL timeout, not a deadline: the watchdog fires only after this long with NO
+  -- progress at all. It has to work that way now the manifest can carry sprite sheets --
+  -- a 55 MB Tibia.spr takes minutes on a slow line, and a fixed deadline would abort a
+  -- download that was proceeding perfectly well.
   overallTimeout = 60000,
   retries = 3,
   retryDelay = 1500,
@@ -24,10 +28,14 @@ local DEFAULT_CONFIG = {
   allowExecutableUpdate = true,
   allowDeletions = true,
   stagingDir = '.otcupdate',
-  protectedPaths = { 'config.otml', '*.log', 'data/things/**', 'data/sounds/**', 'downloads/**' }
+  protectedPaths = { 'config.otml', '*.log', 'data/sounds/**', 'downloads/**' }
 }
 
 local HASH_CHUNK = 40 -- files hashed per frame, so the progress bar keeps animating
+-- ...but 40 sprite sheets in one frame would freeze the UI for seconds, because hashing
+-- reads the whole file into memory. Whichever limit is reached first ends the chunk.
+local HASH_BYTE_BUDGET = 16 * 1024 * 1024
+local WATCHDOG_POLL = 1000
 
 local config
 local updaterWindow
@@ -36,14 +44,54 @@ local scheduledEvent
 local watchdogEvent
 local httpOperationId
 local finished = false
+local lastProgressAt = 0
+
+-- Forward declaration: the watchdog closure below is built before the lifecycle section
+-- defines this, so it has to capture the same local rather than a later shadow.
+local fail
 
 local manifest
 local stagingRoot
+local totalDownloadBytes = 0
+local doneDownloadBytes = 0
 
 -- helpers ---------------------------------------------------------------------
 
 local function logInfo(message) g_logger.info('[Updater] ' .. message) end
 local function logWarning(message) g_logger.warning('[Updater] ' .. message) end
+
+local function humanBytes(bytes)
+  bytes = bytes or 0
+  if bytes >= 1024 * 1024 then
+    return string.format('%.1f MB', bytes / (1024 * 1024))
+  elseif bytes >= 1024 then
+    return string.format('%.0f KB', bytes / 1024)
+  end
+  return string.format('%i B', bytes)
+end
+
+-- Anything that counts as forward motion calls this: a download progress tick, a
+-- completed hash chunk, a committed file.
+local function noteProgress()
+  lastProgressAt = g_clock.millis()
+end
+
+-- The watchdog polls against that marker rather than being torn down and rescheduled on
+-- every progress tick, which arrive every 100ms during a download. It still catches the
+-- case it exists for -- an HTTP backend that never calls back at all.
+local function startWatchdog()
+  local function tick()
+    if finished then return end
+    if g_clock.millis() - lastProgressAt >= config.overallTimeout then
+      return fail(string.format('Update stalled for %is with no progress.',
+        math.floor(config.overallTimeout / 1000)))
+    end
+    watchdogEvent = scheduleEvent(tick, WATCHDOG_POLL)
+  end
+
+  noteProgress()
+  watchdogEvent = scheduleEvent(tick, WATCHDOG_POLL)
+end
 
 local function loadModules()
   if loadModulesFunction then
@@ -180,7 +228,8 @@ local function finish(ok, message)
   Updater.abort()
 end
 
-local function fail(message)
+-- No `local` here on purpose: this assigns the forward-declared local above.
+function fail(message)
   finish(false, message)
 end
 
@@ -241,6 +290,7 @@ local function commit(entries, binaryKey)
         return fail(string.format('Unable to install %s. The client was left unchanged where possible.', entry.path))
       end
     end
+    noteProgress()
     setMainProgress(80 * index / #entries)
   end
 
@@ -291,8 +341,9 @@ local function verifyStaged(entries, index, binaryKey)
     return commit(entries, binaryKey)
   end
 
-  local chunkEnd = math.min(index + HASH_CHUNK - 1, #entries)
-  for i = index, chunkEnd do
+  local chunkEnd = index
+  local chunkBytes = 0
+  for i = index, math.min(index + HASH_CHUNK - 1, #entries) do
     local entry = entries[i]
     local actual = g_resources.fileSha256InWorkDir(stagingPathFor(entry.path))
     if actual ~= entry.sha256 then
@@ -300,13 +351,31 @@ local function verifyStaged(entries, index, binaryKey)
       return fail(string.format('Verification failed for %s (expected %s, got %s). Nothing was installed.',
         entry.path, entry.sha256, actual ~= '' and actual or 'nothing'))
     end
+    chunkEnd = i
+    chunkBytes = chunkBytes + (entry.size or 0)
+    if chunkBytes >= HASH_BYTE_BUDGET then break end
   end
 
+  noteProgress()
   setStatus(tr('Verifying update'))
   setMainProgress(100 * chunkEnd / #entries)
   scheduledEvent = scheduleEvent(function()
     verifyStaged(entries, chunkEnd + 1, binaryKey)
   end, 0)
+end
+
+-- One 55 MB sprite sheet among two hundred small Lua files makes file-count progress a
+-- lie: the bar would jump to 99% and then sit there for minutes. Weight by bytes, and
+-- fold in how far the file currently downloading has got.
+local function setDownloadedFraction(entries, index, entry, percent)
+  percent = percent or 0
+  if totalDownloadBytes > 0 then
+    local bytes = doneDownloadBytes + (entry.size or 0) * percent / 100
+    setMainProgress(100 * math.min(bytes, totalDownloadBytes) / totalDownloadBytes)
+  else
+    -- A manifest without sizes, so fall back to counting files.
+    setMainProgress(100 * (index - 1 + percent / 100) / #entries)
+  end
 end
 
 local function downloadEntries(entries, index, attempt, onDone)
@@ -317,15 +386,20 @@ local function downloadEntries(entries, index, attempt, onDone)
     return onDone()
   end
 
-  local url = manifest.rawBaseUrl .. entry.path
+  -- Files small enough to live in the mirror repo are fetched per-path from
+  -- raw.githubusercontent. Anything too big for git -- sprite sheets, above all -- is
+  -- published as a Release asset instead, and the manifest names that asset here.
+  local url = entry.asset and (manifest.assetBaseUrl .. entry.asset)
+      or (manifest.rawBaseUrl .. entry.path)
   local key = stagingRoot .. '/' .. entry.path
+  local label = string.format('%s (%s)', entry.path, humanBytes(entry.size))
 
   if attempt > 0 then
-    setDownloadStatus(tr('Downloading (retry %i):\n%s', attempt, entry.path), 0)
+    setDownloadStatus(tr('Downloading (retry %i):\n%s', attempt, label), 0)
   else
-    setDownloadStatus(tr('Downloading:\n%s', entry.path), 0)
+    setDownloadStatus(tr('Downloading:\n%s', label), 0)
   end
-  setMainProgress(100 * (index - 1) / #entries)
+  setDownloadedFraction(entries, index, entry, 0)
 
   local function retryOrFail(reason)
     if attempt >= config.retries then
@@ -349,9 +423,20 @@ local function downloadEntries(entries, index, attempt, onDone)
         return retryOrFail('unable to write to the staging directory')
       end
 
+      -- The bytes are on disk in staging now, so drop the in-RAM copy. Without this the
+      -- cache holds every file downloaded so far until commit, which was harmless when
+      -- the manifest was all small text files and is not once a 55 MB sprite sheet is in
+      -- it. Safe here because the binary is fetched after every entry, into its own key.
+      if g_http and g_http.clearDownloads then
+        g_http.clearDownloads()
+      end
+
+      doneDownloadBytes = doneDownloadBytes + (entry.size or 0)
       downloadEntries(entries, index + 1, 0, onDone)
     end, function(progress, speed)
+      noteProgress()
       setDownloadStatus(nil, progress, speed)
+      setDownloadedFraction(entries, index, entry, progress)
     end)
   end)
 
@@ -388,6 +473,7 @@ local function downloadBinary(entries, binaryEntry)
 
       verifyStaged(entries, 1, key)
     end, function(progress, speed)
+      noteProgress()
       setDownloadStatus(nil, progress, speed)
     end)
   end)
@@ -411,7 +497,13 @@ local function diffFiles(files, index, changed, binaryEntry)
       return finish(true, 'Client is already up to date.')
     end
 
-    logInfo(string.format('%i file(s) to update.', #changed))
+    totalDownloadBytes = 0
+    doneDownloadBytes = 0
+    for _, entry in ipairs(changed) do
+      totalDownloadBytes = totalDownloadBytes + (entry.size or 0)
+    end
+
+    logInfo(string.format('%i file(s) to update, %s to download.', #changed, humanBytes(totalDownloadBytes)))
     setStatus(tr('Downloading %i files', #changed))
     showDownloadRow(true)
     return downloadEntries(changed, 1, 0, function()
@@ -419,14 +511,19 @@ local function diffFiles(files, index, changed, binaryEntry)
     end)
   end
 
-  local chunkEnd = math.min(index + HASH_CHUNK - 1, #files)
-  for i = index, chunkEnd do
+  local chunkEnd = index
+  local chunkBytes = 0
+  for i = index, math.min(index + HASH_CHUNK - 1, #files) do
     local entry = files[i]
     if g_resources.fileSha256InWorkDir(entry.path) ~= entry.sha256 then
       table.insert(changed, entry)
     end
+    chunkEnd = i
+    chunkBytes = chunkBytes + (entry.size or 0)
+    if chunkBytes >= HASH_BYTE_BUDGET then break end
   end
 
+  noteProgress()
   setStatus(tr('Checking installed files'))
   setMainProgress(100 * chunkEnd / #files)
   scheduledEvent = scheduleEvent(function()
@@ -455,7 +552,27 @@ local function validateManifest(data)
     if not isSha256(entry.sha256) then
       return nil, 'manifest contains a malformed hash for ' .. tostring(entry.path)
     end
-    table.insert(files, { path = entry.path, sha256 = entry.sha256:lower(), size = tonumber(entry.size) or 0 })
+
+    -- An entry may redirect its download to a Release asset instead of the mirror repo,
+    -- which is how files too big for git (sprite sheets) get shipped. The asset name is
+    -- appended to assetBaseUrl, so it is held to a flat filename -- no separators, no
+    -- traversal, nothing that could escape the release's asset namespace.
+    local asset = entry.asset
+    if asset ~= nil then
+      if type(asset) ~= 'string' or not asset:match('^[%w%._%-]+$') or asset:find('..', 1, true) then
+        return nil, 'manifest contains a malformed asset name for ' .. tostring(entry.path)
+      end
+      if type(data.assetBaseUrl) ~= 'string' or data.assetBaseUrl == '' then
+        return nil, 'manifest routes ' .. tostring(entry.path) .. ' to an asset but has no assetBaseUrl'
+      end
+    end
+
+    table.insert(files, {
+      path = entry.path,
+      sha256 = entry.sha256:lower(),
+      size = tonumber(entry.size) or 0,
+      asset = asset
+    })
   end
 
   local binaryEntry
@@ -482,9 +599,19 @@ local function applyManifest(data)
 
   local localCode, localVersion = readLocalVersion()
 
-  -- Fast path: matching version codes mean there is nothing to do, and we skip
-  -- hashing thousands of files entirely. This is the normal case on every launch.
-  if localCode > 0 and localCode == manifest.versionCode then
+  -- Fast path: nothing to do once the install is at or beyond the published version, and
+  -- we skip hashing thousands of files entirely. This is the normal case on every launch.
+  --
+  -- `>=`, not `==`: a dev tree or a locally built client is routinely AHEAD of the latest
+  -- release, and treating "different" as "stale" would quietly overwrite it with older
+  -- files -- sprites included, now that data/things ships through here. Roll players back
+  -- by publishing a HIGHER version carrying the old content, never by lowering a code.
+  if localCode > 0 and localCode >= manifest.versionCode then
+    if localCode > manifest.versionCode then
+      return finish(true, string.format(
+        'Installed version %s is newer than the published %s; leaving it alone.',
+        localVersion, manifest.version))
+    end
     return finish(true, string.format('Client is up to date (%s).', localVersion))
   end
 
@@ -577,7 +704,16 @@ local function fetchVersionProbe()
         return fetchManifest()
       end
 
-      if tonumber(data.versionCode) == localCode then
+      -- Same `>=` rule as applyManifest(), for the same reason -- see the comment there.
+      -- This is the branch that actually spares a dev tree, since it runs before any
+      -- hashing and so before anything can be overwritten.
+      local remoteCode = tonumber(data.versionCode)
+      if localCode >= remoteCode then
+        if localCode > remoteCode then
+          return finish(true, string.format(
+            'Installed version %s is newer than the published %s; leaving it alone.',
+            localVersion, tostring(data.version or remoteCode)))
+        end
         return finish(true, string.format('Client is up to date (%s).', localVersion))
       end
 
@@ -657,6 +793,8 @@ function Updater.init(loadModulesFunc)
   config = resolveConfig()
   stagingRoot = config.stagingDir
   protectedPatterns = nil
+  totalDownloadBytes = 0
+  doneDownloadBytes = 0
 
   if not config.enabled or not config.manifestUrl then
     return finish(true, 'Updater is not configured; skipping.')
@@ -675,10 +813,9 @@ function Updater.check(args)
   updaterWindow:raise()
 
   -- The backstop that makes every stall survivable, including an HTTP backend that
-  -- never calls back at all.
-  watchdogEvent = scheduleEvent(function()
-    fail('Update check timed out.')
-  end, config.overallTimeout)
+  -- never calls back at all. It measures silence, not elapsed time, so a legitimately
+  -- long sprite download is left alone for as long as bytes keep arriving.
+  startWatchdog()
 
   local ok, err = pcall(fetchVersionProbe)
   if not ok then
