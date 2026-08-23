@@ -50,8 +50,6 @@ MouseNoButton                = 0
 MouseLeftButton              = 1
 MouseRightButton             = 2
 MouseMidButton               = 3
-MouseXButton                 = 4 -- side button 1 (back)
-MouseXButton2                = 5 -- side button 2 (forward)
 
 MouseNoWheel                 = 0
 MouseWheelUp                 = 1

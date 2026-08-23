@@ -58,76 +58,11 @@ mouseGrabberWidget = nil
 useRadioGroup = nil
 currentHotkeys = nil
 boundCombosCallback = {}
-boundMouseCombos = {}
 hotkeysList = {}
 local hotkeyBlockingSources = {}
 local nextSourceId = 1
 lastHotkeyTime = g_clock.millis()
 local hotkeysWindowButton = nil
-local previousRootMouseRelease = nil
-
--- Mouse button hotkeys. Left/Right/Middle click rarely reach here in
--- practice (the game map or some other widget consumes them first), same
--- caveat as binding e.g. 'W' as a keyboard hotkey -- the capture UI doesn't
--- stop you either way. Mouse4/Mouse5 (side buttons) are never consumed by
--- anything else in this codebase, so those fire reliably regardless of
--- what's under the cursor.
-local MouseButtonNames = {
-    [MouseLeftButton] = 'LeftClick',
-    [MouseRightButton] = 'RightClick',
-    [MouseMidButton] = 'MiddleClick',
-    [MouseXButton] = 'Mouse4',
-    [MouseXButton2] = 'Mouse5'
-}
-
-local function determineMouseComboDesc(mouseButton)
-    local name = MouseButtonNames[mouseButton]
-    if not name then
-        return nil
-    end
-    local parts = {}
-    if g_keyboard.isCtrlPressed() then
-        table.insert(parts, 'Ctrl')
-    end
-    if g_keyboard.isAltPressed() then
-        table.insert(parts, 'Alt')
-    end
-    if g_keyboard.isShiftPressed() then
-        table.insert(parts, 'Shift')
-    end
-    if g_keyboard.isMetaPressed() then
-        table.insert(parts, 'Meta')
-    end
-    table.insert(parts, name)
-    return table.concat(parts, '+')
-end
-
-local function isMouseCombo(keyCombo)
-    if not keyCombo then
-        return false
-    end
-    local mainPart = keyCombo:match('([^+]+)$')
-    for _, name in pairs(MouseButtonNames) do
-        if mainPart == name then
-            return true
-        end
-    end
-    return false
-end
-
-local function onGlobalMouseRelease(self, mousePos, mouseButton)
-    if g_game.isOnline() then
-        local keyCombo = determineMouseComboDesc(mouseButton)
-        if keyCombo and boundMouseCombos[keyCombo] then
-            doKeyCombo(keyCombo)
-            return true
-        end
-    end
-    if previousRootMouseRelease then
-        return previousRootMouseRelease(self, mousePos, mouseButton)
-    end
-    return false
-end
 
 -- public functions
 function init()
@@ -180,13 +115,6 @@ function init()
     mouseGrabberWidget:setFocusable(false)
     mouseGrabberWidget.onMouseRelease = onChooseItemMouseRelease
 
-    -- Chained, not overwritten: other modules (e.g. game_actionbar) also
-    -- hook this root panel's onMouseRelease and restore whatever was there
-    -- before them, so ours needs to keep whatever's already there too.
-    local gameRootPanel = modules.game_interface.getRootPanel()
-    previousRootMouseRelease = gameRootPanel.onMouseRelease
-    gameRootPanel.onMouseRelease = onGlobalMouseRelease
-
     currentHotkeys.onChildFocusChange = function(self, hotkeyLabel)
         onSelectHotkeyLabel(hotkeyLabel)
     end
@@ -214,12 +142,6 @@ function terminate()
     Keybind.delete("Windows", "Show/hide Hotkeys")
 
     unload()
-
-    local gameRootPanel = modules.game_interface and modules.game_interface.getRootPanel and modules.game_interface.getRootPanel()
-    if gameRootPanel and gameRootPanel.onMouseRelease == onGlobalMouseRelease then
-        gameRootPanel.onMouseRelease = previousRootMouseRelease
-    end
-    previousRootMouseRelease = nil
 
     hotkeysWindow:destroy()
 
@@ -340,7 +262,6 @@ function unload()
         g_keyboard.unbindKeyPress(keyCombo, callback)
     end
     boundCombosCallback = {}
-    boundMouseCombos = {}
     currentHotkeys:destroyChildren()
     currentHotkeyLabel = nil
     updateHotkeyForm(true)
@@ -520,23 +441,6 @@ function addHotkey()
     local comboLabel = assignWindow:getChildById('comboPreview')
     comboLabel.keyCombo = ''
     assignWindow.onKeyDown = hotkeyCapture
-    -- Clicking the Add/Cancel buttons themselves is unaffected: a left-click
-    -- release on those is consumed by the button widget itself and never
-    -- reaches this window-level handler.
-    assignWindow.onMouseRelease = mouseHotkeyCapture
-end
-
-function mouseHotkeyCapture(assignWindow, mousePos, mouseButton)
-    local keyCombo = determineMouseComboDesc(mouseButton)
-    if not keyCombo then
-        return false
-    end
-    local comboPreview = assignWindow:getChildById('comboPreview')
-    comboPreview:setText(tr('Current hotkey to add: %s', keyCombo))
-    comboPreview.keyCombo = keyCombo
-    comboPreview:resizeToText()
-    assignWindow:getChildById('addButton'):enable()
-    return true
 end
 
 function addKeyCombo(keyCombo, keySettings, focus)
@@ -595,14 +499,10 @@ function addKeyCombo(keyCombo, keySettings, focus)
 
         updateHotkeyLabel(hotkeyLabel)
 
-        if isMouseCombo(keyCombo) then
-            boundMouseCombos[keyCombo] = true
-        else
-            boundCombosCallback[keyCombo] = function()
-                doKeyCombo(keyCombo)
-            end
-            g_keyboard.bindKeyPress(keyCombo, boundCombosCallback[keyCombo])
+        boundCombosCallback[keyCombo] = function()
+            doKeyCombo(keyCombo)
         end
+        g_keyboard.bindKeyPress(keyCombo, boundCombosCallback[keyCombo])
     end
 
     if focus then
@@ -930,13 +830,8 @@ function removeHotkey()
     if currentHotkeyLabel == nil then
         return
     end
-    local keyCombo = currentHotkeyLabel.keyCombo
-    if isMouseCombo(keyCombo) then
-        boundMouseCombos[keyCombo] = nil
-    else
-        g_keyboard.unbindKeyPress(keyCombo, boundCombosCallback[keyCombo])
-        boundCombosCallback[keyCombo] = nil
-    end
+    g_keyboard.unbindKeyPress(currentHotkeyLabel.keyCombo, boundCombosCallback[currentHotkeyLabel.keyCombo])
+    boundCombosCallback[currentHotkeyLabel.keyCombo] = nil
     currentHotkeyLabel:destroy()
     currentHotkeyLabel = nil
 end
@@ -1097,12 +992,6 @@ function canPerformKeyCombo(keyCombo)
     if areHotkeysDisabled() then
         return false
     end
-    -- Mouse buttons can't type into the chat box, so the WASD-mode
-    -- restriction below (which exists purely to stop keyboard hotkeys from
-    -- firing while you're typing) doesn't apply to them.
-    if isMouseCombo(keyCombo) then
-        return true
-    end
     if not modules.game_console.isChatEnabled() then
         return true
     end
@@ -1130,8 +1019,6 @@ function removeHotkeyByCombo(keyCombo)
         if boundCombosCallback[keyCombo] then
             g_keyboard.unbindKeyPress(keyCombo, boundCombosCallback[keyCombo])
             boundCombosCallback[keyCombo] = nil
-        elseif boundMouseCombos[keyCombo] then
-            boundMouseCombos[keyCombo] = nil
         end
         if currentHotkeyLabel == hotkeyLabel then
             currentHotkeyLabel = nil
@@ -1147,7 +1034,7 @@ function isHotkeyUsedByManager(keyCombo)
     if not keyCombo or keyCombo == "" then
         return false
     end
-    if boundCombosCallback[keyCombo] or boundMouseCombos[keyCombo] then
+    if boundCombosCallback[keyCombo] then
         return true
     end
     if currentHotkeys then
