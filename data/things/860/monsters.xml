@@ -1,0 +1,2651 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<monsters>
+ <!-- Amazons -->
+ <monster name="Amazon" file="amazons/amazon.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Valkyrie" file="amazons/valkyrie.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Machines -->
+ <monster name="Damaged Worker Golem" file="machines/damaged_worker_golem.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Nostalgia -->
+ <monster name="Old Bear" file="nostalgia/old_bear.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Old Bonelord" file="nostalgia/old_bonelord.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Old Bug" file="nostalgia/old_bug.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Old Pig" file="nostalgia/old_pig.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Old Spider" file="nostalgia/old_spider.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Old Wasp" file="nostalgia/old_wasp.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Old Wolf" file="nostalgia/old_wolf.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Dawnport -->
+  <monster file="dawnport/scar_tribe_warrior.xml" name="scar tribe warrior"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- VOCATION SUMMONS LV 200+ -->
+ <monster name="Emberwing" file="summons/emberwing.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Thundergiant" file="summons/thundergiant.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Skullfrost" file="summons/skullfrost.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Grovebeast" file="summons/grovebeast.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!--Fey-->
+ <monster name="Dryad" file="fey/dryad.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Annelids -->
+ <monster name="Carrion Worm" file="annelids/carrion_worm.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Rotworm" file="annelids/rotworm.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Rift Worm" file="annelids/rift_worm.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Apes -->
+ <monster name="Kongra" file="apes/kongra.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Merlkin" file="apes/merlkin.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Sibang" file="apes/sibang.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Yeti" file="apes/yeti.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Arachnids -->
+ <monster name="Crystal Spider" file="arachnids/crystal_spider.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Giant Spider" file="arachnids/giant_spider.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Poison Spider" file="arachnids/poison_spider.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Scorpion" file="arachnids/scorpion.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Spider" file="arachnids/spider.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Tarantula" file="arachnids/tarantula.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Wailing Widow" file="arachnids/wailing_widow.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Arena Greenhorn -->
+ <monster name="Achad" file="arena/greenhorn/achad.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Axeitus Headbanger" file="arena/greenhorn/axeitus_headbanger.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Bloodpaw" file="arena/greenhorn/bloodpaw.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Bovinus" file="arena/greenhorn/bovinus.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Colerian The Barbarian" file="arena/greenhorn/colerian_the_barbarian.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Cursed Gladiator" file="arena/greenhorn/cursed_gladiator.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Frostfur" file="arena/greenhorn/frostfur.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Orcus the Cruel" file="arena/greenhorn/orcus_the_cruel.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Rocky" file="arena/greenhorn/rocky.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="The Hairy One" file="arena/greenhorn/the_hairy_one.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Arena Scrapper -->
+ <monster name="Avalanche" file="arena/scrapper/avalanche.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Drasilla" file="arena/scrapper/drasilla.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Grimgor Guteater" file="arena/scrapper/grimgor_guteater.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Kreebosh the Exile" file="arena/scrapper/kreebosh_the_exile.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Slim" file="arena/scrapper/slim.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Spirit of Earth" file="arena/scrapper/spirit_of_earth.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Spirit of Fire" file="arena/scrapper/spirit_of_fire.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Spirit of Water" file="arena/scrapper/spirit_of_water.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="The Dark Dancer" file="arena/scrapper/the_dark_dancer.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="The Hag" file="arena/scrapper/the_hag.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Arena Warlord -->
+ <monster name="Darakan the Executioner" file="arena/warlord/darakan_the_executioner.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Deathbringer" file="arena/warlord/deathbringer.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Fallen Mooh'tah Master Ghar" file="arena/warlord/fallen_mooh'tah_master_ghar.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Gnorre Chyllson" file="arena/warlord/gnorre_chyllson.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Norgle Glacierbeard" file="arena/warlord/norgle_glacierbeard.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Svoren the Mad" file="arena/warlord/svoren_the_mad.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="The Masked Marauder" file="arena/warlord/the_masked_marauder.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="The Obliverator" file="arena/warlord/the_obliverator.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="The Pit Lord" file="arena/warlord/the_pit_lord.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Webster" file="arena/warlord/webster.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Barbarians -->
+ <monster name="Barbarian Bloodwalker" file="barbarians/barbarian_bloodwalker.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Barbarian Brutetamer" file="barbarians/barbarian_brutetamer.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Barbarian Headsplitter" file="barbarians/barbarian_headsplitter.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Barbarian Skullhunter" file="barbarians/barbarian_skullhunter.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Bears -->
+ <monster name="Bear" file="bears/bear.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Panda" file="bears/panda.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Polar Bear" file="bears/polar_bear.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Bio-Elementals -->
+ <monster name="Bog Raider" file="bio-elementals/bog_raider.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Carniphila" file="bio-elementals/carniphila.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Defiler" file="bio-elementals/defiler.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Haunted Treeling" file="bio-elementals/haunted_treeling.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Mechanical Fighter" file="bio-elementals/mechanical_fighter.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Slime" file="bio-elementals/slime.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Son of Verminor" file="bio-elementals/son_of_verminor.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Spit Nettle" file="bio-elementals/spit_nettle.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Squidgy Slime" file="bio-elementals/squidgy_slime.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Birds -->
+ <monster name="Berserker Chicken" file="birds/berserker_chicken.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Chicken" file="birds/chicken.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Demon Parrot" file="birds/demon_parrot.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Dire Penguin" file="birds/dire_penguin.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Flamingo" file="birds/flamingo.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Parrot" file="birds/parrot.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Penguin" file="birds/penguin.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Seagull" file="birds/seagull.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Terror Bird" file="birds/terror_bird.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Blobs -->
+ <monster name="Acid Blob" file="blobs/acid_blob.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Death Blob" file="blobs/death_blob.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Mercury Blob" file="blobs/mercury_blob.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Bonelords -->
+ <monster name="Bonelord" file="bonelords/bonelord.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Braindeath" file="bonelords/braindeath.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Elder Bonelord" file="bonelords/elder_bonelord.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Eye of the Seven" file="bonelords/eye_of_the_seven.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Gazer" file="bonelords/gazer.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Bosses -->  
+ <monster name="Annihilon" file="bosses/annihilon.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Apocalypse" file="bosses/apocalypse.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Apprentice Sheng" file="bosses/apprentice_sheng.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Arachir the Ancient One" file="bosses/arachir_the_ancient_one.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Armenius" file="bosses/armenius.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Azerus" file="bosses/azerus.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Azerus2" file="bosses/azerus2.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Barbaria" file="bosses/barbaria.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Baron Brute" file="bosses/baron_brute.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Battlemaster Zunzu" file="bosses/battlemaster_zunzu.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Bazir" file="bosses/bazir.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Big Boss Trolliver" file="bosses/big_boss_trolliver.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Bones" file="bosses/bones.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Boogey" file="bosses/boogey.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Brutus Bloodbeard" file="bosses/brutus_bloodbeard.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Chizzoron the Distorter" file="bosses/chizzoron_the_distorter.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Coldheart" file="bosses/coldheart.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Countess Sorrow" file="bosses/countess_sorrow.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Deadeye Devious" file="bosses/deadeye_devious.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script> 
+ <monster name="Demodras" file="bosses/demodras.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Dharalion" file="bosses/dharalion.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Diblis the Fair" file="bosses/diblis_the_fair.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Dirtbeard" file="bosses/dirtbeard.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Diseased Bill" file="bosses/diseased_bill.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Diseased Dan" file="bosses/diseased_dan.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Diseased Fred" file="bosses/diseased_fred.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Doomhowl" file="bosses/doomhowl.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Dracola" file="bosses/dracola.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Dreadwing" file="bosses/dreadwing.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Esmeralda" file="bosses/esmeralda.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Evil Mastermind" file="bosses/evil_mastermind.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Fatality" file="bosses/fatality.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Fernfang" file="bosses/fernfang.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Ferumbras" file="bosses/ferumbras.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Fluffy" file="bosses/fluffy.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Foreman Kneebiter" file="bosses/foreman_kneebiter.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Freegoiz" file="bosses/freegoiz.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Fury of the Emperor" file="bosses/fury_of_the_emperor.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="General Murius" file="bosses/general_murius.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Ghazbaran" file="bosses/ghazbaran.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Glitterscale" file="bosses/glitterscale.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Golgordan" file="bosses/golgordan.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Grand Mother Foulscale" file="bosses/grand_mother_foulscale.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Grorlam" file="bosses/grorlam.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Hairman the Huge" file="bosses/hairman_the_huge.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Haunter" file="bosses/haunter.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Hellgorak" file="bosses/hellgorak.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Heoni" file="bosses/heoni.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Hide" file="bosses/hide.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Incineron" file="bosses/incineron.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Infernatil" file="bosses/infernatil.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Inky" file="bosses/inky.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Koshei The Deathless" file="bosses/koshei_the_deathless.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Latrivan" file="bosses/latrivan.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Lethal Lissy" file="bosses/lethal_lissy.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Leviathan" file="bosses/leviathan.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Lizard Abomination" file="bosses/lizard_abomination.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Lord of the Elements" file="bosses/lord_of_the_elements.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Mad Technomancer" file="bosses/mad_technomancer.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Madareth" file="bosses/madareth.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Man In The Cave" file="bosses/man_in_the_cave.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Massacre" file="bosses/massacre.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Menace" file="bosses/menace.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Mephiles" file="bosses/mephiles.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Minishabaal" file="bosses/minishabaal.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Monstor" file="bosses/monstor.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Morgaroth" file="bosses/morgaroth.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Morik the Gladiator" file="bosses/morik_the_gladiator.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Mr. Punish" file="bosses/mr._punish.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Munster" file="bosses/munster.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Mutated Zalamon" file="bosses/mutated_zalamon.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Necropharus" file="bosses/necropharus.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Orshabaal" file="bosses/orshabaal.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Pythius The Rotten" file="bosses/pythius_the_rotten.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Rocko" file="bosses/rocko.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Ron the Ripper" file="bosses/ron_the_ripper.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Rottie the Rotworm" file="bosses/rottie_the_rotworm.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Rotworm Queen" file="bosses/rotworm_queen.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Scorn of the Emperor" file="bosses/scorn_of_the_emperor.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Shardhead" file="bosses/shardhead.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Sharptooth" file="bosses/sharptooth.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Sir Valorcrest" file="bosses/sir_valorcrest.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Snake God Essence" file="bosses/snake_god_essence.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Snake Thing" file="bosses/snake_thing.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Spite of the Emperor" file="bosses/spite_of_the_emperor.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Splasher" file="bosses/splasher.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Stonecracker" file="bosses/stonecracker.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Teleskor" file="bosses/teleskor.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="The Abomination" file="bosses/the_abomination.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="The Axeorcist" file="bosses/the_axeorcist.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="The Blightfather" file="bosses/the_blightfather.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="The Bloodtusk" file="bosses/the_bloodtusk.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="The Collector" file="bosses/the_collector.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="The Count" file="bosses/the_count.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="The Weakened Count" file="bosses/the_weakened_count.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="The Dreadorian" file="bosses/the_dreadorian.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="The Evil Eye" file="bosses/the_evil_eye.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="The Frog Prince" file="bosses/the_frog_prince.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="The Handmaiden" file="bosses/the_handmaiden.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="The Horned Fox" file="bosses/the_horned_fox.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="The Keeper" file="bosses/the_keeper.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="The Imperor" file="bosses/the_imperor.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="The Many" file="bosses/the_many.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="The Noxious Spawn" file="bosses/the_noxious_spawn.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="The Old Widow" file="bosses/the_old_widow.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="The Plasmother" file="bosses/the_plasmother.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="The Snapper" file="bosses/the_snapper.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Thul" file="bosses/thul.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Tiquandas Revenge" file="bosses/tiquandas_revenge.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Tirecz" file="bosses/tirecz.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Tremorak" file="bosses/tremorak.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Ungreez" file="bosses/ungreez.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Ushuriel" file="bosses/ushuriel.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Verminor" file="bosses/verminor.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Warlord Ruzad" file="bosses/warlord_ruzad.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Wrath of the Emperor" file="bosses/wrath_of_the_emperor.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Xenia" file="bosses/xenia.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Yaga The Crone" file="bosses/yaga_the_crone.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Yakchal" file="bosses/yakchal.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Zevelon Duskbringer" file="bosses/zevelon_duskbringer.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Zoralurk" file="bosses/zoralurk.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Zugurosh" file="bosses/zugurosh.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Zulazza the Corruptor" file="bosses/zulazza_the_corruptor.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Doctor Perhaps" file="bosses/doctor_perhaps.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Mooh'Tah Master" file="bosses/mooh'tah_master.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Canines -->
+ <monster name="Dog" file="canines/dog.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Hot Dog" file="canines/hot_dog.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Husky" file="canines/husky.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="War wolf" file="canines/war_wolf.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Werewolf" file="canines/werewolf.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Winter wolf" file="canines/winter_wolf.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Wolf" file="canines/wolf.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Gnarlhound" file="canines/gnarlhound.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Chakoyas -->
+ <monster name="Chakoya Toolshaper" file="chakoyas/chakoya_toolshaper.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Chakoya Tribewarden" file="chakoyas/chakoya_tribewarden.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Chakoya Windcaller" file="chakoyas/chakoya_windcaller.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Crustaceans -->
+ <monster name="Blood Crab" file="crustaceans/blood_crab.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Deepsea Blood Crab" file="crustaceans/deepsea_blood_crab.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Crab" file="crustaceans/crab.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Demons -->
+ <monster name="Dark Torturer" file="demons/dark_torturer.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Demon" file="demons/demon.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Destroyer" file="demons/destroyer.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Diabolic Imp" file="demons/diabolic_imp.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Fire Devil" file="demons/fire_devil.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Gozzler" file="demons/gozzler.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Hand of Cursed Fate" file="demons/hand_of_cursed_fate.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Hellhound" file="demons/hellhound.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Hellspawn" file="demons/hellspawn.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Juggernaut" file="demons/juggernaut.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Nightmare Scion" file="demons/nightmare_scion.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Nightmare" file="demons/nightmare.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Nightstalker" file="demons/nightstalker.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Plaguesmith" file="demons/plaguesmith.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Rift Brood" file="demons/rift_brood.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Rift Lord" file="demons/rift_lord.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Rift Scythe" file="demons/rift_scythe.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Djinn -->
+ <monster name="Blue Djinn" file="djinn/blue_djinn.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Efreet" file="djinn/efreet.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Green Djinn" file="djinn/green_djinn.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Marid" file="djinn/marid.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Dragons -->
+ <monster name="Dragon Lord" file="dragons/dragon_lord.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Dragon Lord Hatchling" file="dragons/dragon_lord_hatchling.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Dragon" file="dragons/dragon.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Dragon Hatchling" file="dragons/dragon_hatchling.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Frost Dragon" file="dragons/frost_dragon.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Frost Dragon Hatchling" file="dragons/frost_dragon_hatchling.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Undead Dragon" file="dragons/undead_dragon.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Wyrm" file="dragons/wyrm.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Ghastly Dragon" file="dragons/ghastly_dragon.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Dwarves -->
+ <monster name="Dwarf Geomancer" file="dwarves/dwarf_geomancer.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Dwarf Guard" file="dwarves/dwarf_guard.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Dwarf Miner" file="dwarves/dwarf_miner.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Dwarf Soldier" file="dwarves/dwarf_soldier.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Dwarf" file="dwarves/dwarf.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Dworcs -->
+ <monster name="Dworc Fleshhunter" file="dworcs/dworc_fleshhunter.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Dworc Venomsniper" file="dworcs/dworc_venomsniper.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Dworc Voodoomaster" file="dworcs/dworc_voodoomaster.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Event_Creatures -->
+ <monster name="Essence of Darkness" file="event_creatures/essence_of_darkness.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Grynch Clan Goblin" file="event_creatures/grynch_clan_goblin.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Hacker" file="event_creatures/hacker.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Herald of Gloom" file="event_creatures/herald_of_gloom.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Midnight Spawn" file="event_creatures/midnight_spawn.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Primitive" file="event_creatures/primitive.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Shadow Hound" file="event_creatures/shadow_hound.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="The Halloween Hare" file="event_creatures/the_halloween_hare.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Undead Minion" file="event_creatures/undead_minion.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Elves -->
+ <monster name="Elf" file="elves/elf.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Elf Arcanist" file="elves/elf_arcanist.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Elf Scout" file="elves/elf_scout.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Electro-Elementals -->
+ <monster name="Charged Energy Elemental" file="electro-elementals/charged_energy_elemental.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Energy Elemental" file="electro-elementals/energy_elemental.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Massive Energy Elemental" file="electro-elementals/massive_energy_elemental.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Overcharged Energy Elemental" file="electro-elementals/overcharged_energy_element.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Elemental_Lords -->
+ <monster name="Earth Overlord" file="elemental_lords/earth_overlord.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Energy Overlord" file="elemental_lords/energy_overlord.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Fire Overlord" file="elemental_lords/fire_overlord.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Ice Overlord" file="elemental_lords/ice_overlord.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Felines -->
+ <monster name="Cat" file="felines/cat.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Lion" file="felines/lion.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Tiger" file="felines/tiger.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Frogs -->
+ <monster name="Azure Frog" file="frogs/azure_frog.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Infernal Frog" file="frogs/infernal_frog.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Coral Frog" file="frogs/coral_frog.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Crimson Frog" file="frogs/crimson_frog.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Deathspawn" file="frogs/deathspawn.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Green Frog" file="frogs/green_frog.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Orchid Frog" file="frogs/orchid_frog.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Toad" file="frogs/toad.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Glires -->
+ <monster name="Cave Rat" file="glires/cave_rat.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Rabbit" file="glires/rabbit.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Rat" file="glires/rat.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Silver Rabbit" file="glires/silver_rabbit.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Squirrel" file="glires/squirrel.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Killer Rabbit" file="glires/killer_rabbit.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Thieving Squirrel" file="glires/thieving_squirrel.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Enraged Squirrel" file="glires/enraged_squirrel.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+
+ <monster name="Clay Guardian" file="geo-elementals/clay_guardian.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Earth Elemental" file="geo-elementals/earth_elemental.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Eternal Guardian" file="geo-elementals/eternal_guardian.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Gargoyle" file="geo-elementals/gargoyle.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Jagged Earth Elemental" file="geo-elementals/jagged_earth_elemental.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Massive Earth Elemental" file="geo-elementals/massive_earth_elemental.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Medusa" file="geo-elementals/medusa.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Muddy Earth Elemental" file="geo-elementals/muddy_earth_elemental.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Stone Golem" file="geo-elementals/stone_golem.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="War Golem" file="geo-elementals/war_golem.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Worker Golem" file="geo-elementals/worker_golem.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Shard Of Corruption" file="geo-elementals/shard_of_corruption.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ 
+ <!-- cryo-elementals -->
+ <monster name="Ice Golem" file="cryo-elementals/Ice_Golem.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ 
+ 
+ <!-- Ghosts -->
+ <monster name="Ghost" file="ghosts/ghost.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Phantasm Summon" file="ghosts/phantasm_summon.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Souleater" file="ghosts/souleater.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Phantasm" file="ghosts/phantasm.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Spectre" file="ghosts/spectre.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Tormented Ghost" file="ghosts/tormented_ghost.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Wisp" file="ghosts/wisp.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Rift Phantom" file="ghosts/rift_phantom.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Giants -->
+ <monster name="Behemoth" file="giants/behemoth.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Cyclops" file="giants/cyclops.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Cyclops Drone" file="giants/cyclops_drone.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Cyclops Smith" file="giants/cyclops_smith.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Frost Giant" file="giants/frost_giant.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Frost Giantess" file="giants/frost_giantess.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Goblins -->
+ <monster name="Goblin" file="goblins/goblin.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Goblin Assassin" file="goblins/goblin_assassin.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Goblin Leader" file="goblins/goblin_leader.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Goblin Scavenger" file="goblins/goblin_scavenger.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Demon Goblin" file="goblins/demon_goblin.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Hydro-Elementals -->
+ <monster name="Massive Water Elemental" file="hydro-elementals/massive_water_elemental.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Roaring Water Elemental" file="hydro-elementals/roaring_water_elemental.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Slick Water Elemental" file="hydro-elementals/slick_water_elemental.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Water Elemental" file="hydro-elementals/water_elemental.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Insects -->
+ <monster name="Ancient Scarab" file="insects/ancient_scarab.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Blue Butterfly" file="insects/blue_butterfly.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Brimstone Bug" file="insects/brimstone_bug.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Bug" file="insects/bug.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Butterfly" file="insects/butterfly.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Cockroach" file="insects/cockroach.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Insect Swarm" file="insects/insect_swarm.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Lancer Beetle" file="insects/lancer_beetle.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Larva" file="insects/larva.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Pink Butterfly" file="insects/pink_butterfly.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Purple Butterfly" file="insects/purple_butterfly.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Red Butterfly" file="insects/red_butterfly.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Sandcrawler" file="insects/sandcrawler.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Scarab" file="insects/scarab.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Terramite" file="insects/terramite.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Wasp" file="insects/wasp.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Yellow Butterfly" file="insects/yellow_butterfly.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Lizards -->
+ <monster name="Draken Abomination" file="lizards/draken_abomination.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Draken Elite" file="lizards/draken_elite.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Draken Spellweaver" file="lizards/draken_spellweaver.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Draken Warmaster" file="lizards/draken_warmaster.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Lizard Chosen" file="lizards/lizard_chosen.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Lizard Dragon Priest" file="lizards/lizard_dragon_priest.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Lizard High Guard" file="lizards/lizard_high_guard.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Lizard Legionnaire" file="lizards/lizard_legionnaire.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Lizard Magistratus" file="lizards/lizard_magistratus.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Lizard Noble" file="lizards/lizard_noble.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Lizard Sentinel" file="lizards/lizard_sentinel.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Lizard Snakecharmer" file="lizards/lizard_snakecharmer.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Lizard Templar" file="lizards/lizard_templar.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Lizard Zaogun" file="lizards/lizard_zaogun.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Wyvern" file="lizards/wyvern.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Minotaurs -->
+ <monster name="Minotaur Archer" file="minotaurs/minotaur_archer.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Minotaur Guard" file="minotaurs/minotaur_guard.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Minotaur Mage" file="minotaurs/minotaur_mage.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Minotaur" file="minotaurs/minotaur.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Misc Mammals -->
+ <monster name="Badger" file="misc/misc_mammals/badger.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Bat" file="misc/misc_mammals/bat.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Hyaena" file="misc/misc_mammals/hyaena.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Skunk" file="misc/misc_mammals/skunk.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Misc Reptiles -->
+ <monster name="Crocodile" file="misc/misc_reptiles/crocodile.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Hydra" file="misc/misc_reptiles/hydra.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Killer Caiman" file="misc/misc_reptiles/killer_caiman.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Thornback Tortoise" file="misc/misc_reptiles/thornback_tortoise.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Tortoise" file="misc/misc_reptiles/tortoise.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Monks -->
+ <monster name="Dark Monk" file="monks/dark_monk.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Monk" file="monks/monk.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Mutated -->
+ <monster name="Mutated Bat" file="mutated/mutated_bat.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Mutated Human" file="mutated/mutated_human.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Mutated Rat" file="mutated/mutated_rat.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Mutated Tiger" file="mutated/mutated_tiger.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Myriapods -->
+ <monster name="Centipede" file="myriapods/centipede.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Necromancers -->
+ <monster name="Necromancer" file="necromancers/necromancer.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Priestess" file="necromancers/priestess.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Orcs -->
+ <monster name="Orc Berserker" file="orcs/orc_berserker.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Orc Leader" file="orcs/orc_leader.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Orc Rider" file="orcs/orc_rider.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Orc Shaman" file="orcs/orc_shaman.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Orc Spearman" file="orcs/orc_spearman.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Orc Warlord" file="orcs/orc_warlord.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Orc Warrior" file="orcs/orc_warrior.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Orc" file="orcs/orc.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Orc Marauder" file="orcs/orc_marauder.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Orcarmor" file="orcs/orcarmor.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Orchelmet" file="orcs/orchelmet.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Orcshield" file="orcs/orcshield.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Orc Sambackpack" file="orcs/orc_sambackpack.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Outlaws -->
+ <monster name="Assassin" file="outlaws/assassin.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Bandit" file="outlaws/bandit.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Black Knight" file="outlaws/black_knight.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Crazed Beggar" file="outlaws/crazed_beggar.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Gang Member" file="outlaws/gang_member.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Gladiator" file="outlaws/gladiator.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Hero" file="outlaws/hero.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Hunter" file="outlaws/hunter.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Nomad" file="outlaws/nomad.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Poacher" file="outlaws/poacher.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Smuggler" file="outlaws/smuggler.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Stalker" file="outlaws/stalker.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Wild Warrior" file="outlaws/wild_warrior.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Pharaohs -->
+ <monster name="Ashmunrah" file="pharaohs/ashmunrah.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Dipthrah" file="pharaohs/dipthrah.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Mahrdis" file="pharaohs/mahrdis.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Morguthis" file="pharaohs/morguthis.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Omruc" file="pharaohs/omruc.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Rahemos" file="pharaohs/rahemos.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Thalas" file="pharaohs/thalas.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Vashresamun" file="pharaohs/vashresamun.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Pirates -->
+ <monster name="Pirate Buccaneer" file="pirates/pirate_buccaneer.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Pirate Corsair" file="pirates/pirate_corsair.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Pirate Cutthroat" file="pirates/pirate_cutthroat.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Pirate Ghost" file="pirates/pirate_ghost.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Pirate Marauder" file="pirates/pirate_marauder.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Pirate Skeleton" file="pirates/pirate_skeleton.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Pyro-Elementals -->
+ <monster name="Blazing Fire Elemental" file="pyro-elementals/blazing_fire_elemental.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Blistering Fire Elemental" file="pyro-elementals/blistering_fire_elemental.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Fire Elemental" file="pyro-elementals/fire_elemental.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Hellfire Fighter" file="pyro-elementals/hellfire_fighter.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Massive Fire Elemental" file="pyro-elementals/massive_fire_elemental.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Quaras -->
+ <monster name="Quara Constrictor" file="quaras/quara_constrictor.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Quara Constrictor Scout" file="quaras/quara_constrictor_scout.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Quara Hydromancer" file="quaras/quara_hydromancer.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Quara Hydromancer Scout" file="quaras/quara_hydromancer_scout.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Quara Mantassin" file="quaras/quara_mantassin.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Quara Mantassin Scout" file="quaras/quara_mantassin_scout.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Quara Pincher" file="quaras/quara_pincher.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Quara Pincher Scout" file="quaras/quara_pincher_scout.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Quara Predator" file="quaras/quara_predator.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Quara Predator Scout" file="quaras/quara_predator_scout.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Serpents -->
+ <monster name="Cobra" file="serpents/cobra.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Sea Serpent" file="serpents/sea_serpent.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Serpent Spawn" file="serpents/serpent_spawn.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Snake" file="serpents/snake.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Young Sea Serpent" file="serpents/young_sea_serpent.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Shapeshifters -->
+ <monster name="Mimic" file="shapeshifters/mimic.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Skeletons -->
+ <monster name="Betrayed Wraith" file="skeletons/betrayed_wraith.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Bonebeast" file="skeletons/bonebeast.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Bone Beast" file="skeletons/bonebeast.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Demon Skeleton" file="skeletons/demon_skeleton.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Dreadbeast" file="skeletons/dreadbeast.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Lost Soul" file="skeletons/lost_soul.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Skeleton" file="skeletons/skeleton.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Skeleton Warrior" file="skeletons/skeleton_warrior.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Undead Gladiator" file="skeletons/undead_gladiator.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Undead Mine Worker" file="skeletons/undead_mine_worker.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Sorcerers -->
+ <monster name="Dark Apprentice" file="sorcerers/dark_apprentice.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Dark Magician" file="sorcerers/dark_magician.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Fury" file="sorcerers/fury.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Ice Witch" file="sorcerers/ice_witch.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Infernalist" file="sorcerers/infernalist.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Mad Scientist" file="sorcerers/mad_scientist.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Warlock" file="sorcerers/warlock.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Witch" file="sorcerers/witch.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Yalahari" file="sorcerers/yalahari.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ 
+
+ <!-- Traps -->
+ <monster name="Deathslicer" file="traps/deathslicer.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Flamethrower" file="traps/flamethrower.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Lavahole" file="traps/lavahole.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Magic Pillar" file="traps/magic_pillar.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Magicthrower" file="traps/magicthrower.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Plaguethrower" file="traps/plaguethrower.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Shredderthrower" file="traps/shredderthrower.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Hell Hole" file="traps/hell_hole.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Deaththrower" file="traps/deaththrower.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Pillar" file="traps/pillar.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Trolls -->
+ <monster name="Frost Troll" file="trolls/frost_troll.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Furious Troll" file="trolls/furious_troll.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Island Troll" file="trolls/island_troll.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Swamp Troll" file="trolls/swamp_troll.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Troll" file="trolls/troll.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Troll Champion" file="trolls/troll_champion.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Troll Legionnaire" file="trolls/troll_legionnaire.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Undead_Humanoids -->
+ <monster name="Banshee" file="undead_humanoids/banshee.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Blightwalker" file="undead_humanoids/blightwalker.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Crypt Shambler" file="undead_humanoids/crypt_shambler.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Ghoul" file="undead_humanoids/ghoul.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Grim Reaper" file="undead_humanoids/grim_reaper.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Lich" file="undead_humanoids/lich.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Mummy" file="undead_humanoids/mummy.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Vampire" file="undead_humanoids/vampire.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Vampire Bride" file="undead_humanoids/vampire_bride.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Zombie" file="undead_humanoids/zombie.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Undead Prospector" file="undead_humanoids/undead_prospector.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Ungulates -->
+ <monster name="Black Sheep" file="ungulates/black_sheep.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Deer" file="ungulates/deer.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Doom Deer" file="ungulates/doom_deer.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Elephant" file="ungulates/elephant.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Evil Sheep Lord" file="ungulates/evil_sheep_lord.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Evil Sheep" file="ungulates/evil_sheep.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Mammoth" file="ungulates/mammoth.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Pig" file="ungulates/pig.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Sheep" file="ungulates/sheep.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Vampire Pig" file="ungulates/vampire_pig.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Voodoo Cultists -->
+ <monster name="Acolyte of the Cult" file="voodoo_cultists/acolyte_of_the_cult.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Adept of the Cult" file="voodoo_cultists/adept_of_the_cult.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Enlightened of the Cult" file="voodoo_cultists/enlightened_of_the_cult.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Novice of the Cult" file="voodoo_cultists/novice_of_the_cult.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Wild Magics -->
+ <monster name="Wild Fire Magic" file="wild_magics/wild_fire_magic.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Wild Fury Magic" file="wild_magics/wild_fury_magic.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Wild Nature Magic" file="wild_magics/wild_nature_magic.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Wild Water Magic" file="wild_magics/wild_water_magic.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+
+ <!-- Monstros adicionados recentemente -->
+ <monster name="Acolyte of Darkness" file="new/acolyte_of_darkness.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Bane of Light" file="new/bane_of_light.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Dreadmaw" file="new/dreadmaw.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Duskbringer" file="new/duskbringer.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Eclipse Knight" file="new/eclipse_knight.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Fahim the Wise" file="new/fahim_the_wise.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Fleabringer" file="new/fleabringer.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+  
+ <!-- Mod -->
+ <monster name="Healer" file="Mod/Healer.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script> 
+ <monster name="Amon Thot" file="Mod/Amon Thot.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Bel Fegor" file="Mod/Bel Fegor.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Elm Inster" file="Mod/Elm Inster.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Leo Nidas" file="Mod/Leo Nidas.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Fairy" file="Mod/Fairy.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Sr. Archimonde" file="Mod/Sr. Archimonde.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="YalahariMonster" file="Mod/yalahari.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Renegade Orc" file="Mod/renegade orc.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Training Monk" file="Mod/Training Monk.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Dwarf Henchman" file="Mod/dwarf henchman.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ 
+ <!-- Mod -->
+ <monster name="Grandfather Tridian" file="bosses/grandfather_tridian.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Smuggler Baron Silvertoe" file="bosses/smuggler_baron_silvertoe.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Zarabustor" file="bosses/zarabustor.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Rukor Zad" file="bosses/rukor_zad.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ 
+ <!-- Mod 1250-->
+ <monster name="Ancalagon" file="Mod/1250/ancalagon.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Ancient Spawn of Morgathla" file="Mod/1250/ancient_spawn_of_morgathla.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Werehyaena" file="Mod/1250/werehyaena.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Animated Snowman" file="Mod/1250/animated_snowman.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Distorted Phantom" file="Mod/1250/distorted_phantom.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script> 
+ <monster name="Execowtioner" file="Mod/1250/execowtioner.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Faceless Bane" file="Mod/1250/faceless_bane.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Gaz'haragoth" file="Mod/1250/gaz'haragoth.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Gnomevil" file="Mod/1250/gnomevil.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Goshnar's Megalomania" file="Mod/1250/goshnar's_megalomania.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Humongous Fungus" file="Mod/1250/humongous_fungus.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script> 
+ <monster name="Infernal Demon" file="Mod/1250/infernal_demon.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script> 
+ <monster name="Jaul" file="Mod/1250/jaul.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script> 
+ <monster name="Johnny Storm" file="Mod/1250/johnny_storm.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Many Faces" file="Mod/1250/many_faces.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script> 
+ <monster name="Minotaur Idol" file="Mod/1250/minotaur_idol.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script> 
+ <monster name="Raging Mage" file="Mod/1250/raging_mage.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Smaug" file="Mod/1250/smaug.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script> 
+ <monster name="The Dread Maiden" file="Mod/1250/the_dread_maiden.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script> 
+ <monster name="The Last Lore Keeper" file="Mod/1250/the_last_lore_keeper.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="The Welter" file="Mod/1250/the_welter.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Urmahlullu The Immaculate" file="Mod/1250/urmahlullu_the_immaculate.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ 
+ 
+ <!-- Mod 1250b-->
+ <monster name="Abyssador" file="Mod/1250b/abyssador.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Askarak Demon" file="Mod/1250b/askarak_demon.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Askarak Lord" file="Mod/1250b/askarak_lord.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Askarak Prince" file="Mod/1250b/askarak_prince.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Choking Fear" file="Mod/1250b/choking_fear.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Corym Charlatan" file="Mod/1250b/corym_charlatan.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Corym Skirmisher" file="Mod/1250b/corym_skirmisher.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Corym Vanguard" file="Mod/1250b/corym_vanguard.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Crawler" file="Mod/1250b/crawler.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Deepling Guard" file="Mod/1250b/deepling_guard.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Deepling Scout" file="Mod/1250b/deepling_scout.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Deepling Spellsinger" file="Mod/1250b/deepling_spellsinger.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Deepling Tyrant" file="Mod/1250b/deepling_tyrant.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Deepling Warrior" file="Mod/1250b/deepling_warrior.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Deepling Worker" file="Mod/1250b/deepling_worker.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Demon Outcast" file="Mod/1250b/demon_outcast.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Elder Wyrm" file="Mod/1250b/elder_wyrm.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Enslaved Dwarf" file="Mod/1250b/enslaved_dwarf.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Frazzlemaw" file="Mod/1250b/frazzlemaw.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script> 
+ <monster name="Giant" file="Mod/1250b/giant.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Gray Giant Spider" file="Mod/1250b/gray_giant_spider.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Green Giant Spider" file="Mod/1250b/green_giant_spider.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>  
+ <monster name="Guzzlemaw" file="Mod/1250b/guzzlemaw.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script> 
+ <monster name="Kollos" file="Mod/1250b/kollos.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Little Corym Charlatan" file="Mod/1250b/little_corym_charlatan.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Lost Basher" file="Mod/1250b/lost_basher.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Lost Berserker" file="Mod/1250b/lost_berserker.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Lost Husher" file="Mod/1250b/lost_husher.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Lost Thrower" file="Mod/1250b/lost_thrower.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script> 
+ <monster name="Mawhawk" file="Mod/1250b/mawhawk.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Minion of Gaz'haragoth" file="Mod/1250b/minion_of_gaz'haragoth.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Nightmare of Gaz'haragoth" file="Mod/1250b/nightmare_of_gaz'haragoth.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Obujos" file="Mod/1250b/obujos.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Shaburak Demon" file="Mod/1250b/shaburak_demon.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Shaburak Lord" file="Mod/1250b/shaburak_lord.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Shaburak Prince" file="Mod/1250b/shaburak_prince.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Sight of Surrender" file="Mod/1250b/sight_of_surrender.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Silencer" file="Mod/1250b/silencer.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script> 
+ <monster name="Spidris" file="Mod/1250b/spidris.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Spitter" file="Mod/1250b/spitter.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Swarmer" file="Mod/1250b/swarmer.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Tanjis" file="Mod/1250b/tanjis.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="The Pale Count" file="Mod/1250b/the_pale_count.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Tyrn" file="Mod/1250b/tyrn.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Vampire Viscount" file="Mod/1250b/vampire_viscount.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Waspoid" file="Mod/1250b/waspoid.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Yielothax" file="Mod/1250b/yielothax.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ 
+ 
+ <!-- Mod Special-->
+ <monster name="Arcane Wizard" file="Mod/special/arcane_wizard.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Elder Demon" file="Mod/special/elder_demon.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Ghastly Slime" file="Mod/special/ghastly_slime.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Gray Dragon" file="Mod/special/gray_dragon.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Retching Horror" file="Mod/special/retching_horror.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Skeleton King" file="Mod/special/skeleton_king.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script> 
+ <monster name="Tutankhamon" file="Mod/special/tutankhamon.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ <monster name="Undead Hero" file="Mod/special/undead_hero.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script> 
+ <monster name="Warrior Specter" file="Mod/special/warrior_specter.xml"/>
+        <script>
+                <event name="UpgradeSystemDeath"/>
+        </script>
+ 
+ 
+ 
+</monsters>

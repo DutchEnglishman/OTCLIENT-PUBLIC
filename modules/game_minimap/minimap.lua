@@ -101,6 +101,25 @@ function mapController:onInit()
     self.ui.minimapBorder.minimap:getChildById('zoomInButton'):hide()
     self.ui.minimapBorder.minimap:getChildById('zoomOutButton'):hide()
     self.ui.minimapBorder.minimap:getChildById('resetButton'):hide()
+
+    -- Same action as the fullscreen-map button next to the minimap.
+    g_keyboard.bindKeyDown('Ctrl+Shift+M', openCyclopediaMap, modules.game_interface.getRootPanel())
+
+    -- GM/GOD teleport: Ctrl+Left-click on the minimap (small or fullscreen --
+    -- it's the same widget instance, just reparented by fullscreen()).
+    -- The server enforces access level (Game::playerGmTeleport); a non-GM
+    -- account sending this is silently ignored there.
+    self.ui.minimapBorder.minimap.onMouseRelease = function(widget, mousePos, mouseButton)
+        if mouseButton == MouseLeftButton and g_keyboard.isCtrlPressed() and not widget:isDragging() then
+            -- Must be getTilePosition(), not getPosition(): the minimap is a
+            -- UIMinimap (extends UIWidget directly, not UIMap/UIGameMap), and
+            -- UIWidget already has its own getPosition() (the widget's own
+            -- on-screen pixel position) that otherwise wins the name clash.
+            g_game.sendGmTeleport(widget:getTilePosition(mousePos))
+            return true
+        end
+        return false
+    end
 end
 
 function mapController:onGameStart()
@@ -157,6 +176,8 @@ function mapController:onTerminate()
         iconTopMenu:destroy()
         iconTopMenu = nil
     end
+
+    g_keyboard.unbindKeyDown('Ctrl+Shift+M', openCyclopediaMap, modules.game_interface.getRootPanel())
 end
 
 function zoomIn()

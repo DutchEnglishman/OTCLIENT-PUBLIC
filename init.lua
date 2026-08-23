@@ -9,15 +9,20 @@ Services = {
         enabled = true,
         repository = "DutchEnglishman/OTCLIENT-PUBLIC",
         timeout = 30,
+        -- Stall timeout: how long the updater tolerates NO progress before giving up.
+        -- Not a deadline -- a 55 MB sprite sheet may legitimately take minutes.
         overallTimeout = 60000,
         retries = 3,
         strictManifestSha256 = true,
         allowExecutableUpdate = true,
         allowDeletions = true,
         -- Never written or deleted by the updater, whatever the manifest says.
+        -- `data/things/**` is deliberately NOT here: sprites ship through the updater.
+        -- Anything added back must also be added to -ManifestExclude in make_release.ps1,
+        -- because a manifest naming a protected path is rejected in full.
         protectedPaths = {
             "config.otml", "config.ini", "*.log",
-            "data/things/**", "data/sounds/**", "mods/**", "downloads/**"
+            "data/sounds/**", "mods/**", "downloads/**"
         }
     }, -- ./updater
     --status = "http://localhost/login.php", --./client_entergame | ./client_topmenu
