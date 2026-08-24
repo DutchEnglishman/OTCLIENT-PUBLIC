@@ -1,0 +1,185 @@
+TaskListLabel < UILabel
+  font: verdana-11px-monochrome
+  background-color: alpha
+  text-offset: 2 0
+  focusable: true
+  phantom: false
+
+  $focus:
+    background-color: #ffffff22
+
+TaskMonsterTile < UIWidget
+  size: 64 58
+  focusable: false
+  background-color: alpha
+
+  $hover:
+    background-color: #ffffff22
+
+  @onClick: modules.game_tasksystem.onMonsterTileClick(self)
+
+  Creature
+    id: creature
+    size: 40 40
+    phantom: true
+    anchors.horizontalCenter: parent.horizontalCenter
+    anchors.top: parent.top
+    border-width: 0
+    padding: 0
+
+  Label
+    id: name
+    font: verdana-11px-monochrome
+    text-align: center
+    text-auto-resize: false
+    phantom: true
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: creature.bottom
+    margin-top: 2
+
+MonsterDetailWindow < MainWindow
+  !text: tr('Monster Details')
+  size: 280 220
+  @onEscape: self:destroy()
+
+  Creature
+    id: creature
+    size: 64 64
+    anchors.horizontalCenter: parent.horizontalCenter
+    anchors.top: parent.top
+    margin-top: 12
+
+  Label
+    id: nameLabel
+    font: verdana-11px-monochrome
+    text-align: center
+    anchors.horizontalCenter: parent.horizontalCenter
+    anchors.top: creature.bottom
+    margin-top: 8
+
+  Label
+    id: killsLabel
+    anchors.left: parent.left
+    anchors.top: nameLabel.bottom
+    margin-top: 14
+    margin-left: 10
+
+  Label
+    id: stageLabel
+    anchors.left: parent.left
+    anchors.top: killsLabel.bottom
+    margin-top: 4
+    margin-left: 10
+
+  Label
+    id: lootNoteLabel
+    !text: tr('Loot table unlocks with more kills. (coming soon)')
+    color: #aaaaaa
+    text-wrap: true
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: stageLabel.bottom
+    margin-top: 14
+    margin-left: 10
+    margin-right: 10
+
+  Button
+    id: closeButton
+    !text: tr('Close')
+    width: 64
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    @onClick: self:getParent():destroy()
+
+MainWindow
+  id: taskSystemWindow
+  !text: tr('Bestiary / Tasks')
+  size: 520 400
+  @onEscape: modules.game_tasksystem.toggle()
+
+  Label
+    id: categoriesLabel
+    !text: tr('Categories')
+    anchors.left: parent.left
+    anchors.top: parent.top
+
+  Button
+    id: closeButton
+    !text: tr('Close')
+    width: 64
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    @onClick: modules.game_tasksystem.toggle()
+
+  Label
+    id: taskPointsLabel
+    !text: tr('Task Points') .. ': ...'
+    anchors.left: parent.left
+    anchors.verticalCenter: closeButton.verticalCenter
+
+  TextEdit
+    id: searchEdit
+    anchors.left: taskPointsLabel.right
+    anchors.right: closeButton.left
+    anchors.bottom: parent.bottom
+    margin-left: 10
+    margin-right: 10
+    @onTextChange: modules.game_tasksystem.onSearchTextChange(self:getText())
+    @onEscape: modules.game_tasksystem.toggle()
+
+  VerticalScrollBar
+    id: categoriesScrollBar
+    anchors.left: parent.left
+    anchors.top: categoriesLabel.bottom
+    anchors.bottom: closeButton.top
+    margin-left: 148
+    margin-top: 4
+    margin-bottom: 8
+    step: 14
+    pixels-scroll: true
+
+  TextList
+    id: categoriesList
+    vertical-scrollbar: categoriesScrollBar
+    anchors.left: parent.left
+    anchors.right: categoriesScrollBar.left
+    anchors.top: categoriesLabel.bottom
+    anchors.bottom: closeButton.top
+    margin-top: 4
+    margin-bottom: 8
+    focusable: false
+
+  Label
+    id: monstersLabel
+    !text: tr('Monsters (click a category)')
+    anchors.left: categoriesScrollBar.right
+    anchors.top: parent.top
+    margin-left: 10
+
+  VerticalScrollBar
+    id: monstersScrollBar
+    anchors.right: parent.right
+    anchors.top: monstersLabel.bottom
+    anchors.bottom: closeButton.top
+    margin-top: 4
+    margin-bottom: 8
+    step: 14
+    pixels-scroll: true
+
+  ScrollablePanel
+    id: monstersList
+    vertical-scrollbar: monstersScrollBar
+    anchors.left: monstersLabel.left
+    anchors.right: monstersScrollBar.left
+    anchors.top: monstersLabel.bottom
+    anchors.bottom: closeButton.top
+    margin-top: 4
+    margin-right: 4
+    margin-bottom: 8
+    focusable: false
+    layout:
+      type: grid
+      cell-size: 64 58
+      cell-spacing: 4
+      flow: true
