@@ -1,0 +1,15 @@
+Module
+  name: game_tasksystem
+  description: Task/bestiary progress tracker
+  author: Custom
+  sandboxed: true
+
+  dependencies:
+    - game_interface
+    - game_mainpanel
+
+  scripts:
+    - tasksystem
+
+  @onLoad: TaskSystemUI.init()
+  @onUnload: TaskSystemUI.terminate()

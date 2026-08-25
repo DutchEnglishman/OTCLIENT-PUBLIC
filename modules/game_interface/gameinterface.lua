@@ -344,6 +344,22 @@ function show()
     gameMapPanel:setFloorViewMode(0)
 
     addEvent(function()
+        -- Mode 2 (the enlarged 27x15 view) depends on setLimitVisibleRange(true)
+        -- staying set -- that's what locks the 27x15 ratio the widget uses when
+        -- it recomputes visible tile count on resize; without it, it falls back
+        -- to the real window aspect ratio and the view silently shrinks. This
+        -- callback used to always run and stomp that back to false right after
+        -- setupViewMode(2) set it (limitedZoom is never actually set true
+        -- anywhere in this codebase, so the branch below was permanently a
+        -- no-op guard). Whether that landed before or after the widget's next
+        -- resize pass baked the ratio in was a timing race -- cold start
+        -- (first login, many competing init events) usually lost the race
+        -- harmlessly; a warm relog (fewer competing events) usually won it,
+        -- shrinking the view back to the default the very next login.
+        if currentViewMode == 2 then
+            return
+        end
+
         if not limitedZoom or g_game.isGM() then
             gameMapPanel:setMaxZoomOut(513)
             gameMapPanel:setLimitVisibleRange(false)
@@ -352,6 +368,30 @@ function show()
             gameMapPanel:setLimitVisibleRange(true)
         end
     end)
+
+    -- Mode 2's applyExtendedViewLayout(true) -> modules.game_mainpanel.
+    -- toggleExtendedViewButtons(true) (called via addEvent above, so on the
+    -- NEXT tick) relocates every button currently sitting in the mainpanel's
+    -- options/specials panels into the top menu's button row, then hides the
+    -- now-empty mainpanel container. That's a one-shot sweep of whatever
+    -- exists at that moment -- any button another module's onGameStart
+    -- creates AFTER it (e.g. game_cyclopedia's mainpanel button) never gets
+    -- relocated: it's stuck inside the now-hidden container, permanently
+    -- invisible for the rest of that login. Whether a given button's
+    -- creation lands before or after that one addEvent tick is a timing
+    -- race, not something guaranteed by module load order -- cold start
+    -- (first login, many competing init events) tends to lose it, a warm
+    -- relog tends to win it, matching the exact symptom this was chasing
+    -- (bestiary/bosstiary/etc. mainpanel buttons missing only on first
+    -- login). Re-running the same relocation once more, well after other
+    -- modules' onGameStart calls have had time to run, is a safe no-op for
+    -- buttons already moved (they're no longer children of the options/
+    -- specials panels by then) and catches any stragglers.
+    scheduleEvent(function()
+        if currentViewMode == 2 then
+            modules.game_mainpanel.toggleExtendedViewButtons(true)
+        end
+    end, 500)
 end
 
 function hide()

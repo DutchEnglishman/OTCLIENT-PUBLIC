@@ -251,83 +251,46 @@ UIWidget
         margin-top: 5
         text-auto-resize: true
  
-      UIWidget
-        id: BonusIcon
-        anchors.top: SubTextLabel.bottom
-        anchors.left: SubTextLabel.left
-        margin-top: 5
-        image-source: /game_cyclopedia/images/bestiary/icons/monster-icon-bonuspoints
-      Label
-        id: BonusValue
-        anchors.verticalCenter: BonusIcon.verticalCenter
-        anchors.left: BonusIcon.right
-        margin-left: 5
-        text-auto-resize: true
-        !text: tr('?')
-        color: #C7C7C7
-      UIWidget
-        id: CharmBase
-        anchors.bottom: LeftBase.bottom
-        anchors.left: BonusIcon.left
-        image-source: /images/ui/panel_flat
-        image-border: 10
-        size: 45 45
-      Button
-        id: SelectButton
-        size: 70 20
-        anchors.left: CharmBase.right
-        anchors.bottom: CharmBase.bottom
-        margin-left: 5
-        !text: tr('Select')
-        //font: verdana-bold-8px-antialiased
-        text-offset: 0 -1
-        color: #C0C0C0
-      ComboBox
-        id: CharmSelector
-        anchors.left: SelectButton.left
-        anchors.right: ProgressBorder3.right
-        anchors.top: CharmBase.top
-        text-align: center
-        enabled: false
-        @onSetup: |
-          self:addOption("?")
-      UIWidget
-        id: BalanceBase
-        anchors.right: CharmSelector.right
-        anchors.left: SelectButton.right
-        anchors.bottom: SelectButton.bottom
-        height: 20
-        margin-left: 5
-        image-source: /images/ui/item
-        image-border: 10
-        UIWidget
-          id: GoldIcon
-          anchors.right: parent.right
-          anchors.verticalCenter: parent.verticalCenter
-          margin-right: 5
-          image-source: /game_cyclopedia/images/icon_gold
-        Label
-          id: GoldBalance
-          anchors.right: GoldIcon.left
-          anchors.verticalCenter: parent.verticalCenter
-          margin-right: 5
-          text-align: right
-          !text: '?'
-      Label
-        id: CharmLabel
-        anchors.bottom: CharmBase.top
-        anchors.left: CharmBase.left
-        margin-bottom: 3
-        text-auto-resize: true
-        !text: tr('Charm Selection:')
-        color: #C7C7C7
       VerticalSeparator
         id: IconsSep
         anchors.horizontalCenter: ProgressBorder2.horizontalCenter
         anchors.top: ProgressBorder2.bottom
-        anchors.bottom: CharmLabel.top
+        anchors.bottom: LeftBase.bottom
         margin-top: 3
         margin-left: 20
+      // Task block sits directly above the unlock hint so the two read as one
+      // group at the bottom of this column. Anchored bottom-up (each label to
+      // the top of the one below) since UnlockHint is the fixed point.
+      Label
+        id: TaskTitle
+        anchors.bottom: TaskTotal.top
+        anchors.left: SubTextLabel.left
+        margin-bottom: 3
+        text-auto-resize: true
+        !text: tr('- Task -')
+        color: #C7C7C7
+      Label
+        id: TaskTotal
+        anchors.bottom: TaskRemaining.top
+        anchors.left: SubTextLabel.left
+        margin-bottom: 2
+        text-auto-resize: true
+        !text: tr('Total: ?')
+        color: #909090
+      Label
+        id: TaskRemaining
+        anchors.bottom: UnlockHint.top
+        anchors.left: SubTextLabel.left
+        margin-bottom: 4
+        text-auto-resize: true
+        !text: tr('Remaining: ?')
+        color: #909090
+      Label
+        id: UnlockHint
+        anchors.bottom: LeftBase.bottom
+        anchors.left: SubTextLabel.left
+        text-auto-resize: true
+        color: #C7C7C7
       UIWidget
         id: Icon1
         anchors.top: IconsSep.top
@@ -407,54 +370,6 @@ UIWidget
         margin-bottom: 1
         text-auto-resize: true
         !text: tr('?')
-        color: #C7C7C7
-      UIWidget
-        id: LocationField
-        anchors.left: BalanceBase.right
-        anchors.bottom: BalanceBase.bottom
-        anchors.right: parent.right
-        height: 100
-        image-source: /images/ui/textedit
-        image-border: 10
-        margin-left: 10
-        margin-right: 5
-        ScrollablePanel
-          id: Textlist
-          anchors.top: parent.top
-          anchors.bottom: parent.bottom
-          anchors.left: parent.left
-          anchors.right: parent.right
-          margin-top: 5
-          margin-bottom: 5
-          margin-left: 5
-          margin-right: 20
-          padding-left: 1
-          vertical-scrollbar: TextlistScrollBar
-          layout: verticalBox
-          UIWidget
-            id: Text
-            text-auto-resize: true
-            text-align: left
-            text-wrap: true
-            !text: '?'
-            color: #C7C7C7
-        VerticalScrollBar
-          id: TextlistScrollBar
-          anchors.top: parent.top
-          anchors.bottom: parent.bottom
-          anchors.right: parent.right
-          margin-right: 2
-          margin-top: 2
-          margin-bottom: 2
-          step: 37
-          pixels-scroll: true
-      Label
-        id: LocationLabel
-        anchors.left: LocationField.left
-        anchors.bottom: LocationField.top
-        margin-bottom: 3
-        text-auto-resize: true
-        !text: tr('Location(s)') .. ':'
         color: #C7C7C7
       UIWidget
         id: PhysicalResist

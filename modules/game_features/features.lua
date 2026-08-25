@@ -9,6 +9,18 @@ controller:registerEvents(g_game, {
 
         g_game.enableFeature(GameFormatCreatureName)
 
+        -- Item rarity frames. GameColorizedLootValue is the cosmetic gate
+        -- that lets ItemsDatabase draw frames at all; GameItemRarity is the
+        -- one that matters for the wire format -- it makes getItem() read
+        -- the trailing per-instance rarity byte this project's server writes
+        -- for every item (OTSERV's NetworkMessage::addItem).
+        --
+        -- DEPLOY ORDER: the server must be live with that byte BEFORE this
+        -- client is. Server-ahead is harmless (the byte is simply not read);
+        -- client-ahead desyncs the entire item stream.
+        g_game.enableFeature(GameColorizedLootValue)
+        g_game.enableFeature(GameItemRarity)
+
         -- For Walk
         g_game.enableFeature(GameAllowPreWalk)
         g_game.enableFeature(GameMapCache)

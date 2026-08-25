@@ -1,0 +1,14 @@
+Module
+  name: game_itemtooltip
+  description: Hover tooltips for items, fetched from the server on demand
+  author: Custom
+  sandboxed: true
+
+  dependencies:
+    - game_interface
+
+  scripts:
+    - itemtooltip
+
+  @onLoad: init()
+  @onUnload: terminate()

@@ -1,0 +1,40 @@
+// Same slate texture as the battlelist, but window_headless rather than
+// miniwindow_body: the body texture is drawn to butt against a header, so it
+// carries no top edge and the frame came out open on one side. This one is
+// bordered on all four (data/styles/10-windows.otui uses it the same way).
+//
+// Deliberately NO layout on the container: an earlier version used
+// verticalBox with fit-children, which resizes the PARENT to fit its
+// children -- combined with setting the window size in code that fed back
+// into the layout and spun forever, hanging the client (Windows logged
+// AppHangB1). Lines are positioned and the window sized explicitly instead.
+ItemTooltipWindow < UIWidget
+  id: itemTooltipWindow
+  image-source: /images/ui/window_headless
+  image-border: 5
+  visible: false
+  phantom: true
+  focusable: false
+
+// One coloured, centred line. Positioned manually by itemtooltip.lua.
+ItemTooltipLine < UILabel
+  text-align: center
+  text-auto-resize: true
+  phantom: true
+  focusable: false
+
+// Hairline between colour groups. Width is set in code to the content width.
+ItemTooltipSeparator < UIWidget
+  height: 1
+  background-color: #7a7a7a80
+  phantom: true
+  focusable: false
+
+// The hovered item's sprite, top-right. Virtual AND phantom: virtual keeps it
+// out of drag/drop, phantom keeps it from taking hover -- otherwise hovering
+// the tooltip's own sprite would fire another tooltip request.
+ItemTooltipSprite < UIItem
+  size: 32 32
+  virtual: true
+  phantom: true
+  focusable: false

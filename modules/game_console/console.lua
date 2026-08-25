@@ -1626,6 +1626,10 @@ function sendCurrentMessage()
     if hadText and walkAfterSend then
         walkAfterSend = false
         toggleChat()
+        -- Mark this Enter as handled so it doesn't also bubble up to
+        -- switchChatOnCall (bound on the root panel), which would otherwise
+        -- see chat just closed and immediately reopen it on the same keypress.
+        return true
     end
 end
 
