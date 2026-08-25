@@ -51,7 +51,6 @@ Module
     - game_cyclopedia
     - game_tasksystem
     - game_crafting
-    - game_itemtooltip
     - game_creatureinformation
     - game_rewardwall
     - game_forge

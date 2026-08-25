@@ -7,7 +7,6 @@ function showBossSlot()
     g_game.requestBossSlootInfo()
     controllerCyclopedia.ui.CharmsBase:setVisible(false)
     controllerCyclopedia.ui.GoldBase:setVisible(true)
-    controllerCyclopedia.ui.TaskPointsBase:setVisible(false)
     controllerCyclopedia.ui.BestiaryTrackerButton:setVisible(false)
     if g_game.getClientVersion() >= 1410 then
         controllerCyclopedia.ui.CharmsBase1410:hide()
@@ -63,18 +62,9 @@ function Cyclopedia.loadBossSlots(data)
         return
     end
 
-    -- No Boss Points economy exists on this server yet (see OTSERV's
-    -- ProtocolGame::sendBossSlotInfo), so isTodaySlotUnlocked is always 0 for
-    -- now and todaySlotData is never sent -- every field below reads through
-    -- it. The real client code assumes a "boosted boss" always exists, which
-    -- isn't true here until the boss roster (currently empty) is populated.
-    if not data.todaySlotData then
-        return
-    end
-
     Cyclopedia.BossSlots.UnlockBosses = {}
 
-    local raceData = Cyclopedia.getRaceData(data.boostedBossId)
+    local raceData = g_things.getRaceData(data.boostedBossId)
     UI.Sprite:setOutfit(raceData.outfit)
 
     UI.Sprite:getCreature():setStaticWalking(1000)
@@ -147,7 +137,7 @@ function Cyclopedia.loadBossSlots(data)
             break
         end
 
-        local uRaceData = Cyclopedia.getRaceData(unlockData.bossId)
+        local uRaceData = g_things.getRaceData(unlockData.bossId)
         local data_t = {
             visible = true,
             bossId = unlockData.bossId,
@@ -221,7 +211,7 @@ function Cyclopedia.setLockedSlot(widget, slot, unlockedBosses)
     end
 
     for _, internalData in ipairs(Cyclopedia.BossSlots.UnlockBosses) do
-        local raceData = Cyclopedia.getRaceData(internalData.bossId)
+        local raceData = g_things.getRaceData(internalData.bossId)
         local internalWidget = g_ui.createWidget("SelectBossBossSlots", widget.SelectBoss.ListBase.List)
         internalWidget:setId(internalData.bossId)
         internalWidget.Sprite:setOutfit(raceData.outfit)
@@ -249,7 +239,7 @@ function Cyclopedia.setLockedSlot(widget, slot, unlockedBosses)
 end
 
 function Cyclopedia.setActiveSlot(widget, slot, slotData, data, bossId)
-    local raceData = Cyclopedia.getRaceData(bossId)
+    local raceData = g_things.getRaceData(bossId)
     widget.LockLabel:setVisible(false)
     widget.SelectBoss:setVisible(false)
     widget.ActivedBoss:setVisible(true)
@@ -391,7 +381,7 @@ function Cyclopedia.readjustSelectBoss(selectBoss, text)
 
     for _, internalData in ipairs(Cyclopedia.BossSlots.UnlockBosses) do
         if text == "" or string.find(internalData.name:lower(), text:lower(), 1, true) ~= nil then
-            local raceData = Cyclopedia.getRaceData(internalData.bossId)
+            local raceData = g_things.getRaceData(internalData.bossId)
             local internalWidget = g_ui.createWidget("SelectBossBossSlots", selectBoss.ListBase.List)
             internalWidget:setId(internalData.bossId)
             internalWidget.Sprite:setOutfit(raceData.outfit)

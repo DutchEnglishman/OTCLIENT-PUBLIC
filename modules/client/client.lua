@@ -48,11 +48,8 @@ function startup()
     else
         EnterGame.firstShow()
     end
-    -- Audio is disabled entirely on this client by request -- forced off at
-    -- startup regardless of any saved 'enableAudio' setting, so a value
-    -- carried over from before this change can't turn sound back on.
-    if g_sounds then
-        g_sounds.setAudioEnabled(false)
+    if g_app.hasUpdater() and g_sounds then
+        g_sounds.setAudioEnabled(g_settings.getBoolean('enableAudio'))
     end
 end
 

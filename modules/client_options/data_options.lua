@@ -209,33 +209,35 @@ return {
             g_app.setMaxFps(v)
         end
     },
-    -- Audio is disabled entirely on this client by request: these three
-    -- default to off/silent and force the engine off regardless of what a
-    -- previously-saved setting or the (still present) options-panel controls
-    -- ask for. The topbar mute button is gone too -- see options.lua.
     enableAudio                       = {
-        value = false,
+        value = true,
         action = function(value, options, controller, panels, extraWidgets)
             if g_sounds then
-                g_sounds.setAudioEnabled(false)
+                g_sounds.setAudioEnabled(value)
+            end
+
+            if value then
+                extraWidgets.audioButton:setIcon('/images/topbuttons/button_mute_up')
+            else
+                extraWidgets.audioButton:setIcon('/images/topbuttons/button_mute_pressed')
             end
         end
     },
     enableMusicSound                  = {
-        value = false,
+        value = true,
         action = function(value, options, controller, panels, extraWidgets)
             if g_sounds then
-                g_sounds.getChannel(SoundChannels.Music):setEnabled(false)
+                g_sounds.getChannel(SoundChannels.Music):setEnabled(value)
             end
         end
     },
     musicSoundVolume                  = {
-        value = 0,
+        value = 100,
         action = function(value, options, controller, panels, extraWidgets)
             if g_sounds then
-                g_sounds.getChannel(SoundChannels.Music):setGain(0)
+                g_sounds.getChannel(SoundChannels.Music):setGain(value / 100)
             end
-            panels.soundPanel:recursiveGetChildById('musicSoundVolume'):setText(tr('Music volume: %d', 0))
+            panels.soundPanel:recursiveGetChildById('musicSoundVolume'):setText(tr('Music volume: %d', value))
         end
     },
     enableLights                      = {

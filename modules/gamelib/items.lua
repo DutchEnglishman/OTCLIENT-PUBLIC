@@ -10,20 +10,6 @@ ItemsDatabase.rarityColors = {
     ["grey"] = TextColors.grey,
 }
 
--- Frame sprite-sheet column per rarity id, matching the server's
--- upgrade-system constants (data/upgrade_system/upgrade_system_const.lua):
---   0 = none (no frame)   1 = COMMON    2 = RARE
---   3 = EPIC              4 = LEGENDARY
--- Each frame is 32x32 in a 160x32 sheet. Rarity is per-item-INSTANCE and
--- arrives on the wire with each item (see GameItemRarity) -- it deliberately
--- is NOT derived from the item id, since two identical items can differ.
-local rarityClips = {
-    [1] = "32 0 32 32",  -- common    -> green
-    [2] = "64 0 32 32",  -- rare      -> blue
-    [3] = "96 0 32 32",  -- epic      -> purple
-    [4] = "128 0 32 32", -- legendary -> yellow
-}
-
 local function getColorForValue(value)
     if value >= 1000000 then
         return "yellow"
@@ -38,6 +24,21 @@ local function getColorForValue(value)
     else
         return "white"
     end
+end
+
+local function clipfunction(value)
+    if value >= 1000000 then
+        return "128 0 32 32"
+    elseif value >= 100000 then
+        return "96 0 32 32"
+    elseif value >= 10000 then
+        return "64 0 32 32"
+    elseif value >= 1000 then
+        return "32 0 32 32"
+    elseif value >= 50 then
+        return "0 0 32 32"
+    end
+    return ""
 end
 
 function ItemsDatabase.getClipAndImagePath(item)
@@ -61,21 +62,18 @@ function ItemsDatabase.getClipAndImagePath(item)
     end
 
     if item then
-        -- Per-instance rarity is the ONLY source. The upstream price-based
-        -- path is deliberately not used as a fallback: getMeanPrice reads
-        -- 12.x appearances.dat NPC prices, which don't exist in this
-        -- client's 8.6 assets, so the only values it could ever return are
-        -- three hardcoded coin prices -- which framed platinum and crystal
-        -- coins regardless of any real rarity. An item with rarity 0 (or a
-        -- bare ThingType, which has no instance data) gets no frame.
-        local rarity = item.getRarity and item:getRarity() or 0
-        clip = rarityClips[rarity]
-
-        if clip then
-            if frameOption == "frames" then
-                imagePath = "/images/ui/rarity_frames"
-            elseif frameOption == "corners" then
-                imagePath = "/images/ui/containerslot-coloredges"
+        local price = type(item) == "number" and item or (item and item:getMeanPrice()) or 0
+        local itemRarity = getColorForValue(price)
+        if itemRarity then
+            clip = clipfunction(price)
+            if clip ~= "" then
+                if frameOption == "frames" then
+                    imagePath = "/images/ui/rarity_frames"
+                elseif frameOption == "corners" then
+                    imagePath = "/images/ui/containerslot-coloredges"
+                end
+            else
+                clip = nil
             end
         end
     end

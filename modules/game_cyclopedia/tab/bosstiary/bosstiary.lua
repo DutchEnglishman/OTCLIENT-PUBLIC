@@ -23,7 +23,6 @@ function showBosstiary()
     -- UI.StarBase.Info3:setTooltipAlign(AlignTopLeft)
     controllerCyclopedia.ui.CharmsBase:setVisible(false)
     controllerCyclopedia.ui.GoldBase:setVisible(false)
-    controllerCyclopedia.ui.TaskPointsBase:setVisible(false)
     controllerCyclopedia.ui.BestiaryTrackerButton:setVisible(false)
     if g_game.getClientVersion() >= 1410 then
         controllerCyclopedia.ui.CharmsBase1410:setVisible(false)
@@ -346,7 +345,7 @@ function Cyclopedia.CreateBosstiaryCreature(data)
 
     local widget = g_ui.createWidget("BosstiaryItem", UI.ListBase.BossList)
     widget:setId(data.raceId)
-    local raceData = Cyclopedia.getRaceData(data.raceId)
+    local raceData = g_things.getRaceData(data.raceId)
     local icons = {
         [CATEGORY.BANE] = "/game_cyclopedia/images/boss/icon_bane",
         [CATEGORY.ARCHFOE] = "/game_cyclopedia/images/boss/icon_archfoe",
@@ -458,7 +457,7 @@ function Cyclopedia.LoadBosstiaryCreatures(data)
     local validCreatures = {}
 
     for i, dataEntry in ipairs(data) do
-        local raceData = Cyclopedia.getRaceData(dataEntry.raceId)
+        local raceData = g_things.getRaceData(dataEntry.raceId)
         local creature = {
             visible = true,
             raceId = dataEntry.raceId,

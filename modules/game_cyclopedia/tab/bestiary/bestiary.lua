@@ -124,30 +124,18 @@ function showBestiary()
     UI = g_ui.loadUI("bestiary", contentContainer)
     UI:show()
 
-    -- No tier categories (Very Low/Low/Mid/High/Very High/Boss) -- just a
-    -- flat, paginated list of every monster, reusing the same "search"
-    -- request/render path BestiarySearch() already uses (STAGES.SEARCH),
-    -- with an empty raceId list meaning "all of them" (see OTSERV's
-    -- ProtocolGame::parseBestiaryRequestOverview). CategoryList/CATEGORY
-    -- stage are never entered anymore -- left in place (dead) rather than
-    -- ripped out, since Cyclopedia.changeBestiaryPage/onStageChange/etc.
-    -- still branch on Stage and this keeps that branching intact.
-    UI.ListBase.CategoryList:setVisible(false)
+    UI.ListBase.CategoryList:setVisible(true)
     UI.ListBase.CreatureList:setVisible(false)
     UI.ListBase.CreatureInfo:setVisible(false)
 
-    Cyclopedia.Bestiary.Stage = STAGES.SEARCH
-    -- Charms are cut from this server entirely (no charm-points economy
-    -- exists) -- the window's shared charm-balance header stays hidden here
-    -- the same way the Charms tab itself is.
-    controllerCyclopedia.ui.CharmsBase:setVisible(false)
+    Cyclopedia.Bestiary.Stage = STAGES.CATEGORY
+    controllerCyclopedia.ui.CharmsBase:setVisible(true)
     controllerCyclopedia.ui.GoldBase:setVisible(true)
-    controllerCyclopedia.ui.TaskPointsBase:setVisible(true)
     controllerCyclopedia.ui.BestiaryTrackerButton:setVisible(true)
     if g_game.getClientVersion() >= 1410 then
         controllerCyclopedia.ui.CharmsBase1410:hide()
     end
-
+    
     Cyclopedia.initializeTrackerData()
     Cyclopedia.ensureStoredRaceIDsPopulated()
 
@@ -159,7 +147,7 @@ function showBestiary()
     end, UI.SearchEdit)
 
     Cyclopedia.Bestiary.Page = 1
-    g_game.requestBestiaryOverview("Result", true, {})
+    g_game.requestBestiary()
 end
 
 Cyclopedia.Bestiary = {}
@@ -310,25 +298,16 @@ function Cyclopedia.loadBestiarySelectedCreature(data)
         4
     }
 
-    local raceData = Cyclopedia.getRaceData(data.id)
+    local raceData = g_things.getRaceData(data.id)
+    local formattedName = raceData.name:gsub("(%l)(%w*)", function(first, rest)
+        return first:upper() .. rest
+    end)
 
-    -- Same "seen it at least once" gate as the tile grid: name and sprite
-    -- both stay hidden until the first real kill (data.killCounter is the
-    -- real, always-sent count -- see sendBestiaryMonsterData).
-    local seenOnce = data.killCounter >= 1
-
-    UI.ListBase.CreatureInfo:setText(seenOnce and raceData.name or "Unknown")
+    UI.ListBase.CreatureInfo:setText(formattedName)
     Cyclopedia.SetBestiaryDiamonds(occurence[data.ocorrence])
     Cyclopedia.SetBestiaryStars(data.difficulty)
     UI.ListBase.CreatureInfo.LeftBase.Sprite:setOutfit(raceData.outfit)
-    -- 0 cancels the walk-animation cycle event and resets to the idle frame
-    -- (Creature::setStaticWalking) -- the sprite stands still.
-    UI.ListBase.CreatureInfo.LeftBase.Sprite:getCreature():setStaticWalking(0)
-    if seenOnce then
-        UI.ListBase.CreatureInfo.LeftBase.Sprite:getCreature():setShader("")
-    else
-        UI.ListBase.CreatureInfo.LeftBase.Sprite:getCreature():setShader("Outfit - cyclopedia-black")
-    end
+    UI.ListBase.CreatureInfo.LeftBase.Sprite:getCreature():setStaticWalking(1000)
 
     Cyclopedia.SetBestiaryProgress(60, UI.ListBase.CreatureInfo.ProgressBack, UI.ListBase.CreatureInfo.ProgressBack33,
         UI.ListBase.CreatureInfo.ProgressBack55, data.killCounter, data.thirdDifficulty, data.secondUnlock,
@@ -372,67 +351,20 @@ function Cyclopedia.loadBestiarySelectedCreature(data)
         setBestiaryTrackCheck(UI.ListBase.CreatureInfo.LeftBase.TrackCheck, false)
     end
 
-    -- data.currentLevel is now just a wire-parse gate on OTSERV (always 2,
-    -- see the comment on ProtocolGame::sendBestiaryMonsterData) -- it no
-    -- longer reflects real progress. Two separate kill-count gates, both
-    -- checked against data.killCounter (always sent, real):
-    --   Name/sprite/HP/EXP -- unlock on the very first kill.
-    --   Speed/Armor/Mitigation -- unlock at the tier's first kill-count
-    --     stage in OTSERV's data/bestiary/task_system_config.lua (200 for
-    --     every non-boss tier, 3 for Boss). That threshold isn't carried on
-    --     the wire, so it's hardcoded against the tier name
-    --     (data.bestClass), which is.
-    -- "- Task -" panel: only ever the stage currently being worked on, one
-    -- value at a time. Stage thresholds are INCREMENTAL (200, then 500 more,
-    -- ...) and pushed per tier by the server (Cyclopedia.getTierStages), so
-    -- Remaining counts down within the current stage and Total flips to the
-    -- next stage's size once this one is cleared -- mirroring
-    -- TaskSystem.getTaskProgress.
-    local stages = Cyclopedia.getTierStages(data.bestClass)
-    local currentGoal, currentRemaining, currentStage
-    local previousBoundary = 0
-    for stageIndex, amount in ipairs(stages) do
-        local boundary = previousBoundary + amount
-        if data.killCounter < boundary then
-            currentStage = stageIndex
-            currentGoal = amount
-            currentRemaining = boundary - data.killCounter
-            break
-        end
-        previousBoundary = boundary
-    end
-
-    if currentGoal then
-        UI.ListBase.CreatureInfo.TaskTitle:setText(string.format("- Task %d/%d -", currentStage, #stages))
-        UI.ListBase.CreatureInfo.TaskTotal:setText("Total: " .. currentGoal)
-        UI.ListBase.CreatureInfo.TaskRemaining:setText("Remaining: " .. currentRemaining)
-    else
-        UI.ListBase.CreatureInfo.TaskTitle:setText(string.format("- Task %d/%d -", #stages, #stages))
-        UI.ListBase.CreatureInfo.TaskTotal:setText("Total: -")
-        UI.ListBase.CreatureInfo.TaskRemaining:setText("All stages complete")
-    end
-
-    local UNLOCK_KILLS = stages[1] or 200
-    local statsUnlocked = data.killCounter >= UNLOCK_KILLS
-
-    if seenOnce then
+    if data.currentLevel > 1 then
         UI.ListBase.CreatureInfo.Value1:setText(data.maxHealth)
         UI.ListBase.CreatureInfo.Value2:setText(data.experience)
-    else
-        UI.ListBase.CreatureInfo.Value1:setText("?")
-        UI.ListBase.CreatureInfo.Value2:setText("?")
-    end
-
-    if statsUnlocked then
         UI.ListBase.CreatureInfo.Value3:setText(data.speed)
         UI.ListBase.CreatureInfo.Value4:setText(data.armor)
         UI.ListBase.CreatureInfo.Value5:setText(data.mitigation .. "%")
-        UI.ListBase.CreatureInfo.UnlockHint:setText("")
+        UI.ListBase.CreatureInfo.BonusValue:setText(data.charmValue)
     else
+        UI.ListBase.CreatureInfo.Value1:setText("?")
+        UI.ListBase.CreatureInfo.Value2:setText("?")
         UI.ListBase.CreatureInfo.Value3:setText("?")
         UI.ListBase.CreatureInfo.Value4:setText("?")
         UI.ListBase.CreatureInfo.Value5:setText("?")
-        UI.ListBase.CreatureInfo.UnlockHint:setText(string.format("%d kills to unlock", UNLOCK_KILLS - data.killCounter))
+        UI.ListBase.CreatureInfo.BonusValue:setText("?")
     end
 
     if data.attackMode == 1 then
@@ -493,8 +425,7 @@ function Cyclopedia.loadBestiarySelectedCreature(data)
     end
 
     Cyclopedia.CreateCreatureItems(lootData)
-    -- The "Location(s)" panel was removed from bestiary.otui -- data.location
-    -- is still parsed off the wire, it just has nowhere to render.
+    UI.ListBase.CreatureInfo.LocationField.Textlist.Text:setText(data.location)
 
     if data.AnimusMasteryPoints and data.AnimusMasteryPoints > 1 then
         UI.ListBase.CreatureInfo.AnimusMastery:setTooltip("The Animus Mastery for this creature is unlocked.\nIt yields "..(data.AnimusMasteryBonus / 10).."% bonus experience points, plus an additional 0.1% for every 10 Animus Masteries unlocked, up to a maximum of 4%.\nYou currently benefit from "..(data.AnimusMasteryBonus / 10).."% bonus experience points due to having unlocked ".. data.AnimusMasteryPoints .." Animus Masteries.")
@@ -641,30 +572,14 @@ end
 -- looks identical to category view
 function Cyclopedia.BestiarySearch()
     local text = UI.SearchEdit:getText()
-    local raceList = Cyclopedia.getRacesByName(text)
+    local raceList = g_things.getRacesByName(text)
     local list = {}
     for _, race in pairs(raceList) do
-        -- Undiscovered monsters (0 kills) are excluded: their name isn't
-        -- shown anywhere yet, so letting a name search surface them would
-        -- leak exactly what the "Unknown" label and blacked-out sprite are
-        -- hiding.
-        if Cyclopedia.getKillCount(race.raceId) >= 1 then
-            list[#list + 1] = race.raceId
-        end
-    end
-
-    UI.SearchEdit:setText("")
-
-    -- An empty raceId list means "send everything" to the server (see
-    -- OTSERV's ProtocolGame::parseBestiaryRequestOverview), so a search that
-    -- filtered down to nothing must NOT be sent -- it would show the full
-    -- list instead of no results. Render an empty result set locally.
-    if #list == 0 then
-        Cyclopedia.loadBestiarySearchCreatures({})
-        return
+        list[#list + 1] = race.raceId
     end
 
     g_game.requestBestiaryOverview("Result", true, list)
+    UI.SearchEdit:setText("")
 end
 
 function Cyclopedia.BestiarySearchText(text)
@@ -676,7 +591,7 @@ function Cyclopedia.BestiarySearchText(text)
 end
 
 function Cyclopedia.CreateBestiaryCreaturesItem(data)
-    local raceData = Cyclopedia.getRaceData(data.id)
+    local raceData = g_things.getRaceData(data.id)
 
     local function verify(name)
         if #name > 18 then
@@ -689,16 +604,13 @@ function Cyclopedia.CreateBestiaryCreaturesItem(data)
     local widget = g_ui.createWidget("BestiaryCreature", UI.ListBase.CreatureList)
     widget:setId(data.id)
 
-    -- Name and sprite both stay hidden until the first real kill.
-    -- Cyclopedia.getKillCount reads the literal kill count pushed over its
-    -- own side channel (see the comment on OTSERV's
-    -- ProtocolGame::sendBestiaryOverviewSearch), not the stage-based
-    -- currentLevel used for the "X / 3" label below.
-    local seenOnce = Cyclopedia.getKillCount(data.id) >= 1
+    local formattedName = raceData.name:gsub("(%l)(%w*)", function(first, rest)
+        return first:upper() .. rest
+    end)
 
-    widget.Name:setText(seenOnce and verify(raceData.name) or "Unknown")
+    widget.Name:setText(verify(formattedName))
     widget.Sprite:setOutfit(raceData.outfit)
-    widget.Sprite:getCreature():setStaticWalking(0)
+    widget.Sprite:getCreature():setStaticWalking(1000)
 
     if data.AnimusMasteryBonus > 0 then
         widget.AnimusMastery:setTooltip("The Animus Mastery for this creature is unlocked.\nIt yields ".. data.AnimusMasteryBonus.. "% bonus experience points, plus an additional 0.1% for every 10 Animus Masteries unlocked, up to a maximum of 4%.\nYou currently benefit from ".. data.AnimusMasteryBonus.. "% bonus experience points due to having unlocked ".. animusMasteryPoints.." Animus Masteries.")
@@ -708,25 +620,29 @@ function Cyclopedia.CreateBestiaryCreaturesItem(data)
         widget.AnimusMastery:setVisible(false)
     end
 
-    -- Every tile stays clickable regardless of kill count (the detail
-    -- screen does its own per-field gating). "%d / 3" would go negative at
-    -- 0 kills -- clamp instead of the old "?" placeholder.
     if data.currentLevel >= 4 then
         widget.Finalized:setVisible(true)
         widget.KillsLabel:setVisible(false)
+        widget.Sprite:getCreature():setShader("")
     else
         widget.Finalized:setVisible(false)
         widget.KillsLabel:setVisible(true)
-        widget.KillsLabel:setText(string.format("%d / 3", math.max(0, data.currentLevel - 1)))
-    end
-
-    if seenOnce then
-        widget.Sprite:getCreature():setShader("")
-    else
-        widget.Sprite:getCreature():setShader("Outfit - cyclopedia-black")
+        if data.currentLevel < 1 then
+            widget.KillsLabel:setText("?")
+            widget.Sprite:getCreature():setShader("Outfit - cyclopedia-black")
+            widget.Name:setText("Unknown")
+            widget.AnimusMastery:setVisible(false)
+        else
+            widget.KillsLabel:setText(string.format("%d / 3", data.currentLevel - 1))
+            widget.Sprite:getCreature():setShader("")
+        end
     end
 
     function widget.ClassBase:onClick()
+        if data.currentLevel < 1 then
+            return
+        end
+
         UI.BackPageButton:setEnabled(true)
         Cyclopedia.openBestiaryCreatureDetail(widget:getId(), Cyclopedia.Bestiary.Stage)
     end
@@ -820,16 +736,15 @@ function Cyclopedia.onStageChange()
     end
 
     if Cyclopedia.Bestiary.Stage == STAGES.SEARCH then
-        -- SEARCH is the top-level "all monsters" screen now (see
-        -- showBestiary()) -- there's no CATEGORY screen above it to go back
-        -- to, so the back button stays disabled here. It's re-enabled by
-        -- the CREATURE branch below when viewing an individual monster's
-        -- detail, and that back button already returns correctly to SEARCH
-        -- via Cyclopedia.Bestiary.DetailBackStage.
-        UI.BackPageButton:setEnabled(false)
+        UI.BackPageButton:setEnabled(true)
         UI.ListBase.CategoryList:setVisible(false)
         UI.ListBase.CreatureList:setVisible(true)
         UI.ListBase.CreatureInfo:setVisible(false)
+
+        function UI.BackPageButton.onClick()
+            Cyclopedia.Bestiary.Stage = STAGES.CATEGORY
+            Cyclopedia.onStageChange()
+        end
     end
 
     if Cyclopedia.Bestiary.Stage == STAGES.CREATURE then
@@ -917,63 +832,18 @@ end
 ===================================================
 ]]
 
--- Renders the last few monsters the player killed, most recent first, with
--- progress through the CURRENT task stage ("50 / 500"). This replaces real
--- Tibia's manually-pinned tracker: the list is pushed by the server on every
--- kill (see TaskSystem.sendRecentKills), so it updates live rather than
--- needing a request. The old pin/unpin plumbing (storedTrackerData,
--- sendStatusTrackerBestiary) is left in place but no longer feeds this panel.
 function Cyclopedia.refreshBestiaryTracker()
     local char = g_game.getCharacterName()
     if not char or #char == 0 then
         return
     end
 
-    if not trackerMiniWindow or not trackerMiniWindow.contentsPanel then
-        return
+    Cyclopedia.initializeTrackerData()
+
+    if trackerMiniWindow and trackerMiniWindow.contentsPanel then
+        Cyclopedia.onParseCyclopediaTracker(0, Cyclopedia.storedTrackerData)
     end
-
-    local panel = trackerMiniWindow.contentsPanel
-    panel:destroyChildren()
-
-    for _, entry in ipairs(Cyclopedia.getRecentKills()) do
-        local raceId, race = Cyclopedia.findRaceByName(entry.name)
-
-        local widget = g_ui.createWidget("TrackerButton", panel)
-        widget:setId(raceId or 0)
-        widget.trackerType = 0
-
-        if race then
-            widget.creature:setOutfit(race.outfit)
-            widget.creature:getCreature():setStaticWalking(0)
-        end
-
-        local killsText = string.format("%d / %d", entry.current, entry.goal)
-        widget.kills:setText(killsText)
-        widget.label:setTextOverflowLength(math.max(11, 18 - string.len(killsText)))
-        widget.label:setText(race and race.name or entry.name)
-
-        -- One bar for the stage in progress -- the three-segment layout the
-        -- widget ships with maps to real Tibia's 3 thresholds, which doesn't
-        -- line up with this server's 4 incremental stages.
-        widget.ProgressBorder1:setVisible(false)
-        widget.ProgressBorder2:setVisible(false)
-        widget.ProgressBorder3:setVisible(false)
-        widget.killsBar2:setVisible(false)
-        widget.ProgressBack33:setVisible(false)
-        widget.ProgressBack55:setVisible(false)
-
-        local percent = entry.goal > 0 and math.min(100, math.floor(entry.current / entry.goal * 100)) or 0
-        widget.killsBar:setVisible(true)
-        Cyclopedia.setBarPercent(widget, percent)
-
-        if raceId then
-            bindTrackerWidgetClicks(widget.creature, widget)
-            bindTrackerWidgetClicks(widget.spacer, widget)
-            bindTrackerWidgetClicks(widget.label, widget)
-            bindTrackerWidgetClicks(widget.kills, widget)
-        end
-    end
+    g_game.requestBestiary()
 end
 
 function Cyclopedia.refreshBosstiaryTracker()
@@ -1062,14 +932,9 @@ function Cyclopedia.toggleBosstiaryTracker()
         return
     end
 
-    -- The topbar button was removed, so fall back to the window's own
-    -- visibility when it isn't there (see game_cyclopedia.lua).
-    if trackerButtonBosstiary and trackerButtonBosstiary:isOn() or
-        (not trackerButtonBosstiary and trackerMiniWindowBosstiary:isVisible()) then
+    if trackerButtonBosstiary:isOn() then
         trackerMiniWindowBosstiary:close()
-        if trackerButtonBosstiary then
-            trackerButtonBosstiary:setOn(false)
-        end
+        trackerButtonBosstiary:setOn(false)
     else
         if not trackerMiniWindowBosstiary:getParent() then
             local panel = modules.game_interface.findContentPanelAvailable(trackerMiniWindowBosstiary,
@@ -1111,20 +976,6 @@ function Cyclopedia.onParseCyclopediaTracker(trackerType, data)
     end
 
     local isBoss = trackerType == 1
-
-    -- The bestiary tracker panel is driven entirely by the server's
-    -- recent-kill feed now (Cyclopedia.refreshBestiaryTracker) -- let the
-    -- native pin-a-monster path keep its bookkeeping below, but never let it
-    -- render over that panel. The bosstiary tracker still uses it normally.
-    if not isBoss then
-        Cyclopedia.storedTrackerData = data
-        storedRaceIDs = {}
-        for _, entry in ipairs(data) do
-            addStoredRaceId(entry[1])
-        end
-        return
-    end
-
     local window = isBoss and trackerMiniWindowBosstiary or trackerMiniWindow
 
     if isBoss and Cyclopedia.mergeBosstiaryTrackerOverrides and not Cyclopedia.BosstiaryTrackerLocalRender then
@@ -1162,7 +1013,7 @@ function Cyclopedia.onParseCyclopediaTracker(trackerType, data)
     for _, entry in ipairs(data) do
         local raceId, kills, uno, dos, maxKills = unpack(entry)
         
-        local raceData = Cyclopedia.getRaceData(raceId)
+        local raceData = g_things.getRaceData(raceId)
         local name = raceData.name
 
         local widget = g_ui.createWidget("TrackerButton", window.contentsPanel)
@@ -1330,8 +1181,8 @@ function Cyclopedia.sortTrackerData(data, trackerType)
     
     if filters.sortByName then
         table.sort(sortedData, function(a, b)
-            local nameA = Cyclopedia.getRaceData(a[1]).name:lower()
-            local nameB = Cyclopedia.getRaceData(b[1]).name:lower()
+            local nameA = g_things.getRaceData(a[1]).name:lower()
+            local nameB = g_things.getRaceData(b[1]).name:lower()
             if isDescending then
                 return nameA > nameB
             else
