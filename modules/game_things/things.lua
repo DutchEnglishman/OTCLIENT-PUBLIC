@@ -3,6 +3,7 @@ ThingsLoaderController = Controller:new()
 local filename = nil
 local loaded = false
 
+
 function setFileName(name)
     filename = name
 end
@@ -86,10 +87,10 @@ local function load(version)
 
     loaded = #errorList == 0
     if loaded then
-        -- loading client files was successful, try to load sounds now
-        -- sound files are optional, this means that failing to load them
-        -- will not block logging into game
-        g_sounds.loadClientFiles(resolvepath(string.format('/data/sounds/%d/', version)))
+        -- Sound files are deliberately not loaded: audio is disabled
+        -- entirely on this client (see client.lua's startup and the audio
+        -- options in client_options/data_options.lua). data/sounds/ holds no
+        -- per-version sound banks here anyway.
         return
     end
 

@@ -96,15 +96,8 @@ function TaskSystemUI.init()
         }
     })
 
-    -- Isolated in a pcall: an icon path or mainpanel API problem here
-    -- shouldn't take down the window/hotkey/opcode wiring above with it.
-    local ok, err = pcall(function()
-        TaskSystemUI.button = modules.game_mainpanel.addToggleButton('taskSystemButton', tr('Task System'),
-            '/images/game/cyclopedia/bestiary_off', TaskSystemUI.toggle, false, 8)
-    end)
-    if not ok then
-        print('[TaskSystem] Failed to add mainpanel button: ' .. tostring(err))
-    end
+    -- "Task System" topbar button removed by request -- the window itself
+    -- still works and is still reachable via its Ctrl+Shift+K keybind above.
 end
 
 function TaskSystemUI.terminate()

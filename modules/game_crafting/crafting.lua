@@ -36,15 +36,9 @@ function init()
     }
   })
 
-  -- Isolated in a pcall: an icon path or mainpanel API problem here
-  -- shouldn't take down the window/hotkey/opcode wiring above with it.
-  local ok, err = pcall(function()
-    craftingButton = modules.game_mainpanel.addToggleButton('craftingButton', tr('Crafting'),
-      '/images/options/store_large', toggleWindow, false, 9)
-  end)
-  if not ok then
-    print('[Crafting] Failed to add mainpanel button: ' .. tostring(err))
-  end
+  -- "Crafting" topbar button removed by request -- the window itself still
+  -- works and is still reachable via its Ctrl+Shift+C keybind above (and via
+  -- a crafting station once one is placed on the map).
 
   if g_game.isOnline() then
     create()
@@ -255,15 +249,28 @@ end
 
 function selectItem(id)
   local craftId = tonumber(id)
-  selectedCraftId = craftId
-
-  local craft = Crafts[selectedCategory][craftId]
+  local craft = Crafts[selectedCategory] and Crafts[selectedCategory][craftId]
 
   for i = 1, 6 do
     local materialWidget = craftPanel:getChildById("material" .. i)
     materialWidget:setItem(nil)
     craftPanel:getChildById("count" .. i):setText("")
   end
+
+  -- A category can legitimately have zero recipes configured yet (see
+  -- data/crafting/<profession>.lua on the server -- only armorsmith ships
+  -- with an example). onExtendedOpcode's "fetch" handler unconditionally
+  -- calls selectItem(1) for weaponsmith on login regardless of whether it
+  -- has any recipes, so this has to tolerate craft being nil rather than
+  -- crash -- leave the panel cleared/no-selection instead.
+  if not craft then
+    selectedCraftId = nil
+    craftPanel:getChildById("craftOutcome"):setItem(nil)
+    craftPanel:recursiveGetChildById("totalCost"):setText("")
+    return
+  end
+
+  selectedCraftId = craftId
 
   for i = 1, #craft.materials do
     local material = craft.materials[i]

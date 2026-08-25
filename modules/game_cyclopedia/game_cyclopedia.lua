@@ -22,6 +22,203 @@ local tabStack = {}
 local previousType = nil
 local windowTypes = {}
 local magicalArchives = nil
+
+-- Bridges the Bestiary/Bosstiary/Boss Slots tabs to real per-monster data on
+-- this 860-locked client. The real wire protocol only ever sends numeric
+-- raceIds + progress, never a monster's name/outfit -- real Tibia assumes
+-- both sides share a client asset catalog (appearances.dat) for that.
+-- OTCLIENT only loads that catalog for client version >= 1281
+-- (modules/game_things/things.lua:47), so g_things.getRaceData/getRacesByName
+-- are permanently empty here. The server pushes the missing raceId ->
+-- name/outfit table once per connection over this extended opcode (see
+-- ProtocolGame::sendBestiaryRaceCache in OTSERV's protocolgame.cpp); every
+-- tab.lua file was patched to call Cyclopedia.getRaceData/getRacesByName
+-- instead of the g_things ones directly.
+local RACE_CACHE_OPCODE = 55
+local raceCache = {}
+
+-- Companion channel to RACE_CACHE_OPCODE: the real Bestiary overview packet
+-- (0xD6) only carries stage-based progress (0-4), not the literal kill
+-- count the "seen it at least once" tile shader needs -- see the comment on
+-- OTSERV's ProtocolGame::sendBestiaryOverviewSearch. Sent fresh every time
+-- the overview is requested (not a one-time push like the race cache),
+-- since kill counts change during a session.
+local KILL_COUNT_OPCODE = 56
+local killCountCache = {}
+
+-- Task points balance for the header panel, pushed alongside the overview
+-- (see the comment on OTSERV's ProtocolGame::sendBestiaryOverviewSearch).
+local TASK_POINTS_OPCODE = 57
+
+-- Per-tier stage thresholds (incremental: 200, then 500 more, ...) and the
+-- bestiary tracker's "last monsters you killed" list. Both pushed from
+-- OTSERV's data/bestiary/task_system_core.lua -- see TIER_STAGES_OPCODE and
+-- TRACKER_OPCODE there.
+local TIER_STAGES_OPCODE = 58
+local TRACKER_OPCODE = 59
+local tierStages = {}
+local recentKills = {}
+
+-- Keyed by the tier's display name, which is what the native monster-data
+-- packet carries as bestClass. Falls back to the regular-monster values if
+-- the push hasn't arrived yet.
+function Cyclopedia.getTierStages(bestClass)
+    return tierStages[bestClass] or {200, 500, 1000, 2000}
+end
+
+function Cyclopedia.getRecentKills()
+    return recentKills
+end
+
+-- Exact (case-insensitive) name lookup against the race cache. The recent-kill
+-- feed is keyed by monster name rather than raceId -- the server side of it
+-- lives in Lua (task_system_core.lua), which has no access to the C++ race
+-- id table -- so the outfit has to be resolved back here.
+function Cyclopedia.findRaceByName(name)
+    if not name then
+        return nil
+    end
+
+    name = name:lower()
+    for raceId, race in pairs(raceCache) do
+        if race.name:lower() == name then
+            return raceId, race
+        end
+    end
+    return nil
+end
+
+function Cyclopedia.getKillCount(raceId)
+    raceId = tonumber(raceId)
+    return (raceId and killCountCache[raceId]) or 0
+end
+
+-- Proper title case, applied once here so every consumer can use
+-- raceData.name as-is. The tab scripts used to re-capitalize on top of this
+-- with a "(%l)(%w*)" gsub, which matched from the SECOND letter of an
+-- already-capitalized word and produced "CAve Rat" -- they now just read
+-- the name straight.
+local function capitalizeRaceName(name)
+    return (name:gsub("(%a)([%w']*)", function(first, rest)
+        return first:upper() .. rest:lower()
+    end))
+end
+
+function Cyclopedia.getRaceData(raceId)
+    raceId = tonumber(raceId)
+    local cached = raceId and raceCache[raceId]
+    if cached then
+        return cached
+    end
+    return g_things.getRaceData(raceId)
+end
+
+function Cyclopedia.getRacesByName(text)
+    text = text:lower()
+    local result = {}
+    for raceId, race in pairs(raceCache) do
+        if race.name:lower():find(text, 1, true) then
+            result[#result + 1] = {raceId = raceId}
+        end
+    end
+    return result
+end
+
+local function onBestiaryRaceCache(_protocol, opcode, buffer)
+    if opcode ~= RACE_CACHE_OPCODE then
+        return
+    end
+
+    for record in buffer:gmatch('[^;]+') do
+        local raceId, name, lookType, lookHead, lookBody, lookLegs, lookFeet, lookAddons =
+            record:match('^(%d+),([^,]*),(%d+),(%d+),(%d+),(%d+),(%d+),(%d+)$')
+        if raceId then
+            raceCache[tonumber(raceId)] = {
+                name = capitalizeRaceName(name),
+                outfit = {
+                    type = tonumber(lookType),
+                    head = tonumber(lookHead),
+                    body = tonumber(lookBody),
+                    legs = tonumber(lookLegs),
+                    feet = tonumber(lookFeet),
+                    addons = tonumber(lookAddons)
+                }
+            }
+        end
+    end
+end
+
+local function onBestiaryKillCounts(_protocol, opcode, buffer)
+    if opcode ~= KILL_COUNT_OPCODE then
+        return
+    end
+
+    for record in buffer:gmatch('[^;]+') do
+        local raceId, killCount = record:match('^(%d+),(%d+)$')
+        if raceId then
+            killCountCache[tonumber(raceId)] = tonumber(killCount)
+        end
+    end
+end
+
+local function onTierStages(_protocol, opcode, buffer)
+    if opcode ~= TIER_STAGES_OPCODE then
+        return
+    end
+
+    tierStages = {}
+    for record in buffer:gmatch('[^;]+') do
+        local parts = {}
+        for field in record:gmatch('[^,]+') do
+            parts[#parts + 1] = field
+        end
+
+        local displayName = table.remove(parts, 1)
+        if displayName and #parts > 0 then
+            local stages = {}
+            for _, value in ipairs(parts) do
+                stages[#stages + 1] = tonumber(value)
+            end
+            tierStages[displayName] = stages
+        end
+    end
+end
+
+local function onRecentKills(_protocol, opcode, buffer)
+    if opcode ~= TRACKER_OPCODE then
+        return
+    end
+
+    recentKills = {}
+    for record in buffer:gmatch('[^;]+') do
+        local name, current, goal, stageIndex, totalStages =
+            record:match('^([^,]+),(%d+),(%d+),(%d+),(%d+)$')
+        if name then
+            recentKills[#recentKills + 1] = {
+                name = name,
+                current = tonumber(current),
+                goal = tonumber(goal),
+                stageIndex = tonumber(stageIndex),
+                totalStages = tonumber(totalStages)
+            }
+        end
+    end
+
+    if Cyclopedia.refreshBestiaryTracker then
+        Cyclopedia.refreshBestiaryTracker()
+    end
+end
+
+local function onTaskPoints(_protocol, opcode, buffer)
+    if opcode ~= TASK_POINTS_OPCODE then
+        return
+    end
+
+    if controllerCyclopedia and controllerCyclopedia.ui and controllerCyclopedia.ui.TaskPointsBase then
+        controllerCyclopedia.ui.TaskPointsBase.Value:setText(buffer)
+    end
+end
+
 function toggle(defaultWindow)
     if not controllerCyclopedia.ui then
         return
@@ -44,45 +241,86 @@ function controllerCyclopedia:onInit()
             end
         end
     })
+
+    ProtocolGame.registerExtendedOpcode(RACE_CACHE_OPCODE, onBestiaryRaceCache)
+    ProtocolGame.registerExtendedOpcode(KILL_COUNT_OPCODE, onBestiaryKillCounts)
+    ProtocolGame.registerExtendedOpcode(TASK_POINTS_OPCODE, onTaskPoints)
+    ProtocolGame.registerExtendedOpcode(TIER_STAGES_OPCODE, onTierStages)
+    ProtocolGame.registerExtendedOpcode(TRACKER_OPCODE, onRecentKills)
 end
 
 function controllerCyclopedia:onGameStart()
     local versionClient = g_game.getClientVersion()
-    if versionClient < 1310 then
+    if versionClient < 860 then
         controllerCyclopedia:scheduleEvent(function()
             g_modules.getModule("game_cyclopedia"):unload()
         end, 100, "unloadModule")
         return
     else
         CyclopediaButton = modules.game_mainpanel.addToggleButton('CyclopediaButton', tr('Cyclopedia'),
-            '/images/options/cooldowns', function() toggle("items") end, false, 7)
-        ButtonBossSlot = modules.game_mainpanel.addToggleButton("bossSlot", tr("Open Boss Slots dialog"),
-            "/images/options/ButtonBossSlot", function() toggle("bossSlot") end, false, 20)
+            '/images/options/cooldowns', function() toggle("map") end, false, 7)
         CyclopediaButton:setOn(false)
-        ButtonBestiary = modules.game_mainpanel.addToggleButton("bosstiary", tr("Open Bosstiary dialog"),
-            "/images/options/ButtonBosstiary", function() toggle("bosstiary") end, false, 17)
+        -- "Open Bosstiary dialog" topbar button removed by request. The tab
+        -- itself still exists and is reachable from the Cyclopedia window's
+        -- own sidebar -- only the topbar shortcut is gone.
 
         contentContainer = controllerCyclopedia.ui:recursiveGetChildById('contentContainer')
         buttonSelection = controllerCyclopedia.ui:recursiveGetChildById('buttonSelection')
         items = buttonSelection:recursiveGetChildById('items')
         bestiary = buttonSelection:recursiveGetChildById('bestiary')
-        charms = buttonSelection:recursiveGetChildById('charms')
         map = buttonSelection:recursiveGetChildById('map')
-        houses = buttonSelection:recursiveGetChildById('houses')
-        character = buttonSelection:recursiveGetChildById('character')
         bosstiary = buttonSelection:recursiveGetChildById('bosstiary')
         bossSlot = buttonSelection:recursiveGetChildById('bossSlot')
         magicalArchives = buttonSelection:recursiveGetChildById('magicalArchives')
 
+        -- Cut: Character, Charms, and Houses each need a whole server-side
+        -- subsystem this project doesn't have (character info opcode,
+        -- charm-points economy, house auctions) -- not fixable by bridging
+        -- client-side data the way Bestiary/Bosstiary/Boss Slots were.
+        -- Items and Boss Slot cut per explicit request. Destroyed, not
+        -- hidden: the sidebar row is a chain of anchors.left: prev.right
+        -- (game_cyclopedia.otui), resolved once at parse time to each
+        -- widget's literal predecessor. Hiding leaves the (invisible)
+        -- button still occupying its 34px slot in that chain, showing up
+        -- as a gap -- destroying it removes the slot, but leaves its
+        -- former successor's anchor dangling, so every survivor gets
+        -- explicitly re-anchored below into the final order: Bestiary,
+        -- Bosstiary, Magical Archives, Map (Map last, per request).
+        charms = buttonSelection:recursiveGetChildById('charms')
+        houses = buttonSelection:recursiveGetChildById('houses')
+        character = buttonSelection:recursiveGetChildById('character')
+        if charms then charms:destroy() end
+        if houses then houses:destroy() end
+        if character then character:destroy() end
+        if items then items:destroy() end
+        if bossSlot then bossSlot:destroy() end
+        bossSlot = nil
+
+        if bestiary then
+            bestiary:breakAnchors()
+            bestiary:addAnchor(AnchorTop, 'parent', AnchorTop)
+            bestiary:addAnchor(AnchorLeft, 'parent', AnchorLeft)
+        end
+        if bosstiary then
+            bosstiary:breakAnchors()
+            bosstiary:addAnchor(AnchorTop, 'bestiary', AnchorTop)
+            bosstiary:addAnchor(AnchorLeft, 'bestiary', AnchorRight)
+        end
+        if magicalArchives then
+            magicalArchives:breakAnchors()
+            magicalArchives:addAnchor(AnchorTop, 'bosstiary', AnchorTop)
+            magicalArchives:addAnchor(AnchorLeft, 'bosstiary', AnchorRight)
+        end
+        if map then
+            map:breakAnchors()
+            map:addAnchor(AnchorTop, 'magicalArchives', AnchorTop)
+            map:addAnchor(AnchorLeft, 'magicalArchives', AnchorRight)
+        end
+
         windowTypes = {
-            items = { obj = items, func = showItems },
             bestiary = { obj = bestiary, func = showBestiary },
-            charms = { obj = charms, func = showCharms },
             map = { obj = map, func = showMap },
-            houses = { obj = houses, func = showHouse },
-            character = { obj = character, func = showCharacter },
             bosstiary = { obj = bosstiary, func = showBosstiary },
-            bossSlot = { obj = bossSlot, func = showBossSlot },
             magicalArchives = { obj = magicalArchives, func = showMagicalArchives },
         }
 
@@ -193,13 +431,11 @@ function controllerCyclopedia:onGameStart()
     =               Tracker Bosstiary                     =
     =================================================== ]] --
 
-        -- Only create if it doesn't exist
-        if not trackerButtonBosstiary then
-            trackerButtonBosstiary = modules.game_mainpanel.addToggleButton("bosstiarytrackerButton",
-                tr("Bosstiary Tracker"), "/images/options/bosstiaryTracker", Cyclopedia.toggleBosstiaryTracker, false, 17)
-        end
-        
-        trackerButtonBosstiary:setOn(false)
+        -- "Bosstiary Tracker" topbar button removed by request. The tracker
+        -- miniwindow below is still built and still works (the keybind under
+        -- Windows > "Show/hide Bosstiary Tracker" still toggles it) -- only
+        -- the topbar shortcut is gone, so every trackerButtonBosstiary use
+        -- past this point is nil-guarded.
         
         -- Only create if it doesn't exist
         if not trackerMiniWindowBosstiary then
@@ -252,7 +488,9 @@ function controllerCyclopedia:onGameStart()
             end
 
             trackerMiniWindowBosstiary.onOpen = function()
-                trackerButtonBosstiary:setOn(true)
+                if trackerButtonBosstiary then
+                    trackerButtonBosstiary:setOn(true)
+                end
                 if not Cyclopedia.BosstiaryTrackerPending then
                     if trackerMiniWindowBosstiary.contentsPanel then
                         trackerMiniWindowBosstiary.contentsPanel:destroyChildren()
@@ -263,7 +501,9 @@ function controllerCyclopedia:onGameStart()
             end
 
             trackerMiniWindowBosstiary.onClose = function()
-                trackerButtonBosstiary:setOn(false)
+                if trackerButtonBosstiary then
+                    trackerButtonBosstiary:setOn(false)
+                end
             end
 
             trackerMiniWindowBosstiary:setup()
@@ -277,7 +517,7 @@ function controllerCyclopedia:onGameStart()
         if trackerMiniWindow:isVisible() then
             trackerButton:setOn(true)
         end
-        if trackerMiniWindowBosstiary:isVisible() then
+        if trackerMiniWindowBosstiary:isVisible() and trackerButtonBosstiary then
             trackerButtonBosstiary:setOn(true)
         end
         
@@ -318,6 +558,12 @@ function controllerCyclopedia:onGameEnd()
 end
 
 function controllerCyclopedia:onTerminate()
+    ProtocolGame.unregisterExtendedOpcode(RACE_CACHE_OPCODE)
+    ProtocolGame.unregisterExtendedOpcode(KILL_COUNT_OPCODE)
+    ProtocolGame.unregisterExtendedOpcode(TASK_POINTS_OPCODE)
+    ProtocolGame.unregisterExtendedOpcode(TIER_STAGES_OPCODE)
+    ProtocolGame.unregisterExtendedOpcode(TRACKER_OPCODE)
+
     if trackerButton then
         trackerButton:destroy()
         trackerButton = nil
@@ -446,7 +692,7 @@ function SelectWindow(type, isBackButtonPress)
         end
     end
     if CyclopediaButton then
-        CyclopediaButton:setOn(type == "items" or type == "charms" or type == "map" or type == "houses" or type == "character" or type == "magicalArchives")
+        CyclopediaButton:setOn(type == "map" or type == "magicalArchives")
     end
     if ButtonBossSlot then
         ButtonBossSlot:setOn(type == "bossSlot")
