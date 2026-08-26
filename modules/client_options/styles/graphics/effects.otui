@@ -7,31 +7,14 @@ UIWidget
     anchors.right: parent.right
     anchors.top: parent.top
 
-    height: 60
-  
+    // 22, not 60: the Ambient light and Floor Fading sliders that sat under
+    // this checkbox are gone. Both are pinned in data_options.lua -- ambient
+    // 0%, fading 500 ms -- and forced there on load in options.lua.
+    height: 22
+
     OptionCheckBox
       id: enableLights
       !text: tr('Enable lights')
-
-    OptionScaleScroll
-      id: ambientLight
-      anchors.top: prev.bottom
-      &minimumScrollValue: 0
-      &maximumScrollValue: 100
-      &scrollSize: 21
-      @onSetup: |
-        local value = modules.client_options.getOption('ambientLight')
-        self:setText(string.format('Ambient light: %s%%', value))
-
-    OptionScaleScroll
-      id: floorFading
-      anchors.top: prev.bottom
-      &minimumScrollValue: 0
-      &maximumScrollValue: 1000
-      &scrollSize: 21
-      @onSetup: |
-        local value = modules.client_options.getOption('floorFading')
-        self:setText(tr('Floor Fading: %s ms', value))
 
   SmallReversedQtPanel
     anchors.left: parent.left

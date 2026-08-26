@@ -1,0 +1,136 @@
+TrainerCheck < CheckBox
+  height: 16
+  text-align: left
+
+// focusable is set on BOTH the field and the window below. The base MiniWindow
+// style is focusable: false, which stops the focus chain before it can reach a
+// child -- with only this half, the fields render but swallow every keystroke.
+TrainerSpellEdit < TextEdit
+  height: 18
+  width: 104
+  focusable: true
+
+TrainerPercentEdit < TextEdit
+  height: 18
+  width: 32
+  text-align: center
+  focusable: true
+
+TrainerSuffix < Label
+  text-auto-resize: true
+  color: #9d9d9dff
+
+// Starts collapsed so the row above it sits flush before the first hint is
+// ever set; trainer.lua grows it to 12 only while a hint is showing.
+TrainerHint < Label
+  height: 0
+  font: verdana-11px-monochrome
+  color: #a06a3c
+  text-align: left
+  visible: false
+
+// MiniWindow, not MainWindow: this is the base the battle list and containers
+// use, and it is what gives docking into a side panel plus tear-out to float.
+// &save keeps the dock position and open state across sessions.
+MiniWindow
+  id: trainerWindow
+  height: 178
+  &save: true
+  // Overrides the base style's focusable: false. Without this the text fields
+  // can never receive keyboard focus, however they are configured themselves.
+  focusable: true
+  @onOpen: modules.game_trainer.onMiniWindowOpen()
+  @onClose: modules.game_trainer.onMiniWindowClose()
+
+  UIWidget
+    id: miniwindowIcon
+    anchors.top: miniwindowHeader.top
+    anchors.left: miniwindowHeader.left
+    margin-top: 2
+    margin-left: 4
+    size: 12 12
+    image-smooth: false
+
+  Label
+    id: miniwindowTitle
+    anchors.top: miniwindowHeader.top
+    anchors.left: miniwindowHeader.left
+    anchors.right: miniwindowHeader.right
+    margin-top: 2
+    margin-left: 20
+    margin-right: 50
+    font: verdana-11px-monochrome
+    height: 13
+    color: #9d9d9dff
+
+  MiniWindowContents
+    id: contentsPanel
+    padding: 6
+
+    TrainerCheck
+      id: autoEat
+      !text: tr('Auto eat food')
+      anchors.top: parent.top
+      anchors.left: parent.left
+      anchors.right: parent.right
+
+    TrainerHint
+      id: autoEatHint
+      anchors.top: autoEat.bottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      margin-top: 1
+
+    TrainerCheck
+      id: manaTraining
+      !text: tr('Mana training')
+      anchors.top: autoEatHint.bottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      margin-top: 6
+
+    TrainerSpellEdit
+      id: manaSpell
+      anchors.top: manaTraining.bottom
+      anchors.left: parent.left
+      margin-top: 3
+
+    TrainerPercentEdit
+      id: manaPercent
+      anchors.top: manaSpell.top
+      anchors.left: manaSpell.right
+      margin-left: 4
+
+    TrainerSuffix
+      id: manaSuffix
+      !text: '%'
+      anchors.left: manaPercent.right
+      anchors.verticalCenter: manaPercent.verticalCenter
+      margin-left: 3
+
+    TrainerCheck
+      id: runemaking
+      !text: tr('Runemaking')
+      anchors.top: manaSpell.bottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      margin-top: 8
+
+    TrainerSpellEdit
+      id: runeSpell
+      anchors.top: runemaking.bottom
+      anchors.left: parent.left
+      margin-top: 3
+
+    TrainerPercentEdit
+      id: runePercent
+      anchors.top: runeSpell.top
+      anchors.left: runeSpell.right
+      margin-left: 4
+
+    TrainerSuffix
+      id: runeSuffix
+      !text: '%'
+      anchors.left: runePercent.right
+      anchors.verticalCenter: runePercent.verticalCenter
+      margin-left: 3

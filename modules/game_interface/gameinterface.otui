@@ -1,7 +1,33 @@
 GameSidePanel < UIMiniWindowContainer
   image-source: /images/ui/2pixel_up_frame_borderimage
   image-border: 4
-  width: 176
+  // Sized so container windows fit 5 item columns instead of 4. The grid
+  // flows on available width (uigridlayout.cpp:75):
+  //     columns = (clipWidth + cellSpacing) / (cellSize + cellSpacing)
+  // and a docked miniwindow is stretched to this panel's width by the
+  // verticalBox layout (uiverticallayout.cpp:73), so this is the number that
+  // decides it -- MiniWindow's own width only applies when undocked.
+  //     clipWidth = width - 3 (contents margin-left) - 1 (margin-right)
+  //                       - 4 (contentsPanel padding, 2 each side)
+  //               = width - 8
+  //
+  // No scrollbar term: containers.lua re-anchors contentsPanel to parent.right
+  // and retires the bar, so its 12px plus a 3px margin are no longer held back.
+  // Measured on a real backpack, reserving them left 19px after the last slot
+  // against 5px before the first, and 15px of that drew nothing at all.
+  //
+  // Picked against the row, not as a minimum: with cell-spacing 1 a row of five
+  // is 5*34 + 4*1 = 174 wide, and 184 - 8 = 176. The grid packs from the left,
+  // so the 2px surplus lands on the right, which with the 2px padding and 1px
+  // margin makes both sides 5px:
+  //     left  = 3 margin + 2 padding             = 5
+  //     right = 2 surplus + 2 padding + 1 margin = 5
+  // 182 sits flush, 183 gives 4 on the right, 185 gives 6.
+  //
+  // 184, not 215: container.otui's padding went 6 -> 2, its cell-spacing
+  // 3 -> 1, and the scrollbar reservation is gone. Change any of those and this
+  // width has to move with them, or the fifth column drops.
+  width: 184
   layout:
     type: verticalBox
     //spacing: 1
@@ -56,8 +82,11 @@ UIWidget
     anchors.top: gameTopPanel.bottom
     anchors.bottom: bottomSplitter.top
     focusable: false
-    margin-top: 1
-    margin-bottom: 1
+    // 0, not 1: a 1px margin here is not spacing, it is a strip nothing paints,
+    // so the black behind the interface shows through as a hairline above and
+    // below the map -- most visible once the top bar is hidden.
+    margin-top: 0
+    margin-bottom: 0
 
     Button
       id: showTopMenuButton
@@ -227,7 +256,7 @@ UIWidget
     anchors.left: prev.right
     anchors.top: parent.top
     anchors.bottom: parent.bottom
-    margin-left: 1
+    margin-left: 0
     focusable: false
     visible: true
     on: true
@@ -248,7 +277,7 @@ UIWidget
     anchors.right: prev.left
     anchors.top: parent.top
     anchors.bottom: parent.bottom
-    margin-right: 1
+    margin-right: 0
     focusable: false
     visible: true
     on: true
@@ -319,8 +348,8 @@ UIWidget
     anchors.left: gameLeftExtraPanel.right
     anchors.right: gameRightExtraPanel.left
     anchors.top: bottomSplitter.bottom
-    margin-left: 1
-    margin-right: 1
+    margin-left: 0
+    margin-right: 0
     focusable: false
 
   Button

@@ -1,0 +1,70 @@
+// Same MiniWindow base the trainer uses: docks into a side panel and tears out
+// to float. &save is what keeps UIMiniWindowContainer:fitAll from evicting this
+// window ahead of a save-less one; it does NOT restore anything on the next
+// session, because nothing calls widgetsWindow:setupOnStart() (widgets.lua
+// init() calls setup() only) so the settings it writes are never read back.
+// The close button is hidden in widgets.lua -- see init().
+MiniWindow
+  id: widgetsWindow
+  // Placeholder only. widgets.lua sizes the window to its icon rows on every
+  // sync, and disables the resize border so the player cannot fight that.
+  height: 48
+  &save: true
+  @onOpen: modules.game_widgets.onMiniWindowOpen()
+  @onClose: modules.game_widgets.onMiniWindowClose()
+
+  UIWidget
+    id: miniwindowIcon
+    anchors.top: miniwindowHeader.top
+    anchors.left: miniwindowHeader.left
+    margin-top: 2
+    margin-left: 4
+    size: 12 12
+    image-smooth: false
+
+  Label
+    id: miniwindowTitle
+    anchors.top: miniwindowHeader.top
+    anchors.left: miniwindowHeader.left
+    anchors.right: miniwindowHeader.right
+    margin-top: 2
+    margin-left: 20
+    margin-right: 50
+    font: verdana-11px-monochrome
+    height: 13
+    color: #9d9d9dff
+
+  // A plain Panel, not MiniWindowContents: that style is a ScrollablePanel
+  // bound to miniwindowScrollBar with always-show-vertical-scrollbar, so the
+  // bar sits there permanently. The window is sized to its rows, so there is
+  // never anything below the fold to scroll to. Anchors and margins are
+  // MiniWindowContents' own, minus the scrollbar -- the right edge goes to
+  // parent.right instead of miniwindowScrollBar.left, reclaiming that strip.
+  // The contentsPanel id has to stay: UIMiniWindow:minimize/maximize look it up.
+  Panel
+    id: contentsPanel
+    anchors.top: miniwindowHeader.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    margin-top: 2
+    margin-left: 3
+    margin-right: 3
+    margin-bottom: 3
+    padding: 4
+
+    // phantom so the grid itself is never hit-tested -- clicks land on the
+    // mirror buttons inside it, exactly as in the main panel's icon grid.
+    // Height is driven from widgets.lua, which is what the row count decides.
+    UIWidget
+      id: iconGrid
+      anchors.top: parent.top
+      anchors.left: parent.left
+      anchors.right: parent.right
+      height: 20
+      phantom: true
+      layout:
+        type: grid
+        cell-size: 20 20
+        cell-spacing: 2
+        flow: true

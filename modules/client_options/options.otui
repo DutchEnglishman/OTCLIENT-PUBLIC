@@ -16,21 +16,18 @@ SpecialConditionLabelSettings < UIWidget
     margin-left: 10
     color: #dfdfdf
 
-  CheckBox
-    id: showInHudCheckBox
-    size: 12 12
-    anchors.right: showInBarCheckBox.left
-    anchors.verticalCenter: parent.verticalCenter
-    margin-right: 80
-    image-source: /images/ui/checkbox
-    image-clip: 0 0 12 12
-
+  // showInHudCheckBox is gone: special conditions are bar-only now, so the row
+  // has one column. See statusiconbar.lua's defaultSettings for the flag that
+  // keeps them out of the HUD.
   CheckBox
     id: showInBarCheckBox
     size: 12 12
     anchors.right: parent.right
     anchors.verticalCenter: parent.verticalCenter
-    margin-right: 50
+    // 142, not 50: this takes over the slot showInHudCheckBox occupied, which
+    // was showInBarCheckBox.left - 80, i.e. parent.right - 50 - 12 - 80. The
+    // Show in Bar header in HUD.otui moved into the same slot.
+    margin-right: 142
     image-source: /images/ui/checkbox
     image-clip: 0 0 12 12
 

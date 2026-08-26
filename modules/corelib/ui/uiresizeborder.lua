@@ -32,11 +32,18 @@ function UIResizeBorder:onHoverChange(hovered)
     if hovered then
         local nativeCursor = modules.client_options and modules.client_options.getOption('nativeCursor')
         
-        -- Check isCursorChanged only when NOT using native cursor
-        if not nativeCursor and (g_mouse.isCursorChanged() or g_mouse.isPressed()) then
+        -- Applies in BOTH modes now. isCursorActive('target') means an action
+        -- (use-with, trade) has armed its crosshair, and a hover cursor must not
+        -- take it away. The check used to be skipped in native mode, which is
+        -- where it matters most: setSystemCursor / restoreMouseCursor overwrite
+        -- the window cursor instead of popping the stack, so the crosshair never
+        -- comes back. Not isCursorChanged: native mode parks a permanent 'window'
+        -- entry on the stack, so that is true at all times. isPressed stays
+        -- non-native-only, as before.
+        if g_mouse.isCursorActive('target') or (not nativeCursor and g_mouse.isPressed()) then
             return
         end
-        
+
         if self:getWidth() > self:getHeight() then
             self.vertical = true
             self.cursortype = 'vertical'

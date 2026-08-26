@@ -49,9 +49,18 @@ function UIButton:onHoverChange(hovered)
             end
         end
     elseif nativeCursor then
-        -- Native cursor mode - use hand pointer
+        -- Native cursor mode - use hand pointer.
+        --
+        -- Not while an action already owns the cursor. "Use with" and trade arm
+        -- a crosshair through g_mouse.pushCursor('target'); the animated branch
+        -- above can safely sit on top of that because it pushes and pops the
+        -- same stack, so the crosshair returns on hover-out. This branch cannot:
+        -- setSystemCursor / restoreMouseCursor overwrite the window cursor
+        -- outright, so leaving the button resets it to the default arrow while
+        -- g_mouse still believes 'target' is on the stack -- nothing ever puts
+        -- it back, and the item silently drops off the crosshair.
         if hovered then
-            if not self.cursorPushed then
+            if not self.cursorPushed and not g_mouse.isCursorActive('target') then
                 g_window.setSystemCursor('hand')
                 self.cursorPushed = true
             end

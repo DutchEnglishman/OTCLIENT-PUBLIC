@@ -147,6 +147,24 @@ local function inventoryEvent(player, slot, item, oldItem)
     slotPanel.item:setShowCharges(g_game.getFeature(GameThingCounter) and modules.client_options.getOption('showExpiryInInvetory'))
     ItemsDatabase.setTier(slotPanel.item, item)
 
+    -- Rarity frame on the equipment slot. Deliberately NOT via
+    -- ItemsDatabase.setRarityItem: that falls back to /images/ui/item when no
+    -- frame applies, which is right for container slots (their Item style
+    -- carries that image by default) but wrong here -- the inventory's item
+    -- widget is a bare UIItem with no image-source, kept transparent so the
+    -- slot's own background art and its empty-slot placeholder icon show
+    -- through. Painting that fallback over it hid both. So: draw a frame only
+    -- when the item actually has a rarity, and otherwise clear the image
+    -- back to nothing.
+    local rarityClip, rarityImage = ItemsDatabase.getClipAndImagePath(item)
+    if rarityClip and rarityImage and rarityImage ~= '/images/ui/item' then
+        slotPanel.item:setImageClip(rarityClip)
+        slotPanel.item:setImageSource(rarityImage)
+    else
+        slotPanel.item:setImageClip(nil)
+        slotPanel.item:setImageSource('')
+    end
+
     if slot == InventorySlotLeft then
         if item and modules.game_proficiency then
             g_game.sendWeaponProficiencyAction(WeaponProficiency.WEAPON_PROFICIENCY_ITEM_INFO, item:getId())
@@ -489,6 +507,18 @@ function changeInventorySize()
     if player and g_game.isOnline() then
         onFreeCapacityChange(player, player:getFreeCapacity())
         onSoulChange(player, player:getSoul())
+
+        -- inventoryEvent skips every slot update while shrunk (offPanel has
+        -- no equipment-slot widgets to write to), so anything that changed
+        -- during that time never reached onPanel and it still shows the old
+        -- sprites -- an item dragged away while shrunk looks like it's still
+        -- equipped until relog. Re-apply the real inventory on expand.
+        -- Only when expanding: reloadInventory resolves slot widgets before
+        -- inventoryEvent's own guard runs, so calling it while shrunk would
+        -- index the widgets offPanel doesn't have.
+        if not inventoryShrink then
+            reloadInventory()
+        end
     end
 end
 
@@ -516,8 +546,10 @@ function extendedView(extendedView)
             iconTopMenu = modules.client_topmenu.addTopRightToggleButton('inventory', tr('Show inventory'),
                 '/images/topbuttons/inventory', toggle)
             iconTopMenu:setOn(inventoryController.ui:isVisible())
-            inventoryController.ui:setBorderColor('black')
-            inventoryController.ui:setBorderWidth(2)
+            -- Was setBorderColor('black') + setBorderWidth(2): a 2px black
+            -- outline applied only in extended view. game_minimap and
+            -- game_healthinfo carried identical copies; all three removed.
+            inventoryController.ui:setBorderWidth(0)
         end
     else
         if iconTopMenu then

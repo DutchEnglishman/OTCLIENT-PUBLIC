@@ -46,17 +46,10 @@ local buttons = { {
         open = "graphicsEffectsPanel"
     } }
 }, {
-    text = "Sound",
-    icon = "/images/icons/icon_sound",
-    open = "soundPanel"
-    --[[     subCategories = {{
-        text = "Battle Sounds",
-        open = "Battle_Sounds"
-    }, {
-        text = "UI Sounds",
-        open = "UI_Sounds"
-    }} ]]
-}, {
+    -- "Sound" options category removed: audio is disabled entirely on this
+    -- client, so every control in it was a no-op. The soundPanel itself is
+    -- still loaded (data_options.lua's music-volume handler writes a label
+    -- into it), it just isn't reachable from the category list.
     text = "Misc.",
     icon = "/images/icons/icon_misc",
     open = "misc",
@@ -219,6 +212,25 @@ local function setup()
         setOption('shadowFloorIntensity', 100, true)
     end
 
+    -- Options whose slider has been removed from the UI. A value carried over
+    -- from a session that still had the slider would otherwise stick forever,
+    -- with nothing left to change it -- so each is forced back to its pinned
+    -- value on every load. For the four scales, a stored 1 is exactly 1x; see
+    -- the mapping in data_options.lua.
+    local pinnedOptions = {
+        hudScale = 1,
+        creatureInformationScale = 1,
+        staticTextScale = 1,
+        animatedTextScale = 1,
+        ambientLight = 0,
+        floorFading = 500
+    }
+    for key, pinned in pairs(pinnedOptions) do
+        if options[key] and options[key].value ~= pinned then
+            setOption(key, pinned, true)
+        end
+    end
+
     if options.showAnimatedCursor and options.showAnimatedCursor.value then
         setOption('showAnimatedCursor', false, true)
     end
@@ -301,9 +313,9 @@ function controller:onInit()
         g_settings.setDefault(k, obj.value)
     end
 
-    extraWidgets.audioButton = modules.client_topmenu.addTopRightToggleButton('audioButton', tr('Audio'),
-        '/images/topbuttons/button_mute_up', function() toggleOption('enableAudio') end)
-
+    -- Audio is disabled entirely on this client (see the audio option
+    -- handlers in data_options.lua) -- the mute toggle has nothing left to
+    -- toggle, so the button isn't created.
     extraWidgets.optionsButton = modules.client_topmenu.addTopRightToggleButton('optionsButton', tr('Options'),
         '/images/topbuttons/button_options', toggle)
 
@@ -380,13 +392,8 @@ function controller:onInit()
         }
     })
 
-    Keybind.new("Sound", "Mute/unmute", "", "")
-    Keybind.bind("Sound", "Mute/unmute", {
-        {
-            type = KEY_DOWN,
-            callback = function() toggleOption('enableAudio') end,
-        }
-    })
+    -- No Mute/unmute keybind: audio is disabled entirely on this client, so
+    -- there's nothing to toggle (see data_options.lua's audio options).
 end
 
 function controller:onTerminate()
@@ -397,14 +404,12 @@ function controller:onTerminate()
     disconnect(g_app, { onExit = onAppExit })
     
     extraWidgets.optionsButton:destroy()
-    extraWidgets.audioButton:destroy()
     panels = {}
     extraWidgets = {}
     buttons = {}
     Keybind.delete("UI", "Toggle Fullscreen")
     Keybind.delete("UI", "Show/hide Creature Names and Bars")
     Keybind.delete("UI", "Show/hide FPS / lag indicator")
-    Keybind.delete("Sound", "Mute/unmute")
 
     if panels.keybindsPanel then
         terminate_binds()

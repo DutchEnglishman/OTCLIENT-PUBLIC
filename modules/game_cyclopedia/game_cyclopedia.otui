@@ -278,7 +278,36 @@ MainWindow
       text-auto-resize: true
       color: #BDBDBD
   UIWidget
+    id: TaskPointsBase
+    anchors.bottom: parent.bottom
+    anchors.left: GoldBase.right
+    margin-left: 5
+    image-source: /images/ui/item
+    image-border: 10
+    size: 100 20
+    !tooltip: tr('Task Points')
+    UIWidget
+      id: Icon
+      anchors.right: parent.right
+      anchors.verticalCenter: parent.verticalCenter
+      margin-right: 4
+      image-source: /game_cyclopedia/images/monster-icon-bonuspoints
+    Label
+      id: Value
+      anchors.right: Icon.left
+      anchors.verticalCenter: parent.verticalCenter
+      margin-right: 4
+      !text: tr('0')
+      text-auto-resize: true
+      color: #BDBDBD
+  // Charms are cut from this server (no charm-points economy exists) -- these
+  // two stay defined because several tab scripts still call
+  // CharmsBase:setVisible(false) on load, but they're permanently hidden and
+  // deliberately left OUT of the anchor chain above so they don't reserve
+  // empty space between GoldBase and TaskPointsBase.
+  UIWidget
     id: CharmsBase
+    visible: false
     anchors.bottom: parent.bottom
     anchors.left: GoldBase.right
     margin-left: 5
@@ -304,7 +333,7 @@ MainWindow
     id: CharmsBase1410
     visible: false
     anchors.bottom: parent.bottom
-    anchors.left: prev.right
+    anchors.left: GoldBase.right
     margin-left: 5
     image-source: /images/ui/item
     image-border: 10
@@ -328,7 +357,7 @@ MainWindow
     id: BestiaryTrackerButton
     size: 90 20
     anchors.bottom: parent.bottom
-    anchors.left: prev.right
+    anchors.left: TaskPointsBase.right
     margin-left: 5
     !text: tr('Bestiary Tracker')
     font: small-9px

@@ -1,6 +1,8 @@
 MiniWindow < UIMiniWindow
   font: verdana-11px-antialised
-  width: 192
+  // Matches GameSidePanel so an undocked container keeps its 5 columns.
+  // Docked windows are stretched to the panel width and ignore this.
+  width: 184
   height: 200
   image-source: /images/ui/miniwindow_body
   image-border: 4
@@ -323,13 +325,22 @@ PhantomMiniWindow < UIMiniWindow
   phantom: false
   focusable: false
   &moveOnlyToMain: true
+  // Only minimap, healthinfo, inventory and mainoptionspanel use this style.
+  // They are the permanent side-panel furniture, so UIMiniWindowContainer's
+  // overflow eviction skips them and closes an ordinary window instead.
+  &keepOpen: true
 
+  // Fills edge to edge. These margins used to be 3, leaving a 3px unpainted
+  // strip down each side that showed whatever was behind the window -- a dark
+  // vertical line on the health, inventory and minimap panels that read as a
+  // drag handle. PhantomMiniWindow has no frame of its own for the inset to
+  // make room for, so there is nothing to leave clear.
   UIWidget
     image-source: /images/ui/background
     image-repeated: true
     anchors.fill: parent
-    margin-left: 3
-    margin-right: 3
+    margin-left: 0
+    margin-right: 0
     phantom: true
     opacity: 0.6
 

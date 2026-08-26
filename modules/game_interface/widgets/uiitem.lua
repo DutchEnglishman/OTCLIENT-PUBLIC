@@ -102,6 +102,18 @@ end
 function UIItem:onHoverChange(hovered)
     UIWidget.onHoverChange(self, hovered)
 
+    -- Item tooltips are fetched from the server on hover (see
+    -- modules/game_itemtooltip) -- the attribute text is composed server-side
+    -- in Lua and changes as items are upgraded, so it can't travel with the
+    -- item or be cached here.
+    if modules.game_itemtooltip then
+        if hovered then
+            modules.game_itemtooltip.requestTooltip(self)
+        else
+            modules.game_itemtooltip.clearHover(self)
+        end
+    end
+
     if self:isVirtual() or not self:isDraggable() then
         local draggingWidget = g_ui.getDraggingWidget()
         if not draggingWidget or draggingWidget == self then

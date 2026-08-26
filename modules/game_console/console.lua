@@ -404,11 +404,26 @@ function selectAll(consoleBuffer)
     end
 end
 
+-- isChecked true means WASD mode, i.e. chat OFF -- the button is a state label,
+-- not an action label. Every session starts here: walking is the default stance
+-- and Enter opens chat on demand (switchChatOnCall sets walkAfterSend,
+-- sendCurrentMessage flips back to walking once the message goes).
+--
+-- Deliberately not restored from settings any more. It used to be, which made
+-- the opening stance depend on however the last session happened to end.
+local function resetToWalkMode()
+    if not consoleToggleChat then
+        return
+    end
+    consoleToggleChat.isChecked = true
+    consoleToggleChat:setText(tr('Chat Off'))
+end
+
 function toggleChat()
     if modules.game_interface.isInternalLocked() then
         return
     end
-    
+
     consoleToggleChat.isChecked = not consoleToggleChat.isChecked
     if consoleToggleChat.isChecked then
         consoleToggleChat:setText(tr('Chat Off'))
@@ -588,7 +603,6 @@ end
 function save()
     local settings = {}
     settings.messageHistory = messageHistory
-    settings.wasdMode = consoleToggleChat.isChecked
     settings.transparentChat = transparentChatEnabled
     settings.showHighlightedUnderline = showHighlightedUnderline
     g_settings.setNode('game_console', settings)
@@ -598,18 +612,17 @@ function load()
     local settings = g_settings.getNode('game_console')
     if settings then
         messageHistory = settings.messageHistory or {}
-        consoleToggleChat.isChecked = settings.wasdMode or false
         transparentChatEnabled = settings.transparentChat or false
         showHighlightedUnderline = settings.showHighlightedUnderline or false
-        if consoleToggleChat.isChecked then
-            consoleToggleChat:setText(tr('Chat Off'))
-        else
-            consoleToggleChat:setText(tr('Chat On'))
-        end
-        -- Only update chat mode if game is online to avoid binding issues during initialization
-        if g_game.isOnline() then
-            updateChatMode()
-        end
+    end
+
+    -- Outside the settings check: a client with no saved node at all must still
+    -- come up in walk mode, and that was the one path that left the button
+    -- untouched entirely.
+    resetToWalkMode()
+    -- Only update chat mode if game is online to avoid binding issues during initialization
+    if g_game.isOnline() then
+        updateChatMode()
     end
 
     local transparentButton = consolePanel:getChildById('extendedViewTransparent')
@@ -723,10 +736,6 @@ function clear()
     end
 
     destroyOwnChannelNameWindows()
-
-    if g_game.getClientVersion() < 862 then
-        Keybind.delete("Dialogs", "Open Rule Violation")
-    end
 
     if readOnlyModeEnabled then
         toggleReadOnlyMode()
@@ -1305,7 +1314,11 @@ function onConsoleTextHovered(widget, text, hovered)
             end
         end
     elseif nativeCursor and hovered then
-        if not widget.consoleCursorPushed then
+        -- Not while an action owns the cursor: this path overwrites the window
+        -- cursor rather than pushing onto g_mouse's stack, so hovering console
+        -- text during "use with" would strip the crosshair for good. Same guard
+        -- as UIButton's native branch.
+        if not widget.consoleCursorPushed and not g_mouse.isCursorActive('target') then
             g_window.setSystemCursor('hand')
             widget.consoleCursorPushed = true
         end
@@ -2404,16 +2417,6 @@ function consoleController:onGameStart()
     consoleTabBar:selectTab(defaultTab)
 
     local clientVersion = g_game.getClientVersion()
-    if clientVersion < 862 then
-        Keybind.new("Dialogs", "Open Rule Violation", "Ctrl+R", "")
-        local gameRootPanel = modules.game_interface.getRootPanel()
-        Keybind.bind("Dialogs", "Open Rule Violation", {
-          {
-            type = KEY_DOWN,
-            callback = openPlayerReportRuleViolationWindow,
-          }
-        }, gameRootPanel)
-    end
     if clientVersion > 1100 then
         local active = g_game.canExivaOptions()
         local widget = consolePanel:getChildById('exivaOption')
@@ -2428,6 +2431,11 @@ function consoleController:onGameStart()
     else
         consolePanel:getChildById('exivaOption'):disable()
     end
+
+    -- Here as well as in load(), which runs once per client launch in onInit:
+    -- without this a relog in the same run would inherit whatever the previous
+    -- character left the toggle on.
+    resetToWalkMode()
 
     -- Update chat mode when game comes online to ensure proper key binding
     updateChatMode()

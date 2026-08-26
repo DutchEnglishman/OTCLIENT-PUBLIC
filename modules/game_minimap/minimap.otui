@@ -10,15 +10,27 @@ PhantomMiniWindow
     id: minimapBorder
     anchors.top: parent.top
     anchors.left: parent.left
+    anchors.right: parent.right
     margin-top: 5
     margin-left: 8
-    size: 115 111
-    image-source: /images/ui/1pixel_down_frame
+    // Clears the whole right-hand control stack, not just layersPanel:
+    //   layersPanel  right 7,  w 20            -> starts 27 in
+    //   rosePanel    right of layersPanel.right, w 43 -> starts 50 in
+    //   fullMap / zoomIn / zoomOut             -> start 51 in
+    // Leftmost of those is 51 from the right edge, so 55 leaves a 4px gap.
+    // Width follows the panel instead of the old fixed 115, so the map fills
+    // whatever GameSidePanel is set to.
+    margin-right: 55
+    height: 111
+    // image-source removed: 1pixel_down_frame drew the inset dark frame around
+    // the map. The widget is kept because the layer buttons, compass rose and
+    // zoom controls all anchor to minimapBorder -- it is now purely a position
+    // reference. margin drops to 0 so the map fills the space the frame used.
 
     Minimap
       id: minimap
       anchors.fill: parent
-      margin: 1
+      margin: 0
 
   UIWidget
     id: layersPanel
@@ -284,3 +296,82 @@ PhantomMiniWindow
 
       $pressed !disabled:
         image-clip: 344 0 15 15
+
+// Controls for the fullscreen map (Ctrl+Shift+M). The docked panel that
+// normally carries these is hidden while fullscreen, so this is a separate
+// overlay created by fullscreen() and destroyed when it closes. Same artwork
+// and the same handlers as the docked copies, so both stay in step.
+MinimapFullscreenControls < UIWidget
+  id: minimapFullscreenControls
+  size: 46 68
+  anchors.right: parent.right
+  anchors.bottom: parent.bottom
+  margin-right: 12
+  margin-bottom: 12
+  phantom: false
+
+  UIWidget
+    id: layersPanel
+    size: 20 68
+    anchors.bottom: parent.bottom
+    anchors.right: parent.right
+
+    UIWidget
+      id: automapLayers
+      image-source: /images/automap/automap_indicator_maplayers
+      anchors.left: parent.left
+      anchors.bottom: parent.bottom
+      image-clip: 98 0 14 67
+      size: 14 67
+
+    UIWidget
+      id: layersMark
+      anchors.left: automapLayers.right
+      anchors.top: automapLayers.top
+      image-source: /images/automap/automap_indicator_slider_left
+      margin-left: 3
+      margin-top: 28
+
+    // Phantom artwork over the top and bottom halves of the layer strip, the
+    // same split the docked panel uses: upper half climbs, lower half descends.
+    Button
+      image-source: /images/automap/automap_phantom
+      anchors.left: automapLayers.left
+      anchors.right: automapLayers.right
+      anchors.top: automapLayers.top
+      anchors.bottom: automapLayers.verticalCenter
+      @onClick: upLayer()
+
+    Button
+      image-source: /images/automap/automap_phantom
+      anchors.left: automapLayers.left
+      anchors.right: automapLayers.right
+      anchors.top: automapLayers.verticalCenter
+      anchors.bottom: automapLayers.bottom
+      @onClick: downLayer()
+
+  Button
+    id: zoomIn
+    image-source: /images/automap/automap_buttons
+    image-clip: 0 40 20 20
+    anchors.right: layersPanel.left
+    anchors.bottom: layersPanel.bottom
+    margin-right: 4
+    size: 20 20
+    @onClick: zoomIn()
+
+    $pressed !disabled:
+      image-clip: 20 40 20 20
+
+  Button
+    id: zoomOut
+    image-source: /images/automap/automap_buttons
+    image-clip: 0 20 20 20
+    anchors.right: zoomIn.right
+    anchors.bottom: zoomIn.top
+    margin-bottom: 2
+    size: 20 20
+    @onClick: zoomOut()
+
+    $pressed !disabled:
+      image-clip: 20 20 20 20
