@@ -2,7 +2,7 @@ MiniWindow < UIMiniWindow
   font: verdana-11px-antialised
   // Matches GameSidePanel so an undocked container keeps its 5 columns.
   // Docked windows are stretched to the panel width and ignore this.
-  width: 184
+  width: 215
   height: 200
   image-source: /images/ui/miniwindow_body
   image-border: 4

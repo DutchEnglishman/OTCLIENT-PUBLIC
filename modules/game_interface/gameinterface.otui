@@ -7,27 +7,11 @@ GameSidePanel < UIMiniWindowContainer
   // and a docked miniwindow is stretched to this panel's width by the
   // verticalBox layout (uiverticallayout.cpp:73), so this is the number that
   // decides it -- MiniWindow's own width only applies when undocked.
-  //     clipWidth = width - 3 (contents margin-left) - 1 (margin-right)
-  //                       - 4 (contentsPanel padding, 2 each side)
-  //               = width - 8
-  //
-  // No scrollbar term: containers.lua re-anchors contentsPanel to parent.right
-  // and retires the bar, so its 12px plus a 3px margin are no longer held back.
-  // Measured on a real backpack, reserving them left 19px after the last slot
-  // against 5px before the first, and 15px of that drew nothing at all.
-  //
-  // Picked against the row, not as a minimum: with cell-spacing 1 a row of five
-  // is 5*34 + 4*1 = 174 wide, and 184 - 8 = 176. The grid packs from the left,
-  // so the 2px surplus lands on the right, which with the 2px padding and 1px
-  // margin makes both sides 5px:
-  //     left  = 3 margin + 2 padding             = 5
-  //     right = 2 surplus + 2 padding + 1 margin = 5
-  // 182 sits flush, 183 gives 4 on the right, 185 gives 6.
-  //
-  // 184, not 215: container.otui's padding went 6 -> 2, its cell-spacing
-  // 3 -> 1, and the scrollbar reservation is gone. Change any of those and this
-  // width has to move with them, or the fifth column drops.
-  width: 184
+  //     clipWidth = width - 3 (sb margin) - 12 (scrollbar) - 1 - 3 (margins)
+  //                       - 12 (contentsPanel padding)
+  // 5 columns needs clipWidth >= 182, so width >= 213; 215 leaves 2px slack.
+  // 6 columns would need 250, so this cannot overshoot.
+  width: 215
   layout:
     type: verticalBox
     //spacing: 1
