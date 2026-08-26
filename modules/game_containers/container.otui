@@ -59,15 +59,46 @@ ContainerWindow < MiniWindow
     margin-bottom: 1
     margin-top: -2
     margin-right: 1
-    padding-left: 6
-    padding-top: 6
-    padding-right: 6
-    padding-bottom: 6
+    // The right anchor is NOT set here. This node derives from
+    // MiniWindowContents, which anchors right to miniwindowScrollBar.left, and
+    // restating anchors.right in a derived node does not replace that -- it was
+    // tried and measured as having no effect, leaving the scrollbar's 15px
+    // reserved and dropping the grid to 4 columns once the window narrowed.
+    // containers.lua re-anchors it from Lua instead, where addAnchor really
+    // does replace the existing anchor for that edge.
+    // Tightened from 6 padding / 3 spacing. Both feed the column maths in
+    // UIGridLayout::internalUpdate (uigridlayout.cpp:74):
+    //     columns = (paddingRect.width + cellSpacing) / (cellSize + cellSpacing)
+    // and paddingRect.width is this panel's width minus the padding below, so
+    // shrinking either lets five 34px slots fit in a narrower window.
+    //
+    // A row of five is 5*34 + 4*1 = 174 wide. GameSidePanel is 184, which makes
+    // paddingRect.width 176 -- two more than the row needs. The grid packs from
+    // the left, so those two pixels land on the right, and together with this
+    // padding and the 1px margin they make both sides 5px. Keep the two in
+    // step: changing the spacing or padding here without moving that width
+    // either drops the fifth column or reopens the gap.
+    padding-left: 2
+    padding-top: 2
+    padding-right: 2
+    padding-bottom: 2
     layout:
       type: grid
       cell-size: 34 34
-      cell-spacing: 3
-      flow: true
+      cell-spacing: 1
+      // Five per row, stated outright. With flow on, UIGridLayout derives the
+      // column count from the available width every relayout
+      // (uigridlayout.cpp:75), so a pixel lost anywhere in the chain -- window
+      // margins, panel padding, a zero-width scrollbar still holding its own
+      // margin -- silently drops the grid to four. It did, repeatedly. Off, the
+      // count is simply what it says here and the width only has to be wide
+      // enough not to clip the fifth slot.
+      //
+      // A row needs 5*34 + 4*1 = 174 of clip; GameSidePanel's 184 gives 176.
+      // containers.lua derives its row count from getNumColumns rather than
+      // getNumLines, which the flow branch is the only thing that maintains.
+      flow: false
+      num-columns: 5
   
   HorizontalSeparator
     id: separator

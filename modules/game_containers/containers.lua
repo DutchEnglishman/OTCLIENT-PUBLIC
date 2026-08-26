@@ -932,6 +932,54 @@ function onContainerOpen(container, previousContainer)
     end
     containerWindow:setId('container' .. container:getId())
     local containerPanel = containerWindow:getChildById('contentsPanel')
+
+    -- Reclaim the scrollbar's reserved strip for the item grid.
+    --
+    -- contentsPanel inherits anchors.right = miniwindowScrollBar.left from
+    -- MiniWindowContents, so 12px of bar plus a 3px margin is held back on the
+    -- right of every container -- measured as a 19px gap after the last slot
+    -- against 5px before the first, and drawing nothing at all when the
+    -- container fits its own contents. Restating the anchor in container.otui
+    -- does not override an inherited one; addAnchor here does.
+    --
+    -- The bar is retired for containers rather than left to overlap the last
+    -- column, because it cannot turn itself off: UIScrollBar's update hardcodes
+    -- `local status = true` (corelib/ui/uiscrollbar.lua:93, that way since the
+    -- initial import), so it is permanently "on" and would sit over the fifth
+    -- slot eating clicks. Zero width and hidden, so it can do neither.
+    --
+    -- The cost is that a container dragged shorter than its contents can no
+    -- longer be scrolled -- enlarge it again to see the rest. Acceptable here
+    -- because containers.lua sets the window height from the row count, so it
+    -- opens showing everything, and paging handles the genuinely large ones.
+    containerPanel:addAnchor(AnchorRight, 'parent', AnchorRight)
+    containerPanel:setMarginRight(1)
+
+    -- Push the scrollbar out of the window rather than shrinking it.
+    --
+    -- setWidth(0) does not hold: the bar's base style is width 12 with
+    -- `$!on: width: 0`, and UIScrollBar:update() hardcodes setOn(true)
+    -- (corelib/ui/uiscrollbar.lua:93), so the on-state re-applies the base 12
+    -- straight over any width set from here. That is what kept the fifth column
+    -- clipped in half.
+    --
+    -- A negative right margin survives, because no state block in the style
+    -- touches margins. With margin-right -12 the bar's right edge lands 12px
+    -- past the window and its LEFT edge -- which is what contentsPanel is
+    -- anchored to -- sits exactly on the window's right edge, handing the whole
+    -- width to the grid. The bar itself is outside the window and clipped away.
+    local function retireScrollBar()
+        local sb = containerWindow:getChildById('miniwindowScrollBar')
+        if not sb or sb:isDestroyed() then
+            return
+        end
+        sb:setMarginRight(-sb:getWidth())
+        sb:setEnabled(false)
+    end
+    retireScrollBar()
+    -- Again after the style and layout have settled: setup() and the deferred
+    -- setVerticalScrollBar in corelib/ui/uiscrollarea.lua both run later.
+    addEvent(retireScrollBar)
     local containerItemWidget = containerWindow:getChildById('containerItemWidget')
     containerWindow.onClose = function()
         g_game.close(container)
@@ -1068,7 +1116,12 @@ function onContainerOpen(container, previousContainer)
     local layout = containerPanel:getLayout()
     local cellSize = layout:getCellSize()
     local step = cellSize.height + layout:getCellSpacing()
-    local numLines = math.max(layout:getNumLines(), 1)
+    -- Derived, not read from the layout. UIGridLayout only maintains numLines
+    -- inside its flow branch (uigridlayout.cpp:78), and the grid is fixed at 5
+    -- columns with flow off now, so getNumLines() is never updated and would
+    -- read as a single row -- collapsing the window height.
+    local numColumns = math.max(layout:getNumColumns(), 1)
+    local numLines = math.max(math.ceil(container:getCapacity() / numColumns), 1)
     local chromeHeight = container:hasPages() and 55 or 31
     containerWindow:setContentMinimumHeight(cellSize.height)
 
@@ -1113,14 +1166,44 @@ function onContainerOpen(container, previousContainer)
         panel:addChild(containerWindow)
     end
 
+    -- TEMPORARY DIAGNOSTIC -- remove once the right-hand gap is understood.
+    -- Every attempt at this so far has been computed from the .otui files;
+    -- this reports what the widgets actually measure at runtime.
+    addEvent(function()
+        if containerWindow:isDestroyed() then
+            return
+        end
+        local cp = containerWindow:getChildById('contentsPanel')
+        local sb = containerWindow:getChildById('miniwindowScrollBar')
+        local rightmost = -1
+        if cp then
+            for i = 1, cp:getChildCount() do
+                local c = cp:getChildByIndex(i)
+                if c and c:isVisible() then
+                    local r = c:getX() + c:getWidth()
+                    if r > rightmost then rightmost = r end
+                end
+            end
+        end
+        local lay = cp and cp:getLayout()
+        g_logger.info(string.format(
+            '[bpprobe] win w=%d x=%d | contents x=%d w=%d pad l%d r%d | sb w=%d mR=%d on=%s | COLUMNS=%d | slots=%d rightmostSlotEdge=%d | winRight=%d',
+            containerWindow:getWidth(), containerWindow:getX(),
+            cp and cp:getX() or -1, cp and cp:getWidth() or -1,
+            cp and cp:getPaddingLeft() or -1, cp and cp:getPaddingRight() or -1,
+            sb and sb:getWidth() or -1, sb and sb:getMarginRight() or -1, tostring(sb and sb:isOn()),
+            lay and lay:getNumColumns() or -1,
+            cp and cp:getChildCount() or -1, rightmost,
+            containerWindow:getX() + containerWindow:getWidth()))
+    end)
+
     if not previousContainer or previousContainer:getCapacity() >= container:getCapacity() then
         -- Always set the content height based on the current container's content, with a minimum of one row
         local minRows = 1
         if modules.client_options.getOption('openMaximized') then
-            local numLines = math.max(layout:getNumLines(), minRows)
-            containerWindow:setContentHeight(numLines * step + chromeHeight)
+            -- numLines is the derived one from above, for the same reason.
+            containerWindow:setContentHeight(math.max(numLines, minRows) * step + chromeHeight)
         else
-            local numColumns = math.max(layout:getNumColumns(), 1)
             local filledLines = math.max(math.ceil(container:getItemsCount() / numColumns), minRows)
             containerWindow:setContentHeight(filledLines * step + chromeHeight)
         end
