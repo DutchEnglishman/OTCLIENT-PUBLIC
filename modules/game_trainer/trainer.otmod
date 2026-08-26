@@ -1,0 +1,8 @@
+Module
+  name: game_trainer
+  description: Auto-eat, mana training and runemaking
+  author: Roel
+  sandboxed: true
+  scripts: [ trainer ]
+  @onLoad: init()
+  @onUnload: terminate()

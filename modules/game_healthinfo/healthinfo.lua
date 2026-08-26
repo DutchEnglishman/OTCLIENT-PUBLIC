@@ -48,8 +48,9 @@ function extendedView(extendedView)
             iconTopMenu = modules.client_topmenu.addTopRightToggleButton('healthMana', tr('Show health'),
                 '/images/topbuttons/healthinfo', toggle)
             iconTopMenu:setOn(healthManaController.ui:isVisible())
-            healthManaController.ui:setBorderColor('black')
-            healthManaController.ui:setBorderWidth(2)
+            -- See game_inventory/inventory.lua: 2px black outline that only
+            -- appeared in extended view. Removed here too.
+            healthManaController.ui:setBorderWidth(0)
         end
     else
         if iconTopMenu then

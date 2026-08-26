@@ -55,13 +55,17 @@ function UIMiniWindowContainer:fitAll(noRemoveChild)
     end
 
     -- try to remove no-save widget
+    -- keepOpen widgets are exempt from both passes: the minimap, health,
+    -- inventory and mainpanel panels must survive an overflow, so an
+    -- ordinary window is what gives way instead of them. Without it they are
+    -- the FIRST to go, since they carry no `save` flag.
     for i = #children, 1, -1 do
         if sumHeight <= selfHeight then
             break
         end
 
         local child = children[i]
-        if child ~= noRemoveChild and not child.save then
+        if child ~= noRemoveChild and not child.save and not child.keepOpen then
             local childHeight = child:getHeight()
             sumHeight = sumHeight - childHeight
             table.insert(removeChildren, child)
@@ -75,7 +79,7 @@ function UIMiniWindowContainer:fitAll(noRemoveChild)
         end
 
         local child = children[i]
-        if child ~= noRemoveChild and child:isVisible() then
+        if child ~= noRemoveChild and child:isVisible() and not child.keepOpen then
             local childHeight = child:getHeight()
             sumHeight = sumHeight - childHeight
             table.insert(removeChildren, child)
@@ -186,6 +190,27 @@ function UIMiniWindowContainer:scheduleInsert(widget, index)
                     break
                 end
             end
+
+            self:orderPinned()
+        end
+    end
+end
+
+-- Windows created without a parent (skills, viplist) reach the panel through
+-- scheduleInsert with whatever index was saved last session -- index 1 seats
+-- them above the minimap/health/inventory/mainpanel furniture. Re-seat the
+-- keepOpen children at the front afterwards so restored windows always land
+-- below them. Deliberate drags are untouched: onDrop does not call this.
+function UIMiniWindowContainer:orderPinned()
+    local children = self:getChildren()
+    local target = 1
+    for i = 1, #children do
+        local child = children[i]
+        if child.keepOpen then
+            if i ~= target then
+                self:moveChildToIndex(child, target)
+            end
+            target = target + 1
         end
     end
 end

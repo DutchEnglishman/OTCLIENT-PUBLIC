@@ -34,8 +34,10 @@ PhantomMiniWindow
   draggable: true
   phantom: false
   moveOnlyToMain: false
-  height: 162
-  &panelHeight: 162
+  // 167, not 162: the extra 5 is the breathing room added below the status
+  // icon row, which is bottom-anchored and was sitting flush on the frame.
+  height: 167
+  &panelHeight: 167
   on: true
 
   $!on:
@@ -242,6 +244,9 @@ PhantomMiniWindow
       anchors.left: defense.left
       anchors.right: standPosture.right
       anchors.bottom: parent.bottom
+      // Lifted with the icon row beside it -- both are bottom-anchored, so
+      // moving only one would leave them misaligned.
+      margin-bottom: 5
       font: cipsoftFont
       color: #c0c0c0ff
       size: 44 13
@@ -256,9 +261,12 @@ PhantomMiniWindow
 
       image-source: /images/ui/containerslot
       image-border: 3
-      anchors.left: changeSize.left
+      // Tracks the slot grid rather than the corner button, so it stays the
+      // same width as the slots above it now that they're centred.
+      anchors.left: amulet.left
       anchors.right: backpack.right
       anchors.bottom: parent.bottom
+      margin-bottom: 5
       anchors.top: stop.top
       layout:
         type: horizontalBox
@@ -266,8 +274,15 @@ PhantomMiniWindow
     MainInventoryItem
       id: amulet
       anchors.top: changeSize.bottom
-      anchors.left: changeSize.left
+      anchors.left: parent.left
       margin-top: 3
+      // Root of the whole slot grid -- every other slot chains off this one,
+      // so this margin positions all of them. The grid is 3 columns of 34
+      // plus two 3px gaps = 108 wide, and the combat buttons start at 164
+      // (standPosture sits 27 in from the right, attack 24 left of that),
+      // so (164 - 108) / 2 = 28 centres it in the space they leave.
+      // Previously pinned to changeSize.left, which has to stay in the corner.
+      margin-left: 28
       &slotPosition: {x = 65535, y = 2, z = 0}
 
     MainInventoryItem

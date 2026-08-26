@@ -59,12 +59,18 @@ local function buildConditionCache()
     end
 end
 
+-- showInHud is off and stays off. isConditionVisible below short-circuits the
+-- whole 'hud' panel on it, and it is the only gate the HUD icon sweep reads, so
+-- this single flag is what keeps every special condition out of the HUD. The
+-- controls that used to set it -- the Show in HUD column in Options > HUD and
+-- the per-row checkbox in SpecialConditionLabelSettings -- are gone; the bar is
+-- the only place conditions appear now.
 local function defaultSettings()
     return {
         ordered = {},
         visibleHud = {},
         visibleBar = {},
-        showInHud = true,
+        showInHud = false,
         showInBar = true
     }
 end
@@ -81,9 +87,10 @@ local function normalizeSettings(settings)
     if type(settings.visibleBar) ~= 'table' then
         settings.visibleBar = {}
     end
-    if type(settings.showInHud) ~= 'boolean' then
-        settings.showInHud = true
-    end
+    -- Unconditional, unlike the fields around it: a settings file written while
+    -- the Show in HUD column still existed would otherwise restore true, and
+    -- nothing is left that could turn it off again.
+    settings.showInHud = false
     if type(settings.showInBar) ~= 'boolean' then
         settings.showInBar = true
     end
@@ -310,12 +317,6 @@ function ConditionsHUD.updateRowCheckboxesState()
     for i = 1, childCount do
         local child = ConditionsHUD.listWidget:getChildByIndex(i)
         if child then
-            local hudCheck = child:getChildById('showInHudCheckBox')
-            if hudCheck then
-                hudCheck:setEnabled(ConditionsHUD.settings.showInHud)
-                hudCheck:setOpacity(ConditionsHUD.settings.showInHud and 1.0 or 0.3)
-            end
-
             local barCheck = child:getChildById('showInBarCheckBox')
             if barCheck then
                 barCheck:setEnabled(ConditionsHUD.settings.showInBar)
@@ -326,17 +327,8 @@ function ConditionsHUD.updateRowCheckboxesState()
 end
 
 local function setupMasterCheckboxes(hudWindow)
-    local hudMasterCheckBox = hudWindow:recursiveGetChildById('hudMasterCheckBox')
-    if hudMasterCheckBox then
-        hudMasterCheckBox:setChecked(ConditionsHUD.settings.showInHud)
-        hudMasterCheckBox.onCheckChange = function(_, checked)
-            ConditionsHUD.settings.showInHud = checked
-            ConditionsHUD.saveSettings()
-            ConditionsHUD.updateRowCheckboxesState()
-            StatusIconBar.refreshIcons()
-        end
-    end
-
+    -- No hudMasterCheckBox any more: showInHud is pinned false in
+    -- normalizeSettings, so there is nothing for a master toggle to flip.
     local barMasterCheckBox = hudWindow:recursiveGetChildById('barMasterCheckBox')
     if barMasterCheckBox then
         barMasterCheckBox:setChecked(ConditionsHUD.settings.showInBar)
@@ -367,12 +359,8 @@ local function createConditionRow(condition, parent)
     widget:setTooltip(condition.tooltip or '')
     applyRowIcon(widget, condition)
 
-    widget.showInHudCheckBox:setChecked(ConditionsHUD.isConditionVisible(condition.id, 'hud'))
     widget.showInBarCheckBox:setChecked(ConditionsHUD.isConditionVisible(condition.id, 'bar'))
 
-    widget.showInHudCheckBox.onCheckChange = function(_, checked)
-        ConditionsHUD.changeVisibilityInHud(condition.id, checked)
-    end
     widget.showInBarCheckBox.onCheckChange = function(_, checked)
         ConditionsHUD.changeVisibilityInBar(condition.id, checked)
     end

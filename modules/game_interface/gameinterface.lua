@@ -343,6 +343,11 @@ function show()
     -- Ensure normal floor animation behavior even if old settings persisted.
     gameMapPanel:setFloorViewMode(0)
 
+    -- connect, not assignment: the map panel may already have a geometry
+    -- handler, and connect composes rather than replacing it.
+    connect(gameMapPanel, { onGeometryChange = enforceExtendedView })
+    enforceExtendedView()
+
     addEvent(function()
         -- Mode 2 (the enlarged 27x15 view) depends on setLimitVisibleRange(true)
         -- staying set -- that's what locks the 27x15 ratio the widget uses when
@@ -390,11 +395,32 @@ function show()
     scheduleEvent(function()
         if currentViewMode == 2 then
             modules.game_mainpanel.toggleExtendedViewButtons(true)
+
+            -- Backstop only, and normally a no-op now.
+            --
+            -- What this used to repair was updateStretchShrink knocking the map
+            -- to 25x19 from gameRootPanel.onGeometryChange while mode 2 was
+            -- active; it now leaves extended view alone. The repair happening
+            -- half a second late is what made the first second of every login
+            -- look zoomed in, since a narrower view means bigger tiles.
+            --
+            -- Kept because it is free -- enforceExtendedView returns immediately
+            -- once the dimension already reads 29x15 -- and because it still
+            -- covers anything else that reshapes the view without resizing the
+            -- map widget, which is the case gameMapPanel.onGeometryChange
+            -- cannot see: setVisibleDimension changes no rect, so it fires no
+            -- geometry event.
+            enforceExtendedView()
         end
     end, 500)
 end
 
 function hide()
+    -- Before setupViewMode(0), so the handler cannot fight the switch out of
+    -- extended view. It guards on currentViewMode anyway; this is belt and
+    -- braces, and keeps the connect balanced across logins.
+    disconnect(gameMapPanel, { onGeometryChange = enforceExtendedView })
+
     setupViewMode(0)
 
     disconnect(g_app, {
@@ -544,7 +570,17 @@ end
 
 function updateStretchShrink()
     local clientOptions = modules.client_options
-    if clientOptions and clientOptions.getOption and clientOptions.getOption('dontStretchShrink') and not alternativeView then
+    -- Never in extended view. 25x19 is the normal view's shape; mode 2 is pinned
+    -- at 29x15 by enforceExtendedView.
+    --
+    -- This runs from gameRootPanel.onGeometryChange (see init), so every panel
+    -- that settled during login knocked the map back to 25x19 -- a narrower view
+    -- means bigger tiles, which is the "zoomed in" first second. Nothing noticed
+    -- until the 500ms re-assert at the end of show() put it back, because
+    -- setVisibleDimension does not resize the map widget and so never triggers
+    -- the gameMapPanel geometry handler that would have caught it sooner.
+    if currentViewMode ~= 2 and clientOptions and clientOptions.getOption
+        and clientOptions.getOption('dontStretchShrink') and not alternativeView then
         gameMapPanel:setVisibleDimension({
             width = 25,
             height = 19
@@ -565,6 +601,13 @@ local function restoreTargetCursor()
         return
     end
 
+    -- Unlock before popping: popCursor has to be able to set the cursor back.
+    --
+    -- Both callers of this are in onMouseGrabberRelease, so the crosshair is
+    -- released by a mouse click and by nothing else -- left uses the item,
+    -- right cancels. Hovering a button, a text field, a splitter or the chat
+    -- input cannot touch it while the lock is held.
+    g_mouse.unlockCursor()
     g_mouse.popCursor('target')
     targetCursorActive = false
 end
@@ -574,6 +617,8 @@ local function setTargetCursor()
     restoreTargetCursor()
 
     g_mouse.pushCursor('target')
+    -- After the push, so the push itself is not blocked by the lock.
+    g_mouse.lockCursor()
     targetCursorActive = true
 end
 
@@ -1912,6 +1957,54 @@ function nextViewMode()
     setupViewMode((currentViewMode + 1) % 3)
 end
 
+-- Holds the extended view at 27x15 -- 13 tiles either side of the player.
+--
+-- Setting it once during setupViewMode(2) does not stick: updateVisibleDimension
+-- (src/client/uimap.cpp:319) recomputes the view on every resize as
+--     height = zoom
+--     width  = zoom * ratio        (ratio is the pinned 27/15 only while
+--                                   limitVisibleRange is true, else the map
+--                                   rect's own ratio)
+-- so any later pass that changes the zoom or clears the flag silently reshapes
+-- the view. setZoom is also clamped to maxZoomOut (uimap.cpp:189), and the
+-- startup path can drop that to 11 -- which turns setZoom(15) into 11 without
+-- reporting anything.
+--
+-- Rather than chase which pass does it, this reapplies the whole set whenever
+-- the map geometry changes and the dimension has drifted. The equality check
+-- makes it a no-op in the normal case, and reasserting guards against
+-- re-entering when the setters below trigger another geometry change.
+local reassertingView = false
+
+function enforceExtendedView()
+    if reassertingView or currentViewMode ~= 2 or not gameMapPanel then
+        return
+    end
+
+    -- 29, not 27. The client is aware of 15 tiles each side (the server sends
+    -- 31x18 via sendChangeMapAwareRange), so the data for these exists; 27 was
+    -- rendering 13 each side correctly and only 12 were arriving fully on
+    -- screen, the outermost column being clipped by the map rect the same way
+    -- the top row is. 29 puts a spare column outside the clip on each side so
+    -- the 13th lands whole.
+    --
+    -- Width must stay odd -- MapView::setVisibleDimension rejects even values
+    -- outright (src/client/mapview.cpp:695).
+    local dimension = gameMapPanel:getVisibleDimension()
+    if dimension.width == 29 and dimension.height == 15 then
+        return
+    end
+
+    reassertingView = true
+    -- Raised first: setZoom(15) is clamped to this, so a lowered ceiling would
+    -- otherwise cap the height and, through it, the width.
+    gameMapPanel:setMaxZoomOut(513)
+    gameMapPanel:setLimitVisibleRange(true)
+    gameMapPanel:setZoom(15)
+    gameMapPanel:setVisibleDimension({ width = 29, height = 15 })
+    reassertingView = false
+end
+
 function setupViewMode(mode)
     if mode == currentViewMode then
         return
@@ -1960,13 +2053,15 @@ function setupViewMode(mode)
         gameMapPanel:setLimitVisibleRange(true)
         gameMapPanel:setLimitVisibleDimension(false)
         gameMapPanel:setZoom(15)
-        -- width/height ratio (27/15 = 1.8) is reused by the widget every time it
-        -- recomputes the visible tile count on resize (since limitVisibleRange
-        -- locks the aspect ratio instead of using the real window ratio). Keep
-        -- height matched to the zoom level so width consistently resolves to
-        -- 27 tiles (13 tiles left/right of the player).
+        -- The width/height ratio is reused by the widget every time it
+        -- recomputes the visible tile count on resize (limitVisibleRange locks
+        -- the aspect ratio instead of using the real window ratio), so height
+        -- must stay matched to the zoom level.
+        --
+        -- Kept identical to enforceExtendedView, which reasserts this on every
+        -- geometry change -- if the two disagree the view flips between them.
         gameMapPanel:setVisibleDimension({
-            width = 27,
+            width = 29,
             height = 15
         })
         gameMapPanel:fill('parent')
@@ -2147,8 +2242,15 @@ function applyExtendedViewLayout(extendedView)
             })
         end
         gameBottomPanel:getChildById('rightResizeBorder'):setMaximum(gameBottomPanel:getWidth())
+        -- bottomResizeBorder is the chat's TOP edge (it anchors to parent.top,
+        -- gameinterface.otui:32, while the panel's bottom is pinned to the
+        -- screen). Grabbing it drags the chat taller and shorter -- that one
+        -- stays, and the system messages above the chat keep following it,
+        -- since textmessage.otui anchors them to gameBottomPanel.top.
         gameBottomPanel:getChildById('bottomResizeBorder'):enable()
-        gameBottomPanel:getChildById('rightResizeBorder'):enable()
+        -- rightResizeBorder is the chat's RIGHT edge, which drags the chat
+        -- narrower and wider. Disabled: the chat keeps its full width.
+        gameBottomPanel:getChildById('rightResizeBorder'):disable()
         gameBottomPanel:addAnchor(AnchorBottom, 'parent', AnchorBottom)
         gameLeftActionPanel:setImageSource(nil)
         gameRightActionPanel:setImageSource(nil)

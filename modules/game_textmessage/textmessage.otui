@@ -6,8 +6,26 @@ TextMessageLabel < UILabel
   margin-bottom: 2
   visible: false
 
+// Bottom tracks the chat panel itself, NOT gameMapPanel and NOT bottomSplitter.
+//
+// gameMapPanel is wrong because extended view mode calls gameMapPanel:fill(
+// 'parent') (gameinterface.lua:1974) -- the map then covers the whole screen
+// and the chat is drawn over it, so a message placed near the map's bottom
+// lands underneath the chat.
+//
+// bottomSplitter is wrong for the same mode: applyExtendedViewLayout calls
+// gameBottomPanel:breakAnchors() and makes the chat a free, draggable panel
+// with its own bottomResizeBorder, so the splitter stops driving its height.
+//
+// gameBottomPanel.top is correct in both modes -- in windowed mode it still
+// follows the splitter, and in extended mode it follows the panel wherever it
+// is dragged or resized to. It is a sibling under gameRootPanel, so the id
+// resolves (anchors look the target up among the parent's children only).
 Panel
-  anchors.fill: gameMapPanel
+  anchors.left: gameMapPanel.left
+  anchors.right: gameMapPanel.right
+  anchors.top: gameMapPanel.top
+  anchors.bottom: gameBottomPanel.top
   focusable: false
 
   Panel
@@ -37,5 +55,7 @@ Panel
     id: statusLabel
     anchors.bottom: parent.bottom
     anchors.horizontalCenter: parent.horizontalCenter
-    margin-bottom: 7
+    // Clearance above the chat's resize handle, since that is now this
+    // panel's bottom edge.
+    margin-bottom: 10
     width: 300

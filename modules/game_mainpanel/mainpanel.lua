@@ -85,7 +85,17 @@ function reloadMainPanelSizes()
             end
         end
     end
-    main_panel:setHeight(total_height)
+    -- Upstream ships two right-hand containers: a dedicated "main" one holding
+    -- only minimap/health/inventory/mainpanel, sized to exactly their combined
+    -- height, and gameRightPanel for user windows. This fork has no
+    -- gameMainRightPanel widget, so getMainRightPanel() falls back to
+    -- gameRightPanel and both locals are the SAME widget -- shrinking it to
+    -- total_height (~344px) leaves no room for any other window, and the
+    -- fitAll below then evicts children until they fit. The four core panels
+    -- carry no `save` flag, so fitAll's first removal pass closes exactly them.
+    if main_panel ~= right_panel then
+        main_panel:setHeight(total_height)
+    end
     right_panel:fitAll()
 end
 
@@ -159,6 +169,16 @@ local function createButton(id, description, image, callback, special, front, in
             return true
         end
     end
+
+    -- Everything game_widgets needs to build a mirror of this button. None of it
+    -- can be read back off the widget later: the callback lives only inside the
+    -- closure above, and UIWidget binds setIcon with no matching getter.
+    button.widgetMirror = {
+        tooltip = description,
+        image = image,
+        callback = callback
+    }
+
     if not button.index and type(index) == 'number' then
         button.index = index or 1000
     end
@@ -174,10 +194,14 @@ function optionsController:onInit()
     createButton_large('Store shop', tr('Store shop'), '/images/options/store_large', toggleStore,
     false, 8)
 
-    if not optionPanel then
-        optionPanel = g_ui.loadUI('option_control_buttons', modules.client_options:getPanel())
-        modules.client_options.addButton("Interface", "Control Buttons", optionPanel, function() initControlButtons() end)
-    end
+    -- Options > Interface > Control Buttons is not registered any more. The
+    -- editor itself (initControlButtons and the list functions below) is left
+    -- in place but is now unreachable: optionPanel stays nil, which is what the
+    -- `if optionPanel then` guard in onGameStart keys on.
+    --
+    -- Side effect worth knowing: that guarded block was also what applied the
+    -- saved per-button visibility from the control_buttons settings node. With
+    -- it skipped, every control button shows, whatever a previous session hid.
 end
 
 function toggleStore()
@@ -231,11 +255,11 @@ function optionsController:onGameStart()
             end
         end
     end, 50, "onGameStart")
-    if g_game.getClientVersion() >= 1400 and not controlButton1400 then
-        controlButton1400 = modules.game_mainpanel.addToggleButton('controButtons', tr('Manage control buttons'),
-        '/images/options/button_control', function() modules.client_options.openOptionsCategory("Interface", "Control Buttons") end, false, 1)
-        controlButton1400:setOn(false)
-    end
+    -- The "Manage control buttons" button that stood here existed only to open
+    -- Options > Interface > Control Buttons, which no longer exists. It was
+    -- gated on clientVersion >= 1400 and so never appeared on this 860 client
+    -- anyway. onTerminate still clears controlButton1400 if one is ever added
+    -- back.
 end
 
 function optionsController:onGameEnd()
@@ -261,6 +285,14 @@ end
 
 function getButton(id)
     return optionsController.ui.onPanel.options:recursiveGetChildById(id)
+end
+
+function getOptionsPanel()
+    return optionsController.ui.onPanel.options
+end
+
+function getSpecialsPanel()
+    return optionsController.ui.onPanel.specials
 end
 
 function toggleExtendedViewButtons(extended)

@@ -546,8 +546,10 @@ function extendedView(extendedView)
             iconTopMenu = modules.client_topmenu.addTopRightToggleButton('inventory', tr('Show inventory'),
                 '/images/topbuttons/inventory', toggle)
             iconTopMenu:setOn(inventoryController.ui:isVisible())
-            inventoryController.ui:setBorderColor('black')
-            inventoryController.ui:setBorderWidth(2)
+            -- Was setBorderColor('black') + setBorderWidth(2): a 2px black
+            -- outline applied only in extended view. game_minimap and
+            -- game_healthinfo carried identical copies; all three removed.
+            inventoryController.ui:setBorderWidth(0)
         end
     else
         if iconTopMenu then

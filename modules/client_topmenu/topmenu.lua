@@ -52,8 +52,9 @@ local function addButton(id, description, icon, callback, panel, toggle, front)
     end
     button:setId(id)
     button:setTooltip(description)
+    local iconPath = toggle and resolvepath(icon, 3) or nil
     if toggle then
-        button:setIcon(resolvepath(icon, 3))
+        button:setIcon(iconPath)
     else
         button:setText(description)
     end
@@ -63,6 +64,18 @@ local function addButton(id, description, icon, callback, panel, toggle, front)
             return true
         end
     end
+
+    -- Same record game_mainpanel.createButton leaves behind, so game_widgets can
+    -- mirror a top-bar button without caring which of the two paths made it. Only
+    -- toggles carry it: a plain Button is a label, not a widget icon.
+    if toggle then
+        button.widgetMirror = {
+            tooltip = description,
+            icon = iconPath,
+            callback = callback
+        }
+    end
+
     return button
 end
 
@@ -176,6 +189,17 @@ end
 
 function hide()
     topMenu:hide()
+
+    -- Reclaim the bar's 32px. A hidden widget keeps its rect in this engine, so
+    -- gameRootPanel's anchor to topMenu.bottom (gameinterface.otui:60) would
+    -- leave an empty band across the top rather than free space.
+    --
+    -- The map grows into it. The tile count is pinned at 29x15 by
+    -- enforceExtendedView, so the same tiles are drawn into a taller box and
+    -- each one renders slightly larger -- nothing enters or leaves the view.
+    --
+    -- No-op in view modes 0 and 1: extendedView(false) already puts the root
+    -- panel at parent.top.
     modules.game_interface.getRootPanel():addAnchor(AnchorTop, 'parent', AnchorTop)
 end
 
@@ -501,10 +525,21 @@ function extendedView(extendedView)
     end
     topMenu:breakAnchors()
     if extendedView then
-        topMenu:show()
         topMenu:addAnchor(AnchorLeft, 'parent', AnchorLeft)
         topMenu:addAnchor(AnchorRight, 'parent', AnchorRight)
-        modules.game_interface.getRootPanel():addAnchor(AnchorTop, 'topMenu', AnchorBottom)
+
+        -- Off in game, where it used to be shown. Everything it carried is
+        -- still reachable: its toggles are mirrored in the Widgets window
+        -- (game_widgets sweeps this very panel, and isExplicitlyVisible means a
+        -- button hidden only because this bar is hidden still gets a mirror),
+        -- and ping/fps draw over the map in extended view -- the two setVisible
+        -- calls just below take them off the bar, and online() builds
+        -- PingWidget on the map panel instead. Ctrl+Shift+T brings the bar back
+        -- whenever it is wanted; hide() reclaims its 32px for the map.
+        --
+        -- The login screen keeps it: that is the only chrome there.
+        hide()
+
         pingLabel:setVisible(false)
         fpsLabel:setVisible(false)
         topMenu.topLeftOnlinePlayers:hide()
@@ -513,8 +548,14 @@ function extendedView(extendedView)
         topMenu.topLeftDiscord:hide()
         topMenu.topLeftYoutube:hide()
     else
+        -- The show is not redundant now that the bar is hidden in game: leaving
+        -- the game runs this branch (game_interface.hide -> setupViewMode(0)),
+        -- and nothing else puts the bar back. Without it a single login would
+        -- leave the login screen with no chrome at all for the rest of the run.
         if g_game.isOnline() then
             topMenu:hide()
+        else
+            topMenu:show()
         end
         topMenu:addAnchor(AnchorHorizontalCenter, 'parent', AnchorHorizontalCenter)
         modules.game_interface.getRootPanel():addAnchor(AnchorTop, 'parent', AnchorTop)

@@ -75,61 +75,12 @@ UIWidget
         $!mobile:
           visible: false
         
-    SmallReversedQtPanel
-      anchors.left: parent.left
-      anchors.right: parent.right
-      anchors.top: prev.bottom
-      height: 22
-      margin-top: 7
-      OptionScaleScroll
-        id: hudScale
-        anchors.fill: parent
-        &minimumScrollValue: 1
-        &maximumScrollValue: 5
-        &scrollSize: 21
-  
-    SmallReversedQtPanel
-      anchors.left: parent.left
-      anchors.right: parent.right
-      anchors.top: prev.bottom
-      height: 22
-      margin-top: 7
-      OptionScaleScroll
-        id: creatureInformationScale
-        anchors.fill: parent
-        &minimumScrollValue: 1
-        &maximumScrollValue: 9
-        &scrollSize: 21
-  
-    SmallReversedQtPanel
-      anchors.left: parent.left
-      anchors.right: parent.right
-      anchors.top: prev.bottom
-      margin-top: 7
-      height: 22
-  
-      OptionScaleScroll
-        id: staticTextScale
-        anchors.fill: parent
-        &minimumScrollValue: 1
-        &maximumScrollValue: 9
-        &scrollSize: 21
-  
-    SmallReversedQtPanel
-      anchors.left: parent.left
-      anchors.right: parent.right
-      anchors.top: prev.bottom
-      margin-top: 7
-      height: 22
-  
-      OptionScaleScroll
-        id: animatedTextScale
-        anchors.fill: parent
-        &minimumScrollValue: 1
-        &maximumScrollValue: 9
-        &scrollSize: 21
-  
-  
+    // The four OptionScaleScroll rows that used to sit here -- HUD Scale,
+    // Creature Information Scale, Message Scale, Animated Message Scale -- are
+    // gone. All four are pinned to 1x in data_options.lua and forced there on
+    // load in options.lua, so there was nothing left for them to change.
+    // The separator below picks up the anchor chain via prev.bottom on its own.
+
     HorizontalSeparator
       anchors.top: prev.bottom
       anchors.left: parent.left
@@ -151,36 +102,20 @@ UIWidget
 
 
 
+    // The Show in HUD column -- its label and hudMasterCheckBox -- is gone;
+    // conditions are bar-only now. Show in Bar takes over the exact anchors
+    // and margin the HUD column had, and the per-row showInBarCheckBox in
+    // options.otui moves into the same slot, so header and rows stay lined up
+    // with each other rather than needing a new offset measured by eye.
     Label
-      id: showInHudLabel
+      id: showInBarLabel
       anchors.top: prev.top
       anchors.left: specialConditionLabel.right
       margin-left: 123
-      !text: tr('Show in HUD')
+      !text: tr('Show in Bar')
       text-auto-resize: true
       $mobile:
         margin-left: -5
-
-  
-    CheckBox
-      id: hudMasterCheckBox
-      size: 12 12
-      anchors.bottom: prev.bottom
-      anchors.left: prev.right
-      margin-left: 8
-      margin-bottom: 2
-      image-source: /images/ui/checkbox
-      image-clip: 0 0 12 12
-
-
-
-    Label
-      id: showInBarLabel
-      anchors.top: showInHudLabel.top
-      anchors.left: prev.right
-      margin-left: 16
-      !text: tr('Show in Bar')
-      text-auto-resize: true
 
 
     CheckBox

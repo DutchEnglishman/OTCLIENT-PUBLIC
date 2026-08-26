@@ -4,15 +4,33 @@ local minimapWidget = nil -- bot fix
 local otmm = true
 local oldPos = nil
 local fullscreenWidget
+local fullscreenControls
 local virtualFloor = 7
 local currentDayTime = {
     h = 12,
     m = 0
 }
 
+-- fullscreen() reparents the minimap widget out of mapController.ui, so
+-- ui.minimapBorder.minimap reads nil for as long as the full map is open. Every
+-- control that reached the map through that path -- floors, zoom, the compass
+-- rose, reset -- was therefore dead while fullscreen. Go through here instead.
+local function minimapUi()
+    return mapController.ui.minimapBorder.minimap or fullscreenWidget
+end
+
+-- Updates the docked panel's layer strip and, while it exists, the fullscreen
+-- overlay's copy: both display virtualFloor and would otherwise disagree.
 local function refreshVirtualFloors()
-    mapController.ui.layersPanel.layersMark:setMarginTop(((virtualFloor + 1) * 4) - 3)
-    mapController.ui.layersPanel.automapLayers:setImageClip((virtualFloor * 14) .. ' 0 14 67')
+    local panels = { mapController.ui.layersPanel }
+    if fullscreenControls and not fullscreenControls:isDestroyed() then
+        table.insert(panels, fullscreenControls.layersPanel)
+    end
+
+    for _, panel in ipairs(panels) do
+        panel.layersMark:setMarginTop(((virtualFloor + 1) * 4) - 3)
+        panel.automapLayers:setImageClip((virtualFloor * 14) .. ' 0 14 67')
+    end
 end
 
 local function onPositionChange()
@@ -181,11 +199,11 @@ function mapController:onTerminate()
 end
 
 function zoomIn()
-    mapController.ui.minimapBorder.minimap:zoomIn()
+    minimapUi():zoomIn()
 end
 
 function zoomOut()
-    mapController.ui.minimapBorder.minimap:zoomOut()
+    minimapUi():zoomOut()
 end
 
 function openCyclopediaMap()
@@ -207,28 +225,55 @@ function fullscreen()
         return
     end
 
+    -- Where the map ends up looking once the mode has been switched. Closing
+    -- restores whatever the docked minimap was showing; opening centres on the
+    -- player rather than resuming wherever the map was left last time.
+    local pos
+
     if minimapWidget.fullMapView then
         fullscreenWidget = nil
+
+        if fullscreenControls and not fullscreenControls:isDestroyed() then
+            fullscreenControls:destroy()
+        end
+        fullscreenControls = nil
+
         minimapWidget:setParent(mapController.ui.minimapBorder)
         minimapWidget:fill('parent')
         mapController.ui:show()
         zoom = minimapWidget.zoomMinimap
         g_keyboard.unbindKeyDown('Escape')
         minimapWidget.fullMapView = false
+
+        pos = oldPos
+        oldPos = nil
     else
         fullscreenWidget = minimapWidget
+        oldPos = minimapWidget:getCameraPosition()
         mapController.ui:hide(true)
         minimapWidget:setParent(modules.game_interface.getRootPanel())
         minimapWidget:fill('parent')
         zoom = minimapWidget.zoomFullmap
         g_keyboard.bindKeyDown('Escape', fullscreen)
         minimapWidget.fullMapView = true
+
+        -- The docked panel carrying the floor and zoom buttons is hidden above,
+        -- so the full map gets its own copy.
+        fullscreenControls = g_ui.createWidget('MinimapFullscreenControls', minimapWidget)
+
+        local player = g_game.getLocalPlayer()
+        pos = player and player:getPosition() or nil
+        if pos then
+            -- Keep the layer strip honest: it reads virtualFloor, and the map
+            -- has just jumped to the player's floor.
+            virtualFloor = pos.z
+        end
     end
 
-    local pos = oldPos or minimapWidget:getCameraPosition()
-    oldPos = minimapWidget:getCameraPosition()
+    pos = pos or minimapWidget:getCameraPosition()
     minimapWidget:setZoom(zoom)
     minimapWidget:setCameraPosition(pos)
+    refreshVirtualFloors()
 end
 
 function upLayer()
@@ -236,7 +281,7 @@ function upLayer()
         return
     end
 
-    mapController.ui.minimapBorder.minimap:floorUp(1)
+    minimapUi():floorUp(1)
     virtualFloor = virtualFloor - 1
     refreshVirtualFloors()
 end
@@ -246,33 +291,33 @@ function downLayer()
         return
     end
 
-    mapController.ui.minimapBorder.minimap:floorDown(1)
+    minimapUi():floorDown(1)
     virtualFloor = virtualFloor + 1
     refreshVirtualFloors()
 end
 
 function onClickRoseButton(dir)
     if dir == 'north' then
-        mapController.ui.minimapBorder.minimap:move(0, 1)
+        minimapUi():move(0, 1)
     elseif dir == 'north-east' then
-        mapController.ui.minimapBorder.minimap:move(-1, 1)
+        minimapUi():move(-1, 1)
     elseif dir == 'east' then
-        mapController.ui.minimapBorder.minimap:move(-1, 0)
+        minimapUi():move(-1, 0)
     elseif dir == 'south-east' then
-        mapController.ui.minimapBorder.minimap:move(-1, -1)
+        minimapUi():move(-1, -1)
     elseif dir == 'south' then
-        mapController.ui.minimapBorder.minimap:move(0, -1)
+        minimapUi():move(0, -1)
     elseif dir == 'south-west' then
-        mapController.ui.minimapBorder.minimap:move(1, -1)
+        minimapUi():move(1, -1)
     elseif dir == 'west' then
-        mapController.ui.minimapBorder.minimap:move(1, 0)
+        minimapUi():move(1, 0)
     elseif dir == 'north-west' then
-        mapController.ui.minimapBorder.minimap:move(1, 1)
+        minimapUi():move(1, 1)
     end
 end
 
 function resetMap()
-    mapController.ui.minimapBorder.minimap:reset()
+    minimapUi():reset()
     local player = g_game.getLocalPlayer()
     if player then
         virtualFloor = player:getPosition().z
@@ -281,7 +326,7 @@ function resetMap()
 end
 
 function getMiniMapUi()
-    return mapController.ui.minimapBorder.minimap
+    return minimapUi()
 end
 
 function extendedView(extendedView)
@@ -290,8 +335,9 @@ function extendedView(extendedView)
             iconTopMenu = modules.client_topmenu.addTopRightToggleButton('miniMap', tr('Show miniMap'),
                 '/images/topbuttons/minimap', toggle)
             iconTopMenu:setOn(mapController.ui:isVisible())
-            mapController.ui:setBorderColor('black')
-            mapController.ui:setBorderWidth(2)
+            -- See game_inventory/inventory.lua: 2px black outline that only
+            -- appeared in extended view. Removed here too.
+            mapController.ui:setBorderWidth(0)
         end
     else
         if iconTopMenu then

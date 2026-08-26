@@ -173,8 +173,70 @@ function determineKeyComboDesc(keyCode, keyboardModifiers)
     return translateKeyCombo(keyCombo)
 end
 
+-- A focused text field must own every keystroke that produces a character.
+--
+-- UITextEdit only consumes editing and navigation keys in onKeyPress
+-- (uitextedit.cpp:1383 -- Delete, Backspace, arrows, Home/End, Ctrl+A/C/V/X).
+-- The character itself arrives on a SEPARATE onKeyText event. So typing a
+-- letter into a search box fires onKeyText, which the field eats, and then
+-- onKeyPress, which the field does not -- and that one keeps propagating up to
+-- rootWidget, where game hotkeys, WASD walking and Keybind all live. Typing
+-- "sword" into a search box casts whatever s/w/o/r/d are bound to.
+--
+-- Every g_keyboard.bindKey* in the client funnels through the three handlers
+-- below, so this is the one place that closes it for all of them rather than
+-- per window.
+local function isTypingIntoTextField()
+    local widget = rootWidget
+    while widget do
+        local child = widget:getFocusedChild()
+        if not child then
+            break
+        end
+        widget = child
+    end
+
+    if not widget or widget == rootWidget or widget:isDestroyed() then
+        return false
+    end
+
+    -- Duck-typed rather than matched on a class name: isEditable is bound on
+    -- UITextEdit's metatable, so it resolves for text edits and for everything
+    -- extending them (UISpinBox, and every OTUI style derived from TextEdit)
+    -- while staying nil on an ordinary widget.
+    if type(widget.isEditable) ~= 'function' then
+        return false
+    end
+
+    return widget:isEditable() and widget:isVisible() and widget:isEnabled()
+end
+
+-- Keys 32 (Space) through 126 (~) are exactly the printable ASCII block in
+-- const.lua, so this is the precise set that produces text -- no guessing at
+-- which keys are "letters". Everything below 32 is a control key (Escape,
+-- Enter, Tab, Backspace, arrows, Home/End, page keys) and F1-F12 and the
+-- numpad sit above 126, so windows keep their navigation keys and the
+-- traditional Tibia hotkey slots keep working while a field has focus.
+--
+-- Ctrl/Alt/Meta exempt a combo, Shift does not: Shift+A still types an "A".
+local function blockedWhileTyping(keyCode, keyboardModifiers)
+    if keyCode < KeySpace or keyCode > KeyTilde then
+        return false
+    end
+    if bit.band(keyboardModifiers, KeyboardCtrlModifier) ~= 0 or
+        bit.band(keyboardModifiers, KeyboardAltModifier) ~= 0 or
+        bit.band(keyboardModifiers, KeyboardMetaModifier) ~= 0 or
+        bit.band(keyboardModifiers, KeyboardPrimaryModifier) ~= 0 then
+        return false
+    end
+    return isTypingIntoTextField()
+end
+
 local function onWidgetKeyDown(widget, keyCode, keyboardModifiers)
     if keyCode == KeyUnknown then
+        return false
+    end
+    if blockedWhileTyping(keyCode, keyboardModifiers) then
         return false
     end
     local callback
@@ -190,6 +252,9 @@ local function onWidgetKeyUp(widget, keyCode, keyboardModifiers)
     if keyCode == KeyUnknown then
         return false
     end
+    if blockedWhileTyping(keyCode, keyboardModifiers) then
+        return false
+    end
     local callback = widget.boundAloneKeyUpCombos[determineKeyComboDesc(keyCode, KeyboardNoModifier)]
     signalcall(callback, widget, keyCode)
     callback = widget.boundKeyUpCombos[determineKeyComboDesc(keyCode, keyboardModifiers)]
@@ -201,6 +266,9 @@ local function onWidgetKeyPress(widget, keyCode, keyboardModifiers, autoRepeatTi
         return false
     end
     if not widget.boundKeyPressCombos then
+        return false
+    end
+    if blockedWhileTyping(keyCode, keyboardModifiers) then
         return false
     end
     local callback = widget.boundKeyPressCombos[determineKeyComboDesc(keyCode, keyboardModifiers)]

@@ -1,0 +1,8 @@
+Module
+  name: game_widgets
+  description: Collects the widget toggle icons into one dockable window
+  author: Roel
+  sandboxed: true
+  scripts: [ widgets ]
+  @onLoad: init()
+  @onUnload: terminate()

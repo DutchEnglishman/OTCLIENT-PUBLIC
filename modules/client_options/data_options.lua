@@ -242,7 +242,8 @@ return {
         value = true,
         action = function(value, options, controller, panels, extraWidgets)
             panels.gameMapPanel:setDrawLights(value and options.ambientLight.value < 100)
-            panels.graphicsEffectsPanel:recursiveGetChildById('ambientLight'):setEnabled(value)
+            -- The ambientLight slider this used to enable/disable no longer
+            -- exists in styles/graphics/effects.otui; the lookup would be nil.
         end
     },
     limitVisibleDimension             = {
@@ -257,11 +258,13 @@ return {
             g_map.setFloatingEffect(value)
         end
     },
+    -- No UI any more: the slider was removed from styles/graphics/effects.otui,
+    -- so the setText that dressed it is gone with it. Pinned to 0% and forced
+    -- there on load in options.lua, so a saved percentage cannot outlive the
+    -- slider that set it.
     ambientLight                      = {
         value = 0,
         action = function(value, options, controller, panels, extraWidgets)
-            panels.graphicsEffectsPanel:recursiveGetChildById('ambientLight'):setText(string.format(
-                'Ambient light: %s%%', value))
             panels.gameMapPanel:setMinimumAmbientLight(value / 100)
             panels.gameMapPanel:setDrawLights(options.enableLights.value)
         end
@@ -442,16 +445,15 @@ return {
         action = function(value, options, controller, panels, extraWidgets)
             panels.gameMapPanel:setFloorViewMode(value)
             panels.graphicsEffectsPanel:recursiveGetChildById('floorViewMode'):setCurrentOptionByData(value, true)
-
-            local fadeMode = value == 1
-            panels.graphicsEffectsPanel:recursiveGetChildById('floorFading'):setEnabled(fadeMode)
+            -- The floorFading slider this used to enable only in fade mode no
+            -- longer exists in styles/graphics/effects.otui.
         end
     },
+    -- No UI any more, same as ambientLight above. Pinned to 500 ms and forced
+    -- there on load in options.lua.
     floorFading                       = {
         value = 500,
         action = function(value, options, controller, panels, extraWidgets)
-            panels.graphicsEffectsPanel:recursiveGetChildById('floorFading'):setText(string.format('Floor Fading: %s ms',
-                value))
             panels.gameMapPanel:setFloorFading(tonumber(value))
         end
     },
@@ -470,9 +472,20 @@ return {
             g_app.setLoadingAsyncTexture(value)
         end
     },
+    -- The four scale options below have no UI any more: their OptionScaleScroll
+    -- rows were removed from styles/interface/HUD.otui, so the setText calls
+    -- that dressed those rows are gone with them -- the widgets they looked up
+    -- no longer exist and the lookup would return nil.
+    --
+    -- Both mappings that produced anything other than 1x are also gone. A
+    -- stored 1 lands on exactly 1x (1/2 + 0.5), and the `value == 0` branch
+    -- that fell back to g_window.getDisplayDensity() is dropped, since that was
+    -- the path that made a HiDPI display scale past 1x on a fresh install.
+    -- Anything at or below 1 now clamps to 1x, and options.lua's setup() forces
+    -- all four to 1 on load regardless of what a previous session saved.
     hudScale                          = {
         event = nil,
-        value = g_platform.isMobile() and 2 or 0,
+        value = 1,
         action = function(value, options, controller, panels, extraWidgets)
             value = value / 2
 
@@ -480,52 +493,30 @@ return {
                 removeEvent(options.hudScale.event)
             end
 
+            -- Debounce kept: client_topmenu's mobile zoom buttons still drive
+            -- this option (topmenu.lua:94) and can fire it rapidly.
             options.hudScale.event = scheduleEvent(function()
                 g_app.setHUDScale(math.max(value + 0.5, 1))
                 options.hudScale.event = nil
             end, 250)
-
-            local hudWidget = panels.interfaceHUD:recursiveGetChildById('hudScale')
-            hudWidget:setText(string.format('HUD Scale: %sx', math.max(value + 0.5, 1)))
         end
     },
     creatureInformationScale          = {
-        value = g_platform.isMobile() and 2 or 0,
+        value = 1,
         action = function(value, options, controller, panels, extraWidgets)
-            if value == 0 then
-                value = g_window.getDisplayDensity() - 0.5
-            else
-                value = value / 2
-            end
-            g_app.setCreatureInformationScale(math.max(value + 0.5, 1))
-            panels.interfaceHUD:recursiveGetChildById('creatureInformationScale'):setText(string.format(
-                'Creature Information Scale: %sx', math.max(value + 0.5, 1)))
+            g_app.setCreatureInformationScale(math.max(value / 2 + 0.5, 1))
         end
     },
     staticTextScale                   = {
-        value = g_platform.isMobile() and 2 or 0,
+        value = 1,
         action = function(value, options, controller, panels, extraWidgets)
-            if value == 0 then
-                value = g_window.getDisplayDensity() - 0.5
-            else
-                value = value / 2
-            end
-            g_app.setStaticTextScale(math.max(value + 0.5, 1))
-            panels.interfaceHUD:recursiveGetChildById('staticTextScale'):setText(string.format('Message Scale: %sx',
-                math.max(value + 0.5, 1)))
+            g_app.setStaticTextScale(math.max(value / 2 + 0.5, 1))
         end
     },
     animatedTextScale                 = {
-        value = g_platform.isMobile() and 2 or 0,
+        value = 1,
         action = function(value, options, controller, panels, extraWidgets)
-            if value == 0 then
-                value = g_window.getDisplayDensity() - 0.5
-            else
-                value = value / 2
-            end
-            g_app.setAnimatedTextScale(math.max(value + 0.5, 1))
-            panels.interfaceHUD:recursiveGetChildById('animatedTextScale'):setText(
-                tr('Animated Message Scale: %sx', math.max(value + 0.5, 1)))
+            g_app.setAnimatedTextScale(math.max(value / 2 + 0.5, 1))
         end
     },
     showLeftExtraPanel                = {

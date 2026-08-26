@@ -4,6 +4,10 @@ game
   typing-icon: /images/game/console/typing
   
   map
+    // Pre-login only. On login the server sends its own range via
+    // sendChangeMapAwareRange (OTSERV protocolgame.cpp:1844, 31x18), and
+    // parseChangeMapAwareRange overwrites whatever is set here -- so changing
+    // this value has no effect on the in-game view.
     viewport: 12 9
     extended-view-ui: true
     max-z: 15
@@ -24,6 +28,12 @@ game
     adjust-creature-information-based-crop-size: false
     use-crop-size-for-ui-draw: true
     diagonal-walk-speed: 3
+    // How fast the walking sprite cycles its frames. 1 is the stock timing,
+    // lower is slower; read at startup, so tuning it needs a client restart
+    // but no rebuild. Purely cosmetic -- how long a step takes still comes
+    // from the server's speed value (Creature::getStepDuration), so this
+    // cannot desync anything.
+    walk-animation-speed: 0.7
 
   player
     diagonal-walk-speed: 3
