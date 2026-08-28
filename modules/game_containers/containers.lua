@@ -1166,37 +1166,6 @@ function onContainerOpen(container, previousContainer)
         panel:addChild(containerWindow)
     end
 
-    -- TEMPORARY DIAGNOSTIC -- remove once the right-hand gap is understood.
-    -- Every attempt at this so far has been computed from the .otui files;
-    -- this reports what the widgets actually measure at runtime.
-    addEvent(function()
-        if containerWindow:isDestroyed() then
-            return
-        end
-        local cp = containerWindow:getChildById('contentsPanel')
-        local sb = containerWindow:getChildById('miniwindowScrollBar')
-        local rightmost = -1
-        if cp then
-            for i = 1, cp:getChildCount() do
-                local c = cp:getChildByIndex(i)
-                if c and c:isVisible() then
-                    local r = c:getX() + c:getWidth()
-                    if r > rightmost then rightmost = r end
-                end
-            end
-        end
-        local lay = cp and cp:getLayout()
-        g_logger.info(string.format(
-            '[bpprobe] win w=%d x=%d | contents x=%d w=%d pad l%d r%d | sb w=%d mR=%d on=%s | COLUMNS=%d | slots=%d rightmostSlotEdge=%d | winRight=%d',
-            containerWindow:getWidth(), containerWindow:getX(),
-            cp and cp:getX() or -1, cp and cp:getWidth() or -1,
-            cp and cp:getPaddingLeft() or -1, cp and cp:getPaddingRight() or -1,
-            sb and sb:getWidth() or -1, sb and sb:getMarginRight() or -1, tostring(sb and sb:isOn()),
-            lay and lay:getNumColumns() or -1,
-            cp and cp:getChildCount() or -1, rightmost,
-            containerWindow:getX() + containerWindow:getWidth()))
-    end)
-
     if not previousContainer or previousContainer:getCapacity() >= container:getCapacity() then
         -- Always set the content height based on the current container's content, with a minimum of one row
         local minRows = 1

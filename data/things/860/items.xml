@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
+﻿<?xml version="1.0" encoding="iso-8859-1"?>
 <items>
 	<item id="100" name="void" />
 	<item id="101" name="earth" />
@@ -17694,7 +17694,7 @@
 		<attribute key="description" value="This one would be quite healthy if it wasn't for all the melted cheese on top." />
 		<attribute key="weight" value="1100" />
 	</item>
-	<item id="9998" article="a" name="filled jalape�o peppers">
+	<item id="9998" article="a" name="filled jalapeï¿½o peppers">
 		<attribute key="description" value="The creamy cheese makes a great combination with the spicy peppers." />
 		<attribute key="weight" value="650" />
 	</item>
@@ -25840,7 +25840,200 @@
 		<attribute key="weight" value="500" />
 		<attribute key="description" value="Allows instant get the summoner mount outfit. (VIP ITEM)" />	
 	</item> 
+	
+	<item id="13494" article="a" name="Faith crystal">
+	<attribute key="description" value="Rerolls all attribute values" />
+	</item>
 
+	<item id="13374" article="a" name="preservation scroll">
+	<attribute key="weight" value="100" />
+	<attribute key="description" value="Use on an amulet to grant it one charge of protection against item loss on death." />
+	</item>
 
+	<item id="13496" article="an" name="amulet of loss with earth protection">
+	<attribute key="weight" value="420" />
+	<attribute key="slotType" value="necklace" />
+	<attribute key="charges" value="1" />
+	<attribute key="absorbPercentEarth" value="5" />
+	<attribute key="description" value="Protects you from losing your belongings upon death. It grants 5% earth resistance." />
+	</item>
 
+	<item id="13497" article="an" name="amulet of loss with death protection">
+	<attribute key="weight" value="420" />
+	<attribute key="slotType" value="necklace" />
+	<attribute key="charges" value="1" />
+	<attribute key="absorbPercentDeath" value="5" />
+	<attribute key="description" value="Protects you from losing your belongings upon death. It grants 5% death resistance." />
+	</item>
+
+	<item id="13498" article="an" name="amulet of loss with ice protection">
+	<attribute key="weight" value="420" />
+	<attribute key="slotType" value="necklace" />
+	<attribute key="charges" value="1" />
+	<attribute key="absorbPercentIce" value="5" />
+	<attribute key="description" value="Protects you from losing your belongings upon death. It grants 5% ice resistance." />
+	</item>
+
+	<item id="13499" article="an" name="amulet of loss with fire protection">
+	<attribute key="weight" value="420" />
+	<attribute key="slotType" value="necklace" />
+	<attribute key="charges" value="1" />
+	<attribute key="absorbPercentFire" value="5" />
+	<attribute key="description" value="Protects you from losing your belongings upon death. It grants 5% fire resistance." />
+	</item>
+
+	<item id="13500" article="an" name="amulet of loss with physical protection">
+	<attribute key="weight" value="420" />
+	<attribute key="slotType" value="necklace" />
+	<attribute key="charges" value="1" />
+	<attribute key="absorbPercentPhysical" value="5" />
+	<attribute key="description" value="Protects you from losing your belongings upon death. It grants 5% physical resistance." />
+	</item>
+
+	<item id="13389" article="a" name="Upgrade rarity crystal">
+    <attribute key="description" value="Can upgrade the rarity of a item" />
+    </item>
+
+	<item id="13489" article="a" name="Cleansening crystal">
+	<attribute key="description" value="removes all attributes from a item" />
+	</item>
+	
+	<item id="13491" article="a" name="Removal crystal">
+	<attribute key="description" value="Removes the last attribute from a item" />
+	</item>
+
+	<item id="13488" article="a" name="Fortune crystal">
+	<attribute key="description" value="Rerolls the value of the last attribute on a item" />
+	</item>
+
+	<item id="13492" article="a" name="Reroll attribute">
+	<attribute key="description" value="Removes last attribute and adds a new one" />
+	</item>
+
+	<item id="13490" article="a" name="Enchantment crystal">
+	<attribute key="description" value="Adds a attribute to a item" />
+	</item>
+
+	<item id="13388" article="a" name="Upgrade crystal">
+	<attribute key="description" value="Upgrades a item to +1 or higher" />
+	</item>
+	
+	<item id="13307" article="a" name="Dumortierite quartz">
+	<attribute key="description" value="Raw unrefined quartz" />
+	</item>
+
+	<item id="13308" article="a" name="Golden Quartz">
+    <attribute key="description" value="Raw unrefined quartz" />
+    </item>
+
+	<item id="13309" article="a" name="Green amethyst quartz">
+	<attribute key="description" value="Raw unrefined quartz" />
+	</item>
+	
+	<item id="13310" article="a" name="Snow quartz">
+	<attribute key="description" value="Raw unrefined quartz" />
+	</item>
+
+	<item id="13311" article="a" name="Blue moon quartz">
+	<attribute key="description" value="Raw unrefined quartz" />
+	</item>
+
+	<item id="13312" article="a" name="Pink quartz">
+	<attribute key="description" value="Raw unrefined quartz" />
+	</item>
+
+	<item id="13313" article="a" name="Amethyst quartz">
+	<attribute key="description" value="Raw unrefined quartz" />
+	</item>
+
+	<item id="13314" article="a" name="Blood quartz">
+	<attribute key="description" value="Raw unrefined quartz" />
+	</item>
+	
+	<item id="13481" article="a" name="Attack speed gem">
+	<attribute key="description" value="refines your weapon with increased attack speed" />
+	</item>
+
+	<item id="13479" article="a" name="Critical chance gem">
+	<attribute key="description" value="Refines your weapon with critical chance" />
+	</item>
+
+	<item id="13294" article="a" name="Critical amount gem">
+	<attribute key="description" value="Refines your weapon with critical amount" />
+	</item>
+
+	<item id="13295" article="a" name="Life leech amount gem">
+	<attribute key="description" value="Refines your weapon with life leech amount" />
+	</item>
+
+	<item id="13485" article="a" name="Life leech chance gem">
+	<attribute key="description" value="Refines your weapon with life leech chance" />
+	</item>
+	
+	<item id="13408" article="a" name="Copper rock">
+	</item>
+
+	<item id="13409" article="a" name="Copper rock">
+    </item>
+
+	<item id="13425" article="a" name="Iron rock">
+	</item>
+	
+	<item id="13423" article="a" name="Gold rock">
+	</item>
+
+	<item id="13414" article="a" name="Gold rock">
+	</item>
+
+	<item id="13438" article="a" name="Mithril rock">
+	</item>
+	
+	<item id="13442" article="a" name="Mithril rock">
+    </item>
+
+	<item id="13401" article="a" name="Adamant rock">
+	</item>
+	
+	<item id="13399" article="a" name="Adamant rock">
+	</item>
+
+	<item id="13391" article="a" name="Runite rock">
+	</item>
+
+	<item id="13392" article="a" name="Runite rock">
+	</item>
+	
+	<item id="13359" article="a" name="Copper ore">
+	</item>
+
+	<item id="13361" article="a" name="Iron ore">
+    </item>
+
+	<item id="13358" article="a" name="Gold ore">
+	</item>
+	
+	<item id="13352" article="a" name="Mithril ore">
+	</item>
+
+	<item id="13356" article="a" name="Adamant ore">
+	</item>
+
+	<item id="13355" article="a" name="Runite ore">
+	</item>
+		
+	<item id="13323" article="a" name="Autoloot slot token">
+	</item>
+a
+	<item id="13322" article="a" name="Autoloot preset token">
+	</item>
+	
+	<item id="13347" article="a" name="Ignore loot token">
+	</item>
+
+	<item id="13346" article="a" name="Stackables token">
+	</item>
+	
+	
 </items>
+
+

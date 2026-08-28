@@ -70,13 +70,198 @@ local function setupUIButtons()
     end
 end
 
+-- Mining borrows the axe row: protocol 860's skills window is a fixed set and
+-- has no slot of its own for it. The server pushes "level:percent" on this
+-- opcode from Mining.sendSkillToClient (OTSERV data/mining/mining.lua) on
+-- login, on every level-up and from the mining talkactions -- the number must
+-- match MiningConfig.skill.clientOpcode in data/mining/mining_config.lua.
+MINING_SKILL_OPCODE = 120
+
+-- Total resistance from worn gear. The 8.60 protocol has no field for this, so
+-- the server pushes it over an extended opcode (src/const.h RESISTANCES_OPCODE)
+-- on login and whenever an equipment slot changes.
+RESISTANCES_OPCODE = 63
+
+-- How long the character stays full. 8.60 has no protocol field for it, so the
+-- server pushes the remaining seconds (data/lib/core/player.lua) on login and
+-- on every meal, and the row counts down locally between pushes.
+FOOD_TIME_OPCODE = 64
+
+-- Crit / life steal totals from the upgrade system plus the wielded weapon's attack
+-- speed. Pushed by the server (Player::sendCombatStats) on login and whenever an
+-- equipment slot changes, same as the resistances.
+COMBAT_STATS_OPCODE = 65
+
+local function setCombatRow(rowId, text, tooltip)
+    if not skillsWindow then
+        return
+    end
+
+    local row = skillsWindow:recursiveGetChildById(rowId)
+    if not row then
+        return
+    end
+
+    local widget = row:getChildById('value')
+    if widget then
+        widget:setText(text)
+    end
+
+    if tooltip then
+        row:setTooltip(tooltip)
+    end
+end
+
+local function onCombatStats(protocol, opcode, buffer)
+    local stats = {}
+    for key, value in buffer:gmatch('(%a+)=(-?%d+)') do
+        stats[key] = tonumber(value)
+    end
+
+    -- Every figure below already has the rarity/upgrade and refine
+    -- contributions folded together server-side.
+    local critChance = stats.critchance or 0
+    local critDamage = stats.critdamage or 0
+    local lifeStealChance = stats.lifestealchance or 0
+    local lifeStealAmount = stats.lifesteal or 0
+    local manaLeech = stats.manaleech or 0
+    local attackSpeed = stats.attackspeed or 0
+
+    setCombatRow('combatCritChance', critChance .. '%',
+        tr('Chance a hit crits, from rarity bonuses and weapon refines together.'))
+    setCombatRow('combatCritDamage', critDamage .. '%',
+        tr('Extra damage a critical hit deals, from weapon refines.'))
+    setCombatRow('combatLifeStealChance', lifeStealChance .. '%',
+        tr('Chance a hit steals life, from weapon refines. Recoup is a separate stat.'))
+    setCombatRow('combatLifeSteal', lifeStealAmount .. '%',
+        tr('Health stolen on a successful life steal, from weapon refines. Separate stats: Recoup %d%% of damage taken, healed over 10s, and mana steal %d%%.', stats.recoup or 0, manaLeech))
+    setCombatRow('combatAttackSpeed',
+        string.format('%.1fs', attackSpeed / 1000),
+        tr('Seconds between attacks, including the weapon refine speed bonus.'))
+end
+
+local foodSeconds = 0
+local foodTickEvent = nil
+
+local function formatFoodTime(seconds)
+    if seconds <= 0 then
+        return '00:00'
+    end
+
+    local hours = math.floor(seconds / 3600)
+    local minutes = math.floor((seconds % 3600) / 60)
+
+    if hours > 0 then
+        return string.format('%d:%02d:%02d', hours, minutes, seconds % 60)
+    end
+
+    return string.format('%02d:%02d', minutes, seconds % 60)
+end
+
+local function refreshFoodRow()
+    if not skillsWindow then
+        return
+    end
+
+    local row = skillsWindow:recursiveGetChildById('food')
+    if not row then
+        return
+    end
+
+    local widget = row:getChildById('value')
+    if widget then
+        widget:setText(formatFoodTime(foodSeconds))
+        widget:setColor(foodSeconds > 0 and '#C0C0C0' or '#F55E5E')
+    end
+end
+
+local function onFoodTime(protocol, opcode, buffer)
+    foodSeconds = tonumber(buffer) or 0
+    refreshFoodRow()
+end
+
+local function tickFoodTime()
+    if foodSeconds > 0 then
+        foodSeconds = foodSeconds - 1
+        refreshFoodRow()
+    end
+end
+
+local RESISTANCE_ROWS = {
+    physical  = 'gearResistPhysical',
+    fire      = 'gearResistFire',
+    earth     = 'gearResistEarth',
+    energy    = 'gearResistEnergy',
+    ice       = 'gearResistIce',
+    holy      = 'gearResistHoly',
+    death     = 'gearResistDeath'
+}
+
+local function setResistanceRow(rowId, value)
+    if not skillsWindow then
+        return
+    end
+
+    local row = skillsWindow:recursiveGetChildById(rowId)
+    if not row then
+        return
+    end
+
+    local valueWidget = row:getChildById('value')
+    if valueWidget then
+        valueWidget:setText(value .. '%')
+        valueWidget:setColor(
+            value > 0 and '#44AD25'
+                or (value < 0 and '#F55E5E' or '#C0C0C0')
+        )
+    end
+
+    local bar = row:getChildById('percent')
+    if bar then
+        -- A negative value is a vulnerability, not resistance, so the bar
+        -- empties and the number carries the sign.
+        bar:setPercent(math.max(0, math.min(100, value)))
+        bar:setTooltip(
+            value < 0
+                and tr('You take %s%% extra damage of this type', -value)
+                or tr('Damage of this type is reduced by %s%%', value)
+        )
+    end
+end
+
+local function onResistances(protocol, opcode, buffer)
+    for key, value in buffer:gmatch('([%a]+)=(-?%d+)') do
+        local rowId = RESISTANCE_ROWS[key]
+        if rowId then
+            setResistanceRow(rowId, tonumber(value))
+        end
+    end
+end
+local MINING_SKILL_ROW = 'skillId3'
+
+local function onMiningSkill(protocol, opcode, buffer)
+    local level, percent = buffer:match('^(%d+):(%d+)$')
+    if not level then
+        return
+    end
+
+    level, percent = tonumber(level), tonumber(percent)
+    setSkillValue(MINING_SKILL_ROW, level)
+    setSkillPercent(MINING_SKILL_ROW, percent, tr('You have %s percent to go', 100 - percent))
+end
+
 function skillController:onInit()
+    ProtocolGame.registerExtendedOpcode(MINING_SKILL_OPCODE, onMiningSkill)
+    ProtocolGame.registerExtendedOpcode(RESISTANCES_OPCODE, onResistances)
+    ProtocolGame.registerExtendedOpcode(FOOD_TIME_OPCODE, onFoodTime)
+    ProtocolGame.registerExtendedOpcode(COMBAT_STATS_OPCODE, onCombatStats)
+    foodTickEvent = cycleEvent(tickFoodTime, 1000)
+
     skillController:registerEvents(LocalPlayer, {
         onExperienceChange = onExperienceChange,
         onLevelChange = onLevelChange,
         onHealthChange = onHealthChange,
         onManaChange = onManaChange,
-        onSoulChange = onSoulChange,
         onFreeCapacityChange = onFreeCapacityChange,
         onTotalCapacityChange = onTotalCapacityChange,
         onBaseCapacityChange = onBaseCapacityChange,
@@ -125,6 +310,14 @@ function skillController:onInit()
 end
 
 function skillController:onTerminate()
+    ProtocolGame.unregisterExtendedOpcode(MINING_SKILL_OPCODE)
+    ProtocolGame.unregisterExtendedOpcode(RESISTANCES_OPCODE)
+    ProtocolGame.unregisterExtendedOpcode(FOOD_TIME_OPCODE)
+    ProtocolGame.unregisterExtendedOpcode(COMBAT_STATS_OPCODE)
+    if foodTickEvent then
+        removeEvent(foodTickEvent)
+        foodTickEvent = nil
+    end
     Keybind.delete("Windows", "Show/hide skills windows")
     skillsWindow:destroy()
     skillsButton:destroy()
@@ -827,7 +1020,6 @@ function refresh()
     onLevelChange(player, player:getLevel(), player:getLevelPercent())
     onHealthChange(player, player:getHealth(), player:getMaxHealth())
     onManaChange(player, player:getMana(), player:getMaxMana())
-    onSoulChange(player, player:getSoul())
     onFreeCapacityChange(player, player:getFreeCapacity())
     onStaminaChange(player, player:getStamina())
     onMagicLevelChange(player, player:getMagicLevel(), player:getMagicLevelPercent())
@@ -920,7 +1112,14 @@ function updateHeight()
                 if percentBar then
                     showPercentBar(skillButton, skillSettings[char][skillButton:getId()] ~= 1)
                 end
-                maximumHeight = maximumHeight + skillButton:getHeight() + skillButton:getMarginBottom()
+                -- Outer height, top margin included. Leaving it out made the
+                -- cap fall short of the content by the sum of every row's
+                -- margin-top, so the window could not be dragged far enough to
+                -- show the last row.
+                maximumHeight = maximumHeight
+                    + skillButton:getMarginTop()
+                    + skillButton:getHeight()
+                    + skillButton:getMarginBottom()
             end
         end
     else
@@ -944,6 +1143,9 @@ end
 
 function skillController:onGameEnd()
     skillsWindow:setParent(nil, true)
+
+    -- Do not carry a stale countdown into the next character.
+    foodSeconds = 0
     if expSpeedEvent then
         expSpeedEvent:cancel()
         expSpeedEvent = nil
@@ -1125,9 +1327,6 @@ function onManaChange(localPlayer, mana, maxMana)
     checkAlert('mana', mana, maxMana, 30)
 end
 
-function onSoulChange(localPlayer, soul)
-    setSkillValue('soul', soul)
-end
 
 function onFreeCapacityChange(localPlayer, freeCapacity)
     setSkillValue('capacity', comma_value(freeCapacity))
@@ -1261,6 +1460,13 @@ function onBaseMagicLevelChange(localPlayer, baseMagicLevel)
 end
 
 function onSkillChange(localPlayer, id, level, percent)
+    -- The axe row shows mining instead (see MINING_SKILL_ROW). The axe skill
+    -- still exists and still advances server-side, it just is not displayed --
+    -- without this it would overwrite the row on its next advance.
+    if id == Skill.Axe then
+        return
+    end
+
     setSkillValue('skillId' .. id, level)
     setSkillPercent('skillId' .. id, percent, tr('You have %s percent to go', 100 - percent))
 
@@ -1272,6 +1478,10 @@ function onSkillChange(localPlayer, id, level, percent)
 end
 
 function onBaseSkillChange(localPlayer, id, baseLevel)
+    if id == Skill.Axe then
+        return
+    end
+
     setSkillBase('skillId' .. id, localPlayer:getSkillLevel(id), baseLevel)
 end
 

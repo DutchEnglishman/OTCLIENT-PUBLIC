@@ -21,15 +21,24 @@ local SYNC_INTERVAL = 500
 -- widgetsButton is this window's own toggle -- mirroring it inside the window
 -- would give the player a button that closes the thing they clicked it in.
 -- optionsMainButton is the main panel's copy of optionsButton under a second
--- id, so without it here Options would appear twice; logoutButton needs no such
--- entry because both registrations reuse one widget (topmenu.lua addButton
--- looks the id up before creating), leaving tryLogout as the live callback.
+-- id, so without it here Options would appear twice.
 -- The dev tools stay top-bar-only.
+--
+-- The bottom group have their own buttons in the equipment panel's shortcut
+-- grid (game_inventory's inventory.otui), so mirroring them here would show
+-- each of them twice. Their source buttons are untouched and still live
+-- wherever their own modules registered them. Analysers is deliberately NOT in
+-- this group -- it is wanted in both places.
 local EXCLUDED_IDS = {
     widgetsButton = true,
     optionsMainButton = true,
     debugInfoButton = true,
     otuiEditorButton = true,
+
+    optionsButton = true,
+    hotkeysWindowButton = true,
+    autoLootButton = true,
+    logoutButton = true,
 }
 
 local widgetsWindow = nil
@@ -277,10 +286,10 @@ function init()
 
     iconGrid = widgetsWindow:recursiveGetChildById('iconGrid')
 
-    widgetsWindow:getChildById('miniwindowTitle'):setText(tr('Widgets'))
+    widgetsWindow:getChildById('miniwindowTitle'):setText(tr('Options'))
     widgetsWindow:getChildById('miniwindowIcon'):setImageSource('/images/icons/icon-prey-widget')
 
-    widgetsButton = modules.game_mainpanel.addToggleButton('widgetsButton', tr('Widgets'),
+    widgetsButton = modules.game_mainpanel.addToggleButton('widgetsButton', tr('Options'),
         '/images/options/button_control', toggle)
     widgetsButton:setOn(widgetsWindow:isVisible())
 

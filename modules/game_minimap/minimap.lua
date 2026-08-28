@@ -19,10 +19,11 @@ local function minimapUi()
     return mapController.ui.minimapBorder.minimap or fullscreenWidget
 end
 
--- Updates the docked panel's layer strip and, while it exists, the fullscreen
--- overlay's copy: both display virtualFloor and would otherwise disagree.
+-- Updates the fullscreen overlay's layer strip while it exists. The docked
+-- panel no longer has one -- its floor is driven by the two arrow buttons --
+-- so there is nothing to refresh there.
 local function refreshVirtualFloors()
-    local panels = { mapController.ui.layersPanel }
+    local panels = {}
     if fullscreenControls and not fullscreenControls:isDestroyed() then
         table.insert(panels, fullscreenControls.layersPanel)
     end
@@ -86,31 +87,9 @@ Canary: void ProtocolGame::sendTibiaTime(int32_t time)
         onChangeWorldTime(nextH, nextM)
     end, 30000, 'dayTime')
 
-    local position = math.floor((124 / (24 * 60)) * ((hour * 60) + minute))
-    local mainWidth = 31
-    local secondaryWidth = 0
-
-    if (position + 31) >= 124 then
-        secondaryWidth = ((position + 31) - 124) + 1
-        mainWidth = 31 - secondaryWidth
-    end
-
-    mapController.ui.rosePanel.ambients.main:setWidth(mainWidth)
-    mapController.ui.rosePanel.ambients.secondary:setWidth(secondaryWidth)
-
-    if secondaryWidth == 0 then
-        mapController.ui.rosePanel.ambients.secondary:hide()
-    else
-        mapController.ui.rosePanel.ambients.secondary:setImageClip('0 0 ' .. secondaryWidth .. ' 31')
-        mapController.ui.rosePanel.ambients.secondary:show()
-    end
-
-    if mainWidth == 0 then
-        mapController.ui.rosePanel.ambients.main:hide()
-    else
-        mapController.ui.rosePanel.ambients.main:setImageClip(position .. ' 0 ' .. mainWidth .. ' 31')
-        mapController.ui.rosePanel.ambients.main:show()
-    end
+    -- currentDayTime is still tracked and still ticks -- the scheduled event
+    -- above is what advances it. Only the drawing is gone: the day/night
+    -- scroll lived inside the compass rose, and the panel no longer has one.
 end
 
 function mapController:onInit()

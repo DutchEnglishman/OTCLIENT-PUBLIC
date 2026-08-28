@@ -13,289 +13,119 @@ PhantomMiniWindow
     anchors.right: parent.right
     margin-top: 5
     margin-left: 8
-    // Clears the whole right-hand control stack, not just layersPanel:
-    //   layersPanel  right 7,  w 20            -> starts 27 in
-    //   rosePanel    right of layersPanel.right, w 43 -> starts 50 in
-    //   fullMap / zoomIn / zoomOut             -> start 51 in
-    // Leftmost of those is 51 from the right edge, so 55 leaves a 4px gap.
-    // Width follows the panel instead of the old fixed 115, so the map fills
-    // whatever GameSidePanel is set to.
-    margin-right: 55
+    // Was 55, to clear a column of controls down the right-hand side: the
+    // layer strip, the compass rose and the fullscreen button. All three are
+    // gone, so the map takes the full width and the four remaining buttons
+    // float over its bottom-right corner instead of sitting beside it.
+    margin-right: 8
     height: 111
     // image-source removed: 1pixel_down_frame drew the inset dark frame around
-    // the map. The widget is kept because the layer buttons, compass rose and
-    // zoom controls all anchor to minimapBorder -- it is now purely a position
-    // reference. margin drops to 0 so the map fills the space the frame used.
+    // the map. The widget is kept as the position reference the buttons anchor
+    // to. margin drops to 0 so the map fills the space the frame used.
 
     Minimap
       id: minimap
       anchors.fill: parent
       margin: 0
 
-  UIWidget
-    id: layersPanel
-    size: 20 68
-    anchors.bottom: parent.bottom
-    anchors.right: parent.right
-    margin-right: 7
-
-    UIWidget
-      id: automapLayers
-      image-source: /images/automap/automap_indicator_maplayers
-      anchors.left: parent.left
-      anchors.bottom: parent.bottom
-      image-clip: 98 0 14 67
-      size: 14 67
-
-    UIWidget
-      image-source: /images/ui/vertical_line_dark
-      margin-left: 2
-      margin-top: 4
-      margin-bottom: 4
-      anchors.left: automapLayers.right
-      anchors.top: parent.top
-      anchors.bottom: parent.bottom
-      width: 1
-
-    UIWidget
-      id: layersMark
-      anchors.left: prev.right
-      anchors.top: automapLayers.top
-      image-source: /images/automap/automap_indicator_slider_left
-      margin-top: 28
-
-    Button
-      image-source: /images/automap/automap_phantom
-      anchors.left: automapLayers.left
-      anchors.right: automapLayers.right
-      anchors.top: automapLayers.top
-      anchors.bottom: automapLayers.verticalCenter
-      @onClick: upLayer()
-
-    Button
-      image-source: /images/automap/automap_phantom
-      anchors.left: automapLayers.left
-      anchors.right: automapLayers.right
-      anchors.top: automapLayers.verticalCenter
-      anchors.bottom: automapLayers.bottom
-      @onClick: downLayer()
-
-  Button
-    id: fullMap
-    image-source: /images/automap/automap_buttons
-    image-clip: 0 0 20 20
-    anchors.right: layersPanel.left
-    anchors.bottom: minimapBorder.bottom
-    margin-right: 4
-    size: 20 20
-    @onClick: openCyclopediaMap()
-
-    $hover !disabled:
-      image-clip: 0 0 20 20
-
-    $pressed !disabled:
-      image-clip: 20 0 20 20
-
-  Button
-    id: zoomIn
-    image-source: /images/automap/automap_buttons
-    image-clip: 0 40 20 20
-    anchors.right: fullMap.right
-    anchors.bottom: fullMap.top
-    margin-bottom: 2
-    size: 20 20
-    @onClick: zoomIn()
-
-    $hover !disabled:
-      image-clip: 0 40 20 20
-
-    $pressed !disabled:
-      image-clip: 20 40 20 20
-
+  // Floor on the left, zoom on the right, stacked into a 2x2 block inset into
+  // the map's bottom-right corner. Everything chains off zoomOut, the corner
+  // button, so moving that one moves the block. It is declared first for that
+  // reason -- the other three anchor to it.
+  //
+  // The zoom pair keep the automap artwork (a 40x60 sheet: three 20x20 rows,
+  // normal in the left column, pressed in the right). That sheet has no arrows,
+  // so the floor pair use the spinbox arrows: 10x10 cells, normal/hover/pressed
+  // stacked vertically.
+  //
+  // UIButton, NOT Button: the Button style carries image-border: 1
+  // (10-buttons.otui:8), and a bordered image is drawn REPEATED --
+  // uiwidgetimage.cpp:125, useRepeated = hasProp(PropImageBordered). Scaling a
+  // 10x10 source into 20x20 therefore tiled the 8x8 middle across an 18x18
+  // interior and drew two and a bit arrows.
+  //
+  // Simply omitting image-border does not help, because the style's value is
+  // inherited; nor does image-border: 0, because setImageBorder() sets the
+  // bordered flag unconditionally whatever the width. Deriving from the raw
+  // class is what actually leaves the flag unset, so the clip is scaled to the
+  // widget: one arrow, an exact 2x, kept crisp by image-smooth: false.
+  //
+  // The zoom buttons keep the Button style safely -- their clip is 20x20 drawn
+  // into a 20x20 widget, so the repeat count is exactly one and nothing tiles.
+  //
+  // image-size/image-offset rather than letting the 10x10 clip stretch to fill
+  // the widget: they set m_imageRect, which drawImage uses as the destination,
+  // so the chevron is blitted 1:1 at its native size and centred in the 20x20
+  // click target. No scaling anywhere in the path, so nothing can repeat.
   Button
     id: zoomOut
+    !tooltip: tr('Zoom out')
     image-source: /images/automap/automap_buttons
     image-clip: 0 20 20 20
-    anchors.right: fullMap.right
-    anchors.bottom: zoomIn.top
-    margin-bottom: 2
+    anchors.right: minimapBorder.right
+    anchors.bottom: minimapBorder.bottom
+    margin-right: 4
+    margin-bottom: 4
     size: 20 20
     @onClick: zoomOut()
-
-    $hover !disabled:
-      image-clip: 0 20 20 20
 
     $pressed !disabled:
       image-clip: 20 20 20 20
 
-  UIWidget
-    id: rosePanel
-    anchors.top: minimapBorder.top
-    anchors.right: layersPanel.right
-    size: 43 43
+  UIButton
+    id: floorDown
+    !tooltip: tr('Go down one floor')
+    image-source: /images/ui/spinbox_down
+    image-clip: 0 0 10 10
+    image-size: 10 10
+    image-offset: 5 5
+    image-smooth: false
+    anchors.right: zoomOut.left
+    anchors.bottom: zoomOut.bottom
+    margin-right: 2
+    size: 20 20
+    @onClick: downLayer()
 
-    UIWidget
-      id: ambients
-      anchors.centerIn: parent
-      size: 31 31
+    $hover !disabled:
+      image-clip: 0 10 10 10
 
-      UIWidget
-        id: main
-        image-source: /images/automap/timedisplay_scroll
-        anchors.left: parent.left
-        anchors.top: parent.top
-        image-clip: 100 0 24 31
-        size: 24 31
+    $pressed !disabled:
+      image-clip: 0 20 10 10
 
-      UIWidget
-        id: secondary
-        image-source: /images/automap/timedisplay_scroll
-        anchors.left: main.right
-        anchors.top: parent.top
-        image-clip: 0 0 7 31
-        size: 7 31
+  UIButton
+    id: floorUp
+    !tooltip: tr('Go up one floor')
+    image-source: /images/ui/spinbox_up
+    image-clip: 0 0 10 10
+    image-size: 10 10
+    image-offset: 5 5
+    image-smooth: false
+    anchors.right: floorDown.right
+    anchors.bottom: floorDown.top
+    margin-bottom: 2
+    size: 20 20
+    @onClick: upLayer()
 
-      Button
-        image-source: /images/automap/automap_phantom
-        anchors.fill: parent
-        @onClick: resetMap()
+    $hover !disabled:
+      image-clip: 0 10 10 10
 
-    UIWidget
-      id: rose
-      anchors.fill: parent
-      image-source: /images/automap/automap_rose
-      image-clip: 0 0 43 43
-      phantom: true
+    $pressed !disabled:
+      image-clip: 0 20 10 10
 
-    Button
-      image-source: /images/automap/automap_rose
-      image-clip: 14 0 15 8
-      anchors.left: parent.left
-      anchors.top: parent.top
-      margin-left: 14
-      size: 15 8
-      @onClick: |
-        onClickRoseButton('north')
+  Button
+    id: zoomIn
+    !tooltip: tr('Zoom in')
+    image-source: /images/automap/automap_buttons
+    image-clip: 0 40 20 20
+    anchors.right: zoomOut.right
+    anchors.bottom: zoomOut.top
+    margin-bottom: 2
+    size: 20 20
+    @onClick: zoomIn()
 
-      $hover !disabled:
-        image-clip: 14 0 15 8
+    $pressed !disabled:
+      image-clip: 20 40 20 20
 
-      $pressed !disabled:
-        image-clip: 57 0 15 8
-
-    Button
-      image-source: /images/automap/automap_rose
-      image-clip: 28 0 15 15
-      anchors.left: parent.left
-      anchors.top: parent.top
-      margin-left: 28
-      size: 15 15
-      @onClick: |
-        onClickRoseButton('north-east')
-
-      $hover !disabled:
-        image-clip: 28 0 15 15
-
-      $pressed !disabled:
-        image-clip: 114 0 15 15
-
-    Button
-      image-source: /images/automap/automap_rose
-      image-clip: 35 14 8 15
-      anchors.left: parent.left
-      anchors.top: parent.top
-      margin-left: 35
-      margin-top: 14
-      size: 8 15
-      @onClick: |
-        onClickRoseButton('east')
-
-      $hover !disabled:
-        image-clip: 35 14 8 15
-
-      $pressed !disabled:
-        image-clip: 164 14 8 15  
-
-    Button
-      image-source: /images/automap/automap_rose
-      image-clip: 28 28 15 15
-      anchors.left: parent.left
-      anchors.top: parent.top
-      margin-left: 28
-      margin-top: 28
-      size: 15 15
-      @onClick: |
-        onClickRoseButton('south-east')
-
-      $hover !disabled:
-        image-clip: 28 28 15 15
-
-      $pressed !disabled:
-        image-clip: 200 28 15 15
-
-    Button
-      image-source: /images/automap/automap_rose
-      image-clip: 14 35 15 8
-      anchors.left: parent.left
-      anchors.top: parent.top
-      margin-left: 14
-      margin-top: 35
-      size: 15 8
-      @onClick: |
-        onClickRoseButton('south')
-
-      $hover !disabled:
-        image-clip: 14 35 15 8
-
-      $pressed !disabled:
-        image-clip: 229 35 15 8
-
-    Button
-      image-source: /images/automap/automap_rose
-      image-clip: 0 28 15 15
-      anchors.left: parent.left
-      anchors.top: parent.top
-      margin-top: 28
-      size: 15 15
-      @onClick: |
-        onClickRoseButton('south-west')
-
-      $hover !disabled:
-        image-clip: 0 28 15 15
-
-      $pressed !disabled:
-        image-clip: 258 28 15 15
-
-    Button
-      image-source: /images/automap/automap_rose
-      image-clip: 0 14 8 15
-      anchors.left: parent.left
-      anchors.top: parent.top
-      margin-top: 14
-      size: 8 15
-      @onClick: |
-        onClickRoseButton('west')
-
-      $hover !disabled:
-        image-clip: 0 14 8 15
-
-      $pressed !disabled:
-        image-clip: 301 14 8 15
-
-    Button
-      image-source: /images/automap/automap_rose
-      image-clip: 0 0 15 15
-      anchors.left: parent.left
-      anchors.top: parent.top
-      size: 15 15
-      @onClick: |
-        onClickRoseButton('north-west')
-
-      $hover !disabled:
-        image-clip: 0 0 15 15
-
-      $pressed !disabled:
-        image-clip: 344 0 15 15
 
 // Controls for the fullscreen map (Ctrl+Shift+M). The docked panel that
 // normally carries these is hidden while fullscreen, so this is a separate

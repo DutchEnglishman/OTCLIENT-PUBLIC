@@ -8,26 +8,71 @@ HotkeyListLabel < UILabel
   $focus:
     background-color: #ffffff22
 
+// The four use-type buttons. ButtonBox centres its label; these read as a list
+// of options rather than a row of captions, so the text is flush left with a
+// little breathing room off the border.
+HotkeyUseBox < ButtonBox
+  text-align: left
+  text-offset: 6 0
+
 MainWindow
   id: hotkeysWindow
   !text: tr('Hotkeys')
-  size: 340 470
+  // 24 taller than stock, to make room for the preset row without squeezing
+  // the hotkey list or pushing the ok/cancel buttons off the bottom.
+  size: 340 494
 
   @onEnter: modules.game_hotkeys.ok()
   @onEscape: modules.game_hotkeys.cancel()
+
+  // Four hotkey presets, all usable from the start -- nothing to unlock,
+  // unlike the autoloot ones this mirrors. Each holds a complete,
+  // independent set of hotkeys for this character.
+  //
+  // A combo box rather than a row of radio buttons: it names the live preset
+  // in place, so nothing has to be read off a tooltip or the title bar.
+  //
+  // presetCombo anchors to the parent on both sides and presetLabel hangs off
+  // the combo, not the other way round -- anchoring them to each other in
+  // both directions leaves the pair unresolvable.
+  Button
+    id: renamePresetButton
+    !text: tr('Rename')
+    width: 64
+    anchors.right: parent.right
+    anchors.top: parent.top
+    @onClick: modules.game_hotkeys.renamePreset()
+
+  ComboBox
+    id: presetCombo
+    anchors.left: parent.left
+    anchors.right: prev.left
+    anchors.top: parent.top
+    margin-left: 44
+    margin-right: 6
+    mouse-scroll: false
+
+  Label
+    id: presetLabel
+    !text: tr('Preset') .. ':'
+    anchors.left: parent.left
+    anchors.verticalCenter: prev.verticalCenter
+    text-auto-resize: true
 
   Label
     id: currentHotkeysLabel
     !text: tr('Current hotkeys') .. ':'
     anchors.left: parent.left
     anchors.right: parent.right
-    anchors.top: parent.top
+    anchors.top: presetCombo.bottom
+    margin-top: 4
 
   VerticalScrollBar
     id: currentHotkeysScrollBar
     height: 150
-    anchors.top: parent.top
+    anchors.top: presetCombo.bottom
     anchors.right: parent.right
+    margin-top: 4
     step: 14
     pixels-scroll: true
 
@@ -142,7 +187,7 @@ MainWindow
     margin-top: 2
     @onClick: modules.game_hotkeys.clearObject()
 
-  ButtonBox
+  HotkeyUseBox
     id: useOnSelf
     !text: tr('Use on yourself')
     width: 128
@@ -153,7 +198,7 @@ MainWindow
     checked: false
     margin-left: 10
 
-  ButtonBox
+  HotkeyUseBox
     id: useOnTarget
     !text: tr('Use on target')
     width: 128
@@ -164,7 +209,7 @@ MainWindow
     checked: false
     margin-top: 2
 
-  ButtonBox
+  HotkeyUseBox
     id: useWith
     !text: tr('With crosshair')
     width: 128
@@ -175,9 +220,9 @@ MainWindow
     checked: false
     margin-top: 2
 
-  ButtonBox
+  HotkeyUseBox
     id: useAtCursor
-    !text: tr('Use at cursor position')
+    !text: tr('Use at cursor')
     width: 128
     enabled: false
     anchors.left: prev.left
@@ -247,6 +292,43 @@ HotkeyAssignWindow < MainWindow
     anchors.bottom: parent.bottom
     margin-right: 10
     @onClick: modules.game_hotkeys.hotkeyCaptureOk(self:getParent(), self:getParent():getChildById('comboPreview').keyCombo)
+
+  Button
+    id: cancelButton
+    !text: tr('Cancel')
+    width: 64
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    @onClick: self:getParent():destroy()
+
+HotkeyPresetRenameWindow < MainWindow
+  id: renameWindow
+  !text: tr('Rename Preset')
+  size: 300 120
+  @onEscape: self:destroy()
+
+  TextEdit
+    id: presetNameEdit
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: parent.top
+    max-length: 24
+
+  HorizontalSeparator
+    id: separator
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: next.top
+    margin-bottom: 10
+
+  Button
+    id: okButton
+    !text: tr('Ok')
+    width: 64
+    anchors.right: next.left
+    anchors.bottom: parent.bottom
+    margin-right: 10
+    @onClick: modules.game_hotkeys.renamePresetOk(self:getParent())
 
   Button
     id: cancelButton

@@ -54,6 +54,16 @@ useAtCursor = nil
 defaultComboKeys = nil
 perServer = true
 perCharacter = true
+currentPreset = 1
+presetNames = {}
+presetCombo = nil
+-- addOption() auto-selects the first option it is handed and setCurrentOption
+-- signals unless told not to, so rebuilding the list would call straight back
+-- into selectPreset. Every rebuild is fenced with this instead.
+presetComboUpdating = false
+-- Guards the cursor lock: released on every exit from 'Select object', so a
+-- cancelled pick can never leave the whole client stuck on the crosshair.
+targetCursorActive = false
 mouseGrabberWidget = nil
 useRadioGroup = nil
 currentHotkeys = nil
@@ -202,6 +212,9 @@ function init()
         onGameEnd = offline
     })
 
+    -- Before load(), which ends by pushing the loaded preset onto the combo.
+    setupPresetCombo()
+
     load()
 end
 
@@ -212,6 +225,10 @@ function terminate()
     })
 
     Keybind.delete("Windows", "Show/hide Hotkeys")
+
+    restoreTargetCursor()
+
+    presetCombo = nil
 
     unload()
 
@@ -256,6 +273,9 @@ function online()
 end
 
 function offline()
+    -- Logging out mid-pick would otherwise leave the cursor locked to the
+    -- crosshair with no grabber left to release it.
+    restoreTargetCursor()
     unload()
     hide()
 end
@@ -297,24 +317,275 @@ function cancel()
     hide()
 end
 
-function load(forceDefaults)
-    local serverHost = nil
-    hotkeysManagerLoaded = false
+-- Four hotkey presets. Unlike autoloot's there is nothing to unlock -- all four
+-- are usable from the first login.
+--
+-- They live one level deeper inside the same 'game_hotkeys' settings node the
+-- hotkeys already used, so a preset is scoped per server and per character
+-- exactly as the hotkeys themselves are:
+--
+--   game_hotkeys[host][character] = {
+--       presets       = { ['1'] = { ['F1'] = {...} }, ['2'] = {}, ... },
+--       currentPreset = 2,
+--       presetNames   = { ['1'] = 'Attack' },
+--   }
+--
+-- Preset keys are STRINGS. Settings round-trip through OTML, whose tags are
+-- text, so a table written under the number 1 comes back under "1" -- reading
+-- it back with a numeric key finds nothing, the preset looks empty, and the
+-- default F-keys overwrite it. presetKey() is the only way these are indexed,
+-- presetNames included: those round-trip through the same file.
+MAX_PRESETS = 4
 
-    local hotkeySettings = g_settings.getNode('game_hotkeys')
-    local hotkeys = {}
+-- Only what a preset is called until someone renames it. The name carries no
+-- meaning beyond the label -- nothing checks a preset against the vocation the
+-- character actually is.
+PRESET_DEFAULT_NAMES = {'Knight', 'Paladin', 'Sorcerer', 'Druid'}
 
-    if not table.empty(hotkeySettings) then
-        hotkeys = hotkeySettings
+local function presetKey(index)
+    return tostring(index)
+end
+
+-- Anything on the character node that is NOT one of these is a key combo. The
+-- migration below has nothing else to tell them apart by.
+local PRESET_RESERVED_KEYS = {
+    presets = true,
+    currentPreset = true,
+    presetNames = true
+}
+
+-- Walks to the per-character node. Read-only: g_settings.getNode hands back a
+-- SNAPSHOT (Config::getNode returns a node that is converted to a fresh Lua
+-- table), so nothing written to what this returns reaches the file. Every
+-- write goes through updateHotkeysNode instead.
+local function getHotkeysNode()
+    local node = g_settings.getNode('game_hotkeys')
+    if not node then
+        return nil
     end
-    if perServer and not table.empty(hotkeys) then
-        if G.host ~= nil then
-            serverHost = string.gsub(G.host, "^https?://", "")
-            hotkeys = hotkeys[serverHost]
+
+    if perServer then
+        if G.host == nil then
+            return nil
+        end
+        node = node[string.gsub(G.host, "^https?://", "")]
+        if not node then
+            return nil
         end
     end
-    if perCharacter and not table.empty(hotkeys) then
-        hotkeys = hotkeys[g_game.getCharacterName()]
+
+    if perCharacter then
+        local char = g_game.getCharacterName()
+        if not char or char == '' then
+            return nil
+        end
+        node = node[char]
+        if not node then
+            return nil
+        end
+    end
+
+    return node
+end
+
+-- Read, mutate, write back. Config::setNode stores a clone(), so the root has
+-- to be handed back whole after every change -- mutating a fetched node and
+-- calling g_settings.save() persists nothing.
+local function updateHotkeysNode(mutator)
+    local root = g_settings.getNode('game_hotkeys') or {}
+    local node = root
+
+    if perServer then
+        if G.host == nil then
+            return false
+        end
+        local host = string.gsub(G.host, "^https?://", "")
+        node[host] = node[host] or {}
+        node = node[host]
+    end
+
+    if perCharacter then
+        local char = g_game.getCharacterName()
+        if not char or char == '' then
+            return false
+        end
+        node[char] = node[char] or {}
+        node = node[char]
+    end
+
+    mutator(node)
+
+    g_settings.setNode('game_hotkeys', root)
+    g_settings.save()
+    return true
+end
+
+-- Settings written before presets existed keep their combos directly on the
+-- character node. Those become preset 1 rather than being thrown away.
+local function getPresets(node, create)
+    if not node then
+        return nil
+    end
+
+    if not node.presets then
+        if not create then
+            return nil
+        end
+
+        local migrated = {}
+        for key, value in pairs(node) do
+            if not PRESET_RESERVED_KEYS[key] then
+                migrated[key] = value
+                node[key] = nil
+            end
+        end
+        node.presets = { [presetKey(1)] = migrated }
+    end
+
+    return node.presets
+end
+
+function getCurrentPreset()
+    return currentPreset
+end
+
+function getPresetName(index)
+    local name = presetNames[presetKey(index)]
+    if not name or name == '' then
+        return PRESET_DEFAULT_NAMES[index] or (tr('Preset') .. ' ' .. index)
+    end
+    return name
+end
+
+-- Global, not local: init() is defined far above this point and would not see
+-- a local declared here.
+function setupPresetCombo()
+    presetCombo = hotkeysWindow:recursiveGetChildById('presetCombo')
+    if not presetCombo then
+        return
+    end
+
+    -- Selection is read back by data, never by text: two presets renamed to the
+    -- same thing would otherwise be indistinguishable to setCurrentOption.
+    presetCombo.onOptionChange = function(_, _, data)
+        if not presetComboUpdating then
+            selectPreset(data)
+        end
+    end
+
+    refreshPresetCombo()
+end
+
+-- Rebuilt rather than patched in place, so a rename lands in the drop-down list
+-- as well as on the closed box.
+function refreshPresetCombo()
+    if not presetCombo then
+        return
+    end
+
+    presetComboUpdating = true
+    presetCombo:clearOptions()
+    for i = 1, MAX_PRESETS do
+        presetCombo:addOption(getPresetName(i), i)
+    end
+    presetCombo:setCurrentOptionByData(currentPreset, true)
+    presetComboUpdating = false
+
+    -- Name the live preset in the title bar too. The hotkey list gives no hint
+    -- that a swap happened, and the window is often read from the title first.
+    hotkeysWindow:setText(tr('Hotkeys') .. ' - ' .. getPresetName(currentPreset))
+end
+
+-- Asks for the new name in its own small window, in the same shape the key
+-- capture dialog above already uses.
+function renamePreset()
+    local window = g_ui.createWidget('HotkeyPresetRenameWindow', rootWidget)
+    window.presetIndex = currentPreset
+
+    local edit = window:getChildById('presetNameEdit')
+    edit:setText(getPresetName(currentPreset))
+    edit:focus()
+    edit:selectAll()
+
+    window.onEnter = function(self)
+        renamePresetOk(self)
+    end
+end
+
+function renamePresetOk(window)
+    local index = window.presetIndex
+    local name = window:getChildById('presetNameEdit'):getText():trim()
+
+    -- An emptied name is a reset, not a preset called ''. Storing nil puts the
+    -- default back rather than leaving a blank drop-down -- and so does typing
+    -- the default in by hand. Compared against the DEFAULT, never against the
+    -- current display name: confirming an unchanged custom name would then wipe
+    -- the very name it was showing.
+    if name == '' or name == PRESET_DEFAULT_NAMES[index] then
+        presetNames[presetKey(index)] = nil
+    else
+        presetNames[presetKey(index)] = name
+    end
+
+    updateHotkeysNode(function(node)
+        node.presetNames = presetNames
+    end)
+
+    refreshPresetCombo()
+    window:destroy()
+end
+
+function selectPreset(index)
+    index = tonumber(index)
+    if not index or index < 1 or index > MAX_PRESETS then
+        return
+    end
+
+    if index == currentPreset then
+        return
+    end
+
+    -- Persist the preset being left before unload destroys its widgets, then
+    -- record the new selection so the reload below reads the right one.
+    save()
+    updateHotkeysNode(function(node)
+        node.currentPreset = index
+    end)
+
+    currentPreset = index
+    reload()
+    refreshPresetCombo()
+end
+
+function load(forceDefaults)
+    hotkeysManagerLoaded = false
+
+    local node = getHotkeysNode()
+    local hotkeys = {}
+
+    if node then
+        currentPreset = tonumber(node.currentPreset) or 1
+        if currentPreset < 1 or currentPreset > MAX_PRESETS then
+            currentPreset = 1
+        end
+        presetNames = node.presetNames or {}
+
+        local presets = getPresets(node, false)
+        if presets then
+            hotkeys = presets[presetKey(currentPreset)]
+        else
+            -- Pre-preset settings: the combos are still on the node itself.
+            for key, value in pairs(node) do
+                if not PRESET_RESERVED_KEYS[key] then
+                    hotkeys[key] = value
+                end
+            end
+        end
+    end
+
+    -- An empty preset can come back from OTML as something other than a table.
+    if type(hotkeys) ~= 'table' then
+        hotkeys = {}
     end
 
     hotkeyList = {}
@@ -333,6 +604,7 @@ function load(forceDefaults)
     end
 
     hotkeysManagerLoaded = true
+    refreshPresetCombo()
 end
 
 function unload()
@@ -358,26 +630,7 @@ function reload()
 end
 
 function save()
-    local serverHost = string.gsub(G.host, "^https?://", "")
-    local hotkeySettings = g_settings.getNode('game_hotkeys') or {}
-    local hotkeys = hotkeySettings
-
-    if perServer then
-        if not hotkeys[serverHost] then
-            hotkeys[serverHost] = {}
-        end
-        hotkeys = hotkeys[serverHost]
-    end
-
-    if perCharacter then
-        local char = g_game.getCharacterName()
-        if not hotkeys[char] then
-            hotkeys[char] = {}
-        end
-        hotkeys = hotkeys[char]
-    end
-
-    table.clear(hotkeys)
+    local hotkeys = {}
 
     for _, child in pairs(currentHotkeys:getChildren()) do
         hotkeys[child.keyCombo] = {
@@ -390,9 +643,17 @@ function save()
         }
     end
 
+    updateHotkeysNode(function(node)
+        local presets = getPresets(node, true)
+
+        -- Only the selected preset is rewritten; the other three keep
+        -- whatever they held.
+        presets[presetKey(currentPreset)] = hotkeys
+        node.currentPreset = currentPreset
+        node.presetNames = presetNames
+    end)
+
     hotkeyList = hotkeys
-    g_settings.setNode('game_hotkeys', hotkeySettings)
-    g_settings.save()
 end
 
 function loadDefautComboKeys()
@@ -430,26 +691,74 @@ function onActionChange(comboBox, option)
     end
 end
 
+-- Deliberately identical to game_interface's own setTargetCursor, so picking an
+-- object here looks exactly like right-clicking an item to use it on something.
+--
+-- Two things were wrong before. It was gated on the 'crosshair' option, which
+-- governs the in-game tile crosshair and not this cursor -- with that option
+-- off, clicking 'Select object' changed nothing on screen at all. And it never
+-- locked the cursor, so the target shape was dropped again the moment the
+-- pointer crossed any widget, which is unavoidable here because the mouse has
+-- to travel over the interface to reach the item being picked.
 local function setTargetCursor()
     if modules.client_options and modules.client_options.getOption('nativeCursor') then
         g_window.setSystemCursor('cross')
     end
 
-    local crosshairOption = modules.client_options and modules.client_options.getOption and modules.client_options.getOption('crosshair')
-    if crosshairOption ~= nil and crosshairOption ~= 'disabled' then
-        g_mouse.pushCursor('target')
-    end
+    g_mouse.pushCursor('target')
+    -- After the push, so the push itself is not blocked by the lock.
+    g_mouse.lockCursor()
+    targetCursorActive = true
 end
 
-local function restoreTargetCursor()
-    local crosshairOption = modules.client_options and modules.client_options.getOption and modules.client_options.getOption('crosshair')
-    if crosshairOption ~= nil and crosshairOption ~= 'disabled' then
+-- Global, not local: offline() and terminate() are defined above this point and
+-- have to be able to drop the lock if the module goes away mid-pick.
+function restoreTargetCursor()
+    if targetCursorActive then
+        -- Unlock before popping: popCursor has to be able to set the cursor
+        -- back.
+        g_mouse.unlockCursor()
         g_mouse.popCursor('target')
+        targetCursorActive = false
     end
 
     if modules.client_options and modules.client_options.getOption('nativeCursor') then
         g_window.restoreMouseCursor()
     end
+end
+
+-- 'Select object' takes runes and useables only -- not armour, not a wall, not
+-- the ground you happened to click.
+--
+-- The only usability flag in Tibia.dat is MultiUse (attribute 7): the 682
+-- client types that ask for a crosshair. That covers every rune, potion, vial
+-- and tool. The dat's Usable flag (attribute 34) does not exist before 10.10 --
+-- it appears on 0 of the 13919 types in data/things/860/Tibia.dat -- and
+-- items.otb's FLAG_USEABLE is set on exactly the same 682 items, so the server
+-- side knows nothing extra either.
+--
+-- That leaves food, which is a plain use with no flag anywhere. These are the
+-- client ids behind every server id actions.xml binds to other/food/food.lua,
+-- mapped through items.otb. Regenerate them the same way if that list changes.
+local HOTKEY_EXTRA_USABLE_IDS = {
+    130, 169, 229, 836, 841, 901, 904, 3250, 3577, 3578,
+    3579, 3580, 3581, 3582, 3583, 3584, 3585, 3586, 3587, 3588,
+    3589, 3590, 3591, 3592, 3593, 3594, 3595, 3596, 3597, 3599,
+    3600, 3601, 3602, 3606, 3607, 3723, 3724, 3725, 3726, 3727,
+    3728, 3729, 3730, 3731, 3732, 5096, 6125, 6277, 6278, 6392,
+    6500, 6541, 6542, 6543, 6544, 6545, 6569, 6574, 7158, 7159,
+    7373, 7374, 7375, 7376, 7377, 8010, 8011, 8012, 8013, 8014,
+    8015, 8016, 8017, 8019, 8177, 8194, 8197, 9537, 10219, 10329,
+    10453, 11459, 11460, 11461, 11462, 11681, 11682, 11683
+}
+
+local extraUsableIds = {}
+for _, id in ipairs(HOTKEY_EXTRA_USABLE_IDS) do
+    extraUsableIds[id] = true
+end
+
+local function isHotkeyUsable(item)
+    return item:isMultiUse() or extraUsableIds[item:getId()] == true
 end
 
 function onChooseItemMouseRelease(self, mousePosition, mouseButton)
@@ -469,6 +778,14 @@ function onChooseItemMouseRelease(self, mousePosition, mouseButton)
                 item = clickedWidget:getItem()
             end
         end
+    end
+
+    -- Rejected out loud. Silently doing nothing reads as a broken button, since
+    -- the window reopens looking exactly as it did before the click.
+    if item and not isHotkeyUsable(item) then
+        modules.game_textmessage.displayFailureMessage(
+            tr('You can only assign runes and useable items to a hotkey.'))
+        item = nil
     end
 
     if item and currentHotkeyLabel then

@@ -109,8 +109,8 @@ SkillTypes = {
     [1]  = {name = "Magic Level", imageOffset = "256 0"},
     [6]  = {name = "Shielding", imageOffset = "320 0"},
     [7]  = {name = "Distance Fighting", imageOffset = "384 0"},
-    [8]  = {name = "Sword Fighting", imageOffset = "0 0"},
-    [9]  = {name = "Club Fighting", imageOffset = "128 0"},
+    [8]  = {name = "Two-Handed Fighting", imageOffset = "0 0"},
+    [9]  = {name = "One-Handed Fighting", imageOffset = "128 0"},
     [10] = {name = "Axe Fighting", imageOffset = "64 0"},
     [11] = {name = "Fist Fighting", imageOffset = "192 0"},
     [13] = {name = "Fishing", imageOffset = "448 0"}

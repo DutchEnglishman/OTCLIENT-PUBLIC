@@ -238,25 +238,96 @@ PhantomMiniWindow
       $disabled:
         image-clip: 20 60 20 20
 
-    TopToggleButton
-      id: stop
-      !text: tr('Stop')
-      anchors.left: defense.left
+    // Shortcut grid, two columns by three rows of 20x20, filling the space
+    // under the pvp checkbox.
+    //
+    //     [options ] [hotkeys ]
+    //     [loot    ] [store   ]
+    //     [widgets ] [logout  ]
+    //
+    // That space is free on this protocol: the expert checkbox and the four
+    // expert pvp-mode boxes that would sit here are hidden unless
+    // GamePVPMode is on, and features.lua only enables it from client 1000
+    // (this server is 860) -- see the showPVPMode gate in inventory.lua.
+    //
+    // Everything chains off the logout button in the bottom-right, so moving
+    // that one moves the whole grid.
+    //
+    // MainToggleButton is the same style the mainpanel shortcut row uses: the
+    // icons are 40x20 sprite pairs and it clips 0/20 for the normal and
+    // pressed halves. The store keeps its own artwork, which is 26x20, hence
+    // the fixed ratio so it is not squashed into the square.
+    MainToggleButton
+      id: logoutToggle
+      !tooltip: tr('Exit')
       anchors.right: standPosture.right
       anchors.bottom: parent.bottom
-      // Lifted with the icon row beside it -- both are bottom-anchored, so
-      // moving only one would leave them misaligned.
-      margin-bottom: 5
-      font: cipsoftFont
-      color: #c0c0c0ff
-      size: 44 13
-      @onClick: |
-        g_game.stop()
-        g_game.getLocalPlayer():stopAutoWalk()
+      margin-bottom: 4
+      size: 20 20
+      image-source: /images/options/button_logout
+      @onClick: modules.game_interface.tryLogout()
+
+    MainToggleButton
+      id: widgetsToggle
+      !tooltip: tr('Options')
+      anchors.right: logoutToggle.left
+      anchors.bottom: logoutToggle.bottom
+      margin-right: 4
+      size: 20 20
+      image-source: /images/options/button_control
+      @onClick: modules.game_widgets.toggle()
+
+    UIButton
+      id: store
+      !tooltip: tr('Open the store')
+      anchors.right: logoutToggle.right
+      anchors.bottom: logoutToggle.top
+      margin-bottom: 2
+      size: 20 20
+      image-source: /images/game/prey/prey_smallstore
+      image-clip: 0 0 26 20
+      image-fixed-ratio: true
+      @onClick: modules.game_mainpanel.toggleStore()
+
+      $pressed:
+        image-source: /images/game/prey/prey_smallstore_clicked
+        image-clip: -1 -1 27 21
+
+    MainToggleButton
+      id: lootToggle
+      !tooltip: tr('Loot')
+      anchors.right: store.left
+      anchors.bottom: store.bottom
+      margin-right: 4
+      size: 20 20
+      image-source: /images/topbuttons/autoloot
+      @onClick: modules.game_autoloot.toggle()
+
+    MainToggleButton
+      id: hotkeysToggle
+      !tooltip: tr('Hotkeys')
+      anchors.right: logoutToggle.right
+      anchors.bottom: store.top
+      margin-bottom: 2
+      size: 20 20
+      image-source: /images/options/hotkeys
+      @onClick: modules.game_hotkeys.toggle()
+
+    MainToggleButton
+      id: optionsToggle
+      !tooltip: tr('Options')
+      anchors.right: hotkeysToggle.left
+      anchors.bottom: hotkeysToggle.bottom
+      margin-right: 4
+      size: 20 20
+      image-source: /images/options/button_options
+      @onClick: modules.client_options.toggle()
 
     Panel
       id: icons
-      size: 108 18
+      // Height was previously borrowed from the Stop button's top anchor. Held
+      // explicitly now so the button beside it can be sized independently.
+      size: 108 13
       padding: 2
 
       image-source: /images/ui/containerslot
@@ -267,7 +338,6 @@ PhantomMiniWindow
       anchors.right: backpack.right
       anchors.bottom: parent.bottom
       margin-bottom: 5
-      anchors.top: stop.top
       layout:
         type: horizontalBox
 
@@ -635,15 +705,18 @@ PhantomMiniWindow
       layout:
         type: horizontalBox
 
-    TopToggleButton
-      id: stop
-      !text: tr('Stop')
+    UIButton
+      id: store
+      !tooltip: tr('Open the store')
       anchors.right: parent.right
       margin-right: 7
       anchors.bottom: icons.bottom
-      font: cipsoftFont
-      color: #c0c0c0ff
-      size: 44 13
-      @onClick: |
-        g_game.stop()
-        g_game.getLocalPlayer():stopAutoWalk()
+      size: 20 20
+      image-source: /images/game/prey/prey_smallstore
+      image-clip: 0 0 26 20
+      image-fixed-ratio: true
+      @onClick: modules.game_mainpanel.toggleStore()
+
+      $pressed:
+        image-source: /images/game/prey/prey_smallstore_clicked
+        image-clip: -1 -1 27 21
