@@ -311,6 +311,19 @@ function TaskSystemUI.showMonsterDetail(tile)
 end
 
 function TaskSystemUI.setTaskPoints(payload)
+    -- TEMPORARY DIAGNOSTIC -- remove once the counter is confirmed working.
+    if modules.game_console and modules.game_console.addText then
+        modules.game_console.addText('[taskpoints] server sent: ' .. tostring(payload),
+            modules.game_console.SpeakTypesSettings.privateRed, tr('Server Log'))
+    end
+
+    -- The inventory panel's counter is always live, so it updates whether or
+    -- not this window happens to be open -- the server pushes on login and on
+    -- every stage payout, not only in reply to this window's request.
+    if modules.game_inventory and modules.game_inventory.setTaskPoints then
+        modules.game_inventory.setTaskPoints(payload)
+    end
+
     if not TaskSystemUI.window then
         return
     end

@@ -334,21 +334,28 @@ MinimapFullscreenControls < UIWidget
 
     // Phantom artwork over the top and bottom halves of the layer strip, the
     // same split the docked panel uses: upper half climbs, lower half descends.
+    //
+    // No @onClick anywhere in this style, unlike the docked panel above. An
+    // @onClick in an IMPORTED style resolves its names in the global
+    // environment, not this module's, so upLayer/downLayer/zoomIn/zoomOut all
+    // came back nil. The docked copies work only because loadUI compiles their
+    // expressions inside the module that loaded the file. fullscreen() assigns
+    // these handlers from Lua instead, which is why they carry ids.
     Button
+      id: layerUp
       image-source: /images/automap/automap_phantom
       anchors.left: automapLayers.left
       anchors.right: automapLayers.right
       anchors.top: automapLayers.top
       anchors.bottom: automapLayers.verticalCenter
-      @onClick: upLayer()
 
     Button
+      id: layerDown
       image-source: /images/automap/automap_phantom
       anchors.left: automapLayers.left
       anchors.right: automapLayers.right
       anchors.top: automapLayers.verticalCenter
       anchors.bottom: automapLayers.bottom
-      @onClick: downLayer()
 
   Button
     id: zoomIn
@@ -358,7 +365,6 @@ MinimapFullscreenControls < UIWidget
     anchors.bottom: layersPanel.bottom
     margin-right: 4
     size: 20 20
-    @onClick: zoomIn()
 
     $pressed !disabled:
       image-clip: 20 40 20 20
@@ -371,7 +377,6 @@ MinimapFullscreenControls < UIWidget
     anchors.bottom: zoomIn.top
     margin-bottom: 2
     size: 20 20
-    @onClick: zoomOut()
 
     $pressed !disabled:
       image-clip: 20 20 20 20

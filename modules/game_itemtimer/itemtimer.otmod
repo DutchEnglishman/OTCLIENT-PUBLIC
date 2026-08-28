@@ -1,0 +1,8 @@
+Module
+  name: game_itemtimer
+  description: Countdown overlay on items that expire, fed by the server
+  author: Roel
+  sandboxed: true
+  scripts: [ itemtimer ]
+  @onLoad: init()
+  @onUnload: terminate()

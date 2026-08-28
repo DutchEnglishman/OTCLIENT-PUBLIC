@@ -278,11 +278,15 @@ PhantomMiniWindow
       margin-top: 3
       // Root of the whole slot grid -- every other slot chains off this one,
       // so this margin positions all of them. The grid is 3 columns of 34
-      // plus two 3px gaps = 108 wide, and the combat buttons start at 164
-      // (standPosture sits 27 in from the right, attack 24 left of that),
-      // so (164 - 108) / 2 = 28 centres it in the space they leave.
+      // plus two 3px gaps = 108 wide, and the combat buttons begin 51 in from
+      // the right edge (standPosture 27 in, attack 24 left of that), so on the
+      // 184-wide panel they start at 133 and (133 - 108) / 2 = 12 centres the
+      // grid in the space they leave (12 left, 13 right -- the odd pixel has to
+      // land on one side).
       // Previously pinned to changeSize.left, which has to stay in the corner.
-      margin-left: 28
+      //
+      // 12, not 28: GameSidePanel narrowed from 215 to 184, so this follows it.
+      margin-left: 12
       &slotPosition: {x = 65535, y = 2, z = 0}
 
     MainInventoryItem
@@ -349,33 +353,46 @@ PhantomMiniWindow
       &slotPosition: {x = 65535, y = 10, z = 0}
 
     UIWidget
-      id: soulPanel
+      id: taskPointsPanel
       image-source: /images/inventory/containerslot
       image-border: 3
       phantom: false
+      !tooltip: tr('Task points')
       anchors.left: amulet.left
       anchors.right: amulet.right
       anchors.bottom: boots.bottom
       anchors.top: ring.bottom
       margin-top: 3
 
-      Label
-        !text: tr('Soul')
-        text.align: center
-        font: cipsoftFont
-        anchors.horizontalCenter: parent.horizontalCenter
+      // Both top-anchored. A bottom-anchored child of this panel never drew
+      // anything here -- not even its own otui default -- so everything that
+      // has to be visible hangs off the top edge.
+      //
+      // The icon is declared first because the number's right edge anchors to
+      // it. The number then owns whatever is left of the 34px slot, with
+      // text-align doing the centring: an auto-sized label centred on a point
+      // sized itself to its text and let wide values run past the edge.
+      UIWidget
+        id: taskPointsIcon
+        image-source: /images/icons/taskpoints
+        size: 8 8
+        phantom: true
+        anchors.right: parent.right
         anchors.top: parent.top
-        color: #c0c0c0ff
-        margin-top: 1
+        margin-top: 6
+        margin-right: 2
 
       Label
-        id: soul
-        !text: '100000'
-        font: cipsoftFont
+        id: taskPoints
+        !text: tr('TP')
+        !tooltip: tr('Task points')
         text-align: center
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.bottom: parent.bottom
+        font: cipsoftFont
+        anchors.left: parent.left
+        anchors.right: taskPointsIcon.left
+        anchors.top: parent.top
         color: #c0c0c0ff
+        margin-top: 5
 
     UIWidget
       id: capacityPanel
@@ -427,7 +444,7 @@ PhantomMiniWindow
         image-clip: 12 0 12 12
 
     UIWidget
-      id: soulAndCapacity
+      id: capacityAndTaskPoints
       image-source: /images/inventory/containerslot
       image-border: 3
       phantom: false
@@ -456,31 +473,41 @@ PhantomMiniWindow
         margin-top: 8
         color: #c0c0c0ff
 
+      // Same number-then-icon pairing as taskPointsPanel above, in a box 4px
+      // narrower, so the number has correspondingly less room here.
+      UIWidget
+        id: taskPointsIcon
+        image-source: /images/icons/taskpoints
+        size: 8 8
+        // Not phantom here, unlike the expanded panel: this box also holds
+        // Capacity, so the tooltip cannot live on the parent without
+        // mislabelling that half.
+        phantom: false
+        !tooltip: tr('Task points')
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        margin-bottom: 8
+        margin-right: 1
+
       Label
-        !text: tr('Soul')
-        text.align: center
+        id: taskPoints
+        !text: tr('TP')
+        !tooltip: tr('Task points')
+        phantom: false
+        text-align: center
         font: cipsoftFont
-        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.left: parent.left
+        anchors.right: taskPointsIcon.left
         anchors.bottom: parent.bottom
         color: #c0c0c0ff
         margin-bottom: 8
         height: 10
 
-      Label
-        id: soul
-        !text: '100000'
-        font: cipsoftFont
-        text-align: center
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.bottom: parent.bottom
-        margin-bottom: -2
-        color: #c0c0c0ff
-
     TopToggleButton
       id: attack
       image-source: /images/inventory/buttons_general
       image-clip: 0 40 20 20
-      anchors.left: soulAndCapacity.right
+      anchors.left: capacityAndTaskPoints.right
       anchors.top: changeSize.top
       margin-left: 3
       size: 20 20
@@ -572,7 +599,7 @@ PhantomMiniWindow
       id: expert
       image-source: /data/images/inventory/button-expert-up
       anchors.left: changeSize.left
-      anchors.bottom: soulAndCapacity.bottom
+      anchors.bottom: capacityAndTaskPoints.bottom
       phantom: false
       size: 12 12
       @onClick: |
@@ -598,7 +625,7 @@ PhantomMiniWindow
 
     Panel
       id: icons
-      anchors.left: soulAndCapacity.left
+      anchors.left: capacityAndTaskPoints.left
       anchors.right: pvp.right
       anchors.bottom: parent.bottom
       anchors.top: blessings.top

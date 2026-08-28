@@ -65,10 +65,18 @@ function AutoLoot.updateContainerLockVisual(widget, containerType)
         lockLabel:fill('parent')
     end
 
+    local tooltips = {
+        main = 'Drag a backpack here.\nEverything looted that is not stackable goes in it.',
+        stackables = 'Drag a backpack here.\nEvery stackable item looted goes in it instead of Main.',
+        usables = 'Not in use yet.'
+    }
+
     if AutoLoot.isContainerUnlocked(containerType) then
         lockLabel:hide()
         widget:setOpacity(1.0)
-        widget:setTooltip('Loot container')
+        widget:setTooltip(
+            tooltips[containerType] or 'Loot container'
+        )
     else
         lockLabel:show()
         lockLabel:raise()

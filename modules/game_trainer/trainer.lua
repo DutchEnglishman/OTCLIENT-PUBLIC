@@ -346,6 +346,11 @@ function onMiniWindowClose()
 end
 
 function online()
+    -- Collapsed the first time a character sees it, their own choice after that.
+    -- Here rather than in init() because the saved state is per character and
+    -- there is no character name until login.
+    trainerWindow:applyMinimizedPreference(true)
+
     loadSettings()
     setHint(nil)
     lastEatTime = 0
@@ -400,6 +405,7 @@ function init()
 
     trainerWindow:getChildById('miniwindowTitle'):setText(tr('Trainer'))
     trainerWindow:getChildById('miniwindowIcon'):setImageSource('/images/icons/icon-prey-widget')
+
 
     -- Every control writes through on change, so a crash or a kill can't lose
     -- settings that were only going to be flushed at logout. Changing any of

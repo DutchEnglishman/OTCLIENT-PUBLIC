@@ -282,8 +282,16 @@ function UIMinimap:onMouseRelease(pos, button)
 
     if button == MouseLeftButton then
         local player = g_game.getLocalPlayer()
-        if g_game.getClientVersion() > 1288 and g_keyboard.isCtrlPressed() and g_keyboard.isShiftPressed() then
-            return g_game.sendGmTeleport(mapPos)
+        -- GM teleport. No version gate: this fork speaks protocol 860 (init.lua),
+        -- so the upstream `> 1288` test was never true here and the branch was
+        -- dead. The server enforces access level in Game::playerGmTeleport, so a
+        -- non-GM account sending it is ignored there.
+        -- `return true` rather than returning sendGmTeleport's result: the
+        -- binding is void, so that returned nil and the release fell through as
+        -- unhandled.
+        if g_keyboard.isCtrlPressed() then
+            g_game.sendGmTeleport(mapPos)
+            return true
         end
         if Position.distance(player:getPosition(), mapPos) > 250 then
             modules.game_textmessage.displayStatusMessage(tr('Destination is out of range.'))

@@ -469,6 +469,22 @@ local function bindMovingKeys()
     gameWalk.bindWasdTurnKeys()
 end
 
+-- UIWidget::focusChild only marks a widget focused inside its own parent, and
+-- propagateOnKeyText descends from the root following isFocused() at every
+-- level. So focusing a deep widget is not enough on its own: unless each
+-- ancestor is also the focused child of ITS parent, the descent stops short and
+-- the typed characters never arrive. A mouse click repairs the chain as it goes
+-- down, which is why clicking the window used to be what made chat accept text.
+local function focusChainTo(widget)
+    local child = widget
+    local parent = child:getParent()
+    while parent do
+        parent:focusChild(child, ActiveFocusReason)
+        child = parent
+        parent = child:getParent()
+    end
+end
+
 function switchChat(enabled)
     if not (enabled and consoleTextEdit:isVisible()) then
         consoleTextEdit:setVisible(enabled)
@@ -478,7 +494,7 @@ function switchChat(enabled)
     if enabled then
         unbindMovingKeys()
 
-        consoleTextEdit:focus()
+        focusChainTo(consoleTextEdit)
         consoleTextEdit:setCursorPos(-1)
 
         consoleToggleChat:setTooltip(
@@ -2442,7 +2458,7 @@ function consoleController:onGameStart()
     
     addEvent(function()
         if consolePanel then
-            consolePanel:focus()
+            focusChainTo(consolePanel)
         end
     end)
 

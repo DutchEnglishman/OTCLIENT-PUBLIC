@@ -123,21 +123,10 @@ function mapController:onInit()
     -- Same action as the fullscreen-map button next to the minimap.
     g_keyboard.bindKeyDown('Ctrl+Shift+M', openCyclopediaMap, modules.game_interface.getRootPanel())
 
-    -- GM/GOD teleport: Ctrl+Left-click on the minimap (small or fullscreen --
-    -- it's the same widget instance, just reparented by fullscreen()).
-    -- The server enforces access level (Game::playerGmTeleport); a non-GM
-    -- account sending this is silently ignored there.
-    self.ui.minimapBorder.minimap.onMouseRelease = function(widget, mousePos, mouseButton)
-        if mouseButton == MouseLeftButton and g_keyboard.isCtrlPressed() and not widget:isDragging() then
-            -- Must be getTilePosition(), not getPosition(): the minimap is a
-            -- UIMinimap (extends UIWidget directly, not UIMap/UIGameMap), and
-            -- UIWidget already has its own getPosition() (the widget's own
-            -- on-screen pixel position) that otherwise wins the name clash.
-            g_game.sendGmTeleport(widget:getTilePosition(mousePos))
-            return true
-        end
-        return false
-    end
+    -- Ctrl+Left-click GM teleport lives in UIMinimap:onMouseRelease, not here.
+    -- Assigning onMouseRelease on this widget would shadow that class method --
+    -- which is also what carries left-click autowalk and the right-click marker
+    -- menu -- and silently take both away.
 end
 
 function mapController:onGameStart()
@@ -260,6 +249,16 @@ function fullscreen()
         -- The docked panel carrying the floor and zoom buttons is hidden above,
         -- so the full map gets its own copy.
         fullscreenControls = g_ui.createWidget('MinimapFullscreenControls', minimapWidget)
+
+        -- Wired here rather than with @onClick in the style: an @onClick in an
+        -- imported style resolves its names in the global environment, not this
+        -- module's, so every one of these came back nil ("attempt to call
+        -- global 'downLayer'"). The docked panel's copies work only because
+        -- loadUI compiles their expressions inside the loading module.
+        fullscreenControls.layersPanel.layerUp.onClick = upLayer
+        fullscreenControls.layersPanel.layerDown.onClick = downLayer
+        fullscreenControls.zoomIn.onClick = zoomIn
+        fullscreenControls.zoomOut.onClick = zoomOut
 
         local player = g_game.getLocalPlayer()
         pos = player and player:getPosition() or nil

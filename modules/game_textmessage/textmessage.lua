@@ -244,6 +244,27 @@ function displayMessage(mode, text)
         MessageTypes[MessageModes.MonsterSay] = MessageSettings.consoleOrange
         MessageTypes[MessageModes.MonsterYell] = MessageSettings.consoleOrange
     end
+    -- Loot goes to the Loot tab and nowhere else -- no green flash across the
+    -- middle of the screen, no duplicate in Server Log.
+    --
+    -- Matched on the text because protocol 860 has no loot message mode:
+    -- MessageModes.Loot is a 10.x addition, and the server sends loot as plain
+    -- MESSAGE_INFO_DESCR (OTSERV data/events/scripts/monster.lua), which
+    -- protocolcodes.cpp maps to MessageLook for version >= 840 -- the same mode
+    -- as "You see a ...". So the mode cannot tell them apart and the string is
+    -- the only handle. Matching is safe because that same server script is what
+    -- formats the string.
+    --
+    -- Falls through to normal handling when the Loot tab is missing, so the
+    -- message is never silently lost.
+    if text:find('^Loot of ') then
+        local lootTabName = tr('Loot')
+        if modules.game_console.getTab(lootTabName) then
+            modules.game_console.addText(ItemsDatabase.setColorLootMessage(text), MessageSettings.loot, lootTabName)
+            return
+        end
+    end
+
     local msgtype = MessageTypes[mode]
     if not msgtype then
         return

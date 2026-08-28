@@ -291,7 +291,7 @@ MainWindow
       anchors.right: parent.right
       anchors.verticalCenter: parent.verticalCenter
       margin-right: 4
-      image-source: /game_cyclopedia/images/monster-icon-bonuspoints
+      image-source: /images/icons/taskpoints
     Label
       id: Value
       anchors.right: Icon.left

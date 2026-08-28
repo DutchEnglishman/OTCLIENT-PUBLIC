@@ -143,8 +143,8 @@ local function inventoryEvent(player, slot, item, oldItem)
     slotPanel.item:setWidth(34)
     slotPanel.item:setHeight(34)
     
-    slotPanel.item:setShowDuration(g_game.getFeature(GameThingClock) and modules.client_options.getOption('showExpiryInInvetory'))
-    slotPanel.item:setShowCharges(g_game.getFeature(GameThingCounter) and modules.client_options.getOption('showExpiryInInvetory'))
+    slotPanel.item:setShowDuration(modules.client_options.getOption('showExpiryInInvetory'))
+    slotPanel.item:setShowCharges(modules.client_options.getOption('showExpiryInInvetory'))
     ItemsDatabase.setTier(slotPanel.item, item)
 
     -- Rarity frame on the equipment slot. Deliberately NOT via
@@ -174,22 +174,50 @@ local function inventoryEvent(player, slot, item, oldItem)
     end
 end
 
-local function onSoulChange(localPlayer, soul)
+-- Task points replace the old Soul slot. They arrive over extended opcode 53
+-- (game_tasksystem pushes them here) rather than being a player stat, so the
+-- last value has to be held: both panels are re-read on every shrink/expand
+-- and on every inventory refresh, and would otherwise drop back to 0.
+-- nil until the server's first push. A placeholder rather than 0 keeps "the
+-- value has not arrived" distinguishable from "the balance really is zero" --
+-- otherwise a server that never sends looks identical to a new character.
+local taskPoints = nil
+
+-- Never wider than four characters: the slot is 34px and cipsoftFont draws 8px
+-- per glyph, so a fifth one runs off the edge. Balances are fractional
+-- (task_system_core.lua awards e.g. 0.75), hence the decimal below 100.
+local function formatTaskPoints(points)
+    if not points then
+        return '-'
+    end
+    if points >= 10000 then
+        return math.min(999, math.floor(points / 1000)) .. 'k'
+    end
+    if points >= 100 or points == math.floor(points) then
+        return tostring(math.floor(points))
+    end
+    return string.format('%.1f', points)
+end
+
+local function refreshTaskPoints()
     local ui = getInventoryUi()
-    if not localPlayer then
-        return
-    end
-    if not soul then
-        return
+    local text = formatTaskPoints(taskPoints)
+
+    local onWidget = ui.taskPointsPanel and ui.taskPointsPanel.taskPoints
+    local offWidget = ui.capacityAndTaskPoints and ui.capacityAndTaskPoints.taskPoints
+
+    if onWidget then
+        onWidget:setText(text)
     end
 
-    if ui.soulPanel and ui.soulPanel.soul then
-        ui.soulPanel.soul:setText(soul)
+    if offWidget then
+        offWidget:setText(text)
     end
+end
 
-    if ui.soulAndCapacity and ui.soulAndCapacity.soul then
-        ui.soulAndCapacity.soul:setText(soul)
-    end
+function setTaskPoints(points)
+    taskPoints = tonumber(points) or 0
+    refreshTaskPoints()
 end
 
 local function onFreeCapacityChange(player, freeCapacity)
@@ -211,8 +239,8 @@ local function onFreeCapacityChange(player, freeCapacity)
     if ui.capacityPanel and ui.capacityPanel.capacity then
         ui.capacityPanel.capacity:setText(freeCapacity)
     end
-    if ui.soulAndCapacity and ui.soulAndCapacity.capacity then
-        ui.soulAndCapacity.capacity:setText(freeCapacity)
+    if ui.capacityAndTaskPoints and ui.capacityAndTaskPoints.capacity then
+        ui.capacityAndTaskPoints.capacity:setText(freeCapacity)
     end
 end
 
@@ -227,7 +255,7 @@ end
 local function refreshInventory_panel()
     local player = g_game.getLocalPlayer()
     if player then
-        onSoulChange(player, player:getSoul())
+        refreshTaskPoints()
         onFreeCapacityChange(player, player:getFreeCapacity())
     end
     if inventoryShrink then
@@ -318,7 +346,6 @@ function inventoryController:onGameStart()
     end
     inventoryController:registerEvents(LocalPlayer, {
         onInventoryChange = inventoryEvent,
-        onSoulChange = onSoulChange,
         onFreeCapacityChange = onFreeCapacityChange
     }):execute()
 
@@ -377,6 +404,10 @@ end
 
 function inventoryController:onGameEnd()
     monkMirrorItem = nil
+
+    -- Otherwise the next character logged in on this client would show the
+    -- previous one's balance until the server's first push arrives.
+    taskPoints = nil
 
     local lastCombatControls = g_settings.getNode('LastCombatControls')
     if not lastCombatControls then
@@ -506,7 +537,7 @@ function changeInventorySize()
     local player = g_game.getLocalPlayer()
     if player and g_game.isOnline() then
         onFreeCapacityChange(player, player:getFreeCapacity())
-        onSoulChange(player, player:getSoul())
+        refreshTaskPoints()
 
         -- inventoryEvent skips every slot update while shrunk (offPanel has
         -- no equipment-slot widgets to write to), so anything that changed

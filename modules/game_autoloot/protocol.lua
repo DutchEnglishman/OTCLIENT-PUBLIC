@@ -59,8 +59,8 @@ function AutoLoot.syncFilterToServer(mode)
     sendMessage("FILTER|" .. mode)
 end
 
-function AutoLoot.sendMainContainer(item)
-    if not item then
+function AutoLoot.sendContainer(role, item)
+    if not role or not item then
         return false
     end
 
@@ -77,7 +77,8 @@ function AutoLoot.sendMainContainer(item)
     end
 
     return sendMessage(string.format(
-        "CONTAINER|main|%d|%d|%d|%d",
+        "CONTAINER|%s|%d|%d|%d|%d",
+        role,
         serverId,
         position.x,
         position.y,
@@ -85,8 +86,16 @@ function AutoLoot.sendMainContainer(item)
     ))
 end
 
+function AutoLoot.sendMainContainer(item)
+    return AutoLoot.sendContainer('main', item)
+end
+
+function AutoLoot.clearContainerOnServer(role)
+    return sendMessage("CONTAINER_CLEAR|" .. tostring(role))
+end
+
 function AutoLoot.clearMainContainerOnServer()
-    return sendMessage("CONTAINER_CLEAR|main")
+    return AutoLoot.clearContainerOnServer('main')
 end
 
 function AutoLoot.syncAllToServer()
@@ -140,6 +149,50 @@ function AutoLoot.onExtendedOpcode(protocol, opcode, buffer)
 
         if AutoLoot.refreshDailyBankUI then
             AutoLoot.refreshDailyBankUI()
+        end
+
+        return
+    end
+
+    if command == "CONTAINER_LOST" then
+        -- The bag was re-bound to another slot server-side, so drop the stale
+        -- binding here instead of leaving the window showing one that is gone.
+        if AutoLoot.forgetContainer then
+            AutoLoot.forgetContainer(payload)
+        end
+
+        return
+    end
+
+    if command == "FEATURES" then
+        local ignoreFlag, containersFlag =
+            payload:match("^(%d+)|(%d+)$")
+
+        if not ignoreFlag or not containersFlag then
+            return
+        end
+
+        AutoLoot.ignoreUnlocked = ignoreFlag == '1'
+
+        local containersUnlocked = containersFlag == '1'
+
+        AutoLoot.unlockedContainers.stackables = containersUnlocked
+        AutoLoot.unlockedContainers.usables = containersUnlocked
+
+        -- A cached preset may have selected the ignore filter before the token
+        -- was spent, or on a character that never had it.
+        if not AutoLoot.ignoreUnlocked
+            and AutoLoot.filter == 'ignore' then
+            AutoLoot.filter = 'accept'
+            AutoLoot.syncFilterToServer('accept')
+        end
+
+        if AutoLoot.refreshUnlocks then
+            AutoLoot.refreshUnlocks()
+        end
+
+        if AutoLoot.refreshFilterUI then
+            AutoLoot.refreshFilterUI()
         end
 
         return

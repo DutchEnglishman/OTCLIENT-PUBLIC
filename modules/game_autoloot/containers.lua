@@ -6,31 +6,37 @@ AutoLoot.containers = AutoLoot.containers or {
     usables = nil
 }
 
-local function getMainWidget()
+-- Roles a bag can actually be bound to. "usables" has a slot and a lock but no
+-- routing rule yet, so it is deliberately not in here.
+AutoLoot.CONTAINER_ROLES = {
+    'main',
+    'stackables'
+}
+
+local WIDGET_IDS = {
+    main = 'mainContainer',
+    stackables = 'stackablesContainer',
+    usables = 'usablesContainer'
+}
+
+local ROLE_NAMES = {
+    main = 'Main',
+    stackables = 'Stackables',
+    usables = 'Useable'
+}
+
+local function getRoleWidget(role)
     if not AutoLoot.window then
         return nil
     end
-    return AutoLoot.window:recursiveGetChildById("mainContainer")
-end
 
-local function getStackablesWidget()
-    if not AutoLoot.window then
+    local widgetId = WIDGET_IDS[role]
+
+    if not widgetId then
         return nil
     end
 
-    return AutoLoot.window:recursiveGetChildById(
-        'stackablesContainer'
-    )
-end
-
-local function getUsablesWidget()
-    if not AutoLoot.window then
-        return nil
-    end
-
-    return AutoLoot.window:recursiveGetChildById(
-        'usablesContainer'
-    )
+    return AutoLoot.window:recursiveGetChildById(widgetId)
 end
 
 local function getStoredClientId(value)
@@ -43,28 +49,7 @@ local function getStoredClientId(value)
     return nil
 end
 
-function AutoLoot.setMainContainer(item)
-    if not item or not item:isItem() then
-        return false
-    end
-
-    if item.isContainer and not item:isContainer() then
-        print("[AUTOLOOT] Main destination must be a container")
-        return false
-    end
-
-    local widget = getMainWidget()
-    if not widget then
-        return false
-    end
-
-    AutoLoot.containers.main = item:getId()
-    widget:setItem(item)
-
-    if AutoLoot.sendMainContainer then
-        AutoLoot.sendMainContainer(item)
-    end
-
+local function persist()
     if AutoLoot.saveCurrentPreset then
         AutoLoot.saveCurrentPreset()
     end
@@ -72,162 +57,183 @@ function AutoLoot.setMainContainer(item)
     if AutoLoot.saveCharacterSettings then
         AutoLoot.saveCharacterSettings()
     end
+end
+
+function AutoLoot.setContainer(role, item)
+    if not AutoLoot.isContainerUnlocked(role) then
+        print(string.format(
+            '[AUTOLOOT] %s container is locked',
+            ROLE_NAMES[role] or role
+        ))
+
+        return false
+    end
+
+    if not item or not item:isItem() then
+        return false
+    end
+
+    if item.isContainer and not item:isContainer() then
+        print(string.format(
+            '[AUTOLOOT] %s destination must be a container',
+            ROLE_NAMES[role] or role
+        ))
+
+        return false
+    end
+
+    local widget = getRoleWidget(role)
+
+    if not widget then
+        return false
+    end
+
+    AutoLoot.containers[role] = item:getId()
+    widget:setItem(item)
+
+    if AutoLoot.sendContainer then
+        AutoLoot.sendContainer(role, item)
+    end
+
+    persist()
 
     print(string.format(
-        "[AUTOLOOT] Main container saved: %d",
+        '[AUTOLOOT] %s container saved: %d',
+        ROLE_NAMES[role] or role,
         item:getId()
     ))
 
     return true
 end
 
-function AutoLoot.clearMainContainer()
-    AutoLoot.containers.main = nil
+function AutoLoot.clearContainer(role)
+    local widget = getRoleWidget(role)
 
-    local widget = getMainWidget()
-    if widget then
-        widget:setItem(nil)
+    if not widget then
+        return false
     end
 
-    if AutoLoot.clearMainContainerOnServer then
-        AutoLoot.clearMainContainerOnServer()
+    AutoLoot.containers[role] = nil
+    widget:setItem(nil)
+
+    if AutoLoot.clearContainerOnServer then
+        AutoLoot.clearContainerOnServer(role)
     end
 
-    if AutoLoot.saveCurrentPreset then
-        AutoLoot.saveCurrentPreset()
-    end
+    persist()
 
-    if AutoLoot.saveCharacterSettings then
-        AutoLoot.saveCharacterSettings()
-    end
-
-    print("[AUTOLOOT] Main container cleared and saved")
+    print(string.format(
+        '[AUTOLOOT] %s container cleared and saved',
+        ROLE_NAMES[role] or role
+    ))
 
     return true
 end
 
-function AutoLoot.refreshContainerSlots()
-    local widget = getMainWidget()
-    if not widget then
-        return
+-- Drop the binding without telling the server, for when the server is the one
+-- that dropped it (the same bag was bound to another slot).
+function AutoLoot.forgetContainer(role)
+    if not WIDGET_IDS[role] then
+        return false
     end
 
-    local clientId = getStoredClientId(AutoLoot.containers.main)
-    if clientId then
-        widget:setItem(Item.create(clientId))
-    else
+    AutoLoot.containers[role] = nil
+
+    local widget = getRoleWidget(role)
+
+    if widget then
         widget:setItem(nil)
+    end
+
+    persist()
+
+    print(string.format(
+        '[AUTOLOOT] %s container was re-bound elsewhere and is now empty',
+        ROLE_NAMES[role] or role
+    ))
+
+    return true
+end
+
+function AutoLoot.setMainContainer(item)
+    return AutoLoot.setContainer('main', item)
+end
+
+function AutoLoot.clearMainContainer()
+    return AutoLoot.clearContainer('main')
+end
+
+function AutoLoot.refreshContainerSlots()
+    for role in pairs(WIDGET_IDS) do
+        local widget = getRoleWidget(role)
+
+        if widget then
+            local clientId = getStoredClientId(
+                AutoLoot.containers[role]
+            )
+
+            if clientId then
+                widget:setItem(Item.create(clientId))
+            else
+                widget:setItem(nil)
+            end
+        end
     end
 end
 
 function AutoLoot.setupContainerSlots()
-    local mainWidget = getMainWidget()
-    local stackablesWidget = getStackablesWidget()
-    local usablesWidget = getUsablesWidget()
+    for _, role in ipairs(AutoLoot.CONTAINER_ROLES) do
+        local widget = getRoleWidget(role)
 
-    if not mainWidget then
-        print("[AUTOLOOT] Main container widget not found")
-        return
-    end
+        if widget then
+            local boundRole = role
 
-    mainWidget.onDrop = function(self, draggedWidget, mousePos)
-        if not AutoLoot.isContainerUnlocked('main') then
-            print('[AUTOLOOT] Main container is locked')
-            return false
-        end
+            widget.onDrop = function(self, draggedWidget, mousePos)
+                if not draggedWidget then
+                    return false
+                end
 
-        if not draggedWidget then
-            return false
-        end
+                local item = draggedWidget.currentDragThing
 
-        local item = draggedWidget.currentDragThing
-        if not item or not item:isItem() then
-            return false
-        end
+                if not item or not item:isItem() then
+                    return false
+                end
 
-        return AutoLoot.setMainContainer(item)
-    end
-
-    mainWidget.onMouseRelease = function(self, mousePos, mouseButton)
-        if not AutoLoot.isContainerUnlocked('main') then
-            return false
-        end
-
-        if mouseButton ~= MouseRightButton then
-            return false
-        end
-
-        return AutoLoot.clearMainContainer()
-    end
-
-    if stackablesWidget then
-        AutoLoot.updateContainerLockVisual(
-            stackablesWidget,
-            'stackables'
-        )
-
-        stackablesWidget.onDrop = function(
-            self,
-            draggedWidget,
-            mousePos
-        )
-            if not AutoLoot.isContainerUnlocked('stackables') then
-                print('[AUTOLOOT] Stackables container is locked')
-                return false
+                return AutoLoot.setContainer(boundRole, item)
             end
 
-            return false
-        end
+            widget.onMouseRelease = function(self, mousePos, mouseButton)
+                if mouseButton ~= MouseRightButton then
+                    return false
+                end
 
-        stackablesWidget.onMouseRelease = function(
-            self,
-            mousePos,
-            mouseButton
-        )
-            if not AutoLoot.isContainerUnlocked('stackables') then
-                return false
+                if not AutoLoot.isContainerUnlocked(boundRole) then
+                    return false
+                end
+
+                return AutoLoot.clearContainer(boundRole)
             end
 
-            return false
+            AutoLoot.updateContainerLockVisual(widget, role)
+        else
+            print(string.format(
+                '[AUTOLOOT] Container widget missing for role %s',
+                role
+            ))
         end
     end
+
+    -- The Useable slot locks and unlocks with Stackables but has no routing
+    -- rule, so it stays inert rather than silently swallowing a bag.
+    local usablesWidget = getRoleWidget('usables')
 
     if usablesWidget then
-        AutoLoot.updateContainerLockVisual(
-            usablesWidget,
-            'usables'
-        )
+        AutoLoot.updateContainerLockVisual(usablesWidget, 'usables')
 
-        usablesWidget.onDrop = function(
-            self,
-            draggedWidget,
-            mousePos
-        )
-            if not AutoLoot.isContainerUnlocked('usables') then
-                print('[AUTOLOOT] Usables container is locked')
-                return false
-            end
-
-            return false
-        end
-
-        usablesWidget.onMouseRelease = function(
-            self,
-            mousePos,
-            mouseButton
-        )
-            if not AutoLoot.isContainerUnlocked('usables') then
-                return false
-            end
-
+        usablesWidget.onDrop = function()
             return false
         end
     end
-
-    AutoLoot.updateContainerLockVisual(
-        mainWidget,
-        'main'
-    )
 
     AutoLoot.refreshContainerSlots()
 end

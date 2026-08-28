@@ -429,7 +429,7 @@ MainWindow
 
       MiniPanel
         id: usablesContainerPanel
-        text: Usables
+        text: Useable
         anchors.top: stackablesContainerPanel.bottom
         anchors.horizontalCenter: parent.horizontalCenter
         width: 70

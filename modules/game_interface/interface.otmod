@@ -23,6 +23,7 @@ Module
     - game_outfit
     - game_skills
     - game_containers
+    - game_itemtimer
     - game_viplist
     - game_battle
     - game_npctrade
