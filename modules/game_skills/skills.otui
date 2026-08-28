@@ -161,10 +161,10 @@ MiniWindow
       SkillValueLabel
 
     SkillButton
-      id: food
+      id: soul
       height: 15
       SkillNameLabel
-        !text: tr('Food')
+        !text: tr('Soul Points')
       SkillValueLabel
 
     SkillButton
@@ -230,7 +230,17 @@ MiniWindow
     SkillButton
       id: skillId1
       SkillNameLabel
-        !text: tr('One-Handed Fighting')
+        !text: tr('Club Fighting')
+      SkillValueLabel
+      ImageSkill
+        image-source: /images/icons/icon_club
+        image-size: 9 9
+      SkillPercentPanel
+
+    SkillButton
+      id: skillId2
+      SkillNameLabel
+        !text: tr('Sword Fighting')
       SkillValueLabel
       ImageSkill
         image-source: /images/icons/icon_sword
@@ -238,12 +248,12 @@ MiniWindow
       SkillPercentPanel
 
     SkillButton
-      id: skillId2
+      id: skillId3
       SkillNameLabel
-        !text: tr('Two-Handed Fighting')
+        !text: tr('Axe Fighting')
       SkillValueLabel
       ImageSkill
-        image-source: /images/icons/icon_sword
+        image-source: /images/icons/icon_axe
         image-size: 9 9
       SkillPercentPanel
 
@@ -267,20 +277,6 @@ MiniWindow
         image-size: 9 9
       SkillPercentPanel
 
-    // Repurposed: the 8.60 skills window has a fixed set of rows, so mining
-    // borrows the axe one. Driven by the server's mining opcode rather than the
-    // axe skill -- see MINING_SKILL_OPCODE in skills.lua. Keeps the axe icon;
-    // there is no pickaxe sprite in data/images/icons.
-    SkillButton
-      id: skillId3
-      SkillNameLabel
-        !text: tr('Mining Level')
-      SkillValueLabel
-      ImageSkill
-        image-source: /images/icons/icon_axe
-        image-size: 9 9
-      SkillPercentPanel
-
     SkillButton
       id: skillId6
       SkillNameLabel
@@ -292,122 +288,6 @@ MiniWindow
       SkillPercentPanel
       margin-bottom: 5
         
-
-    HorizontalSeparator
-      id: gearResistSeparator
-      margin-top: 5
-      margin-bottom: 5
-
-    SkillButton
-      id: gearResistPhysical
-      SkillNameLabel
-        !text: tr('Physical')
-      SkillValueLabel
-      ImageSkill
-        image-source: /game_cyclopedia/images/bestiary/icons/monster-icon-physical-resist
-        image-size: 9 9
-      SkillPercentPanel
-
-    SkillButton
-      id: gearResistFire
-      SkillNameLabel
-        !text: tr('Fire')
-      SkillValueLabel
-      ImageSkill
-        image-source: /game_cyclopedia/images/bestiary/icons/monster-icon-fire-resist
-        image-size: 9 9
-      SkillPercentPanel
-
-    SkillButton
-      id: gearResistEarth
-      SkillNameLabel
-        !text: tr('Earth')
-      SkillValueLabel
-      ImageSkill
-        image-source: /game_cyclopedia/images/bestiary/icons/monster-icon-earth-resist
-        image-size: 9 9
-      SkillPercentPanel
-
-    SkillButton
-      id: gearResistEnergy
-      SkillNameLabel
-        !text: tr('Energy')
-      SkillValueLabel
-      ImageSkill
-        image-source: /game_cyclopedia/images/bestiary/icons/monster-icon-energy-resist
-        image-size: 9 9
-      SkillPercentPanel
-
-    SkillButton
-      id: gearResistIce
-      SkillNameLabel
-        !text: tr('Ice')
-      SkillValueLabel
-      ImageSkill
-        image-source: /game_cyclopedia/images/bestiary/icons/monster-icon-ice-resist
-        image-size: 9 9
-      SkillPercentPanel
-
-    SkillButton
-      id: gearResistHoly
-      SkillNameLabel
-        !text: tr('Holy')
-      SkillValueLabel
-      ImageSkill
-        image-source: /game_cyclopedia/images/bestiary/icons/monster-icon-holy-resist
-        image-size: 9 9
-      SkillPercentPanel
-
-    SkillButton
-      id: gearResistDeath
-      SkillNameLabel
-        !text: tr('Death')
-      SkillValueLabel
-      ImageSkill
-        image-source: /game_cyclopedia/images/bestiary/icons/monster-icon-death-resist
-        image-size: 9 9
-      SkillPercentPanel
-
-    HorizontalSeparator
-      id: combatStatsSeparator
-      margin-top: 5
-      margin-bottom: 5
-
-    SkillButton
-      id: combatCritChance
-      height: 15
-      SkillNameLabel
-        !text: tr('Critical chance')
-      SkillValueLabel
-
-    SkillButton
-      id: combatCritDamage
-      height: 15
-      SkillNameLabel
-        !text: tr('Critical damage')
-      SkillValueLabel
-
-    SkillButton
-      id: combatLifeStealChance
-      height: 15
-      SkillNameLabel
-        !text: tr('Life steal chance')
-      SkillValueLabel
-
-    SkillButton
-      id: combatLifeSteal
-      height: 15
-      SkillNameLabel
-        !text: tr('Life steal')
-      SkillValueLabel
-
-    SkillButton
-      id: combatAttackSpeed
-      height: 15
-      SkillNameLabel
-        !text: tr('Attack speed')
-      SkillValueLabel
-
     HorizontalSeparator
       id: separadorOnOffenceInfoChange
       margin-bottom: 5
@@ -427,13 +307,13 @@ MiniWindow
     SmallSkillButton
       id: skillId9
       SkillNameLabel
-        !text: tr('Life Steal Chance')
+        !text: tr('Life Leech Chance')
       SkillValueLabel
 
     SmallSkillButton
       id: skillId10
       SkillNameLabel
-        !text: tr('Life Steal Amount')
+        !text: tr('Life Leech Amount')
       SkillValueLabel
 
     SmallSkillButton
@@ -508,7 +388,7 @@ MiniWindow
       id: lifeLeech
       visible: false
       SkillNameLabel
-        !text: tr('Life Steal')
+        !text: tr('Life Leech')
       SkillValueLabel
     SmallSkillButton
       id: manaLeech
@@ -792,15 +672,15 @@ SkillsListSubMenu < PopupMenu
 
   SkillsSubMenuOption
     id: showClub
-    !text: tr('One-handed')
+    !text: tr('Club')
 
   SkillsSubMenuOption
     id: showSword
-    !text: tr('Two-handed')
+    !text: tr('Sword')
 
   SkillsSubMenuOption
     id: showAxe
-    !text: tr('Mining')
+    !text: tr('Axe')
 
   SkillsSubMenuOption
     id: showDistance

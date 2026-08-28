@@ -84,8 +84,8 @@ local SkillId = {
 
 local skillNames = {
     [SkillId.Magic]     = { name = "Magic Level",        icon = "magic" },
-    [SkillId.Sword]     = { name = "Two-Handed Fighting",     icon = "sword" },
-    [SkillId.Club]      = { name = "One-Handed Fighting",      icon = "club" },
+    [SkillId.Sword]     = { name = "Sword Fighting",     icon = "sword" },
+    [SkillId.Club]      = { name = "Club Fighting",      icon = "club" },
     [SkillId.Axe]       = { name = "Axe Fighting",       icon = "axe" },
     [SkillId.Fist]      = { name = "Fist Fighting",      icon = "fist" },
     [SkillId.Distance]  = { name = "Distance Fighting",  icon = "distance" },

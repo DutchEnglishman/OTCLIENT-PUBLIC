@@ -6,9 +6,6 @@ local nextWalkDir = nil
 local lastWalkDir = nil
 local lastCancelWalkTime = 0
 
-local NOCLIP_OPCODE = 66
-local noclip = false
-
 
 local keys = {
     { "Up",      North },
@@ -137,18 +134,12 @@ local function walk(dir)
     if g_game.getFeature(GameAllowPreWalk) then
         local toPos = Position.translatedToDirection(player:getPosition(), dir)
         local toTile = g_map.getTile(toPos)
-        if toTile and toTile:isWalkable() then
-            player:preWalk(dir)
-        elseif noclip then
-            -- The server accepts these steps, so predict them like any other
-            -- walk; without a prewalk each one waits a full round-trip. Only
-            -- when the tile is known: an unknown one the server rejects too,
-            -- and predicting it would lurch and snap back.
-            if toTile then
-                player:preWalk(dir)
+        if not toTile or not toTile:isWalkable() then
+            if not canChangeFloor(toPos, 1) and not canChangeFloor(toPos, -1) then
+                return false
             end
-        elseif not canChangeFloor(toPos, 1) and not canChangeFloor(toPos, -1) then
-            return false
+        else
+            player:preWalk(dir)
         end
     end
 
@@ -292,11 +283,6 @@ end
 
 --- Sets up game-related events for the WalkController.
 function WalkController:onGameStart()
-    noclip = false
-    ProtocolGame.registerExtendedOpcode(NOCLIP_OPCODE, function(protocol, opcode, buffer)
-        noclip = buffer == '1'
-    end)
-
     self:registerEvents(g_game, {
         onGameStart = onGameStart,
         onTeleport = onTeleport,
@@ -321,8 +307,6 @@ end
 
 --- Cleans up resources when the game ends.
 function WalkController:onGameEnd()
-    ProtocolGame.unregisterExtendedOpcode(NOCLIP_OPCODE)
-    noclip = false
     stopSmartWalk()
 end
 

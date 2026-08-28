@@ -73,15 +73,6 @@ local function onWidgetDestroy(widget)
 end
 
 local function onWidgetHoverChange(widget, hovered)
-    -- TEMPORARY DIAGNOSTIC (tooltip) -- remove once confirmed working.
-    if hovered then
-        local id = widget.getId and widget:getId() or '?'
-        if id ~= '' and id ~= '?' then
-            g_logger.info(string.format('[tooltip] hover %-24s tooltip=%s pressed=%s',
-                id, tostring(widget.tooltip), tostring(g_mouse.isPressed())))
-        end
-    end
-
     if hovered then
         if widget.tooltip and not g_mouse.isPressed() then
             g_tooltip.display(widget.tooltip)

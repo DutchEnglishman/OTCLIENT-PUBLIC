@@ -346,10 +346,7 @@ function UIMiniWindow:getSettings(name)
     end
 
     local settings = g_settings.getNode('CharMiniWindows')
-    -- settings[char] is nil for a character that has never saved a window, even
-    -- when the node itself exists because another character on this client has.
-    -- setSettings creates it defensively; this did not, and indexed the nil.
-    if settings and settings[char] then
+    if settings then
         local selfSettings = settings[char][self:getId()]
         if selfSettings then
             return selfSettings[name]
@@ -357,31 +354,6 @@ function UIMiniWindow:getSettings(name)
     end
 
     return nil
-end
-
--- Apply the player's saved minimize state, falling back to defaultMinimized the
--- first time this character opens the window and recording that choice so the
--- default only ever applies once.
---
--- Call this after login, never from a module's init(): getSettings/setSettings
--- both key off g_game.getCharacterName(), which is empty until the player is in
--- game, so at init() the read returns nil and the write is dropped -- the
--- default would be re-applied on every single login.
-function UIMiniWindow:applyMinimizedPreference(defaultMinimized)
-    local minimized = self:getSettings('minimized')
-    if minimized == nil then
-        minimized = defaultMinimized and true or false
-        self:setSettings({ minimized = minimized })
-    end
-
-    -- Only move when the current state actually differs. minimize() stores the
-    -- present height as maximizedHeight, so calling it on an already-minimized
-    -- window would record the collapsed 20px as the size to restore to.
-    if minimized and not self:isOn() then
-        self:minimize(true)
-    elseif not minimized and self:isOn() then
-        self:maximize(true)
-    end
 end
 
 function UIMiniWindow:setSettings(data)

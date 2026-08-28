@@ -1306,8 +1306,8 @@ local hardcodedSkillNames = {
     [1]  = "Magic Level",
     [6]  = "Shielding",
     [7]  = "Distance Fighting",
-    [8]  = "Two-Handed Fighting",
-    [9]  = "One-Handed Fighting",
+    [8]  = "Sword Fighting",
+    [9]  = "Club Fighting",
     [10] = "Axe Fighting",
     [11] = "Fist Fighting",
     [13] = "Fishing"
@@ -1319,8 +1319,8 @@ end
 
 local weaponSkillNames = {
     [0] = "Fist Fighting",
-    [1] = "One-Handed Fighting",
-    [2] = "Two-Handed Fighting",
+    [1] = "Club Fighting",
+    [2] = "Sword Fighting",
     [3] = "Axe Fighting",
     [4] = "Distance Fighting",
     [5] = "Shielding",
