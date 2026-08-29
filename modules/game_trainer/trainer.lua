@@ -20,6 +20,26 @@ local FOOD_IDS = {
 local EAT_INTERVAL = 60 * 1000
 local TICK_INTERVAL = 500
 
+-- Anti-idle, on while any trainer toggle is.
+--
+-- The server kicks after kickIdlePlayerAfterMinutes with no packet that counts
+-- as activity (src/player.cpp:1418), and a working trainer easily goes that
+-- long without sending one: auto-eat fires once a minute and only when it
+-- finds food, and both spell trainers hold fire below their threshold.
+-- Regenerating from empty mana is exactly the case where the trainer is doing
+-- its job and the player looks idle.
+--
+-- A turn towards the direction the character already faces is the cheapest
+-- signal that counts. Game::playerTurn resets the idle timer BEFORE calling
+-- internalCreatureTurn (src/game.cpp:3044), which returns early on an
+-- unchanged direction (src/game.cpp:3309) -- so nothing reaches other players
+-- and no state changes. Player:onTurn is disabled in events.xml, so no script
+-- runs either. That is why this needs no server-side counterpart.
+--
+-- 30s holds idleTime under half a minute whatever the config says, so this
+-- keeps working if kickIdlePlayerAfterMinutes is ever lowered.
+local ANTI_IDLE_INTERVAL = 30 * 1000
+
 -- Spell cooldowns are modelled here because the server never reports them: this
 -- fork sends no spell-cooldown opcode (there is no sendSpellCooldown in
 -- src/protocolgame.cpp), and GameSpellList only switches on from protocol 870
@@ -45,6 +65,7 @@ local trainerButton = nil
 local contentsPanel = nil
 local tickEvent = nil
 local lastEatTime = 0
+local lastAntiIdleTime = 0
 
 -- One cooldown model per trainer: they cast different spells with different
 -- cooldowns, so a shared timer would let the slower one gate the faster.
@@ -281,9 +302,52 @@ local function onTextMessage(_mode, text)
     lastCaster.nextCastAt = now + lastCaster.interval
 end
 
+local function anyTrainerEnabled()
+    return controls.autoEat:isChecked()
+        or controls.manaTraining:isChecked()
+        or controls.runemaking:isChecked()
+end
+
+-- A diagonal step leaves the CLIENT facing NorthEast..NorthWest -- Creature::walk
+-- stores the raw step direction -- while the server ends on East or West, because
+-- Map::moveCreature (src/map.cpp:268) applies its y test first and then lets the x
+-- test overwrite it. That is also the sprite drawn here, since Creature::setDirection
+-- folds the pattern the same way, so the two agree on screen and the turn stays a
+-- no-op. Sending the raw diagonal would be worse than wrong: Game::turn has no case
+-- for one and drops the packet without a word, so anti-idle would silently stop for
+-- anyone whose last step was diagonal.
+local DIAGONAL_CARDINAL = {
+    [Directions.NorthEast] = Directions.East,
+    [Directions.SouthEast] = Directions.East,
+    [Directions.SouthWest] = Directions.West,
+    [Directions.NorthWest] = Directions.West
+}
+
+local function keepAwake()
+    local now = g_clock.millis()
+    if now - lastAntiIdleTime < ANTI_IDLE_INTERVAL then
+        return
+    end
+
+    local player = g_game.getLocalPlayer()
+    if not player then
+        return
+    end
+
+    local direction = player:getDirection()
+    lastAntiIdleTime = now
+    g_game.turn(DIAGONAL_CARDINAL[direction] or direction)
+end
+
 local function tick()
     if not g_game.isOnline() then
         return
+    end
+
+    -- Ahead of the trainers themselves: the runemaking branch below returns
+    -- early, and that branch is the one most likely to sit idle.
+    if anyTrainerEnabled() then
+        keepAwake()
     end
 
     if controls.autoEat:isChecked() and g_clock.millis() - lastEatTime >= EAT_INTERVAL then
@@ -354,6 +418,7 @@ function online()
     loadSettings()
     setHint(nil)
     lastEatTime = 0
+    lastAntiIdleTime = g_clock.millis()
     resetCooldowns()
     startTicking()
 end
@@ -384,6 +449,24 @@ function init()
     for _, id in ipairs({ 'manaPercent', 'runePercent' }) do
         controls[id]:setValidCharacters('0123456789')
         controls[id]:setMaxLength(3)
+
+        -- Hover and scroll to nudge the threshold, one point per notch, the way
+        -- the client's own spin boxes behave (corelib/ui/uispinbox.lua:29).
+        -- Overriding on the instance loses nothing: UITextEdit's handler only
+        -- drives scrollbars, and a single-line field has none.
+        --
+        -- Consuming the wheel matters as much as handling it -- unconsumed it
+        -- reaches the right panel underneath and scrolls the whole column while
+        -- you are aiming at the field.
+        --
+        -- setText is what saves: it fires onTextChange, which is already wired
+        -- to onSettingChanged below.
+        controls[id].onMouseWheel = function(widget, _mousePos, direction)
+            local step = direction == MouseWheelUp and 1 or -1
+            local current = tonumber(widget:getText()) or 0
+            widget:setText(tostring(math.min(100, math.max(0, current + step))))
+            return true
+        end
     end
 
     -- Returning false leaves UITextEdit's own C++ mouse handling (cursor

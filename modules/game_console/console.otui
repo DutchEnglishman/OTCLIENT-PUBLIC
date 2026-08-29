@@ -319,7 +319,7 @@ Panel
     !tooltip: tr('Transparant chat')
     image-source: /images/ui/console_buttons
     image-clip: 0 0 16 16
-    anchors.right: extendedViewHide.left
+    anchors.right: closeChannelButton.left
     anchors.bottom: consoleContentPanel.top
     margin-bottom: 5
     margin-right: 1
@@ -337,28 +337,6 @@ Panel
       image-clip: 0 0 16 16
     $pressed:
       image-clip: 16 0 16 16
-
-  TabButton
-    id: extendedViewHide
-    !tooltip: tr('Hide Chat')
-    image-source: /images/ui/console_buttons
-    image-clip: 0 80 16 16
-    anchors.right: closeChannelButton.left
-    anchors.bottom: consoleContentPanel.top
-    margin-bottom: 5
-    margin-right: 1
-    visible: false
-    size: 16 16
-    @onClick: |
-      self:setChecked(not self:isChecked())
-      extendedViewHide(self:isChecked())
-
-    $checked:
-      image-clip: 16 80 16 16
-    $!checked:
-      image-clip: 0 80 16 16
-    $pressed:
-      image-clip: 16 80 16 16
 
   TabButton
     id: closeChannelButton
@@ -506,6 +484,6 @@ Panel
     size: 64 18
     color: #c0c0c0ff
     font: cipsoftFont
-    !text: tr('Chat Off')
+    !text: tr('WASD On')
     &isChecked: false
     @onClick: toggleChat()

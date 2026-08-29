@@ -1,5 +1,5 @@
--- TODO: find another hotkey for this. Ctrl+Z will be reserved to undo on textedits.
-HOTKEY = 'Ctrl+Z'
+-- Unbound by default: Ctrl+Z is reserved for undo in text edits. Assignable in Options > Controls.
+HOTKEY = ''
 
 bugReportWindow = nil
 bugTextEdit = nil

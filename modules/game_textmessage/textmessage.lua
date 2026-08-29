@@ -21,6 +21,16 @@ MessageSettings = {
         consoleTab = 'Server Log',
         screenTarget = 'lowCenterLabel'
     },
+    -- Raids get their own label rather than one of the centre three: those sit
+    -- in centerTextMessagePanel, which is centerIn: parent with fit-children,
+    -- so a lone message in any of them lands on the middle of the map -- which
+    -- is exactly where the character stands.
+    raid = {
+        color = TextColors.red,
+        consoleTab = 'Server Log',
+        screenTarget = 'raidLabel',
+        consoleOption = 'showEventMessagesInConsole'
+    },
     centerGreen = {
         color = TextColors.green,
         consoleTab = 'Server Log',
@@ -149,6 +159,7 @@ MessageTypes = {
     [MessageModes.Failure] = MessageSettings.statusSmall,
     [MessageModes.Login] = MessageSettings.bottomWhite,
     [MessageModes.Game] = MessageSettings.centerWhite,
+    [MessageModes.Raid] = MessageSettings.raid,
     [MessageModes.Status] = MessageSettings.status,
     [MessageModes.Warning] = MessageSettings.centerRed,
     [MessageModes.Look] = MessageSettings.centerGreen,

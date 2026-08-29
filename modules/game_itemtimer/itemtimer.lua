@@ -96,6 +96,28 @@ local function apply()
     end
 end
 
+-- Container and inventory widgets are rebuilt around a move, and a rebuilt
+-- widget points at a fresh Item with no duration on it. The snapshot can
+-- easily arrive BEFORE that rebuild, so applying it on arrival alone leaves
+-- the overlay blank until the next cycle.
+--
+-- addEvent rather than calling apply() straight from the signal: the rebuild
+-- is still in progress while these fire, so this runs once the current batch
+-- of container/inventory events has finished. The flag collapses a burst of
+-- them -- a single move emits several -- into one pass.
+local applyQueued = false
+local function requestApply()
+    if applyQueued then
+        return
+    end
+
+    applyQueued = true
+    addEvent(function()
+        applyQueued = false
+        apply()
+    end)
+end
+
 -- "i5=512:1:0:2171;c0.3=0:0:14:2260" -- seconds, decaying, charges, server id.
 -- Inventory slot 5 counting down with no charges; container 0 slot 3 holding 14
 -- charges and no timer. An empty buffer is a valid snapshot meaning "nothing to
@@ -138,10 +160,30 @@ function init()
     -- it is idempotent thanks to the elapsed-time subtraction above, and it
     -- self-heals whatever the refresh dropped.
     applyEvent = cycleEvent(apply, 1000)
+
+    connect(Container, {
+        onOpen = requestApply,
+        onSizeChange = requestApply,
+        onUpdateItem = requestApply
+    })
+
+    connect(g_game, {
+        onInventoryChange = requestApply
+    })
 end
 
 function terminate()
     ProtocolGame.unregisterExtendedOpcode(ITEM_TIMER_OPCODE)
+
+    disconnect(Container, {
+        onOpen = requestApply,
+        onSizeChange = requestApply,
+        onUpdateItem = requestApply
+    })
+
+    disconnect(g_game, {
+        onInventoryChange = requestApply
+    })
 
     if applyEvent then
         removeEvent(applyEvent)

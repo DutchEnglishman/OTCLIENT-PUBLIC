@@ -1,6 +1,6 @@
 Module
   name: game_bugreport
-  description: Bug report interface (Ctrl+Z)
+  description: Bug report interface
   author: edubart
   website: https://github.com/edubart/otclient
   scripts: [ bugreport ]

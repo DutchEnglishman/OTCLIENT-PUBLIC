@@ -416,7 +416,7 @@ local function resetToWalkMode()
         return
     end
     consoleToggleChat.isChecked = true
-    consoleToggleChat:setText(tr('Chat Off'))
+    consoleToggleChat:setText(tr('WASD On'))
 end
 
 function toggleChat()
@@ -426,9 +426,9 @@ function toggleChat()
 
     consoleToggleChat.isChecked = not consoleToggleChat.isChecked
     if consoleToggleChat.isChecked then
-        consoleToggleChat:setText(tr('Chat Off'))
+        consoleToggleChat:setText(tr('WASD On'))
     else
-        consoleToggleChat:setText(walkAfterSend and (tr('Chat On') .. '*') or tr('Chat On'))
+        consoleToggleChat:setText(walkAfterSend and (tr('WASD Off') .. '*') or tr('WASD Off'))
     end
 
     updateChatMode()
@@ -2527,14 +2527,11 @@ function setExtendedView(bool)
         consolePanel:getChildById('extendedViewDraggable'):show()
         consolePanel:getChildById('extendedViewTransparent'):show()
         consolePanel:getChildById('extendedViewTransparent'):setChecked(transparentChatEnabled)
-        consolePanel:getChildById('extendedViewHide'):show()
-        consolePanel:getChildById('extendedViewHide'):setChecked(not gameBottomPanel:isVisible())
     else
         consolePanel:setMarginRight(0)
         consolePanel:setMarginBottom(0)
         consolePanel:getChildById('extendedViewDraggable'):hide()
         consolePanel:getChildById('extendedViewTransparent'):hide()
-        consolePanel:getChildById('extendedViewHide'):hide()
         gameBottomPanel:show(true)
         destroyButtonChat()
     end
@@ -2617,7 +2614,10 @@ function extendedViewHide(bool)
         createButtonChat()
         extendedViewCanSee(extendedViewButtonShowAlphaChat:isOn())
     else
-        consolePanel:getChildById('extendedViewHide'):setChecked(false)
+        -- The Hide Chat button this used to un-check is gone from
+        -- console.otui, so nothing in the chat window reaches this any
+        -- more -- only the floating button createButtonChat() puts on the
+        -- map, which is itself only created from the branch above.
         gameBottomPanel:show(true)
         extendedViewCanSee(false)
         returnChat()

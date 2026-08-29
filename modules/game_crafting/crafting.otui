@@ -115,58 +115,58 @@ MainWindow
 
     CategoryButton
       id: weaponsmithCat
-      width: 120
+      width: 118
       @onClick: modules.game_crafting.selectCategory("weaponsmith")
 
       CategoryItem
         item-id: 3264
 
       CategoryLabel
-        text: Weaponsmith
+        text: Item refining
 
     CategoryButton
       id: armorsmithCat
-      width: 112
+      width: 97
       @onClick: modules.game_crafting.selectCategory("armorsmith")
 
       CategoryItem
         item-id: 3365
 
       CategoryLabel
-        text: Armorsmith
+        text: Jeweller
 
     CategoryButton
       id: alchemistCat
-      width: 98
+      width: 88
       @onClick: modules.game_crafting.selectCategory("alchemist")
 
       CategoryItem
         item-id: 7440
 
       CategoryLabel
-        text: Alchemist
+        text: Mining
 
     CategoryButton
       id: enchanterCat
-      width: 100
+      width: 95
       @onClick: modules.game_crafting.selectCategory("enchanter")
 
       CategoryItem
         item-id: 942
 
       CategoryLabel
-        text: Enchanter
+        text: Crystals
 
     CategoryButton
       id: jewellerCat
-      width: 88
+      width: 120
       @onClick: modules.game_crafting.selectCategory("jeweller")
 
       CategoryItem
         item-id: 6299
 
       CategoryLabel
-        text: Jeweller
+        text: Placeholder 2
 
   HorizontalSeparator
     anchors.top: prev.bottom

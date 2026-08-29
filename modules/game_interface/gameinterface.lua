@@ -568,6 +568,42 @@ function tryLogout(prompt)
     end
 end
 
+-- Puts the chat back where its anchors would have put it.
+--
+-- applyExtendedViewLayout breaks the chat's left and right anchors so the
+-- panel can be dragged, leaving only the bottom one. Resizing the window under
+-- it -- a fullscreen toggle -- therefore leaves it holding the x and width it
+-- had at the old size, and bindRectToParent clamps that into the corner of the
+-- new one. With dragging switched off there is then no way to get it back.
+--
+-- bottomSplitter is the reference rather than the parent because it is what
+-- the normal view anchors the chat to (gameinterface.otui:228), so it already
+-- accounts for the side panels whether they are showing or not.
+local function resetExtendedChatPosition()
+    if not isExtendedViewActive or g_platform.isMobile() then
+        return
+    end
+
+    if not gameBottomPanel or gameBottomPanel:isDestroyed() then
+        return
+    end
+
+    local splitter = gameRootPanel and gameRootPanel:getChildById('bottomSplitter')
+    if not splitter then
+        return
+    end
+
+    gameBottomPanel:setWidth(splitter:getWidth())
+    gameBottomPanel:setX(splitter:getX())
+
+    -- The right edge's drag limit was set from the panel width when extended
+    -- view was entered, so a new window size makes the old number wrong.
+    local rightBorder = gameBottomPanel:getChildById('rightResizeBorder')
+    if rightBorder then
+        rightBorder:setMaximum(gameBottomPanel:getWidth())
+    end
+end
+
 function updateStretchShrink()
     local clientOptions = modules.client_options
     -- Never in extended view. 25x19 is the normal view's shape; mode 2 is pinned
@@ -592,6 +628,11 @@ function updateStretchShrink()
             modules.game_actionbar.updateVisibleWidgetsExternal()
         end)
     end
+
+    -- Deferred: the splitter needs its own new geometry before the chat can be
+    -- lined up with it, and this handler runs while the resize is still
+    -- propagating.
+    addEvent(resetExtendedChatPosition)
 end
 
 local targetCursorActive = false

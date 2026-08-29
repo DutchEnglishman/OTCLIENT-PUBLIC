@@ -4235,9 +4235,14 @@
 	<item id="2561" article="a" name="baking tray">
 		<attribute key="weight" value="1200" />
 	</item>
+	<!-- Solid on its own, unlike the rest of the furniture: items.otb gives the
+	     pot only HAS_HEIGHT, which the two-high rule in Tile::queryAdd would let
+	     you step onto. "blocking" is the one block flag items.xml can override
+	     (ITEM_PARSE_BLOCKING, src/items.cpp:1311), so this needs no otb edit. -->
 	<item id="2562" article="a" name="pot">
 		<attribute key="weight" value="5250" />
 		<attribute key="pickupable" value="1" />
+		<attribute key="blocking" value="1" />
 	</item>
 	<item id="2563" article="a" name="pan">
 		<attribute key="weight" value="1800" />
@@ -25917,39 +25922,7 @@
 	<item id="13388" article="a" name="Upgrade crystal">
 	<attribute key="description" value="Upgrades a item to +1 or higher" />
 	</item>
-	
-	<item id="13307" article="a" name="Dumortierite quartz">
-	<attribute key="description" value="Raw unrefined quartz" />
-	</item>
-
-	<item id="13308" article="a" name="Golden Quartz">
-    <attribute key="description" value="Raw unrefined quartz" />
-    </item>
-
-	<item id="13309" article="a" name="Green amethyst quartz">
-	<attribute key="description" value="Raw unrefined quartz" />
-	</item>
-	
-	<item id="13310" article="a" name="Snow quartz">
-	<attribute key="description" value="Raw unrefined quartz" />
-	</item>
-
-	<item id="13311" article="a" name="Blue moon quartz">
-	<attribute key="description" value="Raw unrefined quartz" />
-	</item>
-
-	<item id="13312" article="a" name="Pink quartz">
-	<attribute key="description" value="Raw unrefined quartz" />
-	</item>
-
-	<item id="13313" article="a" name="Amethyst quartz">
-	<attribute key="description" value="Raw unrefined quartz" />
-	</item>
-
-	<item id="13314" article="a" name="Blood quartz">
-	<attribute key="description" value="Raw unrefined quartz" />
-	</item>
-	
+		
 	<item id="13481" article="a" name="Attack speed gem">
 	<attribute key="description" value="refines your weapon with increased attack speed" />
 	</item>
@@ -26033,7 +26006,137 @@ a
 	<item id="13346" article="a" name="Stackables token">
 	</item>
 	
+	<item id="15002" name="the avenger">
+		<attribute key="description" value="This holy blade was forged of shattered dreams." />
+		<attribute key="weight" value="6400" />
+		<attribute key="defense" value="38" />
+		<attribute key="attack" value="40" />
+		<attribute key="elementEarth" value="10" />
+		<attribute key="weaponType" value="sword" />
+		<attribute key="slotType" value="two-handed" />
+	</item>
 	
+		<item id="15003" name="the avenger">
+		<attribute key="description" value="This holy blade was forged of shattered dreams." />
+		<attribute key="weight" value="6400" />
+		<attribute key="defense" value="38" />
+		<attribute key="attack" value="40" />
+		<attribute key="elementFire" value="10" />
+		<attribute key="weaponType" value="sword" />
+		<attribute key="slotType" value="two-handed" />
+	</item>
+	
+		<item id="15004" name="the avenger">
+		<attribute key="description" value="This holy blade was forged of shattered dreams." />
+		<attribute key="weight" value="6400" />
+		<attribute key="defense" value="38" />
+		<attribute key="attack" value="40" />
+		<attribute key="elementEnergy" value="10" />
+		<attribute key="weaponType" value="sword" />
+		<attribute key="slotType" value="two-handed" />
+	</item>
+	
+		<item id="15005" name="the avenger">
+		<attribute key="description" value="This holy blade was forged of shattered dreams." />
+		<attribute key="weight" value="6400" />
+		<attribute key="defense" value="38" />
+		<attribute key="attack" value="40" />
+		<attribute key="elementIce" value="10" />
+		<attribute key="weaponType" value="sword" />
+		<attribute key="slotType" value="two-handed" />
+	</item>
+	
+	<item id="15022" article="a" name="Copper pickaxe">
+	</item>
+
+	<item id="15021" article="a" name="Iron pickaxe">
+	</item>
+	
+	<item id="15020" article="a" name="Gold pickaxe">
+	</item>
+
+	<item id="15019" article="a" name="Mithril pickaxe">
+    </item>
+
+	<item id="15016" article="a" name="Adamant pickaxe">
+	</item>
+	
+	<item id="15017" article="a" name="Rune pickaxe">
+	</item>
+
+	<item id="13304" article="a" name="Copper bar">
+	</item>
+
+	<item id="13306" article="a" name="Iron bar">
+	</item>
+	
+	<item id="13305" article="a" name="Gold bar">
+	</item>
+
+	<item id="13303" article="a" name="Mithril bar">
+	</item>
+	
+	<item id="13309" article="a" name="Adamant bar">
+	</item>
+
+	<item id="13308" article="a" name="Runite bar">
+	</item>
+
+	<item id="15015" article="a" name="Pink quartz">
+	</item>
+
+	<item id="15013" article="a" name="Sapphire quartz">
+	</item>
+
+	<item id="14994" article="a" name="Gold quartz">
+	</item>
+	
+	<item id="14995" article="a" name="Snow quartz">
+	</item>
+
+	<item id="14996" article="a" name="Onyx quartz">
+	</item>
+	
+	<item id="14998" article="a" name="Kyanite quartz">
+	</item>
+
+	<item id="14999" article="a" name="Aventurine quartz">
+	</item>
+
+	<item id="15000" article="a" name="Blood quartz">
+	</item>
+	
+	<item id="15001" article="a" name="Amethyst quartz">
+	</item>
+	
+	<item id="15009" article="a" name="Pink quartz shards">
+	</item>
+
+	<item id="15007" article="a" name="Sapphire quartz shards">
+	</item>
+
+	<item id="15008" article="a" name="Gold quartz shards">
+	</item>
+	
+	<item id="15012" article="a" name="Snow quartz shards">
+	</item>
+
+	<item id="15006" article="a" name="Onyx quartz shards">
+	</item>
+	
+	<item id="13369" article="a" name="Kyanite quartz shards">
+	</item>
+
+	<item id="13371" article="a" name="Aventurine quartz shards">
+	</item>
+
+	<item id="15011" article="a" name="Blood quartz shards">
+	</item>
+	
+	<item id="15010" article="a" name="Amethyst quartz shards">
+	</item>
+		
+
 </items>
 
 

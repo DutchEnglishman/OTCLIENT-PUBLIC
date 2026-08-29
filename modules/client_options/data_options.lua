@@ -395,6 +395,11 @@ return {
                 if options.nativeCursor.value then
                     options.nativeCursor.value = false
                     g_settings.set('nativeCursor', false)
+                    -- Before the pop, and not only on the checkbox: popCursor
+                    -- and refreshCursor both hand the cursor straight back to
+                    -- the OS while this flag is set, so leaving it true here
+                    -- pinned the native cursor with animations supposedly on.
+                    g_mouse.setUseNativeCursor(false)
                     g_mouse.popCursor('window')
                     -- Update the UI checkbox
                     local widget = panels.interface:recursiveGetChildById('nativeCursor')
@@ -434,8 +439,14 @@ return {
             g_app.forceEffectOptimization(value)
         end
     },
+    -- On by default: magic effects go to DrawOrder::FOURTH instead of THIRD
+    -- (src/client/tile.cpp:58), so they composite after everything else on the
+    -- floor rather than in tile order. Without it a corpse dropped on -- or
+    -- just south-east of -- a tile buries the effect playing there, which hid
+    -- the cursed chest spawn warnings exactly when a wave had just died on top
+    -- of them.
     drawEffectOnTop                   = {
-        value = false,
+        value = true,
         action = function(value, options, controller, panels, extraWidgets)
             g_app.setDrawEffectOnTop(value)
         end

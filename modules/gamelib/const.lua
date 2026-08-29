@@ -308,6 +308,9 @@ MessageModes = {
     Potion = 56,
     ValuableLoot = 57,
 
+    -- Raid announcements. Mirrors Otc::MessageRaid in src/client/const.h.
+    Raid = 60,
+
     Last = 58,
     Invalid = 255
 }
