@@ -31,7 +31,7 @@ local SECTION_COLORS = {
 
 -- Rarity id -> colour, matching the upgrade system's COMMON..LEGENDARY.
 local RARITY_COLORS = {
-    [1] = '#00C000', -- common / uncommon green
+    [1] = '#00C000', -- common green
     [2] = '#4080FF', -- rare blue
     [3] = '#A020F0', -- epic purple
     [4] = '#DF7010', -- legendary
@@ -378,6 +378,12 @@ local function onTooltipData(_protocol, opcode, buffer)
     end
 
     renderTooltip(payload, widget:getItem())
+end
+
+-- Exposed so other windows paint rarity the same colour this tooltip does,
+-- rather than keeping a second copy of the palette that can drift from it.
+function getRarityColor(rarityId)
+    return RARITY_COLORS[rarityId]
 end
 
 function requestTooltip(widget)

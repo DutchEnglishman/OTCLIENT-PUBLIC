@@ -165,3 +165,15 @@ UIWidget
       !text: tr('Show Expiry On Unused Items')
       !tooltip: tr('Check this box to see how much time or how many charges are left\n on items that have not been used yet')
       enabled: false
+
+  SmallReversedQtPanel
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    margin-top: 7
+    height: 22
+
+    OptionCheckBox
+      id: showPartyMembersOnMinimap
+      !text: tr('Show name and location of party members')
+      !tooltip: tr('Marks each party member on the minimap with a coloured dot and the first four letters of their name.\n\nThe colour follows their vocation: red sorcerer, blue druid, green paladin, black knight.')

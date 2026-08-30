@@ -212,6 +212,16 @@ local function setup()
         setOption('shadowFloorIntensity', 100, true)
     end
 
+    -- Colourise Loot Value starts on Frames. setDefault seeds it on a fresh
+    -- config but never overwrites a key that already exists, so a config
+    -- carrying an empty or unrecognised value would keep it forever and draw
+    -- no rarity borders at all. Anything outside the three the combobox offers
+    -- counts as unset; an explicit 'none' is a real choice and is left alone.
+    local rarityFrameModes = { none = true, frames = true, corners = true }
+    if options.framesRarity and not rarityFrameModes[options.framesRarity.value] then
+        setOption('framesRarity', 'frames', true)
+    end
+
     -- Options whose slider has been removed from the UI. A value carried over
     -- from a session that still had the slider would otherwise stick forever,
     -- with nothing left to change it -- so each is forced back to its pinned
@@ -316,7 +326,7 @@ function controller:onInit()
     -- Audio is disabled entirely on this client (see the audio option
     -- handlers in data_options.lua) -- the mute toggle has nothing left to
     -- toggle, so the button isn't created.
-    extraWidgets.optionsButton = modules.client_topmenu.addTopRightToggleButton('optionsButton', tr('Options'),
+    extraWidgets.optionsButton = modules.client_topmenu.addTopRightToggleButton('optionsButton', tr('Settings'),
         '/images/topbuttons/button_options', toggle)
 
     extraWidgets.logoutButton = modules.client_topmenu.addTopRightToggleButton('logoutButton', tr('Exit'),
@@ -485,7 +495,7 @@ function setupOptionsMainButton()
         return
     end
 
-    extraWidgets.optionsButtons = modules.game_mainpanel.addSpecialToggleButton('optionsMainButton', tr('Options'),
+    extraWidgets.optionsButtons = modules.game_mainpanel.addSpecialToggleButton('optionsMainButton', tr('Settings'),
         '/images/options/button_options', toggle, true)
 end
 

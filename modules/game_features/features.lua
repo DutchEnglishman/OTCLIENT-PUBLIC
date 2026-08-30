@@ -21,6 +21,30 @@ controller:registerEvents(g_game, {
         g_game.enableFeature(GameColorizedLootValue)
         g_game.enableFeature(GameItemRarity)
 
+        -- Mounts. Enabled here rather than by moving the client to 870,
+        -- because that version block also switches on GameDoubleExperience and
+        -- GameSpellList and changes packets this server does not speak.
+        --
+        -- DEPLOY ORDER: this one is LOCKSTEP, not server-first. The server's
+        -- AddOutfit always appends the mount looktype (u16) and the client's
+        -- getOutfit reads it only with this feature on, so a mismatch in either
+        -- direction desyncs every creature packet. Ship the rebuilt server and
+        -- this client together.
+        g_game.enableFeature(GamePlayerMounts)
+
+        -- Extended sprites. Without this the sprite count in the .spr header
+        -- and every sprite id in the .dat are u16, which is the 65535 ceiling
+        -- Object Builder reports; with it both are u32 (spritemanager.cpp:92,
+        -- thingtype.cpp:681). Item ids are NOT affected -- the .dat's
+        -- per-category counts stay u16 (thingtypemanager.cpp:107).
+        --
+        -- DEPLOY ORDER: lockstep with the ASSETS, not the server. Tibia.dat and
+        -- Tibia.spr must both be re-saved from Object Builder in extended mode:
+        -- the old files do not parse with this on, and the new ones do not parse
+        -- with it off. The server is not involved -- nothing in the protocol
+        -- reads this feature, and TFS never opens either file.
+        g_game.enableFeature(GameSpritesU32)
+
         -- For Walk
         g_game.enableFeature(GameAllowPreWalk)
         g_game.enableFeature(GameMapCache)

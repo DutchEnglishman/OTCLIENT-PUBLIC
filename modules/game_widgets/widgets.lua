@@ -286,10 +286,10 @@ function init()
 
     iconGrid = widgetsWindow:recursiveGetChildById('iconGrid')
 
-    widgetsWindow:getChildById('miniwindowTitle'):setText(tr('Options'))
+    widgetsWindow:getChildById('miniwindowTitle'):setText(tr('Menus'))
     widgetsWindow:getChildById('miniwindowIcon'):setImageSource('/images/icons/icon-prey-widget')
 
-    widgetsButton = modules.game_mainpanel.addToggleButton('widgetsButton', tr('Options'),
+    widgetsButton = modules.game_mainpanel.addToggleButton('widgetsButton', tr('Menus'),
         '/images/options/button_control', toggle)
     widgetsButton:setOn(widgetsWindow:isVisible())
 

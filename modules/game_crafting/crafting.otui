@@ -249,6 +249,50 @@ MainWindow
     margin-left: 10
     text: Crafting Process
 
+    // Refining input. Hidden on every other tab -- craftPanel is shared, so
+    // selectCategory turns this pair on and off.
+    Item
+      id: refineInput
+      anchors.top: parent.top
+      anchors.horizontalCenter: parent.horizontalCenter
+      margin-top: 4
+      // Not virtual: game_itemtooltip.requestTooltip refuses virtual widgets
+      // (itemtooltip.lua:385), so a virtual slot can never show the rolls.
+      // The drop is still handled by this module -- crafting.lua assigns its
+      // own onDrop, which replaces the one UIItem would use to physically move
+      // the item into the slot.
+      virtual: false
+      visible: false
+
+    Label
+      id: refineInputHint
+      text-auto-resize: true
+      anchors.top: prev.bottom
+      anchors.horizontalCenter: prev.horizontalCenter
+      margin-top: 3
+      text-align: center
+      text: Drag an item here
+      visible: false
+
+    // Flank the slot: upgrade level on the left, rarity on the right. Both
+    // anchor to refineInput by id rather than to prev, so the hint above can
+    // keep its own prev chain.
+    Label
+      id: refineUpgrade
+      text-auto-resize: true
+      anchors.right: refineInput.left
+      anchors.verticalCenter: refineInput.verticalCenter
+      margin-right: 8
+      text-align: right
+
+    Label
+      id: refineRarity
+      text-auto-resize: true
+      anchors.left: refineInput.right
+      anchors.verticalCenter: refineInput.verticalCenter
+      margin-left: 8
+      text-align: left
+
     Item
       id: craftOutcome
       anchors.centerIn: parent
@@ -455,6 +499,35 @@ MainWindow
         margin-right: 4
         text-align: right
 
+    // Batch size. Shown only for recipes the server marks with maxBatch > 1;
+    // everything else crafts one at a time and hides this row.
+    //
+    // Sits at the top of the panel, above the recipe. It used to sit just above
+    // the Craft button, where it ran to parent.right and straight through the
+    // Total Cost / Balance column anchored to that same edge. Nothing competes
+    // for the top: only the refining tab puts anything there (refineInput), and
+    // refining recipes never set maxBatch, so this row is hidden whenever that
+    // slot is in use. MiniPanel's padding-top of 18 keeps it clear of the title.
+    Label
+      id: craftAmountLabel
+      text-auto-resize: true
+      anchors.left: parent.left
+      anchors.top: parent.top
+      margin-left: 6
+      margin-top: 4
+      text-align: left
+      visible: false
+
+    HorizontalScrollBar
+      id: craftAmount
+      anchors.left: prev.right
+      anchors.right: parent.right
+      anchors.verticalCenter: prev.verticalCenter
+      margin-left: 8
+      margin-right: 6
+      focusable: false
+      visible: false
+
     CategoryButton
       id: craftButton
       anchors.bottom: parent.bottom
@@ -468,6 +541,17 @@ MainWindow
 
       CategoryLabel
         text: Craft
+
+    // Refining only: which projected Item Level the price was worked out from.
+    // Anchored after craftButton so the id it points at is already declared.
+    Label
+      id: refineBasis
+      text-auto-resize: true
+      anchors.right: craftButton.left
+      anchors.verticalCenter: craftButton.verticalCenter
+      margin-right: 8
+      text-align: right
+      color: #afafaf
 
   HorizontalSeparator
     id: separator

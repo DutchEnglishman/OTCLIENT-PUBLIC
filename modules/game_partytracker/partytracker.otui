@@ -1,0 +1,23 @@
+PartyTrackerDot < UIWidget
+  size: 7 7
+  phantom: true
+  focusable: false
+  // Replaced per member at runtime from VOCATION_COLOR; this is only what an
+  // unknown vocation id falls back to.
+  background-color: #c0c0c0
+  // Light rather than dark: the knight colour is near-black, and a dark border
+  // around it on the minimap's dark ground would leave nothing to see.
+  border-width: 1
+  border-color: #e8e8e8
+
+PartyTrackerName < UILabel
+  phantom: true
+  focusable: false
+  font: verdana-11px-rounded
+  color: #ffd633
+  text-auto-resize: true
+  text-align: center
+  // Clears the dot and nothing more. The label's bottom edge is hooked to the
+  // tile centre, which is where the dot is drawn, so this is half the dot's 7px
+  // height plus the gap -- and being a pixel margin it stays put at any zoom.
+  margin-bottom: 5

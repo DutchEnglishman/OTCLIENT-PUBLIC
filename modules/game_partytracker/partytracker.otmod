@@ -1,0 +1,9 @@
+Module
+  name: game_partytracker
+  description: Shows party members as a named dot on the minimap
+  author: Roel
+  sandboxed: true
+  autoload: true
+  scripts: [ partytracker ]
+  @onLoad: init()
+  @onUnload: terminate()

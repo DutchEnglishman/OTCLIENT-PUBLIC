@@ -377,35 +377,35 @@ MiniWindow
       id: combatCritChance
       height: 15
       SkillNameLabel
-        !text: tr('Critical chance')
+        !text: tr('Critical Chance')
       SkillValueLabel
 
     SkillButton
       id: combatCritDamage
       height: 15
       SkillNameLabel
-        !text: tr('Critical damage')
+        !text: tr('Critical Damage')
       SkillValueLabel
 
     SkillButton
       id: combatLifeStealChance
       height: 15
       SkillNameLabel
-        !text: tr('Life steal chance')
+        !text: tr('Life Steal Chance')
       SkillValueLabel
 
     SkillButton
       id: combatLifeSteal
       height: 15
       SkillNameLabel
-        !text: tr('Life steal')
+        !text: tr('Life Steal')
       SkillValueLabel
 
     SkillButton
       id: combatAttackSpeed
       height: 15
       SkillNameLabel
-        !text: tr('Attack speed')
+        !text: tr('Attack Speed')
       SkillValueLabel
 
     HorizontalSeparator

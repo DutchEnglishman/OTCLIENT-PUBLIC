@@ -269,7 +269,7 @@ PhantomMiniWindow
 
     MainToggleButton
       id: widgetsToggle
-      !tooltip: tr('Options')
+      !tooltip: tr('Menus')
       anchors.right: logoutToggle.left
       anchors.bottom: logoutToggle.bottom
       margin-right: 4
@@ -315,7 +315,7 @@ PhantomMiniWindow
 
     MainToggleButton
       id: optionsToggle
-      !tooltip: tr('Options')
+      !tooltip: tr('Settings')
       anchors.right: hotkeysToggle.left
       anchors.bottom: hotkeysToggle.bottom
       margin-right: 4

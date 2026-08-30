@@ -414,6 +414,18 @@ return {
     showDragIcon        = {
         value = true,
     },
+    showPartyMembersOnMinimap = {
+        value = true,
+        action = function(value, options, controller, panels, extraWidgets)
+            -- Repainted here rather than left to the module's own cycle, so
+            -- unticking the box clears the dots while the options window is
+            -- still open instead of a quarter second later.
+            local tracker = modules.game_partytracker
+            if tracker and tracker.refresh then
+                tracker.refresh()
+            end
+        end
+    },
     antialiasingMode                  = {
         value = 1,
         action = function(value, options, controller, panels, extraWidgets)

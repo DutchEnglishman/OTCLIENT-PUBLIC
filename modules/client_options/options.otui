@@ -193,7 +193,7 @@ MainWindow
     margin-bottom: 15
 
   Label
-    !text: tr('Options')
+    !text: tr('Settings')
     font: verdana-11px-antialised
     margin-top: -35
     text-align: top
