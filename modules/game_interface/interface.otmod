@@ -53,6 +53,7 @@ Module
     - game_tasksystem
     - game_crafting
     - game_itemtooltip
+    - game_itemshare
     - game_trainer
     - game_widgets
     - game_creatureinformation

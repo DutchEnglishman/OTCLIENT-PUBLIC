@@ -1,0 +1,215 @@
+PeriodicTaskCreature < Creature
+  size: 48 48
+  phantom: true
+  border-width: 0
+  padding: 0
+
+PeriodicTaskDifficultyButton < Button
+  height: 20
+  font: verdana-11px-monochrome
+
+PeriodicTaskColumn < UIWidget
+  width: 150
+  background-color: alpha
+  focusable: false
+
+  Label
+    id: title
+    height: 16
+    font: verdana-11px-rounded
+    text-align: center
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: parent.top
+
+  // The empty slot the sprite drops into once a task is taken. Kept at a fixed
+  // size so the three columns stay level whether or not they hold a monster.
+  UIWidget
+    id: monsterSlot
+    height: 52
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    margin-top: 2
+    background-color: #00000044
+    border-width: 1
+    border-color: #3a3a3a
+    focusable: false
+
+    PeriodicTaskCreature
+      id: creature
+      anchors.horizontalCenter: parent.horizontalCenter
+      anchors.verticalCenter: parent.verticalCenter
+
+  // Only the monthly column shows this; the others hide it and close the gap.
+  UIWidget
+    id: bossSlot
+    height: 52
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    margin-top: 2
+    background-color: #00000044
+    border-width: 1
+    border-color: #5a2a2a
+    focusable: false
+
+    PeriodicTaskCreature
+      id: creature
+      anchors.horizontalCenter: parent.horizontalCenter
+      anchors.verticalCenter: parent.verticalCenter
+
+  Label
+    id: monsterName
+    height: 14
+    font: verdana-11px-monochrome
+    text-align: center
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    margin-top: 2
+
+  Label
+    id: progress
+    height: 14
+    font: verdana-11px-monochrome
+    text-align: center
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+
+  // The monthly slot's boss line: its own label rather than borrowing the
+  // expiry one, so the deadline and the boss count can both be on screen.
+  Label
+    id: bossLine
+    height: 14
+    font: verdana-11px-monochrome
+    text-align: center
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+
+  // Directly under the kill counts, and shown whether or not the task has been
+  // taken -- the point is to see what a slot pays BEFORE choosing a difficulty.
+  Label
+    id: rewardTitle
+    height: 14
+    font: verdana-11px-rounded
+    color: #ffffff
+    text-align: center
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    margin-top: 4
+
+  // Height is set in Lua from the number of lines: the monthly pays two things
+  // and they stack, so a fixed height would clip the second one.
+  Label
+    id: reward
+    height: 14
+    font: verdana-11px-monochrome
+    color: #c8c8c8
+    text-align: center
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+
+  Label
+    id: expiry
+    height: 14
+    font: verdana-11px-monochrome
+    color: #a0a0a0
+    text-align: center
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+
+  // The three difficulty buttons, created at runtime from the payload so the
+  // labels and hints come from the server config rather than being duplicated
+  // here.
+  //
+  // Anchored to the BOTTOM of the column with a fixed height, deliberately not
+  // chained to prev.bottom like everything above it. The monthly column carries
+  // a second sprite slot for its boss, so a top-down chain leaves its buttons
+  // 54px lower than daily's and weekly's -- three button rows at three
+  // different heights. Pinning them to the bottom makes the row line up across
+  // all three columns whatever sits above it.
+  //
+  // Height is the three rows plus the 3px gaps between them: 3*20 + 2*3.
+  // phantom so the empty box cannot swallow clicks meant for the Reroll button
+  // that shares this corner. Its own children stay clickable:
+  // recursiveGetChildByPos descends into a child before testing whether that
+  // child is phantom (uiwidget.cpp).
+  UIWidget
+    id: buttons
+    height: 66
+    phantom: true
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    background-color: alpha
+    focusable: false
+
+  Button
+    id: reroll
+    height: 20
+    text: Reroll
+    font: verdana-11px-monochrome
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    @onClick: modules.game_periodictasks.onReroll(self:getParent():getId())
+
+  // Sits above Reroll so the two never trade places as one appears and
+  // disappears. Only shown while the one undo per assignment is unspent.
+  Button
+    id: changeDifficulty
+    height: 20
+    // (1x) rather than a silent one-shot: the button vanishes after use, and
+    // without the count that reads as a bug rather than a rule.
+    !text: tr('Change difficulty (1x)')
+    font: verdana-11px-monochrome
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: reroll.top
+    margin-bottom: 3
+    @onClick: modules.game_periodictasks.onChangeDifficulty(self:getParent():getId())
+
+PeriodicTasksWindow < MainWindow
+  id: periodicTasksWindow
+  !text: tr('Tasks')
+  // Sized against the TALLEST column, which is the monthly one: it alone
+  // carries a second sprite slot and a two-line reward.
+  //
+  //   title 16 + monster 54 + boss 54 + name 16 + progress 14
+  //   + boss line 14 + reward heading 18 + reward 28 + expiry 14   = 228
+  //   + the three difficulty buttons pinned to the bottom          =  66
+  //                                                                  ---
+  //                                                                  294
+  //
+  // Window padding is 36 top and 16 bottom (Window style), and the Close button
+  // is 20 with a 6 margin, so the column gets height - 78. At the old 340 that
+  // was 262 -- 32px short, which is what pushed the monthly reward underneath
+  // the buttons. 400 gives 322, leaving 28px of slack.
+  size: 500 400
+
+  // Columns and the vertical borders between them are created in Lua and
+  // anchored to each other, because their number comes from the payload --
+  // anchoring them here would hard-code three of them into the style.
+  UIWidget
+    id: columns
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: parent.top
+    anchors.bottom: closeButton.top
+    margin-bottom: 6
+    background-color: alpha
+    focusable: false
+
+  Button
+    id: closeButton
+    !text: tr('Close')
+    width: 64
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    @onClick: modules.game_periodictasks.hide()

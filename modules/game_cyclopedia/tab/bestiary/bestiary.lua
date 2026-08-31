@@ -7,96 +7,8 @@ local STAGES = {
     CREATURE = 3
 }
 
-local storedRaceIDs = {}
-Cyclopedia.storedTrackerData = Cyclopedia.storedTrackerData or {}
 Cyclopedia.storedBosstiaryTrackerData = Cyclopedia.storedBosstiaryTrackerData or {}
 local animusMasteryPoints = 0
-
-local function copyTrackerEntry(entry)
-    return {unpack(entry)}
-end
-
-local function setBestiaryTrackCheck(widget, checked)
-    local originalCallback = widget.onCheckChange
-    widget.onCheckChange = nil
-    widget:setChecked(checked)
-    widget.onCheckChange = originalCallback
-    widget.bestiaryTrackerState = checked
-end
-
-local function addStoredRaceId(raceId)
-    if not table.find(storedRaceIDs, raceId) then
-        table.insert(storedRaceIDs, raceId)
-    end
-end
-
-local function removeStoredRaceId(raceId)
-    for index, storedRaceId in ipairs(storedRaceIDs) do
-        if storedRaceId == raceId then
-            table.remove(storedRaceIDs, index)
-            return
-        end
-    end
-end
-
-function Cyclopedia.setBestiaryTrackerStatus(raceId, checked, trackerEntry, sendToServer)
-    raceId = tonumber(raceId)
-    if not raceId then
-        return
-    end
-
-    Cyclopedia.storedTrackerData = Cyclopedia.storedTrackerData or {}
-
-    local trackerData = {}
-    for _, entry in ipairs(Cyclopedia.storedTrackerData) do
-        if entry[1] ~= raceId then
-            table.insert(trackerData, copyTrackerEntry(entry))
-        end
-    end
-
-    if checked then
-        addStoredRaceId(raceId)
-        if trackerEntry then
-            table.insert(trackerData, copyTrackerEntry(trackerEntry))
-        end
-    else
-        removeStoredRaceId(raceId)
-    end
-
-    Cyclopedia.storedTrackerData = trackerData
-
-    if trackerMiniWindow and Cyclopedia.onParseCyclopediaTracker then
-        Cyclopedia.onParseCyclopediaTracker(0, trackerData)
-    elseif trackerMiniWindow and trackerMiniWindow.contentsPanel and #trackerData == 0 then
-        trackerMiniWindow.contentsPanel:destroyChildren()
-    end
-
-    if UI and UI.ListBase and UI.ListBase.CreatureInfo and UI.ListBase.CreatureInfo.LeftBase then
-        local trackCheck = UI.ListBase.CreatureInfo.LeftBase.TrackCheck
-        if trackCheck and tonumber(trackCheck.raceId) == raceId then
-            setBestiaryTrackCheck(trackCheck, checked)
-        end
-    end
-
-    if sendToServer ~= false then
-        g_game.sendStatusTrackerBestiary(raceId, checked)
-    end
-end
-
-function Cyclopedia.onBestiaryTrackCheckChange(widget)
-    local raceId = tonumber(widget.raceId)
-    if not raceId then
-        return
-    end
-
-    local checked = widget:isChecked()
-    if widget.bestiaryTrackerState == checked then
-        return
-    end
-
-    widget.bestiaryTrackerState = checked
-    Cyclopedia.setBestiaryTrackerStatus(raceId, checked, widget.trackerData, true)
-end
 
 function Cyclopedia.loadBestiaryOverview(name, creatures, animusMasteryPoints)
     if (name == "Result" or name == "") and #creatures > 0 then
@@ -149,7 +61,6 @@ function showBestiary()
     end
 
     Cyclopedia.initializeTrackerData()
-    Cyclopedia.ensureStoredRaceIDsPopulated()
 
     -- Bind Enter key to search when SearchEdit is focused
     g_keyboard.bindKeyDown('Enter', function()
@@ -347,30 +258,6 @@ function Cyclopedia.loadBestiarySelectedCreature(data)
         data.secondUnlock, fullText))
     UI.ListBase.CreatureInfo.ProgressBorder3:setTooltip(string.format(" %d / %d %s", data.killCounter,
         data.lastProgressKillCount, fullText))
-    UI.ListBase.CreatureInfo.LeftBase.TrackCheck.raceId = data.id
-    UI.ListBase.CreatureInfo.LeftBase.TrackCheck.trackerData = {
-        data.id,
-        data.killCounter,
-        data.thirdDifficulty,
-        data.secondUnlock,
-        data.lastProgressKillCount,
-        1
-    }
-
-    -- TODO investigate when it can be track-- idk when
-    --[[     if data.currentLevel == 1 then
-        UI.ListBase.CreatureInfo.LeftBase.TrackCheck:enable()
-    else
-        UI.ListBase.CreatureInfo.LeftBase.TrackCheck:disable()
-    end ]]
-
-    Cyclopedia.ensureStoredRaceIDsPopulated()
-
-    if table.find(storedRaceIDs, data.id) then
-        setBestiaryTrackCheck(UI.ListBase.CreatureInfo.LeftBase.TrackCheck, true)
-    else
-        setBestiaryTrackCheck(UI.ListBase.CreatureInfo.LeftBase.TrackCheck, false)
-    end
 
     -- data.currentLevel is now just a wire-parse gate on OTSERV (always 2,
     -- see the comment on ProtocolGame::sendBestiaryMonsterData) -- it no
@@ -917,12 +804,21 @@ end
 ===================================================
 ]]
 
+-- The recent-kill feed carries names lowercase. The race cache holds
+-- title-cased ones but only arrives once the cyclopedia has been opened, so
+-- the tracker cannot lean on it for a list restored at login.
+local function titleCaseMonsterName(name)
+    return (name:gsub("(%a)([%w']*)", function(first, rest)
+        return first:upper() .. rest:lower()
+    end))
+end
+
 -- Renders the last few monsters the player killed, most recent first, with
 -- progress through the CURRENT task stage ("50 / 500"). This replaces real
 -- Tibia's manually-pinned tracker: the list is pushed by the server on every
--- kill (see TaskSystem.sendRecentKills), so it updates live rather than
--- needing a request. The old pin/unpin plumbing (storedTrackerData,
--- sendStatusTrackerBestiary) is left in place but no longer feeds this panel.
+-- kill and on login (see TaskSystem.sendRecentKills), so it updates live and
+-- survives a relog rather than needing a request. There is no pin/unpin path
+-- into this panel any more -- the bestiary's "Track Kills" checkbox is gone.
 function Cyclopedia.refreshBestiaryTracker()
     local char = g_game.getCharacterName()
     if not char or #char == 0 then
@@ -943,15 +839,19 @@ function Cyclopedia.refreshBestiaryTracker()
         widget:setId(raceId or 0)
         widget.trackerType = 0
 
-        if race then
-            widget.creature:setOutfit(race.outfit)
+        -- Prefer the outfit the feed carries: the race cache is only pushed
+        -- once the cyclopedia has been opened, so on a fresh login the tracker
+        -- would otherwise draw empty slots for a list it just restored.
+        local outfit = entry.outfit or (race and race.outfit)
+        if outfit and (outfit.type or 0) > 0 then
+            widget.creature:setOutfit(outfit)
             widget.creature:getCreature():setStaticWalking(0)
         end
 
         local killsText = string.format("%d / %d", entry.current, entry.goal)
         widget.kills:setText(killsText)
         widget.label:setTextOverflowLength(math.max(11, 18 - string.len(killsText)))
-        widget.label:setText(race and race.name or entry.name)
+        widget.label:setText(race and race.name or titleCaseMonsterName(entry.name))
 
         -- One bar for the stage in progress -- the three-segment layout the
         -- widget ships with maps to real Tibia's 3 thresholds, which doesn't
@@ -1112,16 +1012,11 @@ function Cyclopedia.onParseCyclopediaTracker(trackerType, data)
 
     local isBoss = trackerType == 1
 
-    -- The bestiary tracker panel is driven entirely by the server's
-    -- recent-kill feed now (Cyclopedia.refreshBestiaryTracker) -- let the
-    -- native pin-a-monster path keep its bookkeeping below, but never let it
-    -- render over that panel. The bosstiary tracker still uses it normally.
+    -- The bestiary tracker panel is driven entirely by the server's recent-kill
+    -- feed (Cyclopedia.refreshBestiaryTracker), so the native pin-a-monster
+    -- path must never render over it. The bosstiary tracker still uses this
+    -- normally.
     if not isBoss then
-        Cyclopedia.storedTrackerData = data
-        storedRaceIDs = {}
-        for _, entry in ipairs(data) do
-            addStoredRaceId(entry[1])
-        end
         return
     end
 
@@ -1131,17 +1026,8 @@ function Cyclopedia.onParseCyclopediaTracker(trackerType, data)
         data = Cyclopedia.mergeBosstiaryTrackerOverrides(data)
     end
 
-    if isBoss then
-        Cyclopedia.BosstiaryTrackerPending = false
-        Cyclopedia.storedBosstiaryTrackerData = data
-    else
-        Cyclopedia.storedTrackerData = data
-        -- Keep checkbox state available even when the miniwindow is still closed.
-        storedRaceIDs = {}
-        for _, entry in ipairs(data) do
-            addStoredRaceId(entry[1])
-        end
-    end
+    Cyclopedia.BosstiaryTrackerPending = false
+    Cyclopedia.storedBosstiaryTrackerData = data
 
     if #data == 0 then
         if window and window.contentsPanel then
@@ -1240,25 +1126,13 @@ function Cyclopedia.saveTrackerFilters(trackerType)
 end
 
 function Cyclopedia.initializeTrackerData()
-    Cyclopedia.storedTrackerData = Cyclopedia.storedTrackerData or {}
     Cyclopedia.storedBosstiaryTrackerData = Cyclopedia.storedBosstiaryTrackerData or {}
 end
 
-function Cyclopedia.ensureStoredRaceIDsPopulated()
-    Cyclopedia.initializeTrackerData()
-
-    storedRaceIDs = {}
-    for _, entry in ipairs(Cyclopedia.storedTrackerData) do
-        addStoredRaceId(entry[1])
-    end
-end
-
 function Cyclopedia.clearTrackerDataForCharacterChange()
-    Cyclopedia.storedTrackerData = {}
     Cyclopedia.storedBosstiaryTrackerData = {}
     Cyclopedia.BosstiaryTrackerPending = false
     Cyclopedia.BosstiaryTrackerRetryScheduled = false
-    storedRaceIDs = {}
 
     if trackerMiniWindow and trackerMiniWindow.contentsPanel then
         trackerMiniWindow.contentsPanel:destroyChildren()
@@ -1312,9 +1186,9 @@ function Cyclopedia.refreshTracker(trackerType)
             Cyclopedia.onParseCyclopediaTracker(1, Cyclopedia.storedBosstiaryTrackerData)
         end
     else
-        if trackerMiniWindow and Cyclopedia.storedTrackerData then
-            Cyclopedia.onParseCyclopediaTracker(0, Cyclopedia.storedTrackerData)
-        end
+        -- The bestiary panel renders the server's recent-kill feed, not stored
+        -- pin data, so a refresh means rebuilding it from that feed.
+        Cyclopedia.refreshBestiaryTracker()
     end
 end
 
@@ -1454,15 +1328,20 @@ function onTrackerClick(widget, mousePosition, mouseButton)
         return false
     end
 
+    -- Only the bosstiary tracker is a pinned list. The bestiary panel shows the
+    -- server's recent kills, which nothing can un-pin, so a right-click there
+    -- has nothing to offer.
+    if widget.trackerType ~= 1 then
+        return false
+    end
+
     local taskId = tonumber(widget:getId())
     local menu = g_ui.createWidget("PopupMenu")
 
     menu:setGameMenu(true)
     menu:addOption("stop Tracking " .. widget.label:getText(), function()
-        if widget.trackerType == 1 and Cyclopedia.setBosstiaryTrackerStatus then
+        if Cyclopedia.setBosstiaryTrackerStatus then
             Cyclopedia.setBosstiaryTrackerStatus(taskId, false, true)
-        elseif Cyclopedia.setBestiaryTrackerStatus then
-            Cyclopedia.setBestiaryTrackerStatus(taskId, false, nil, true)
         else
             g_game.sendStatusTrackerBestiary(taskId, false)
         end

@@ -146,6 +146,12 @@ local function onBestiaryRaceCache(_protocol, opcode, buffer)
             }
         end
     end
+
+    -- The tracker may already be showing a login-restored list whose rows had
+    -- no raceId to click through to. Now that the cache is here, redraw them.
+    if Cyclopedia.refreshBestiaryTracker then
+        Cyclopedia.refreshBestiaryTracker()
+    end
 end
 
 local function onBestiaryKillCounts(_protocol, opcode, buffer)
@@ -189,20 +195,49 @@ local function onRecentKills(_protocol, opcode, buffer)
         return
     end
 
-    recentKills = {}
+    -- Two record shapes share this channel, told apart by field count:
+    -- five fields is a monster's progress, seven is its outfit. They are
+    -- separate records rather than one wide one so that an older client build,
+    -- which matches every record against an anchored five-group pattern,
+    -- skips the outfit rows instead of losing the whole list.
+    local progress = {}
+    local outfits = {}
+
     for record in buffer:gmatch('[^;]+') do
-        local name, current, goal, stageIndex, totalStages =
-            record:match('^([^,]+),(%d+),(%d+),(%d+),(%d+)$')
-        if name then
-            recentKills[#recentKills + 1] = {
-                name = name,
-                current = tonumber(current),
-                goal = tonumber(goal),
-                stageIndex = tonumber(stageIndex),
-                totalStages = tonumber(totalStages)
+        local fields = {}
+        for field in record:gmatch('[^,]+') do
+            fields[#fields + 1] = field
+        end
+
+        if #fields == 5 then
+            progress[#progress + 1] = {
+                name = fields[1],
+                current = tonumber(fields[2]),
+                goal = tonumber(fields[3]),
+                stageIndex = tonumber(fields[4]),
+                totalStages = tonumber(fields[5])
+            }
+        elseif #fields == 7 then
+            outfits[fields[1]] = {
+                type = tonumber(fields[2]),
+                head = tonumber(fields[3]),
+                body = tonumber(fields[4]),
+                legs = tonumber(fields[5]),
+                feet = tonumber(fields[6]),
+                addons = tonumber(fields[7])
             }
         end
     end
+
+    -- The outfit is what lets the tracker draw a sprite before the race cache
+    -- arrives -- that cache is only pushed once the cyclopedia is opened, so a
+    -- list restored at login has nothing else to draw from. Absent when the
+    -- server is a deploy behind, and the widget falls back to the cache then.
+    for _, entry in ipairs(progress) do
+        entry.outfit = outfits[entry.name]
+    end
+
+    recentKills = progress
 
     if Cyclopedia.refreshBestiaryTracker then
         Cyclopedia.refreshBestiaryTracker()
@@ -216,6 +251,37 @@ local function onTaskPoints(_protocol, opcode, buffer)
 
     if controllerCyclopedia and controllerCyclopedia.ui and controllerCyclopedia.ui.TaskPointsBase then
         controllerCyclopedia.ui.TaskPointsBase.Value:setText(buffer)
+    end
+end
+
+-- Strips a tracker's sort menu and its open-the-tab button, then closes the
+-- gap. UIAnchorLayout resolves an anchor against the hooked widget's rect
+-- without checking visibility (uianchorlayout.cpp:48), so hiding a button is
+-- not enough on its own -- the lock button has to be re-pointed at minimize or
+-- it stays parked two slots out over empty header.
+local function hideTrackerHeaderButtons(window, contextMenuButton, newWindowButton, minimizeButton)
+    if contextMenuButton then
+        contextMenuButton:setVisible(false)
+    end
+
+    if newWindowButton then
+        newWindowButton:setVisible(false)
+    end
+
+    -- Occupies the same slot as the sort button in the shared style and does
+    -- nothing in a tracker, so it goes too rather than surfacing underneath.
+    local toggleFilterButton = window:recursiveGetChildById('toggleFilterButton')
+    if toggleFilterButton then
+        toggleFilterButton:setVisible(false)
+    end
+
+    local lockButton = window:recursiveGetChildById('lockButton')
+    if lockButton and minimizeButton then
+        lockButton:breakAnchors()
+        lockButton:addAnchor(AnchorTop, minimizeButton:getId(), AnchorTop)
+        lockButton:addAnchor(AnchorRight, minimizeButton:getId(), AnchorLeft)
+        lockButton:setMarginRight(7)
+        lockButton:setMarginTop(0)
     end
 end
 
@@ -384,35 +450,13 @@ function controllerCyclopedia:onGameStart()
                 titleWidget:setText(title)
             end
 
-            -- Set up contextMenuButton positioning and click handler
+            -- Header buttons, both removed by request: the sort menu and the
+            -- one that opened the Bestiary tab.
             local contextMenuButton = trackerMiniWindow:recursiveGetChildById('contextMenuButton')
             local newWindowButton = trackerMiniWindow:recursiveGetChildById('newWindowButton')
             local minimizeButton = trackerMiniWindow:recursiveGetChildById('minimizeButton')
-            
-            if contextMenuButton then
-                contextMenuButton:setVisible(true)
-                
-                -- Position contextMenuButton like in ImbuementTracker
-                if minimizeButton then
-                    contextMenuButton:breakAnchors()
-                    contextMenuButton:addAnchor(AnchorTop, minimizeButton:getId(), AnchorTop)
-                    contextMenuButton:addAnchor(AnchorRight, minimizeButton:getId(), AnchorLeft)
-                    contextMenuButton:setMarginRight(7)
-                    contextMenuButton:setMarginTop(0)
-                end
-                
-                contextMenuButton.onClick = function(widget, mousePos, mouseButton)
-                    return Cyclopedia.createTrackerContextMenu("bestiary", mousePos)
-                end
-            end
 
-            if newWindowButton then
-                newWindowButton:setVisible(true)
-                newWindowButton.onClick = function(widget, mousePos, mouseButton)
-                    toggle("bestiary")
-                    return true
-                end
-            end
+            hideTrackerHeaderButtons(trackerMiniWindow, contextMenuButton, newWindowButton, minimizeButton)
 
             trackerMiniWindow.onOpen = function()
                 trackerButton:setOn(true)
@@ -457,35 +501,15 @@ function controllerCyclopedia:onGameStart()
                 iconWidgetBosstiary:setImageSource('/images/icons/icon-bosstracker-widget')
             end
 
-            -- Set up contextMenuButton positioning and click handler for Bosstiary
+            -- Header buttons, both removed by request: the sort menu and the
+            -- one that opened the Bosstiary tab. Hidden rather than deleted
+            -- from 30-miniwindow.otui, which every miniwindow shares.
             local contextMenuButtonBosstiary = trackerMiniWindowBosstiary:recursiveGetChildById('contextMenuButton')
             local newWindowButtonBosstiary = trackerMiniWindowBosstiary:recursiveGetChildById('newWindowButton')
             local minimizeButtonBosstiary = trackerMiniWindowBosstiary:recursiveGetChildById('minimizeButton')
-            
-            if contextMenuButtonBosstiary then
-                contextMenuButtonBosstiary:setVisible(true)
-                
-                -- Position contextMenuButton like in ImbuementTracker
-                if minimizeButtonBosstiary then
-                    contextMenuButtonBosstiary:breakAnchors()
-                    contextMenuButtonBosstiary:addAnchor(AnchorTop, minimizeButtonBosstiary:getId(), AnchorTop)
-                    contextMenuButtonBosstiary:addAnchor(AnchorRight, minimizeButtonBosstiary:getId(), AnchorLeft)
-                    contextMenuButtonBosstiary:setMarginRight(7)
-                    contextMenuButtonBosstiary:setMarginTop(0)
-                end
-                
-                contextMenuButtonBosstiary.onClick = function(widget, mousePos, mouseButton)
-                    return Cyclopedia.createTrackerContextMenu("bosstiary", mousePos)
-                end
-            end
 
-            if newWindowButtonBosstiary then
-                newWindowButtonBosstiary:setVisible(true)
-                newWindowButtonBosstiary.onClick = function(widget, mousePos, mouseButton)
-                    toggle("bosstiary")
-                    return true
-                end
-            end
+            hideTrackerHeaderButtons(trackerMiniWindowBosstiary, contextMenuButtonBosstiary,
+                newWindowButtonBosstiary, minimizeButtonBosstiary)
 
             trackerMiniWindowBosstiary.onOpen = function()
                 if trackerButtonBosstiary then

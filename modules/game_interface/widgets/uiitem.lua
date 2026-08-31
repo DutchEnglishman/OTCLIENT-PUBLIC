@@ -183,6 +183,22 @@ function UIItem:onMouseRelease(mousePosition, mouseButton)
         return false
     end
 
+    -- Ctrl+Alt+left click links the item into chat instead of acting on it.
+    -- Tested before the control-mode branches below so it behaves the same in
+    -- regular, classic and smart-click modes.
+    --
+    -- Tested BIT BY BIT, never as == KeyboardCtrlAltModifier. Ctrl also raises
+    -- KeyboardPrimaryModifier (16) on this platform, so Ctrl+Alt reads as 19
+    -- and an equality test against 3 can never be true -- which is exactly why
+    -- this silently did nothing. Shift is excluded so Ctrl+Alt+Shift stays free
+    -- for something else.
+    if mouseButton == MouseLeftButton
+            and g_keyboard.isCtrlPressed() and g_keyboard.isAltPressed()
+            and not g_keyboard.isShiftPressed()
+            and modules.game_itemshare and modules.game_itemshare.shareItem(self) then
+        return true
+    end
+
     if modules.client_options.getOption('classicControl') and not g_platform.isMobile() and
         ((g_mouse.isPressed(MouseLeftButton) and mouseButton == MouseRightButton) or
             (g_mouse.isPressed(MouseRightButton) and mouseButton == MouseLeftButton)) then

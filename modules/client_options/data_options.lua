@@ -463,6 +463,17 @@ return {
             g_app.setDrawEffectOnTop(value)
         end
     },
+    -- Local only. Off draws every mounted creature on foot: the mount sprite is
+    -- skipped and the rider is drawn standing instead of seated. The server is
+    -- never told, so mount speed and everything else still apply -- this only
+    -- changes what this client renders. Applied per frame, so toggling updates
+    -- creatures already on screen without waiting for an outfit change.
+    showMounts                        = {
+        value = true,
+        action = function(value, options, controller, panels, extraWidgets)
+            g_app.setDrawMounts(value)
+        end
+    },
     floorViewMode                     = {
         value = 0,
         action = function(value, options, controller, panels, extraWidgets)

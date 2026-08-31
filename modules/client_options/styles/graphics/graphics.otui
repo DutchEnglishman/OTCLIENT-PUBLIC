@@ -111,3 +111,15 @@ UIWidget
     OptionCheckBox
       id: dontStretchShrink
       !text: 'Don\'t stretch/shrink Game Window'
+
+  SmallReversedQtPanel
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    margin-top: 7
+    height: 22
+
+    OptionCheckBox
+      id: showMounts
+      !text: tr('Show mounts')
+      !tooltip: tr('Draw players and creatures on their mounts. Turn this off to see everyone on foot.')

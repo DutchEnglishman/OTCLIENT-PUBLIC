@@ -773,6 +773,24 @@ function setTextEditText(text)
     consoleTextEdit:setCursorPos(-1)
 end
 
+-- Inserts at the cursor rather than replacing, so a link can be dropped into a
+-- half-typed line. Chat is switched on first when it is off: the input is
+-- hidden in WASD mode, and appending into a hidden widget would read as the
+-- click having done nothing.
+function insertTextEditText(text)
+    if not consoleTextEdit then
+        return false
+    end
+
+    if not isChatEnabled() then
+        toggleChat()
+    end
+
+    consoleTextEdit:appendText(text)
+    consoleTextEdit:focus()
+    return true
+end
+
 function destroyOwnChannelNameWindows()
     if inviteNameWindow then
         inviteNameWindow:destroy()
@@ -1360,8 +1378,19 @@ function addTabText(text, speaktype, tab, creatureName)
     local label = g_ui.createWidget('ConsoleLabel', consoleBuffer)
     label:setId('consoleLabel' .. consoleBuffer:getChildCount())
 
+    -- Item links (game_itemshare) carry their own colours and their own hover
+    -- handler, and an NPC line never contains one, so they are tested first.
+    local shareData = modules.game_itemshare and
+        modules.game_itemshare.buildChatMarkup(text, speaktype.color)
+
     -- Overlay for consoleBuffer which shows highlighted words only
-    if speaktype.npcChat and (g_game.getCharacterName() ~= creatureName or g_game.getCharacterName() == 'Account Manager') then
+    if shareData then
+        label:setColoredText(shareData.markup)
+        label.coloredData = shareData.markup
+        label.shareLinks = shareData.links
+        label:setEventListener(EVENT_TEXT_HOVER)
+        connect(label, { onTextHoverChange = modules.game_itemshare.onChatLinkHover })
+    elseif speaktype.npcChat and (g_game.getCharacterName() ~= creatureName or g_game.getCharacterName() == 'Account Manager') then
         local highlightData = getHighlightedText(text, speaktype.color, "#1f9ffe")
         label:setColoredText(highlightData)
         label.coloredData = highlightData
@@ -1386,7 +1415,12 @@ function addTabText(text, speaktype, tab, creatureName)
         local readOnlyBuffer = readOnlyPanel:getChildById('panel')
         local readOnlyLabel = g_ui.createWidget('ConsoleLabel', readOnlyBuffer)
         readOnlyLabel:setId('consoleLabel' .. readOnlyBuffer:getChildCount())
-        if speaktype.npcChat and (g_game.getCharacterName() ~= creatureName or g_game.getCharacterName() == 'Account Manager') then
+        if shareData then
+            readOnlyLabel:setColoredText(shareData.markup)
+            readOnlyLabel.shareLinks = shareData.links
+            readOnlyLabel:setEventListener(EVENT_TEXT_HOVER)
+            connect(readOnlyLabel, { onTextHoverChange = modules.game_itemshare.onChatLinkHover })
+        elseif speaktype.npcChat and (g_game.getCharacterName() ~= creatureName or g_game.getCharacterName() == 'Account Manager') then
             local highlightData = getHighlightedText(text, speaktype.color, "#1f9ffe")
             readOnlyLabel:setColoredText(highlightData)
             readOnlyLabel:setEventListener(EVENT_TEXT_CLICK)

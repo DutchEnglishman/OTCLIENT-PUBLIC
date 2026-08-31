@@ -17,11 +17,36 @@ ItemTooltipWindow < UIWidget
   focusable: false
 
 // One coloured, centred line. Positioned manually by itemtooltip.lua.
+//
+// Tahoma Bold, loaded from data/fonts/ttf/tahomabd.ttf. The name carries no
+// extension or path on purpose: TTFLoader appends ".ttf" and looks in
+// data/fonts/ttf (ttfloader.cpp:119-127), the same way client_bottommenu asks
+// for "verdana-bold".
+//
+// Every row, the name and the weight derive from this style -- and so do the
+// eight outline copies behind each of them -- so the whole tooltip follows.
+// The face is rasterised once and cached under "tahomabd_10", so the nine
+// widgets a single line costs do not each pay for it (uiwidgettext.cpp:561).
+//
+// No ttf-stroke here, deliberately: runtime stroking is what hung the client
+// before, which is why the outline is drawn with offset copies instead. See
+// the note above ensureWidget in itemtooltip.lua.
 ItemTooltipLine < UILabel
+  ttf-font: tahomabd
+  ttf-font-size: 10
   text-align: center
   text-auto-resize: true
   phantom: true
   focusable: false
+
+// The weight, top-left of the header. Its own style purely so it can be set a
+// size below the body text -- it is a footnote, not a stat. ttf-font is
+// repeated rather than leaned on through inheritance: parseTextStyle reads the
+// pair off one node (uiwidgettext.cpp:230-234), so a size with no face beside
+// it would be a silent no-op.
+ItemTooltipWeight < ItemTooltipLine
+  ttf-font: tahomabd
+  ttf-font-size: 8
 
 // Hairline between colour groups. Width is set in code to the content width.
 ItemTooltipSeparator < UIWidget

@@ -88,6 +88,80 @@ local function updateMonkMirrorItem(leftItem)
 end
 
 
+-- Auto mount. Protection zones dismount the player server-side
+-- (Player::onChangeZone), so a plain mount button would have to be pressed
+-- again on every trip out of town. This one remembers the intent and re-sends
+-- the mount as soon as the zone allows it.
+local autoMount = false
+
+-- PlayerStates.Pz mirrors the server's ICON_PIGEON and PzBlock its
+-- ICON_REDSWORDS. Player::toggleMount refuses to mount outside a protection
+-- zone while pz-locked, and inside one the server dismounts anyway, so asking
+-- in either state only earns the player a "Sorry, not possible.".
+local function isMountBlocked(states)
+    return Player.isStateActive(states, PlayerStates.Pz) or Player.isStateActive(states, PlayerStates.PzBlock)
+end
+
+local function tryAutoMount()
+    if not autoMount or not g_game.isOnline() or not g_game.getFeature(GamePlayerMounts) then
+        return
+    end
+
+    local player = g_game.getLocalPlayer()
+    if player and not player:isMounted() and not isMountBlocked(player:getStates()) then
+        player:mount()
+    end
+end
+
+local function refreshAutoMountButtons()
+    for _, panel in ipairs({inventoryController.ui.onPanel, inventoryController.ui.offPanel}) do
+        if panel.autoMount then
+            panel.autoMount:setChecked(autoMount)
+        end
+    end
+end
+
+local function onPlayerStatesChange(player, states, oldStates)
+    -- Only when one of the two blocking bits actually cleared: every other
+    -- condition icon fires this event too, and each pointless attempt would
+    -- put another cancel message on the player's screen.
+    if autoMount and isMountBlocked(oldStates) and not isMountBlocked(states) then
+        tryAutoMount()
+    end
+end
+
+local function onPlayerOutfitChange(creature, outfit, oldOutfit)
+    -- The server clears lookMount when it dismounts the player. Nothing else
+    -- reports that, so this is what undoes a dismount taken outside a zone
+    -- change -- losing the mount, an outfit condition ending.
+    if autoMount and (oldOutfit.mount or 0) > 0 and (outfit.mount or 0) == 0 then
+        tryAutoMount()
+    end
+end
+
+function onSetAutoMount(self, checked)
+    if checked == autoMount then
+        return
+    end
+
+    autoMount = checked
+    g_settings.set('autoMount', autoMount)
+    refreshAutoMountButtons()
+
+    if not g_game.isOnline() then
+        return
+    end
+
+    if autoMount then
+        tryAutoMount()
+    else
+        local player = g_game.getLocalPlayer()
+        if player and player:isMounted() then
+            player:dismount()
+        end
+    end
+end
+
 local function walkEvent()
     if modules.client_options.getOption('autoChaseOverride') then
         if g_game.isAttacking() and g_game.getChaseMode() == ChaseOpponent then
@@ -318,6 +392,18 @@ function inventoryController:onInit()
     connect(inventoryController.ui.onPanel.expert, {
         onCheckChange = expertMode
     })
+
+    -- Read before connecting so the setChecked below matches what the handler
+    -- already holds and is swallowed by its equality guard.
+    autoMount = g_settings.getBoolean('autoMount')
+    connect(inventoryController.ui.onPanel.autoMount, {
+        onCheckChange = onSetAutoMount
+    })
+    connect(inventoryController.ui.offPanel.autoMount, {
+        onCheckChange = onSetAutoMount
+    })
+    refreshAutoMountButtons()
+
     pvpModeRadioGroup = UIRadioGroup.create()
     pvpModeRadioGroup:addWidget(inventoryController.ui.onPanel.whiteDoveBox)
     pvpModeRadioGroup:addWidget(inventoryController.ui.onPanel.whiteHandBox)
@@ -357,6 +443,18 @@ function inventoryController:onGameStart()
         onSafeFightChange = combatEvent,
         onPVPModeChange = combatEvent
     }):execute()
+
+    -- Not chained onto the :execute() above: that fires every handler in the
+    -- table with no arguments, and both of these read their event payload.
+    inventoryController:registerEvents(LocalPlayer, {
+        onStatesChange = onPlayerStatesChange,
+        onOutfitChange = onPlayerOutfitChange
+    })
+
+    -- Delayed: sendIcons() is the last thing the login stream writes, and
+    -- mounting before it lands would put the player on a mount inside the
+    -- temple they just logged into.
+    inventoryController:scheduleEvent(tryAutoMount, 500, 'autoMountOnLogin')
 
     inventoryShrink = g_settings.getBoolean('mainpanel_shrink_inventory')
     refreshInventorySizes()

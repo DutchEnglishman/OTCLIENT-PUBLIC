@@ -767,7 +767,6 @@ function toggleContainerPages(containerWindow, pages)
     local separator = containerWindow:getChildById('separator')
     local contentsPanel = containerWindow:getChildById('contentsPanel')
     local upButton = containerWindow:getChildById('upButton')
-    local contextMenuButton = containerWindow:recursiveGetChildById('contextMenuButton')
     local lockButton = containerWindow:recursiveGetChildById('lockButton')
     local minimizeButton = containerWindow:recursiveGetChildById('minimizeButton')
     
@@ -793,29 +792,19 @@ function toggleContainerPages(containerWindow, pages)
         contentsPanel:setMarginRight(1)
         
         -- When pages are active, move upButton to toggleFilterButton position if it's visible
-        if upButton and upButton:isVisible() and contextMenuButton and minimizeButton then
-            -- Position upButton where toggleFilterButton was
+        if upButton and upButton:isVisible() and lockButton and minimizeButton then
             upButton:breakAnchors()
             upButton:addAnchor(AnchorTop, minimizeButton:getId(), AnchorTop)
             upButton:addAnchor(AnchorRight, minimizeButton:getId(), AnchorLeft)
             upButton:setMarginRight(7)
             upButton:setMarginTop(0)
-            
-            -- Move contextMenuButton to the left of upButton
-            contextMenuButton:breakAnchors()
-            contextMenuButton:addAnchor(AnchorTop, upButton:getId(), AnchorTop)
-            contextMenuButton:addAnchor(AnchorRight, upButton:getId(), AnchorLeft)
-            contextMenuButton:setMarginRight(2)
-            contextMenuButton:setMarginTop(0)
-            
-            -- Position lockButton to the left of contextMenu
-            if lockButton then
-                lockButton:breakAnchors()
-                lockButton:addAnchor(AnchorTop, contextMenuButton:getId(), AnchorTop)
-                lockButton:addAnchor(AnchorRight, contextMenuButton:getId(), AnchorLeft)
-                lockButton:setMarginRight(2)
-                lockButton:setMarginTop(0)
-            end
+
+            -- lockButton sits where the sort button used to, left of upButton.
+            lockButton:breakAnchors()
+            lockButton:addAnchor(AnchorTop, upButton:getId(), AnchorTop)
+            lockButton:addAnchor(AnchorRight, upButton:getId(), AnchorLeft)
+            lockButton:setMarginRight(2)
+            lockButton:setMarginTop(0)
         end
     else
         -- When pages are hidden, use normal bottom anchor
@@ -839,38 +828,25 @@ function toggleContainerPages(containerWindow, pages)
         contentsPanel:setMarginRight(1)
         
         -- When pages are not active, reset button positions based on upButton visibility
-        if upButton and contextMenuButton and minimizeButton then
+        if upButton and lockButton and minimizeButton then
             if upButton:isVisible() then
-                -- Reset upButton to original position
                 upButton:breakAnchors()
                 upButton:addAnchor(AnchorTop, minimizeButton:getId(), AnchorTop)
                 upButton:addAnchor(AnchorRight, minimizeButton:getId(), AnchorLeft)
                 upButton:setMarginRight(3)
                 upButton:setMarginTop(0)
-                
-                -- Position contextMenuButton to the left of upButton
-                contextMenuButton:breakAnchors()
-                contextMenuButton:addAnchor(AnchorTop, upButton:getId(), AnchorTop)
-                contextMenuButton:addAnchor(AnchorRight, upButton:getId(), AnchorLeft)
-                contextMenuButton:setMarginRight(2)
-                contextMenuButton:setMarginTop(0)
-            else
-                -- Position contextMenuButton where toggleFilterButton was
-                contextMenuButton:breakAnchors()
-                contextMenuButton:addAnchor(AnchorTop, minimizeButton:getId(), AnchorTop)
-                contextMenuButton:addAnchor(AnchorRight, minimizeButton:getId(), AnchorLeft)
-                contextMenuButton:setMarginRight(7)
-                contextMenuButton:setMarginTop(0)
-            end
-            
-            -- Position lockButton to the left of contextMenu
-            if lockButton then
+
                 lockButton:breakAnchors()
-                lockButton:addAnchor(AnchorTop, contextMenuButton:getId(), AnchorTop)
-                lockButton:addAnchor(AnchorRight, contextMenuButton:getId(), AnchorLeft)
+                lockButton:addAnchor(AnchorTop, upButton:getId(), AnchorTop)
+                lockButton:addAnchor(AnchorRight, upButton:getId(), AnchorLeft)
                 lockButton:setMarginRight(2)
-                lockButton:setMarginTop(0)
+            else
+                lockButton:breakAnchors()
+                lockButton:addAnchor(AnchorTop, minimizeButton:getId(), AnchorTop)
+                lockButton:addAnchor(AnchorRight, minimizeButton:getId(), AnchorLeft)
+                lockButton:setMarginRight(7)
             end
+            lockButton:setMarginTop(0)
         end
     end
     
@@ -1033,42 +1009,31 @@ function onContainerOpen(container, previousContainer)
     local contextMenuButton = containerWindow:recursiveGetChildById('contextMenuButton')
     local lockButton = containerWindow:recursiveGetChildById('lockButton')
     local minimizeButton = containerWindow:recursiveGetChildById('minimizeButton')
-    
-    -- Make sure contextMenuButton is visible
+
+    -- The sort menu is off by request. Hidden rather than deleted from
+    -- 30-miniwindow.otui, which every miniwindow shares -- other windows still
+    -- use this button for menus that have nothing to do with sorting.
+    --
+    -- lockButton then has to take the slot it vacated: UIAnchorLayout resolves
+    -- an anchor against the hooked widget's rect without checking visibility
+    -- (uianchorlayout.cpp:48), so chaining off the hidden button would leave a
+    -- hole in the header rather than closing it up.
     if contextMenuButton then
-        contextMenuButton:setVisible(true)
+        contextMenuButton:setVisible(false)
     end
-    
-    if contextMenuButton and minimizeButton then
+
+    if lockButton and minimizeButton then
+        lockButton:breakAnchors()
         if container:hasParent() then
-            -- When upButton is visible, position contextMenuButton to its left
-            contextMenuButton:breakAnchors()
-            contextMenuButton:addAnchor(AnchorTop, upButton:getId(), AnchorTop)
-            contextMenuButton:addAnchor(AnchorRight, upButton:getId(), AnchorLeft)
-            contextMenuButton:setMarginRight(2)
-            contextMenuButton:setMarginTop(0)
-        else
-            -- When upButton is not visible, position contextMenuButton where toggleFilterButton was
-            contextMenuButton:breakAnchors()
-            contextMenuButton:addAnchor(AnchorTop, minimizeButton:getId(), AnchorTop)
-            contextMenuButton:addAnchor(AnchorRight, minimizeButton:getId(), AnchorLeft)
-            contextMenuButton:setMarginRight(7)
-            contextMenuButton:setMarginTop(0)
-        end
-        
-        -- Position lockButton to the left of contextMenu
-        if lockButton then
-            lockButton:breakAnchors()
-            lockButton:addAnchor(AnchorTop, contextMenuButton:getId(), AnchorTop)
-            lockButton:addAnchor(AnchorRight, contextMenuButton:getId(), AnchorLeft)
+            lockButton:addAnchor(AnchorTop, upButton:getId(), AnchorTop)
+            lockButton:addAnchor(AnchorRight, upButton:getId(), AnchorLeft)
             lockButton:setMarginRight(2)
-            lockButton:setMarginTop(0)
+        else
+            lockButton:addAnchor(AnchorTop, minimizeButton:getId(), AnchorTop)
+            lockButton:addAnchor(AnchorRight, minimizeButton:getId(), AnchorLeft)
+            lockButton:setMarginRight(7)
         end
-        
-        -- Add onClick handler for context menu
-        contextMenuButton.onClick = function(widget, mousePos, mouseButton)
-            return showContainersContextMenu(widget, mousePos, mouseButton)
-        end
+        lockButton:setMarginTop(0)
     end
 
     local name = container:getName()

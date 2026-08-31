@@ -49,9 +49,39 @@ local SECTION_GROUPS = {
     { 'A' },
 }
 
+-- Tags whose lines are "Label: value" pairs, drawn as two columns inside one
+-- centred block: names on its left edge, values on its right, so the numbers --
+-- and the % after them -- line up down the whole tooltip.
+--
+-- S is deliberately absent: the base stats arrive as one comma-joined summary
+-- line ("Atk: 47, Ice: 13, Def: 48"), which holds several colons and would be
+-- torn apart at the wrong one. R and L are out because they sit with the name
+-- as the item's identity rather than as a table.
+local TWO_COLUMN_TAGS = { F = true, A = true }
+
+-- Space between the longest label and the value column, and the whole knob for
+-- how far apart the two sit. In the default font a space is 4px wide
+-- (data/fonts/otfont/verdana-11px-antialised.otfont), and this is now zero:
+-- the longest label sits directly against the widest value. That is the floor;
+-- anything tighter has to come out of the shared value column itself.
+--
+-- Only the row that has BOTH the longest label and the widest value shows this
+-- gap; every other row shows it plus the difference in value width, which is
+-- what keeps the numbers in one column.
+local COLUMN_GAP = 0
+
 local PADDING = 6
 local SPRITE_SIZE = 32
-local HEADER_GAP = 4
+-- Clearance between the name and the sprite in the top row. Only bites on a
+-- name long enough to be clamped against the sprite (see gapEnd below); it also
+-- counts into the header width, which matters only while the header is the
+-- widest thing in the tooltip. To narrow EVERY tooltip, use CONTENT_PAD.
+local HEADER_GAP = 2
+-- Wider than HEADER_GAP, and only ever seen on the weight side. The name is
+-- centred in the window and falls back to this gap solely when it is long
+-- enough to be clamped against the weight -- which is where the two used to
+-- read as one run-on string.
+local WEIGHT_GAP = 9
 local SEPARATOR_GAP = 3
 local SEPARATOR_BLOCK = SEPARATOR_GAP * 2 + 1
 local SEPARATOR_WIDTH_RATIO = 1 / 3
@@ -61,7 +91,13 @@ local WEIGHT_COLOR = '#DFDFDF'
 -- outline copies reach one pixel further out than the text itself.
 local FRAME_INSET_X = 6
 local FRAME_INSET_Y = 6
-local WIDTH_SCALE = 2
+-- Breathing room added to the widest line so text isn't packed against the
+-- frame. Additive rather than the multiplier this used to be: scaling grew the
+-- slack with the content, so the longest tooltips were also the emptiest.
+--
+-- Keep it EVEN: it is split across the two sides of the widest line, so an odd
+-- value seats that line a pixel off-centre in its own window.
+local CONTENT_PAD = 6
 
 -- 1px offsets used to fake a black outline (8 directions = solid edge).
 local OUTLINE_OFFSETS = {
@@ -146,20 +182,40 @@ local function parseSections(payload)
     return sections, rarityId, weight
 end
 
+-- "Critical Chance: +2%" -> 'Critical Chance:', '+2%'. Every line that has a
+-- value is written in this shape by the server (data/tooltip/tooltip_core.lua);
+-- the ones that read as whole sentences carry no ": " and come back nil, which
+-- is what keeps them on a single line.
+--
+-- The match is greedy, so a label holding a colon of its own keeps it and only
+-- the last ": " separates the columns.
+local function splitPair(text)
+    local label, value = text:match('^(.+):%s+(.+)$')
+    if not label then
+        return nil
+    end
+    return label .. ':', value
+end
+
 -- The engine has no text-outline property, and generating a stroked font at
 -- runtime hung the client, so the outline is eight 1px black copies. They're
 -- created BEFORE the coloured label so they render underneath -- children draw
 -- in creation order.
-local function createOutlinedLabel(text, color)
+-- style defaults to the body line. The weight passes its own so it can be a
+-- size smaller; the outline copies have to use the SAME style, or they would be
+-- drawn at a different size than the text they sit behind.
+local function createOutlinedLabel(text, color, style)
+    style = style or 'ItemTooltipLine'
+
     local shadows = {}
     for _, offset in ipairs(OUTLINE_OFFSETS) do
-        local shadow = g_ui.createWidget('ItemTooltipLine', tooltipWindow)
+        local shadow = g_ui.createWidget(style, tooltipWindow)
         shadow:setText(text)
         shadow:setColor('#000000')
         shadows[#shadows + 1] = { widget = shadow, dx = offset[1], dy = offset[2] }
     end
 
-    local label = g_ui.createWidget('ItemTooltipLine', tooltipWindow)
+    local label = g_ui.createWidget(style, tooltipWindow)
     label:setText(text)
     label:setColor(color)
 
@@ -208,6 +264,11 @@ local function renderTooltip(payload, item)
     local rows = {}
     local contentWidth = 0
     local contentHeight = 0
+    -- Measured across the WHOLE tooltip rather than per group, so a refine
+    -- value lands in the same column as an attribute's and the stats above
+    -- both of them line up with either.
+    local labelWidth = 0
+    local valueWidth = 0
 
     for _, group in ipairs(SECTION_GROUPS) do
         local groupRows = {}
@@ -218,9 +279,25 @@ local function renderTooltip(payload, item)
                     color = rarityColor
                 end
 
-                local entry = createOutlinedLabel(text, color)
-                contentWidth = math.max(contentWidth, entry.widget:getWidth())
-                groupRows[#groupRows + 1] = entry
+                local label, value
+                if TWO_COLUMN_TAGS[tag] then
+                    label, value = splitPair(text)
+                end
+
+                if label then
+                    local labelEntry = createOutlinedLabel(label, color)
+                    local valueEntry = createOutlinedLabel(value, color)
+                    labelWidth = math.max(labelWidth, labelEntry.widget:getWidth())
+                    valueWidth = math.max(valueWidth, valueEntry.widget:getWidth())
+                    groupRows[#groupRows + 1] = { label = labelEntry, value = valueEntry }
+                else
+                    local entry = createOutlinedLabel(text, color)
+                    contentWidth = math.max(contentWidth, entry.widget:getWidth())
+                    -- No value to column off ("Mana Shield", or an attribute
+                    -- that reads as a sentence). Still left-aligned with the
+                    -- names it sits among rather than centred on its own.
+                    groupRows[#groupRows + 1] = { entry = entry, flush = TWO_COLUMN_TAGS[tag] }
+                end
             end
         end
 
@@ -233,15 +310,22 @@ local function renderTooltip(payload, item)
                 contentHeight = contentHeight + SEPARATOR_BLOCK
             end
 
-            for _, entry in ipairs(groupRows) do
-                rows[#rows + 1] = { entry = entry }
-                contentHeight = contentHeight + entry.widget:getHeight()
+            for _, row in ipairs(groupRows) do
+                rows[#rows + 1] = row
+                contentHeight = contentHeight + (row.entry or row.label).widget:getHeight()
             end
         end
     end
 
+    local tableWidth = 0
+    if labelWidth > 0 then
+        tableWidth = labelWidth + COLUMN_GAP + valueWidth
+        contentWidth = math.max(contentWidth, tableWidth)
+    end
+
     -- Header: weight left, name between, sprite right.
-    local weightEntry = weight and createOutlinedLabel(weight, WEIGHT_COLOR) or nil
+    local weightEntry = weight
+        and createOutlinedLabel(weight, WEIGHT_COLOR, 'ItemTooltipWeight') or nil
 
     local nameText = (sections.N or {})[1]
     local nameEntry = nameText
@@ -265,13 +349,15 @@ local function renderTooltip(payload, item)
     -- the rows beneath it; letting its 32px drive the header height would
     -- reopen the gap between the name and the rarity line under it.
     local headerHeight = 0
+    -- One gap per adjacent pair that is actually present, and the two sides are
+    -- no longer the same width, so they are counted separately.
     local headerWidth = leftWidth + nameWidth + rightWidth
-    for _, present in ipairs({ leftWidth, nameWidth, rightWidth }) do
-        if present > 0 then
-            headerWidth = headerWidth + HEADER_GAP
-        end
+    if leftWidth > 0 and nameWidth > 0 then
+        headerWidth = headerWidth + WEIGHT_GAP
     end
-    headerWidth = math.max(0, headerWidth - HEADER_GAP)
+    if rightWidth > 0 and (leftWidth > 0 or nameWidth > 0) then
+        headerWidth = headerWidth + HEADER_GAP
+    end
 
     if weightEntry then
         headerHeight = math.max(headerHeight, weightEntry.widget:getHeight())
@@ -280,10 +366,14 @@ local function renderTooltip(payload, item)
         headerHeight = math.max(headerHeight, nameEntry.widget:getHeight())
     end
 
-    -- Widened past what the text needs so lines aren't packed edge to edge.
     -- Applied before any placement maths so everything centres in the final
     -- width rather than in the measured one.
-    contentWidth = math.floor(math.max(contentWidth, headerWidth) * WIDTH_SCALE)
+    contentWidth = math.max(contentWidth, headerWidth) + CONTENT_PAD
+
+    -- The pair rows are centred as ONE block rather than pinned to the left
+    -- edge, so the names stand as far from the left border as the values do
+    -- from the right. Computed here because it needs the final contentWidth.
+    local tableX = PADDING + math.floor((contentWidth - tableWidth) / 2)
 
     -- Header alone is still worth showing; nothing at all is not.
     if #rows == 0 and headerHeight == 0 then
@@ -310,7 +400,7 @@ local function renderTooltip(payload, item)
         -- weight and sprite are rarely the same width, so centring between
         -- them instead would sit the name off-centre by half their difference.
         -- Clamped only so a very long name can't run under either of them.
-        local gapStart = weightEntry and (FRAME_INSET_X + leftWidth + HEADER_GAP) or PADDING
+        local gapStart = weightEntry and (FRAME_INSET_X + leftWidth + WEIGHT_GAP) or PADDING
         local gapEnd = PADDING + contentWidth
         if sprite then
             gapEnd = windowWidth - FRAME_INSET_X - SPRITE_SIZE - HEADER_GAP
@@ -337,6 +427,22 @@ local function renderTooltip(payload, item)
             row.separator:setMarginLeft(PADDING + math.floor((contentWidth - ruleWidth) / 2))
             row.separator:setMarginTop(y + SEPARATOR_GAP)
             y = y + SEPARATOR_BLOCK
+        elseif row.label then
+            -- Left edge of the block for the name, right edge for the value.
+            -- The block, not the tooltip body: the body is as wide as its
+            -- widest line and the base-stats summary is usually far wider than
+            -- any roll, so aligning to it left a gap the eye could not bridge.
+            placeOutlinedLabel(row.label, tableX, y)
+            placeOutlinedLabel(row.value,
+                tableX + tableWidth - row.value.widget:getWidth(), y)
+            y = y + row.label.widget:getHeight()
+        elseif row.flush then
+            -- Starts with the names above it, unless it is wider than the
+            -- block -- then it is pulled back so it cannot run off the edge.
+            local width = row.entry.widget:getWidth()
+            placeOutlinedLabel(row.entry,
+                math.max(PADDING, math.min(tableX, PADDING + contentWidth - width)), y)
+            y = y + row.entry.widget:getHeight()
         else
             placeOutlinedLabel(row.entry, PADDING, y, contentWidth)
             y = y + row.entry.widget:getHeight()
@@ -384,6 +490,47 @@ end
 -- rather than keeping a second copy of the palette that can drift from it.
 function getRarityColor(rarityId)
     return RARITY_COLORS[rarityId]
+end
+
+-- Exposed for the chat item-link module (game_itemshare), which has to address
+-- an item for the server exactly the way a hover does. A second copy of this
+-- encoding would drift from the resolver on the other side.
+function describeItemTarget(item)
+    if not item then
+        return nil
+    end
+
+    local pos = item:getPosition()
+    if not pos then
+        return nil
+    end
+
+    return describeTarget(pos)
+end
+
+-- Renders a snapshot with no live item behind it: the payload came from a chat
+-- link the server froze at share time, so the header sprite is rebuilt from the
+-- client id sent alongside it rather than read off a slot.
+function showSharedTooltip(payload, clientId, count)
+    -- Deliberately not tied to a hovered widget -- a stale hover reply must not
+    -- paint over this, and clearHover must not take it away.
+    hoveredWidget = nil
+
+    if not payload or payload == '' then
+        hideTooltip()
+        return
+    end
+
+    local item = nil
+    if clientId and clientId > 0 then
+        item = Item.create(clientId, (count and count > 0) and count or 1)
+    end
+
+    renderTooltip(payload, item)
+end
+
+function hideSharedTooltip()
+    hideTooltip()
 end
 
 function requestTooltip(widget)

@@ -1,0 +1,13 @@
+Module
+  name: game_periodictasks
+  description: Daily / weekly / monthly task window, opened by the Task Master NPC
+  author: Roel
+  sandboxed: true
+  autoload: true
+
+  dependencies:
+    - game_interface
+
+  scripts: [ periodictasks ]
+  @onLoad: init()
+  @onUnload: terminate()

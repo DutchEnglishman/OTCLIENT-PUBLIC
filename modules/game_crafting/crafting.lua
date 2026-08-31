@@ -16,6 +16,68 @@ local Crafts = {weaponsmith = {}, armorsmith = {}, alchemist = {}, enchanter = {
 local money = 0
 local craftingButton = nil
 
+-- Material counts used to be read once, when the client asked for the recipe
+-- lists on login, and again only when a crafting station was used or something
+-- was crafted. An item picked up after that was invisible to the window, which
+-- kept showing what the player held at login. Everything below is the resync.
+--
+-- Debounced: emptying a corpse fires one container event per item, and each one
+-- would otherwise be its own round trip.
+local REFRESH_DELAY = 250
+
+-- Container events only fire for containers that are actually OPEN, so loot
+-- landing in a closed backpack changes nothing the client can see. This is the
+-- backstop for that, and it runs only while the window is on screen.
+local REFRESH_INTERVAL = 2000
+
+local refreshEvent = nil
+local refreshTicker = nil
+
+function requestRefresh()
+  if refreshEvent then
+    return
+  end
+
+  refreshEvent = scheduleEvent(function()
+    refreshEvent = nil
+
+    local protocolGame = g_game.getProtocolGame()
+    if not window or not protocolGame then
+      return
+    end
+
+    -- The visible tab only. The other four are not on screen and each is its
+    -- own message; selectCategory asks again when the player switches.
+    protocolGame:sendExtendedOpcode(CODE, json.encode({
+      action = "refresh",
+      data = selectedCategory and {category = selectedCategory} or nil
+    }))
+  end, REFRESH_DELAY)
+end
+
+local function onItemsChanged()
+  if window and window:isVisible() then
+    requestRefresh()
+  end
+end
+
+local function startRefreshTicker()
+  if refreshTicker then
+    return
+  end
+
+  refreshTicker = cycleEvent(function()
+    if window and window:isVisible() then
+      requestRefresh()
+    end
+  end, REFRESH_INTERVAL)
+end
+
+local function stopRefreshTicker()
+  removeEvent(refreshTicker)
+  refreshTicker = nil
+end
+
 function init()
   connect(
     g_game,
@@ -26,6 +88,17 @@ function init()
   )
 
   ProtocolGame.registerExtendedOpcode(CODE, onExtendedOpcode)
+
+  -- Anything that changes what the player is carrying re-pulls the counts while
+  -- the window is open. Container covers the backpack, LocalPlayer the worn
+  -- slots; both are class-level connects, the same way game_containers and
+  -- game_npctrade take these.
+  connect(LocalPlayer, {onInventoryChange = onItemsChanged})
+  connect(Container, {
+    onAddItem = onItemsChanged,
+    onRemoveItem = onItemsChanged,
+    onUpdateItem = onItemsChanged
+  })
 
   -- Fallback entry point until a crafting station (action id 38820, see
   -- data/scripts/crafting/crafting_registration.lua on the server) is placed
@@ -60,6 +133,13 @@ function terminate()
   )
 
   ProtocolGame.unregisterExtendedOpcode(CODE, onExtendedOpcode)
+
+  disconnect(LocalPlayer, {onInventoryChange = onItemsChanged})
+  disconnect(Container, {
+    onAddItem = onItemsChanged,
+    onRemoveItem = onItemsChanged,
+    onUpdateItem = onItemsChanged
+  })
 
   Keybind.delete("Windows", "Show/hide Crafting")
 
@@ -123,6 +203,10 @@ function create()
 end
 
 function destroy()
+  stopRefreshTicker()
+  removeEvent(refreshEvent)
+  refreshEvent = nil
+
   if window then
     categories = nil
     craftPanel = nil
@@ -176,17 +260,39 @@ function onExtendedOpcode(protocol, code, buffer)
       selectItem(1)
     end
   elseif action == "materials" then
+    local list = Crafts[data.category]
+    if not list then
+      return
+    end
+
     for i = 1, #data.materials do
       local material = data.materials[i]
-      for x = 1, #material do
-        local mats = Crafts[data.category][data.from + i - 1].materials[x]
-        if mats then
-          mats.player = material[x]
+      -- The recipe this index names may be gone: the refining tab rebuilds its
+      -- own list whenever the slot changes, so a chunk can land against a list
+      -- the client has already replaced.
+      local craft = list[data.from + i - 1]
+      if craft then
+        for x = 1, #material do
+          local mats = craft.materials[x]
+          if mats then
+            mats.player = material[x]
+          end
         end
       end
     end
-    if data.from == 1 and window:isVisible() and selectedCategory == data.category then
-      selectItem(selectedCraftId)
+
+    -- Redraw when the chunk actually covers the recipe on screen. This was
+    -- keyed on from == 1, and the server pages at ten, so refreshed counts for
+    -- anything past the tenth recipe reached the table and never the window --
+    -- alchemist has twelve recipes and enchanter eighteen.
+    --
+    -- renderCraftAmount rather than selectItem: selectItem resets the batch
+    -- slider to one, which a refresh arriving mid-craft would now do out from
+    -- under the player.
+    local last = data.from + #data.materials - 1
+    if window and window:isVisible() and selectedCategory == data.category
+        and selectedCraftId and selectedCraftId >= data.from and selectedCraftId <= last then
+      renderCraftAmount()
     end
   elseif action == "money" then
     money = data
@@ -422,6 +528,9 @@ function selectCategory(category)
     setRefineBasis(nil)
 
     rebuildItemsList()
+
+    -- Only the visible tab is refreshed, so the new one is pulled on arrival.
+    requestRefresh()
   end
 end
 
@@ -595,6 +704,12 @@ function show()
   window:show()
   window:raise()
   window:focus()
+
+  -- The Ctrl+Shift+C keybind opens the window without the server hearing about
+  -- it, so this is what makes an opened window show current counts rather than
+  -- the ones from login.
+  requestRefresh()
+  startRefreshTicker()
 end
 
 function hide()
@@ -602,6 +717,7 @@ function hide()
     return
   end
   window:hide()
+  stopRefreshTicker()
 end
 
 function toggleWindow()

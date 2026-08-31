@@ -1,0 +1,16 @@
+Module
+  name: game_itemshare
+  description: Ctrl+Alt+click links an item into chat, hoverable by everyone who sees it
+  author: Custom
+  sandboxed: true
+
+  dependencies:
+    - game_interface
+    - game_itemtooltip
+    - game_console
+
+  scripts:
+    - itemshare
+
+  @onLoad: init()
+  @onUnload: terminate()

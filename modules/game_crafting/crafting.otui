@@ -129,8 +129,11 @@ MainWindow
       width: 97
       @onClick: modules.game_crafting.selectCategory("armorsmith")
 
+      // Client id, not the server's: this client never calls g_things.loadOtb,
+      // so item-id is read straight against the .dat. 3004 is server 2121,
+      // the wedding ring.
       CategoryItem
-        item-id: 3365
+        item-id: 3004
 
       CategoryLabel
         text: Jeweller
@@ -140,8 +143,9 @@ MainWindow
       width: 88
       @onClick: modules.game_crafting.selectCategory("alchemist")
 
+      // 14042 is server 15017, the rune pickaxe.
       CategoryItem
-        item-id: 7440
+        item-id: 14042
 
       CategoryLabel
         text: Mining

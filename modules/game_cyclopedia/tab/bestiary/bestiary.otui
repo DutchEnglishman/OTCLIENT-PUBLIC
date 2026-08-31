@@ -127,14 +127,6 @@ UIWidget
         margin-left: 5
         width: 125
         phantom: true
-        CheckBox
-          id: TrackCheck
-          anchors.bottom: parent.bottom
-          anchors.horizontalCenter: parent.horizontalCenter
-          !text: tr('Track Kills')
-          text-auto-resize: true
-          color: #C7C7C7
-          @onCheckChange: modules.game_cyclopedia.Cyclopedia.onBestiaryTrackCheckChange(self)
         UICreature
           id: Sprite
           anchors.top: parent.top

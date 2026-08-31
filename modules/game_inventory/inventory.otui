@@ -23,6 +23,15 @@ ChaseModeBox < UICheckBox
   $checked:
     image-clip: 20 20 20 20
 
+// mount.png is a 20x40 vertical pair, unlike buttons_general's side-by-side
+// rows, so the checked state clips down rather than across.
+MountBox < UICheckBox
+  size: 20 20
+  image-source: /images/game/combatmodes/mount
+  image-clip: 0 0 20 20
+  $checked:
+    image-clip: 0 20 20 20
+
 ConditionWidget < UIWidget
   size: 10 10
 
@@ -128,6 +137,19 @@ PhantomMiniWindow
 
       $disabled:
         image-clip: 20 20 20 20
+
+    MountBox
+      id: autoMount
+      !tooltip: tr('Auto mount')
+      anchors.right: standPosture.right
+      anchors.top: followPosture.bottom
+      margin-top: 4
+      phantom: false
+
+    // Shares autoMount's slot rather than sitting under it. expert is hidden
+    // unless GamePVPMode is on (client 1000+; this server is 860), and the rows
+    // below are only 1px clear of the shortcut grid -- giving it a row of its
+    // own pushed the safe-fight toggle underneath the hotkeys button.
     UICheckBox
       id: expert
       image-source: /data/images/inventory/button-expert-up
@@ -151,7 +173,9 @@ PhantomMiniWindow
       image-clip: 0 0 44 21
       margin: 2 4
       anchors.right: standPosture.right
-      anchors.top: expert.bottom
+      // autoMount, not expert: expert is hidden on this protocol, and chaining
+      // off it left this 24px lower once autoMount took the row above.
+      anchors.top: autoMount.bottom
       margin-top: 4
       margin-right: 0
       phantom: false
@@ -663,6 +687,17 @@ PhantomMiniWindow
       anchors.top: standPosture.top
       margin-left: 1
       margin-top: 0
+      phantom: false
+
+    // Both panels carry the toggle so shrinking the window doesn't hide the
+    // only way to turn it off; inventory.lua keeps the two checked states in
+    // step off one shared value.
+    MountBox
+      id: autoMount
+      !tooltip: tr('Auto mount')
+      anchors.left: pvp.right
+      anchors.top: standPosture.top
+      margin-left: 1
       phantom: false
 
     UIWidget
