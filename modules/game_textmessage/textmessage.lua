@@ -332,8 +332,21 @@ function displayPrivateMessage(text)
         return
     end
     
-    label:setText(text)
     label:setColor(msgtype.color)
+
+    -- An item link reaches here as its full "[Name#id]" token, because the
+    -- rarity is the first digit of that id -- strip it earlier and the colour
+    -- goes with it. buildScreenMarkup drops the id and paints the name, and
+    -- returns nil when the line holds no link, which keeps this plain text.
+    local itemshare = modules.game_itemshare
+    local shareData = itemshare and itemshare.buildScreenMarkup(text, msgtype.color)
+
+    if shareData then
+        label:setColoredText(shareData.markup)
+    else
+        label:setText(text)
+    end
+
     label:setVisible(true)
     removeEvent(label.hideEvent)
     label.hideEvent = scheduleEvent(function()

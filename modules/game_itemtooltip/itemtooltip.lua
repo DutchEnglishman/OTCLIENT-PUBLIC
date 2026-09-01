@@ -25,6 +25,7 @@ local SECTION_COLORS = {
     R = '#FFFFFF', -- rarity (recoloured by rarity)
     L = '#A2E2C2', -- item level
     S = '#FFBB22', -- item stats
+    P = '#7FD4FF', -- what the sockets add up to
     F = '#E257E3', -- refine rolls
     A = '#2266FF', -- attributes
 }
@@ -45,9 +46,39 @@ local RARITY_COLORS = {
 local SECTION_GROUPS = {
     { 'R', 'L' },
     { 'S' },
-    { 'F' },
+    { 'K' },
+    { 'P' },
     { 'A' },
+    { 'F' },
 }
+
+-- Sockets are drawn, not written: the K section carries a count and each one
+-- becomes an icon. Ten to a row, which is also the upgrade system's ceiling
+-- (US_CONFIG.MAX_UPGRADE_LEVEL, clamped server-side), so in practice they all
+-- sit on one line. The wrap is kept rather than assumed away: raise that
+-- ceiling and the eleventh socket starts a second row instead of running off
+-- the edge of the tooltip.
+local SOCKET_TAG = 'K'
+local SOCKETS_PER_ROW = 10
+
+-- The K section arrives as "<total>|<fill>": how many sockets the item has, and
+-- one character per filled one, left to right. The characters are the server's
+-- SOCKET_KINDS keys (data/sockets/sockets.lua) -- an unknown one falls back to
+-- the empty icon rather than drawing nothing, so a client that is a deploy
+-- behind still shows the right NUMBER of sockets.
+local SOCKET_STYLES = {
+    ['1'] = 'ItemTooltipSocketMinorPhysical',
+    ['2'] = 'ItemTooltipSocketMajorPhysical',
+}
+local SOCKET_STYLE_EMPTY = 'ItemTooltipSocket'
+local SOCKET_WIDTH = 12
+local SOCKET_HEIGHT = 10
+-- Between icons in a row.
+local SOCKET_GAP = 2
+-- ABOVE each socket row after the first, never below the last. A trailing gap
+-- would land on top of the following separator's own leading gap and seat the
+-- block off-centre between the two rules -- 3px of air above it, 6 below.
+local SOCKET_ROW_GAP = 3
 
 -- Tags whose lines are "Label: value" pairs, drawn as two columns inside one
 -- centred block: names on its left edge, values on its right, so the numbers --
@@ -57,7 +88,7 @@ local SECTION_GROUPS = {
 -- line ("Atk: 47, Ice: 13, Def: 48"), which holds several colons and would be
 -- torn apart at the wrong one. R and L are out because they sit with the name
 -- as the item's identity rather than as a table.
-local TWO_COLUMN_TAGS = { F = true, A = true }
+local TWO_COLUMN_TAGS = { F = true, A = true, P = true }
 
 -- Space between the longest label and the value column, and the whole knob for
 -- how far apart the two sit. In the default font a space is 4px wide
@@ -251,6 +282,17 @@ end
 -- once, then place. Nothing here may resize the window from inside a layout
 -- pass -- an auto-fitting layout plus an explicit setSize fed back into each
 -- other and hung the client.
+-- What one row costs vertically. The measuring pass and the placing pass have
+-- to agree on this exactly, or the window is sized to a different height than
+-- the rows it ends up holding.
+local function rowHeight(row)
+    if row.sockets then
+        return SOCKET_HEIGHT + row.topGap
+    end
+
+    return (row.entry or row.label).widget:getHeight()
+end
+
 local function renderTooltip(payload, item)
     if not ensureWidget() then
         return
@@ -274,29 +316,57 @@ local function renderTooltip(payload, item)
         local groupRows = {}
         for _, tag in ipairs(group) do
             for _, text in ipairs(sections[tag] or {}) do
-                local color = SECTION_COLORS[tag]
-                if (tag == 'N' or tag == 'R') and rarityColor then
-                    color = rarityColor
-                end
+                if tag == SOCKET_TAG then
+                    -- Icons, not a line of text: the section carries a count
+                    -- and each socket becomes a widget, laid out five to a row.
+                    local total, fill = text:match('^(%d+)|(.*)$')
+                    local count = tonumber(total) or 0
+                    fill = fill or ''
 
-                local label, value
-                if TWO_COLUMN_TAGS[tag] then
-                    label, value = splitPair(text)
-                end
+                    for first = 1, count, SOCKETS_PER_ROW do
+                        local inRow = math.min(SOCKETS_PER_ROW, count - first + 1)
+                        local widgets = {}
+                        for i = 1, inRow do
+                            -- Filled sockets run from the left, so the socket's
+                            -- position in the whole row IS its index into fill.
+                            local kind = fill:sub(first + i - 1, first + i - 1)
+                            widgets[i] = g_ui.createWidget(
+                                SOCKET_STYLES[kind] or SOCKET_STYLE_EMPTY, tooltipWindow)
+                        end
 
-                if label then
-                    local labelEntry = createOutlinedLabel(label, color)
-                    local valueEntry = createOutlinedLabel(value, color)
-                    labelWidth = math.max(labelWidth, labelEntry.widget:getWidth())
-                    valueWidth = math.max(valueWidth, valueEntry.widget:getWidth())
-                    groupRows[#groupRows + 1] = { label = labelEntry, value = valueEntry }
+                        local rowWidth = inRow * SOCKET_WIDTH + (inRow - 1) * SOCKET_GAP
+                        contentWidth = math.max(contentWidth, rowWidth)
+                        groupRows[#groupRows + 1] = {
+                            sockets = widgets,
+                            width = rowWidth,
+                            topGap = first > 1 and SOCKET_ROW_GAP or 0,
+                        }
+                    end
                 else
-                    local entry = createOutlinedLabel(text, color)
-                    contentWidth = math.max(contentWidth, entry.widget:getWidth())
-                    -- No value to column off ("Mana Shield", or an attribute
-                    -- that reads as a sentence). Still left-aligned with the
-                    -- names it sits among rather than centred on its own.
-                    groupRows[#groupRows + 1] = { entry = entry, flush = TWO_COLUMN_TAGS[tag] }
+                    local color = SECTION_COLORS[tag]
+                    if (tag == 'N' or tag == 'R') and rarityColor then
+                        color = rarityColor
+                    end
+
+                    local label, value
+                    if TWO_COLUMN_TAGS[tag] then
+                        label, value = splitPair(text)
+                    end
+
+                    if label then
+                        local labelEntry = createOutlinedLabel(label, color)
+                        local valueEntry = createOutlinedLabel(value, color)
+                        labelWidth = math.max(labelWidth, labelEntry.widget:getWidth())
+                        valueWidth = math.max(valueWidth, valueEntry.widget:getWidth())
+                        groupRows[#groupRows + 1] = { label = labelEntry, value = valueEntry }
+                    else
+                        local entry = createOutlinedLabel(text, color)
+                        contentWidth = math.max(contentWidth, entry.widget:getWidth())
+                        -- No value to column off ("Mana Shield", or an attribute
+                        -- that reads as a sentence). Still left-aligned with the
+                        -- names it sits among rather than centred on its own.
+                        groupRows[#groupRows + 1] = { entry = entry, flush = TWO_COLUMN_TAGS[tag] }
+                    end
                 end
             end
         end
@@ -312,7 +382,7 @@ local function renderTooltip(payload, item)
 
             for _, row in ipairs(groupRows) do
                 rows[#rows + 1] = row
-                contentHeight = contentHeight + (row.entry or row.label).widget:getHeight()
+                contentHeight = contentHeight + rowHeight(row)
             end
         end
     end
@@ -427,6 +497,18 @@ local function renderTooltip(payload, item)
             row.separator:setMarginLeft(PADDING + math.floor((contentWidth - ruleWidth) / 2))
             row.separator:setMarginTop(y + SEPARATOR_GAP)
             y = y + SEPARATOR_BLOCK
+        elseif row.sockets then
+            -- Centred on the tooltip's content, not on the row above it, so a
+            -- trailing row of three sits under the middle of a row of five
+            -- rather than under its left edge.
+            local x = PADDING + math.floor((contentWidth - row.width) / 2)
+            for i, socket in ipairs(row.sockets) do
+                socket:addAnchor(AnchorLeft, 'parent', AnchorLeft)
+                socket:addAnchor(AnchorTop, 'parent', AnchorTop)
+                socket:setMarginLeft(x + (i - 1) * (SOCKET_WIDTH + SOCKET_GAP))
+                socket:setMarginTop(y + row.topGap)
+            end
+            y = y + rowHeight(row)
         elseif row.label then
             -- Left edge of the block for the name, right edge for the value.
             -- The block, not the tooltip body: the body is as wide as its

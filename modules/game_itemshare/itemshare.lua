@@ -54,9 +54,27 @@ local function plainChunk(chunk, color)
     return string.format('{%s, %s}', chunk, color)
 end
 
--- Returns nil when the line holds no link, so the console keeps its existing
+-- For anywhere that draws a chat line as plain text with no hover behind it --
+-- the floating message over a character's head being the one that matters.
+-- There the id cannot do anything except sit there, so "[The Avenger +6#33]"
+-- becomes "[The Avenger +6]". The chat window keeps the full token; that is
+-- where the hover lives.
+function stripLinkIds(text)
+    if not text or not text:find('#', 1, true) then
+        return text
+    end
+
+    return (text:gsub(TOKEN_PATTERN, '[%1]'))
+end
+
+-- Returns nil when the line holds no link, so callers keep their existing
 -- plain-text path for the overwhelming majority of messages.
-function buildChatMarkup(text, baseColor)
+--
+-- hoverable is what separates the two surfaces. Chat wraps each link in a
+-- text-event so the hover handler can fetch the item's snapshot; a screen label
+-- has no such handler, so it takes the colour and skips the wrapper rather than
+-- registering words nothing listens to.
+local function buildMarkup(text, baseColor, hoverable)
     if not text or not text:find('#', 1, true) then
         return nil
     end
@@ -79,12 +97,19 @@ function buildChatMarkup(text, baseColor)
             parts[#parts + 1] = plainChunk(text:sub(pos, startPos - 1), baseColor)
         end
 
-        -- The 0x01 prefix is the "no underline" marker the text-event parser
-        -- strips before it stores the word (uiwidgettext.cpp:430), so the
-        -- hover handler still receives the clean display text.
         local display = '[' .. name .. ']'
-        parts[#parts + 1] = string.format('{[text-event]%s%s[/text-event], %s}',
-            string.char(1), display, rarityColor(id) or baseColor)
+        local color = rarityColor(id) or baseColor
+
+        if hoverable then
+            -- The 0x01 prefix is the "no underline" marker the text-event
+            -- parser strips before it stores the word (uiwidgettext.cpp:430),
+            -- so the hover handler still receives the clean display text.
+            parts[#parts + 1] = string.format('{[text-event]%s%s[/text-event], %s}',
+                string.char(1), display, color)
+        else
+            parts[#parts + 1] = string.format('{%s, %s}', display, color)
+        end
+
         -- Keyed by what is drawn, because that is all the hover event hands
         -- back. Two links to items with the identical name in ONE line will
         -- therefore both open the second one's tooltip.
@@ -102,6 +127,19 @@ function buildChatMarkup(text, baseColor)
     end
 
     return { markup = table.concat(parts), links = links }
+end
+
+-- Chat: coloured and hoverable.
+function buildChatMarkup(text, baseColor)
+    return buildMarkup(text, baseColor, true)
+end
+
+-- Screen labels: the rarity colour, no hover. Use this instead of stripLinkIds
+-- wherever the surface can render coloured markup -- it does the same stripping
+-- as part of building the display text, and keeps the colour that would
+-- otherwise be thrown away with the id.
+function buildScreenMarkup(text, baseColor)
+    return buildMarkup(text, baseColor, false)
 end
 
 local function showSnapshot(entry)

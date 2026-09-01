@@ -234,10 +234,14 @@ local function onOpcode(proto, code, buffer)
 
     rebuild(payload)
 
-    -- The NPC pushes this payload the moment the player says the keyword, so
-    -- arrival IS the open signal -- there is no separate "open the window"
-    -- message and no second round trip.
-    show()
+    -- Only the Task Master's payload carries open, so only it puts the window on
+    -- screen -- still one round trip, no separate "open the window" message.
+    -- Arrival used to be the open signal on its own, which meant every refresh
+    -- popped the window: the server sends one after each credited kill to keep
+    -- the progress numbers live, and one at login.
+    if payload.open then
+        show()
+    end
 end
 
 local function onGameEnd()

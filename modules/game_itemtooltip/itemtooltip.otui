@@ -63,3 +63,19 @@ ItemTooltipSprite < UIItem
   virtual: true
   phantom: true
   focusable: false
+
+// One empty socket. Size is the source image's own 12x10 -- scaling a 12px
+// icon to a rounder number is what makes it look smeared next to crisp text.
+ItemTooltipSocket < UIWidget
+  size: 12 10
+  image-source: /images/game/tooltip/socket_empty
+  phantom: true
+  focusable: false
+
+// Filled sockets. Same box as the empty one -- only the art differs, so a
+// filled socket cannot shift the row it sits in.
+ItemTooltipSocketMinorPhysical < ItemTooltipSocket
+  image-source: /images/game/tooltip/socket_physical_minor
+
+ItemTooltipSocketMajorPhysical < ItemTooltipSocket
+  image-source: /images/game/tooltip/socket_physical_major

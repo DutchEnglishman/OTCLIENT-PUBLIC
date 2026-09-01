@@ -853,6 +853,15 @@ function createThingMenu(menuPosition, lookThing, useThing, creatureThing)
         end
     end
 
+    -- Server-side lock: a protected item is invisible to shop NPCs, cannot be
+    -- taken by a script, and survives water, dustbins and lava. Moving it around
+    -- is deliberately still allowed.
+    if lookThing and lookThing:isItem() and modules.game_protect then
+        menu:addOption(modules.game_protect.getMenuLabel(lookThing), function()
+            modules.game_protect.toggle(lookThing)
+        end)
+    end
+
     if not classic and not mobile then
         shortcut = '(Ctrl)'
     else

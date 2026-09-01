@@ -7,6 +7,31 @@ local itemsList = nil
 local refineInput = nil
 local refineInputHint = nil
 local refineInputPos = nil
+-- What was slotted, as much of it as the client can see. A container item has
+-- no stable instance id here -- Item exposes getId, getCountOrSubType and
+-- getTier and nothing that survives a move -- so this is a fingerprint, and it
+-- cannot tell two identical items apart. It does not have to: it only has to
+-- notice that the index now holds something ELSE.
+local refineInputSig = nil
+
+-- Declared up here rather than beside revalidateRefineInput: a local is only in
+-- scope for functions defined BELOW it, and onExtendedOpcode -- which sits
+-- earlier in this file -- has to fingerprint the item the server re-points to.
+local function itemSignature(item)
+  if not item then
+    return nil
+  end
+
+  return {id = item:getId(), count = item:getCountOrSubType(), tier = item:getTier()}
+end
+
+local function signatureMatches(item, signature)
+  return item ~= nil and signature ~= nil
+    and item:getId() == signature.id
+    and item:getCountOrSubType() == signature.count
+    and item:getTier() == signature.tier
+end
+
 local craftAmount = nil
 local craftAmountLabel = nil
 
@@ -57,6 +82,10 @@ end
 
 local function onItemsChanged()
   if window and window:isVisible() then
+    -- Immediately, not on the next server round trip: the slot resolves from
+    -- the live container the client already holds, so there is nothing to wait
+    -- for and a stale item should never be on screen for even one frame.
+    revalidateRefineInput()
     requestRefresh()
   end
 end
@@ -68,6 +97,9 @@ local function startRefreshTicker()
 
   refreshTicker = cycleEvent(function()
     if window and window:isVisible() then
+      -- Backstop for anything that empties the slot without firing a container
+      -- event -- a relog, a container reopened at a different id.
+      revalidateRefineInput()
       requestRefresh()
     end
   end, REFRESH_INTERVAL)
@@ -97,7 +129,10 @@ function init()
   connect(Container, {
     onAddItem = onItemsChanged,
     onRemoveItem = onItemsChanged,
-    onUpdateItem = onItemsChanged
+    onUpdateItem = onItemsChanged,
+    -- Closing the container the slotted item lives in empties the slot without
+    -- touching any item, so none of the three above would fire.
+    onClose = onItemsChanged
   })
 
   -- Fallback entry point until a crafting station (action id 38820, see
@@ -138,7 +173,8 @@ function terminate()
   disconnect(Container, {
     onAddItem = onItemsChanged,
     onRemoveItem = onItemsChanged,
-    onUpdateItem = onItemsChanged
+    onUpdateItem = onItemsChanged,
+    onClose = onItemsChanged
   })
 
   Keybind.delete("Windows", "Show/hide Crafting")
@@ -215,6 +251,11 @@ function destroy()
     -- destroyed, and selectCategory would touch them again on the next login.
     refineInput = nil
     refineInputHint = nil
+    -- Both cleared with the widgets: they describe a slot in the session that
+    -- is ending, and carrying them into the next login would have the first
+    -- revalidate reasoning about a container that is no longer open.
+    refineInputPos = nil
+    refineInputSig = nil
     craftAmount = nil
     craftAmountLabel = nil
 
@@ -307,6 +348,7 @@ function onExtendedOpcode(protocol, code, buffer)
     -- the live item, which is how it survives a roll without being re-dropped.
     if data and (data.clientId or 0) == 0 then
       refineInputPos = nil
+      refineInputSig = nil
       setRefineItemInfo(nil, nil, nil)
     else
       -- Adopt the server's coordinates rather than keeping the ones sent at
@@ -317,6 +359,14 @@ function onExtendedOpcode(protocol, code, buffer)
       -- and drawing the neighbour.
       if data.container and data.slot then
         refineInputPos = {x = 0xFFFF, y = data.container + 0x40, z = data.slot}
+
+        -- Re-fingerprint against whatever the server just pointed at. Without
+        -- this the signature still describes the item as it was BEFORE the
+        -- roll -- a refine changes the tier, an upgrade can change the id --
+        -- and the next revalidate would read the correction as a stranger and
+        -- throw the slot away.
+        local container = g_game.getContainers()[data.container]
+        refineInputSig = itemSignature(container and container:getItem(data.slot) or nil)
       end
       setRefineItemInfo(data.upgrade, data.rarityName, data.rarity)
     end
@@ -395,6 +445,15 @@ local LIST_TITLES = {
 -- the server (data/crafting/refining.lua).
 local REFINE_CATEGORY = "weaponsmith"
 
+-- Tabs that modify a slotted item instead of producing one, and so show the
+-- input slot. Both keys must match a system's .category server-side --
+-- Refining.category and Socketing.category. The category travels with every
+-- setInput message so the server knows which of the two owns the slot.
+local INPUT_CATEGORIES = {
+  [REFINE_CATEGORY] = true,
+  jeweller = true,
+}
+
 -- The "Based on N" line beside the craft button. Only refining sends a basis;
 -- every other tab leaves it blank.
 function setRefineBasis(value)
@@ -452,6 +511,51 @@ function refreshRefineInput()
   refineInput:setItem(container and container:getItem(refineInputPos.z) or nil)
 end
 
+-- The slot remembers a container index, never the item, so the index alone is
+-- not enough to know what is in it. Two things go wrong on their own:
+--
+--   the index empties  -- item dragged out, sold, consumed, container closed
+--   the index survives but now holds something ELSE -- the player reordered
+--                         the bag, or removed an item ahead of this one and
+--                         everything after it slid down a slot
+--
+-- The second is the one that put a stranger in the slot. Checking the
+-- fingerprint catches both, and a move within the same container is repaired by
+-- finding the item again rather than dropping it.
+--
+-- Clearing locally would not be enough either: the server holds the same stale
+-- reference and would price or socket against it, so both paths go back through
+-- setRefineInput, which tells it.
+function revalidateRefineInput()
+  if not refineInput or not refineInputPos then
+    return
+  end
+
+  local container = g_game.getContainers()[refineInputPos.y - 0x40]
+  local item = container and container:getItem(refineInputPos.z) or nil
+
+  if signatureMatches(item, refineInputSig) then
+    refreshRefineInput()
+    return
+  end
+
+  -- Moved, most likely within the bag it was already in, so look there before
+  -- giving up. First match wins: two identical items in one container are
+  -- indistinguishable from here, and picking either is better than showing a
+  -- weapon the player never slotted.
+  if container then
+    for slot = 0, container:getCapacity() - 1 do
+      if signatureMatches(container:getItem(slot), refineInputSig) then
+        setRefineInput(container:getItem(slot))
+        return
+      end
+    end
+  end
+
+  setRefineInput(nil)
+  setRefineItemInfo(nil, nil, nil)
+end
+
 -- Tells the server which item is slotted, or that the slot was cleared, and
 -- remembers where it is so the slot can be re-pointed at the live item after a
 -- roll. The position is the protocol one the client already keeps on every
@@ -469,18 +573,25 @@ function setRefineInput(thing)
 
   if thing then
     refineInputPos = thing:getPosition()
+    refineInputSig = itemSignature(thing)
     refreshRefineInput()
 
     protocolGame:sendExtendedOpcode(CODE, json.encode({
       action = "setInput",
       data = {
+        -- Names the tab so the server hands the slot to Refining or Socketing.
+        category = selectedCategory,
         position = {x = refineInputPos.x, y = refineInputPos.y, z = refineInputPos.z}
       }
     }))
   else
     refineInputPos = nil
+    refineInputSig = nil
     refreshRefineInput()
-    protocolGame:sendExtendedOpcode(CODE, json.encode({action = "setInput"}))
+    protocolGame:sendExtendedOpcode(CODE, json.encode({
+      action = "setInput",
+      data = {category = selectedCategory}
+    }))
   end
 end
 
@@ -503,7 +614,7 @@ function selectCategory(category)
 
     -- Leaving the tab drops the slot so the server is not still pricing an
     -- item nothing on screen refers to.
-    local refining = (category == REFINE_CATEGORY)
+    local refining = INPUT_CATEGORIES[category] == true
     if refineInput then
       refineInput:setVisible(refining)
       refineInputHint:setVisible(refining)

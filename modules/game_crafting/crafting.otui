@@ -170,7 +170,7 @@ MainWindow
         item-id: 6299
 
       CategoryLabel
-        text: Placeholder 2
+        text: Sockets
 
   HorizontalSeparator
     anchors.top: prev.bottom

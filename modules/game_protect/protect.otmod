@@ -1,0 +1,13 @@
+Module
+  name: game_protect
+  description: Marks items and bags as protected from selling and destruction
+  author: Roel
+  sandboxed: true
+  autoload: true
+
+  dependencies:
+    - game_interface
+
+  scripts: [ protect ]
+  @onLoad: init()
+  @onUnload: terminate()

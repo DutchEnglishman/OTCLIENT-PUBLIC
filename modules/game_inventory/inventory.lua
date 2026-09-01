@@ -326,6 +326,44 @@ function getIconsPanelOff()
     return inventoryController.ui.offPanel.icons
 end
 
+-- Flips the protection lock on each equipment slot. Called back by game_protect
+-- once the server answers; the panel is a MainInventoryItem, which carries its
+-- own protectIcon child (data/styles/10-items.otui) because it is a plain
+-- UIWidget and so does not inherit the one on the Item style.
+function refreshProtectIcons()
+    if not modules.game_protect or not inventoryController or not inventoryController.ui then
+        return
+    end
+
+    -- getInventoryUi(), not inventoryController.ui: the slot widgets live under
+    -- onPanel or offPanel depending on whether the inventory is shrunk, which is
+    -- the same resolution every other slot lookup in this file goes through.
+    local ui = getInventoryUi()
+    if not ui then
+        return
+    end
+
+    for slot = InventorySlotFirst, InventorySlotAmmo do
+        local getSlotInfo = getSlotPanelBySlot[slot]
+        if getSlotInfo then
+            local panel = getSlotInfo(ui)
+            if panel and panel.protectIcon then
+                local protected = modules.game_protect.isInventoryProtected(slot)
+                panel.protectIcon:setVisible(protected)
+
+                -- The item sprite is a sibling widget added after the style's
+                -- children, so it draws over the icon. That is invisible for a
+                -- ring or an amulet, whose sprite leaves the corner
+                -- transparent, but a weapon fills the slot and hides the lock
+                -- completely. Raising it makes it the last child drawn.
+                if protected then
+                    panel.protectIcon:raise()
+                end
+            end
+        end
+    end
+end
+
 local function refreshInventory_panel()
     local player = g_game.getLocalPlayer()
     if player then
@@ -343,6 +381,10 @@ local function refreshInventory_panel()
             inventoryEvent(player, i, nil)
         end
     end
+
+    -- Shrinking swaps the whole panel, so the locks have to be repainted onto
+    -- the widgets that are showing now rather than the ones that just went away.
+    refreshProtectIcons()
 end
 
 local function refreshInventorySizes()

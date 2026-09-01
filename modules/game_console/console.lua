@@ -405,18 +405,30 @@ function selectAll(consoleBuffer)
 end
 
 -- isChecked true means WASD mode, i.e. chat OFF -- the button is a state label,
--- not an action label. Every session starts here: walking is the default stance
--- and Enter opens chat on demand (switchChatOnCall sets walkAfterSend,
--- sendCurrentMessage flips back to walking once the message goes).
---
--- Deliberately not restored from settings any more. It used to be, which made
--- the opening stance depend on however the last session happened to end.
-local function resetToWalkMode()
+-- not an action label. Enter opens chat on demand from walk mode
+-- (switchChatOnCall sets walkAfterSend, sendCurrentMessage flips back once the
+-- message goes).
+local WASD_MODE_SETTING = 'wasdWalkMode'
+
+local function refreshToggleLabel()
+    if consoleToggleChat.isChecked then
+        consoleToggleChat:setText(tr('WASD On'))
+    else
+        consoleToggleChat:setText(walkAfterSend and (tr('WASD Off') .. '*') or tr('WASD Off'))
+    end
+end
+
+-- The opening stance, and the player's own choice from here on. The `false`
+-- below is a first-run default, not a reset: g_settings returns it only while
+-- nothing has been stored, so the very first launch starts in chat mode and
+-- every launch after that comes up however the player last left it.
+local function applyStoredWalkMode()
     if not consoleToggleChat then
         return
     end
-    consoleToggleChat.isChecked = true
-    consoleToggleChat:setText(tr('WASD On'))
+
+    consoleToggleChat.isChecked = g_settings.getBoolean(WASD_MODE_SETTING, false)
+    refreshToggleLabel()
 end
 
 function toggleChat()
@@ -425,11 +437,8 @@ function toggleChat()
     end
 
     consoleToggleChat.isChecked = not consoleToggleChat.isChecked
-    if consoleToggleChat.isChecked then
-        consoleToggleChat:setText(tr('WASD On'))
-    else
-        consoleToggleChat:setText(walkAfterSend and (tr('WASD Off') .. '*') or tr('WASD Off'))
-    end
+    g_settings.set(WASD_MODE_SETTING, consoleToggleChat.isChecked)
+    refreshToggleLabel()
 
     updateChatMode()
 end
@@ -633,9 +642,9 @@ function load()
     end
 
     -- Outside the settings check: a client with no saved node at all must still
-    -- come up in walk mode, and that was the one path that left the button
+    -- get an explicit stance, and that was the one path that left the button
     -- untouched entirely.
-    resetToWalkMode()
+    applyStoredWalkMode()
     -- Only update chat mode if game is online to avoid binding issues during initialization
     if g_game.isOnline() then
         updateChatMode()
@@ -1922,9 +1931,22 @@ function applyMessagePrefixies(name, level, message)
     return message
 end
 
+-- Anywhere a chat line is drawn as plain text with no hover behind it: the
+-- floating message over a speaker, the on-screen copy of a private message, a
+-- broadcast. An item link's id is meaningless there and only shows as noise.
+-- The chat tabs keep the full token -- buildChatMarkup is what turns it into a
+-- hoverable word, and that is the one consumer that needs it.
+local function plainForScreen(text)
+    if modules.game_itemshare then
+        return modules.game_itemshare.stripLinkIds(text)
+    end
+
+    return text
+end
+
 function onTalk(name, level, mode, message, channelId, creaturePos)
     if mode == MessageModes.GamemasterBroadcast then
-        modules.game_textmessage.displayBroadcastMessage(name .. ': ' .. message)
+        modules.game_textmessage.displayBroadcastMessage(name .. ': ' .. plainForScreen(message))
         return
     end
 
@@ -1961,7 +1983,7 @@ function onTalk(name, level, mode, message, channelId, creaturePos)
         mode == MessageModes.MonsterSay or mode == MessageModes.MonsterYell or mode == MessageModes.NpcFrom or mode ==
         MessageModes.BarkLow or mode == MessageModes.BarkLoud or mode == MessageModes.NpcFromStartBlock) and creaturePos then
         local staticText = StaticText.create()
-        local staticMessage = message
+        local staticMessage = plainForScreen(message)
         if isNpcMode then
             local highlightedText = getHighlightedText(staticMessage, speaktype.color, "#1f9ffe")
 
@@ -2005,6 +2027,8 @@ function onTalk(name, level, mode, message, channelId, creaturePos)
         addPrivateText(composedMessage, speaktype, name, false, name)
         if modules.client_options.getOption('showPrivateMessagesOnScreen') and speaktype ~=
             SpeakTypesSettings.privateNpcToPlayer then
+            -- Unstripped on purpose: that label renders coloured markup, so it
+            -- needs the id to read the rarity off. It does its own stripping.
             modules.game_textmessage.displayPrivateMessage(name .. ':\n' .. message)
         end
     else
@@ -2483,9 +2507,9 @@ function consoleController:onGameStart()
     end
 
     -- Here as well as in load(), which runs once per client launch in onInit:
-    -- without this a relog in the same run would inherit whatever the previous
-    -- character left the toggle on.
-    resetToWalkMode()
+    -- this is what puts a character logging in mid-run onto the stored stance
+    -- rather than whatever the toggle happened to be showing.
+    applyStoredWalkMode()
 
     -- Update chat mode when game comes online to ensure proper key binding
     updateChatMode()

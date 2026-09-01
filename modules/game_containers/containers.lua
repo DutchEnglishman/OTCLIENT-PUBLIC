@@ -736,6 +736,28 @@ function onContainersMenuAction(actionId)
     end
 end
 
+-- Repaints the protection lock on every slot of one container, from whatever
+-- the server last told game_protect. Called back by that module when its answer
+-- arrives, which is a round trip after the contents changed.
+function refreshProtectIcons(containerId)
+    local container = g_game.getContainer(containerId)
+    if not container or not container.window then
+        return
+    end
+
+    for slot = 0, container:getCapacity() - 1 do
+        modules.game_protect.updateSlotIcon(container.itemsPanel:getChildById('item' .. slot), containerId, slot)
+    end
+end
+
+-- Protection travels with the item, so any change to a container's contents can
+-- have moved a lock in or out of it. The server is the only one who knows.
+local function requestProtectState(container)
+    if container and modules.game_protect then
+        modules.game_protect.requestContainer(container:getId())
+    end
+end
+
 function refreshContainerItems(container)
     -- Check if we should preserve sorting during refresh
     local currentSortMode = containerSettings and containerSettings['currentSortMode']
@@ -751,10 +773,12 @@ function refreshContainerItems(container)
         itemWidget:setShowCharges(modules.client_options.getOption('showExpiryInContainers'))
     end
 
+    requestProtectState(container)
+
     if container:hasPages() then
         refreshContainerPages(container)
     end
-    
+
     -- Apply current sorting if one is set and manual sort mode is disabled
     if shouldSort then
         sortContainerItems(container, currentSortMode)
@@ -1072,6 +1096,11 @@ function onContainerOpen(container, previousContainer)
         end
     end
 
+    -- The window exists now, so a lock can be painted on it once the answer
+    -- lands. container.window is set just below, which refreshProtectIcons
+    -- checks before it touches anything.
+    requestProtectState(container)
+
     container.window = containerWindow
     container.itemsPanel = containerPanel
 
@@ -1184,7 +1213,9 @@ function onContainerUpdateItem(container, slot, item, oldItem)
     ItemsDatabase.setTier(itemWidget, item)
     itemWidget:setShowDuration(modules.client_options.getOption('showExpiryInContainers'))
     itemWidget:setShowCharges(modules.client_options.getOption('showExpiryInContainers'))
-    
+
+    requestProtectState(container)
+
     -- Note: Removed automatic re-sorting to prevent interference with manual item movement
     -- Sorting should only happen when explicitly requested by the user
 end
