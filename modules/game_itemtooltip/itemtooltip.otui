@@ -79,3 +79,10 @@ ItemTooltipSocketMinorPhysical < ItemTooltipSocket
 
 ItemTooltipSocketMajorPhysical < ItemTooltipSocket
   image-source: /images/game/tooltip/socket_physical_major
+
+
+ItemTooltipSocketMinorLifeSteal < ItemTooltipSocket
+  image-source: /images/game/tooltip/socket_lifesteal_minor
+
+ItemTooltipSocketMajorLifeSteal < ItemTooltipSocket
+  image-source: /images/game/tooltip/socket_lifesteal_major

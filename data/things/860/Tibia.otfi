@@ -3,7 +3,7 @@ DatSpr
   transparency: false
   frame-durations: false
   frame-groups: false
-  metadata-file: Tibia.dat
-  sprites-file: Tibia.spr
+  metadata-file: Tibia (1).dat
+  sprites-file: Tibia (1).spr
   sprite-size: 32
   sprite-data-size: 4096

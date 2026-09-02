@@ -69,6 +69,8 @@ local SOCKETS_PER_ROW = 10
 local SOCKET_STYLES = {
     ['1'] = 'ItemTooltipSocketMinorPhysical',
     ['2'] = 'ItemTooltipSocketMajorPhysical',
+    ['3'] = 'ItemTooltipSocketMinorLifeSteal',
+    ['4'] = 'ItemTooltipSocketMajorLifeSteal',
 }
 local SOCKET_STYLE_EMPTY = 'ItemTooltipSocket'
 local SOCKET_WIDTH = 12

@@ -39,8 +39,15 @@ game
     diagonal-walk-speed: 3
 
   render
-    invisible-ticks-per-frame: 75
-    item-ticks-per-frame: 468
+    // Milliseconds one animation frame is held. Bigger is slower. Engine
+    // defaults (gameconfig.h:133) are 500 / 500 / 75 / 75; invisible and item
+    // sit well past those on purpose, because stock reads as frantic here.
+    //
+    // invisible = creature invisibility sparkles
+    // item      = torches, fire and energy fields, every animated map item
+    // effect    = magic effects, missile = projectiles in flight
+    invisible-ticks-per-frame: 750
+    item-ticks-per-frame: 900
     effect-ticks-per-frame: 75
     missile-ticks-per-frame: 75
     animated-text-duration: 1000

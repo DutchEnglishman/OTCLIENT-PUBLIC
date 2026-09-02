@@ -468,7 +468,7 @@ Panel
     margin-right: 5
     margin-left: 5
     margin-bottom: 3
-    shift-navigation: true
+    shift-navigation: false
     max-length: 255
     height: 18
     placeholder:  "Type here to chat"
