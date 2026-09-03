@@ -72,6 +72,24 @@ function HTTP.download(url, file, callback, progressCallback)
   return operation
 end
 
+-- Streams straight to <workDir>/path rather than through the in-memory download cache,
+-- and resumes from a partial file after a dropped connection. Returns nil when the
+-- backend does not support it (web), so callers can fall back to HTTP.download.
+function HTTP.downloadToWorkDir(url, path, callback, progressCallback)
+  if not g_http or not g_http.downloadToFile then
+    return nil
+  end
+  local operation = g_http.downloadToFile(url, path, HTTP.timeout)
+  HTTP.operations[operation] = {
+    type = "download",
+    url = url,
+    file = path,
+    callback = callback,
+    progressCallback = progressCallback
+  }
+  return operation
+end
+
 function HTTP.downloadImage(url, callback)
   if not g_http or not g_http.download then
     return error("HTTP.downloadImage is not supported")

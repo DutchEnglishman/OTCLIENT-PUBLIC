@@ -411,6 +411,41 @@ local function downloadEntries(entries, index, attempt, onDone)
     end, config.retryDelay)
   end
 
+  local function onProgress(progress, speed)
+    noteProgress()
+    setDownloadStatus(nil, progress, speed)
+    setDownloadedFraction(entries, index, entry, progress)
+  end
+
+  local function advance()
+    doneDownloadBytes = doneDownloadBytes + (entry.size or 0)
+    downloadEntries(entries, index + 1, 0, onDone)
+  end
+
+  -- Preferred path: stream the body straight into the staging file. stagingPathFor()
+  -- yields the same string as `key`, so the bytes land exactly where verifyStaged() will
+  -- hash them, with no in-memory copy and no separate write step. A failed attempt leaves
+  -- the partial file in place and the retry resumes from it with a Range request, which
+  -- matters most for the one entry big enough to be worth resuming -- the sprite sheet.
+  httpOperationId = withHttpTimeout(function()
+    return HTTP.downloadToWorkDir(url, key, function(_, _, err)
+      if finished then return end
+      if err then
+        return retryOrFail(err)
+      end
+      advance()
+    end, onProgress)
+  end)
+
+  if httpOperationId then
+    if httpOperationId < 0 then
+      retryOrFail('HTTP is unavailable')
+    end
+    return
+  end
+
+  -- Fallback for backends with no streaming download (web): buffer through the download
+  -- cache, then write staging out of it.
   httpOperationId = withHttpTimeout(function()
     return HTTP.download(url, key, function(path, checksum, err)
       if finished then return end
@@ -431,13 +466,8 @@ local function downloadEntries(entries, index, attempt, onDone)
         g_http.clearDownloads()
       end
 
-      doneDownloadBytes = doneDownloadBytes + (entry.size or 0)
-      downloadEntries(entries, index + 1, 0, onDone)
-    end, function(progress, speed)
-      noteProgress()
-      setDownloadStatus(nil, progress, speed)
-      setDownloadedFraction(entries, index, entry, progress)
-    end)
+      advance()
+    end, onProgress)
   end)
 
   if not httpOperationId or httpOperationId < 0 then

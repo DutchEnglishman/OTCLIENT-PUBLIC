@@ -1014,6 +1014,27 @@ function addChannel(name, id)
     return tab
 end
 
+-- Every loot line is routed to this tab and to nowhere else (game_textmessage
+-- displayMessage), so it has to exist before the first kill rather than only
+-- after the player picks Loot out of the channel list. Without it the loot text
+-- fell through to the green centre label.
+--
+-- Never focused: this runs on login and again on any kill where the tab has
+-- gone missing, and neither is a moment to move the player off the tab they
+-- were reading.
+function ensureLootTab()
+    local tab = getChannelTab(LOOT_CHANNEL_ID)
+    if tab then
+        return tab
+    end
+
+    local name = tr('Loot')
+    channels[LOOT_CHANNEL_ID] = name
+    tab = addTab(name, false)
+    tab.channelId = LOOT_CHANNEL_ID
+    return tab
+end
+
 function addPrivateChannel(receiver)
     channels[receiver] = receiver
     return addTab(receiver, true)
@@ -2520,6 +2541,8 @@ function consoleController:onGameStart()
         end
     end)
 
+    ensureLootTab()
+
     -- open last channels
     local lastChannelsOpen = g_settings.getNode('lastChannelsOpen')
     if lastChannelsOpen then
@@ -2527,11 +2550,7 @@ function consoleController:onGameStart()
         if savedChannels then
             for channelName, channelId in pairs(savedChannels) do
                 channelId = tonumber(channelId)
-                if channelId == LOOT_CHANNEL_ID then
-                    if not getChannelTab(LOOT_CHANNEL_ID) then
-                        addChannel(tr('Loot'), LOOT_CHANNEL_ID)
-                    end
-                elseif channelId ~= -1 and channelId < 100 then
+                if channelId ~= LOOT_CHANNEL_ID and channelId ~= -1 and channelId < 100 then
                     if not table.find(channels, channelId) then
                         g_game.joinChannel(channelId)
                         table.insert(ignoredChannels, channelId)

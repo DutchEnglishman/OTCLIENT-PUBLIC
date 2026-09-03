@@ -266,14 +266,13 @@ function displayMessage(mode, text)
     -- the only handle. Matching is safe because that same server script is what
     -- formats the string.
     --
-    -- Falls through to normal handling when the Loot tab is missing, so the
-    -- message is never silently lost.
+    -- The tab is created on demand rather than only when the player opens the
+    -- Loot channel: falling through to normal handling is what put the line on
+    -- the green centre label, so there is no fallthrough left.
     if text:find('^Loot of ') then
-        local lootTabName = tr('Loot')
-        if modules.game_console.getTab(lootTabName) then
-            modules.game_console.addText(ItemsDatabase.setColorLootMessage(text), MessageSettings.loot, lootTabName)
-            return
-        end
+        local lootTab = modules.game_console.ensureLootTab()
+        modules.game_console.addTabText(ItemsDatabase.setColorLootMessage(text), MessageSettings.loot, lootTab)
+        return
     end
 
     local msgtype = MessageTypes[mode]
