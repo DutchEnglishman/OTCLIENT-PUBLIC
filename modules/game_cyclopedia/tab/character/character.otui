@@ -317,19 +317,8 @@ UIWidget
       SkillValueLabel
         color: #C0C0C0
     CharacterSkillBase
-      id: soul
-      anchors.top: mana.bottom
-      anchors.left: parent.left
-      anchors.right: separator.right
-      margin-top: 1
-      SkillNameLabel
-        !text: tr('Soul Points')
-        color: #C0C0C0
-      SkillValueLabel
-        color: #C0C0C0
-    CharacterSkillBase
       id: capacity
-      anchors.top: soul.bottom
+      anchors.top: mana.bottom
       anchors.left: parent.left
       anchors.right: separator.right
       margin-top: 1

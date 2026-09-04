@@ -132,7 +132,7 @@ MainWindow
     id: labelMana
     anchors.left: spellList.right
     anchors.top: labelLevel.bottom
-    !text: tr('Mana') .. ' / ' .. tr('Soul') .. ':'
+    !text: tr('Mana') .. ':'
 
   SpellInfoLabel
     id: labelPremium

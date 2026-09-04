@@ -320,7 +320,7 @@ function updateSpellInformation(widget)
 
         type = info.type
         level = info.level
-        mana = info.mana .. ' / ' .. info.soul
+        mana = info.mana
         premium = (info.premium and 'yes' or 'no')
         description = info.description or '-'
     end

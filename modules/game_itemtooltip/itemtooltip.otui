@@ -86,3 +86,52 @@ ItemTooltipSocketMinorLifeSteal < ItemTooltipSocket
 
 ItemTooltipSocketMajorLifeSteal < ItemTooltipSocket
   image-source: /images/game/tooltip/socket_lifesteal_major
+
+// The gem colours. Several kinds share one colour on purpose (purple carries
+// every elemental utility gem, yellow both crit gems); the style names say the
+// colour, and SOCKET_STYLES in itemtooltip.lua says which kind wears which.
+ItemTooltipSocketMinorPurple < ItemTooltipSocket
+  image-source: /images/game/tooltip/socket_purple_minor
+
+ItemTooltipSocketMajorPurple < ItemTooltipSocket
+  image-source: /images/game/tooltip/socket_purple_major
+
+ItemTooltipSocketMinorGreen < ItemTooltipSocket
+  image-source: /images/game/tooltip/socket_green_minor
+
+ItemTooltipSocketMajorGreen < ItemTooltipSocket
+  image-source: /images/game/tooltip/socket_green_major
+
+ItemTooltipSocketMinorYellow < ItemTooltipSocket
+  image-source: /images/game/tooltip/socket_yellow_minor
+
+ItemTooltipSocketMajorYellow < ItemTooltipSocket
+  image-source: /images/game/tooltip/socket_yellow_major
+
+ItemTooltipSocketMinorLightGreen < ItemTooltipSocket
+  image-source: /images/game/tooltip/socket_lightgreen_minor
+
+ItemTooltipSocketMajorLightGreen < ItemTooltipSocket
+  image-source: /images/game/tooltip/socket_lightgreen_major
+
+ItemTooltipSocketMinorBlue < ItemTooltipSocket
+  image-source: /images/game/tooltip/socket_blue_minor
+
+ItemTooltipSocketMajorBlue < ItemTooltipSocket
+  image-source: /images/game/tooltip/socket_blue_major
+
+ItemTooltipSocketMinorLightBlue < ItemTooltipSocket
+  image-source: /images/game/tooltip/socket_lightblue_minor
+
+ItemTooltipSocketMajorLightBlue < ItemTooltipSocket
+  image-source: /images/game/tooltip/socket_lightblue_major
+
+ItemTooltipSocketMinorPink < ItemTooltipSocket
+  image-source: /images/game/tooltip/socket_pink_minor
+
+ItemTooltipSocketMajorPink < ItemTooltipSocket
+  image-source: /images/game/tooltip/socket_pink_major
+
+// The Greater Gem: one socket, two rolled powers.
+ItemTooltipSocketGreater < ItemTooltipSocket
+  image-source: /images/game/tooltip/socket_greater

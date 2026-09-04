@@ -119,10 +119,6 @@ local function playerCanUseSpell(spellData)
         return false
     end
 
-    if spellData.soul and (player:getSoul() < spellData.soul) then
-        return false
-    end
-
     if spellData.vocations and (not table.contains(spellData.vocations, translateVocation(player:getVocation()))) then
         return false
     end

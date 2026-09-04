@@ -71,6 +71,38 @@ local SOCKET_STYLES = {
     ['2'] = 'ItemTooltipSocketMajorPhysical',
     ['3'] = 'ItemTooltipSocketMinorLifeSteal',
     ['4'] = 'ItemTooltipSocketMajorLifeSteal',
+    -- Elemental Atk / Elemental Pen / Elemental % share purple; both crit gems
+    -- share yellow; Fire shares the life steal red; Physical Pen and
+    -- Physical % share the physical grey. Colour marks the family, the
+    -- tooltip's stat line says which stat -- same trade the server makes by
+    -- keeping the kind in the fill character.
+    ['5'] = 'ItemTooltipSocketMinorPurple',     -- Minor Elemental (Atk)
+    ['6'] = 'ItemTooltipSocketMajorPurple',     -- Major Elemental (Atk)
+    ['7'] = 'ItemTooltipSocketMinorPhysical',   -- Minor Physical Pen
+    ['8'] = 'ItemTooltipSocketMajorPhysical',   -- Major Physical Pen
+    ['9'] = 'ItemTooltipSocketMinorPurple',     -- Minor Elemental Pen
+    ['A'] = 'ItemTooltipSocketMajorPurple',     -- Major Elemental Pen
+    ['B'] = 'ItemTooltipSocketMinorGreen',      -- Minor Attack Speed
+    ['C'] = 'ItemTooltipSocketMajorGreen',      -- Major Attack Speed
+    ['D'] = 'ItemTooltipSocketMinorYellow',     -- Minor Critical Chance
+    ['E'] = 'ItemTooltipSocketMajorYellow',     -- Major Critical Chance
+    ['F'] = 'ItemTooltipSocketMinorYellow',     -- Minor Critical Damage
+    ['G'] = 'ItemTooltipSocketMajorYellow',     -- Major Critical Damage
+    ['H'] = 'ItemTooltipSocketMinorPurple',     -- Minor Elemental %
+    ['I'] = 'ItemTooltipSocketMajorPurple',     -- Major Elemental %
+    ['J'] = 'ItemTooltipSocketMinorLifeSteal',  -- Minor Fire
+    ['K'] = 'ItemTooltipSocketMajorLifeSteal',  -- Major Fire
+    ['L'] = 'ItemTooltipSocketMinorLightGreen', -- Minor Earth
+    ['M'] = 'ItemTooltipSocketMajorLightGreen', -- Major Earth
+    ['N'] = 'ItemTooltipSocketMinorBlue',       -- Minor Energy
+    ['O'] = 'ItemTooltipSocketMajorBlue',       -- Major Energy
+    ['P'] = 'ItemTooltipSocketMinorLightBlue',  -- Minor Ice
+    ['Q'] = 'ItemTooltipSocketMajorLightBlue',  -- Major Ice
+    ['R'] = 'ItemTooltipSocketMinorPink',       -- Minor Recoup
+    ['S'] = 'ItemTooltipSocketMajorPink',       -- Major Recoup
+    ['T'] = 'ItemTooltipSocketMinorPhysical',   -- Minor Physical %
+    ['U'] = 'ItemTooltipSocketMajorPhysical',   -- Major Physical %
+    ['V'] = 'ItemTooltipSocketGreater',         -- Greater Gem (two rolled powers)
 }
 local SOCKET_STYLE_EMPTY = 'ItemTooltipSocket'
 local SOCKET_WIDTH = 12
@@ -438,6 +470,7 @@ local function renderTooltip(payload, item)
         headerHeight = math.max(headerHeight, nameEntry.widget:getHeight())
     end
 
+
     -- Applied before any placement maths so everything centres in the final
     -- width rather than in the measured one.
     contentWidth = math.max(contentWidth, headerWidth) + CONTENT_PAD
@@ -447,6 +480,28 @@ local function renderTooltip(payload, item)
     -- from the right. Computed here because it needs the final contentWidth.
     local tableX = PADDING + math.floor((contentWidth - tableWidth) / 2)
 
+    -- The sprite overhangs the body by design (see the note above), which is
+    -- safe under the centred lines a weapon tooltip opens with -- but a
+    -- tooltip that goes straight from the name into the two-column pairs (a
+    -- Greater Gem's rolls) puts its right-aligned values directly beneath
+    -- the sprite. Rather than pushing the body down, the window grows a strip
+    -- on the RIGHT, sliding the sprite clear of the value column -- and only
+    -- by the exact horizontal overlap, so nothing gets airier than it must.
+    -- Tooltips whose centred lines already fill the sprite's span add zero.
+    local spriteStrip = 0
+    -- Keyed on the body STARTING with a pair row, not on a vertical-span walk:
+    -- equipment always opens with something centred (rarity, item level,
+    -- stats, sockets) before its pairs, and those tooltips read fine with the
+    -- overhang -- widening them too made everything airier for nothing. Only
+    -- the gem shape -- name, then straight into the rolls -- collides.
+    if sprite and tableWidth > 0 and rows[1] and rows[1].label then
+        do
+            local valueRight = tableX + tableWidth
+            local spriteLeft = contentWidth + PADDING * 2 - FRAME_INSET_X - SPRITE_SIZE
+            spriteStrip = math.max(0, valueRight + HEADER_GAP - spriteLeft)
+        end
+    end
+
     -- Header alone is still worth showing; nothing at all is not.
     if #rows == 0 and headerHeight == 0 then
         hideTooltip()
@@ -455,7 +510,7 @@ local function renderTooltip(payload, item)
 
     -- The floor keeps the sprite from being clipped on a tooltip with only a
     -- line or two of body.
-    local windowWidth = contentWidth + PADDING * 2
+    local windowWidth = contentWidth + PADDING * 2 + spriteStrip
     local windowHeight = FRAME_INSET_Y + headerHeight + contentHeight + PADDING
     if sprite then
         windowHeight = math.max(windowHeight, FRAME_INSET_Y * 2 + SPRITE_SIZE)

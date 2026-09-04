@@ -805,7 +805,6 @@ function Cyclopedia.loadCharacterGeneralStats(data, skills)
     Cyclopedia.setCharacterSkillValue("expGainRate", comma_value(expGainRate) .. "%")
     Cyclopedia.setCharacterSkillValue("health", comma_value(data.maxHealth))
     Cyclopedia.setCharacterSkillValue("mana", comma_value(data.mana))
-    Cyclopedia.setCharacterSkillValue("soul", data.soul)
     Cyclopedia.setCharacterSkillValue("capacity", comma_value(math.floor(player:getFreeCapacity())))
 
     if data.speed > 0 then

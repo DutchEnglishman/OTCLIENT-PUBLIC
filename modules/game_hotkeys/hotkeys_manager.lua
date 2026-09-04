@@ -72,7 +72,11 @@ boundMouseCombos = {}
 hotkeysList = {}
 local hotkeyBlockingSources = {}
 local nextSourceId = 1
-lastHotkeyTime = g_clock.millis()
+-- Per COMBO, not one shared clock: two held hotkeys repeat in lockstep, and
+-- with a single timestamp whichever fired first ate the 70ms window and
+-- silently swallowed the other on every cycle -- hold exori and a mana
+-- potion together and one of them simply stopped, depending on press phase.
+lastHotkeyTime = {}
 local hotkeysWindowButton = nil
 local previousRootMouseRelease = nil
 
@@ -941,10 +945,10 @@ function doKeyCombo(keyCombo)
         return
     end
 
-    if g_clock.millis() - lastHotkeyTime < modules.client_options.getOption('hotkeyDelay') then
+    if g_clock.millis() - (lastHotkeyTime[keyCombo] or 0) < modules.client_options.getOption('hotkeyDelay') then
         return
     end
-    lastHotkeyTime = g_clock.millis()
+    lastHotkeyTime[keyCombo] = g_clock.millis()
 
     if hotKey.action then
         if hotKey.action == HOTKEY_ACTION_TOGGLE_WASD then
