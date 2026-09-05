@@ -103,6 +103,8 @@ local SOCKET_STYLES = {
     ['T'] = 'ItemTooltipSocketMinorPhysical',   -- Minor Physical %
     ['U'] = 'ItemTooltipSocketMajorPhysical',   -- Major Physical %
     ['V'] = 'ItemTooltipSocketGreater',         -- Greater Gem (two rolled powers)
+    ['W'] = 'ItemTooltipSocketMinorYellow',     -- Minor Holy
+    ['X'] = 'ItemTooltipSocketMajorYellow',     -- Major Holy
 }
 local SOCKET_STYLE_EMPTY = 'ItemTooltipSocket'
 local SOCKET_WIDTH = 12
