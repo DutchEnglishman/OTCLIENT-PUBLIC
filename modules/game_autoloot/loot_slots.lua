@@ -79,6 +79,17 @@ function AutoLoot.addCatalogItemToSlot(slotIndex, serverId, clientId, count)
         AutoLoot.syncItemsToServer()
     end
 
+    -- Adding used to sync to the server but never persist locally, while every
+    -- other mutation -- removal, containers, filters -- saved both, so an item
+    -- added here was missing from the preset until something else saved.
+    if AutoLoot.saveCurrentPreset then
+        AutoLoot.saveCurrentPreset()
+    end
+
+    if AutoLoot.saveCharacterSettings then
+        AutoLoot.saveCharacterSettings()
+    end
+
     print(string.format(
         '[AUTOLOOT] Added server item %d (client item %d) to slot %d',
         serverId,

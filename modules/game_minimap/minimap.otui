@@ -28,21 +28,26 @@ PhantomMiniWindow
       anchors.fill: parent
       margin: 0
 
-  // Floor on the left, zoom on the right, stacked into a 2x2 block inset into
-  // the map's bottom-right corner. Everything chains off zoomOut, the corner
-  // button, so moving that one moves the block. It is declared first for that
-  // reason -- the other three anchor to it.
+  // Zoom on the left, floor on the right, stacked into a 2x2 block inset into
+  // the map's bottom-right corner. Everything chains off floorDown, the corner
+  // button, so moving that one moves the block; it is declared first for that
+  // reason, the other three anchor to it.
+  //
+  // MinimapFullscreenControls at the bottom of this file has the same four
+  // buttons the other way round, floor on the left. That is a deliberate
+  // difference between the docked panel and the full map, not drift, so
+  // changing the order here does NOT mean changing it there.
   //
   // The zoom pair keep the automap artwork (a 40x60 sheet: three 20x20 rows,
   // normal in the left column, pressed in the right). That sheet has no arrows,
   // so the floor pair use the spinbox arrows: 10x10 cells, normal/hover/pressed
   // stacked vertically.
   //
-  // UIButton, NOT Button: the Button style carries image-border: 1
-  // (10-buttons.otui:8), and a bordered image is drawn REPEATED --
-  // uiwidgetimage.cpp:125, useRepeated = hasProp(PropImageBordered). Scaling a
-  // 10x10 source into 20x20 therefore tiled the 8x8 middle across an 18x18
-  // interior and drew two and a bit arrows.
+  // UIButton, NOT Button, for the floor pair: the Button style carries
+  // image-border: 1 (10-buttons.otui:8), and a bordered image is drawn
+  // REPEATED -- uiwidgetimage.cpp:125, useRepeated = hasProp(PropImageBordered).
+  // Scaling a 10x10 source into 20x20 therefore tiled the 8x8 middle across an
+  // 18x18 interior and drew two and a bit arrows.
   //
   // Simply omitting image-border does not help, because the style's value is
   // inherited; nor does image-border: 0, because setImageBorder() sets the
@@ -57,21 +62,6 @@ PhantomMiniWindow
   // the widget: they set m_imageRect, which drawImage uses as the destination,
   // so the chevron is blitted 1:1 at its native size and centred in the 20x20
   // click target. No scaling anywhere in the path, so nothing can repeat.
-  Button
-    id: zoomOut
-    !tooltip: tr('Zoom out')
-    image-source: /images/automap/automap_buttons
-    image-clip: 0 20 20 20
-    anchors.right: minimapBorder.right
-    anchors.bottom: minimapBorder.bottom
-    margin-right: 4
-    margin-bottom: 4
-    size: 20 20
-    @onClick: zoomOut()
-
-    $pressed !disabled:
-      image-clip: 20 20 20 20
-
   UIButton
     id: floorDown
     !tooltip: tr('Go down one floor')
@@ -80,9 +70,10 @@ PhantomMiniWindow
     image-size: 10 10
     image-offset: 5 5
     image-smooth: false
-    anchors.right: zoomOut.left
-    anchors.bottom: zoomOut.bottom
-    margin-right: 2
+    anchors.right: minimapBorder.right
+    anchors.bottom: minimapBorder.bottom
+    margin-right: 4
+    margin-bottom: 4
     size: 20 20
     @onClick: downLayer()
 
@@ -113,6 +104,20 @@ PhantomMiniWindow
       image-clip: 0 20 10 10
 
   Button
+    id: zoomOut
+    !tooltip: tr('Zoom out')
+    image-source: /images/automap/automap_buttons
+    image-clip: 0 20 20 20
+    anchors.right: floorDown.left
+    anchors.bottom: floorDown.bottom
+    margin-right: 2
+    size: 20 20
+    @onClick: zoomOut()
+
+    $pressed !disabled:
+      image-clip: 20 20 20 20
+
+  Button
     id: zoomIn
     !tooltip: tr('Zoom in')
     image-source: /images/automap/automap_buttons
@@ -129,84 +134,92 @@ PhantomMiniWindow
 
 // Controls for the fullscreen map (Ctrl+Shift+M). The docked panel that
 // normally carries these is hidden while fullscreen, so this is a separate
-// overlay created by fullscreen() and destroyed when it closes. Same artwork
-// and the same handlers as the docked copies, so both stay in step.
+// overlay created by fullscreen() and destroyed when it closes. Same four
+// buttons, same artwork and the same handlers as the docked copies above --
+// it used to be a vertical layer strip with a slider instead, which meant the
+// full map picked floors a different way from the minimap it was opened from.
+//
+// The two columns sit the other way round to the docked panel, deliberately:
+// floor on the LEFT here, zoom on the right. Everything chains off zoomOut,
+// the corner button, so it is declared first and the other three anchor to it.
+//
+// 42x42 is the block exactly: two 20px columns and two 20px rows with a 2px
+// gap between each.
+//
+// No @onClick anywhere in this style, unlike the docked panel above. An
+// @onClick in an IMPORTED style resolves its names in the global environment,
+// not this module's, so upLayer/downLayer/zoomIn/zoomOut all came back nil.
+// The docked copies work only because loadUI compiles their expressions inside
+// the module that loaded the file. fullscreen() assigns these handlers from
+// Lua instead, which is why they carry ids.
 MinimapFullscreenControls < UIWidget
   id: minimapFullscreenControls
-  size: 46 68
+  size: 42 42
   anchors.right: parent.right
   anchors.bottom: parent.bottom
   margin-right: 12
   margin-bottom: 12
   phantom: false
 
-  UIWidget
-    id: layersPanel
-    size: 20 68
-    anchors.bottom: parent.bottom
+  Button
+    id: zoomOut
+    !tooltip: tr('Zoom out')
+    image-source: /images/automap/automap_buttons
+    image-clip: 0 20 20 20
     anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    size: 20 20
 
-    UIWidget
-      id: automapLayers
-      image-source: /images/automap/automap_indicator_maplayers
-      anchors.left: parent.left
-      anchors.bottom: parent.bottom
-      image-clip: 98 0 14 67
-      size: 14 67
-
-    UIWidget
-      id: layersMark
-      anchors.left: automapLayers.right
-      anchors.top: automapLayers.top
-      image-source: /images/automap/automap_indicator_slider_left
-      margin-left: 3
-      margin-top: 28
-
-    // Phantom artwork over the top and bottom halves of the layer strip, the
-    // same split the docked panel uses: upper half climbs, lower half descends.
-    //
-    // No @onClick anywhere in this style, unlike the docked panel above. An
-    // @onClick in an IMPORTED style resolves its names in the global
-    // environment, not this module's, so upLayer/downLayer/zoomIn/zoomOut all
-    // came back nil. The docked copies work only because loadUI compiles their
-    // expressions inside the module that loaded the file. fullscreen() assigns
-    // these handlers from Lua instead, which is why they carry ids.
-    Button
-      id: layerUp
-      image-source: /images/automap/automap_phantom
-      anchors.left: automapLayers.left
-      anchors.right: automapLayers.right
-      anchors.top: automapLayers.top
-      anchors.bottom: automapLayers.verticalCenter
-
-    Button
-      id: layerDown
-      image-source: /images/automap/automap_phantom
-      anchors.left: automapLayers.left
-      anchors.right: automapLayers.right
-      anchors.top: automapLayers.verticalCenter
-      anchors.bottom: automapLayers.bottom
+    $pressed !disabled:
+      image-clip: 20 20 20 20
 
   Button
     id: zoomIn
+    !tooltip: tr('Zoom in')
     image-source: /images/automap/automap_buttons
     image-clip: 0 40 20 20
-    anchors.right: layersPanel.left
-    anchors.bottom: layersPanel.bottom
-    margin-right: 4
+    anchors.right: zoomOut.right
+    anchors.bottom: zoomOut.top
+    margin-bottom: 2
     size: 20 20
 
     $pressed !disabled:
       image-clip: 20 40 20 20
 
-  Button
-    id: zoomOut
-    image-source: /images/automap/automap_buttons
-    image-clip: 0 20 20 20
-    anchors.right: zoomIn.right
-    anchors.bottom: zoomIn.top
+  UIButton
+    id: floorDown
+    !tooltip: tr('Go down one floor')
+    image-source: /images/ui/spinbox_down
+    image-clip: 0 0 10 10
+    image-size: 10 10
+    image-offset: 5 5
+    image-smooth: false
+    anchors.right: zoomOut.left
+    anchors.bottom: zoomOut.bottom
+    margin-right: 2
+    size: 20 20
+
+    $hover !disabled:
+      image-clip: 0 10 10 10
+
+    $pressed !disabled:
+      image-clip: 0 20 10 10
+
+  UIButton
+    id: floorUp
+    !tooltip: tr('Go up one floor')
+    image-source: /images/ui/spinbox_up
+    image-clip: 0 0 10 10
+    image-size: 10 10
+    image-offset: 5 5
+    image-smooth: false
+    anchors.right: floorDown.right
+    anchors.bottom: floorDown.top
     margin-bottom: 2
     size: 20 20
 
+    $hover !disabled:
+      image-clip: 0 10 10 10
+
     $pressed !disabled:
-      image-clip: 20 20 20 20
+      image-clip: 0 20 10 10

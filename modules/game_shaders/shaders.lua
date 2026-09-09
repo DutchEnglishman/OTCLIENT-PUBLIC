@@ -178,6 +178,15 @@ local OUTFIT_SHADERS = {
     {
         name = 'Monster - Corrupted',
         frag = 'shaders/fragment/monster_corrupted.frag'
+    },
+    -- Worn only for the few seconds Madareth's Bloodlust lasts. Put on and
+    -- taken off by name from game_attachedeffects, on the server's word.
+    -- Registered here rather than in VARIANT_MONSTER_SHADER_CONFIG because it
+    -- is a boss skill, not a variant: nothing wears it permanently and no
+    -- skull selects it.
+    {
+        name = 'Monster - Bloodlust',
+        frag = 'shaders/fragment/bloodlust.frag'
     } }
 
 

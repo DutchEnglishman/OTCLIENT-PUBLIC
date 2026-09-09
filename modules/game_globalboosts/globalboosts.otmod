@@ -1,0 +1,8 @@
+Module
+  name: game_globalboosts
+  description: Shows the server-wide boosts running right now above the chat window
+  author: OTServ
+  sandboxed: true
+  scripts: [ globalboosts ]
+  @onLoad: init()
+  @onUnload: terminate()

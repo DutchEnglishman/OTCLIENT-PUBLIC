@@ -14,45 +14,6 @@ function sendLocale(localeName)
     return false
 end
 
-function createWindow()
-    localesWindow = g_ui.displayUI('locales')
-    local localesPanel = localesWindow:getChildById('localesPanel')
-    local layout = localesPanel:getLayout()
-    local spacing = layout:getCellSpacing()
-    local size = layout:getCellSize()
-
-    local count = 0
-    for name, locale in pairs(installedLocales) do
-        local widget = g_ui.createWidget('LocalesButton', localesPanel)
-        widget:setImageSource('/images/flags/' .. name .. '')
-        widget:setText(locale.languageName)
-        widget.onClick = function()
-            selectFirstLocale(name)
-        end
-        count = count + 1
-    end
-
-    count = math.max(1, math.min(count, 3))
-    localesPanel:setWidth(size.width * count + spacing * (count - 1))
-
-    addEvent(function()
-        addEvent(function()
-            localesWindow:raise()
-            localesWindow:focus()
-        end)
-    end)
-end
-
-function selectFirstLocale(name)
-    if localesWindow then
-        localesWindow:destroy()
-        localesWindow = nil
-    end
-    if setLocale(name) then
-        g_modules.reloadModules()
-    end
-end
-
 -- hooked functions
 function onGameStart()
     sendLocale(currentLocale.name)
@@ -71,21 +32,12 @@ function init()
 
     installLocales('/locales')
 
-    local userLocaleName = g_settings.get('locale', 'false')
-    if userLocaleName ~= 'false' and setLocale(userLocaleName) then
-        pdebug('Using configured locale: ' .. userLocaleName)
-    else
-        setLocale(defaultLocaleName)
-        if g_app.hasUpdater() then
-            connect(g_app, {
-                onUpdateFinished = createWindow,
-            })
-        else
-            connect(g_app, {
-                onRun = createWindow,
-            })
-        end
-    end
+    -- English is the only language the client ships, so there is nothing to
+    -- choose and no first-start picker any more. Forcing it here is also what
+    -- drags back anyone whose stored settings still name a language that no
+    -- longer exists: setLocale writes 'locale' back out, so an old choice
+    -- cannot survive one start of the client.
+    setLocale(defaultLocaleName)
 
     ProtocolGame.registerExtendedOpcode(ExtendedIds.Locale, onExtendedLocales)
     connect(g_game, {
@@ -98,15 +50,6 @@ function terminate()
     currentLocale = nil
 
     ProtocolGame.unregisterExtendedOpcode(ExtendedIds.Locale)
-    if g_app.hasUpdater() then
-        disconnect(g_app, {
-            onUpdateFinished = createWindow,
-        })
-    else
-        disconnect(g_app, {
-            onRun = createWindow,
-        })
-    end
     disconnect(g_game, {
         onGameStart = onGameStart
     })
@@ -141,20 +84,15 @@ function installLocale(locale)
         return
     end
 
+    -- English is the only language this client has, so nothing else installs.
+    -- Deleting the other files out of /locales is what removed them; this is
+    -- what makes their absence a rule instead of an accident. Without it, a
+    -- locale file dropped back into that directory becomes reachable again
+    -- through the server's locale opcode (onExtendedLocales below), which would
+    -- move a client off English after it had already been forced onto it.
     if locale.name ~= defaultLocaleName then
-        local updatesNamesMissing = {}
-        for _, k in pairs(neededTranslations) do
-            if locale.translation[k] == nil then
-                updatesNamesMissing[#updatesNamesMissing + 1] = k
-            end
-        end
-
-        if #updatesNamesMissing > 0 then
-            pdebug('Locale \'' .. locale.name .. '\' is missing ' .. #updatesNamesMissing .. ' translations.')
-            for _, name in pairs(updatesNamesMissing) do
-                pdebug('["' .. name .. '"] = \"\",')
-            end
-        end
+        pdebug('Ignoring locale \'' .. locale.name .. '\': this client is English only.')
+        return
     end
 
     local installedLocale = installedLocales[locale.name]

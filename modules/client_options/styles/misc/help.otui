@@ -30,7 +30,10 @@ UIWidget
     anchors.left: parent.left
     anchors.right: parent.right
     anchors.top: prev.bottom
-    height: 55
+    // 30, down from 55: this panel stacked Clear Cache and Change language. The
+    // client ships English only now, so the language button is gone and the
+    // height follows the one button that is left.
+    height: 30
     margin-top: 5
 
     QtButton
@@ -45,11 +48,3 @@ UIWidget
         controller:scheduleEvent(function()
           g_app.restart()
         end, 1000)
-    QtButton
-      !text: tr('Change language')
-      size: 130 20
-      margin-top: 5
-      anchors.top: prev.bottom
-      anchors.left: parent.left
-      @onClick: |
-        modules.client_locales.createWindow()

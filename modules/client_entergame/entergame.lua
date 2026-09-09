@@ -13,12 +13,22 @@ local loadBox
 local enterGame
 local motdWindow
 local enterGameButton
-local clientBox
+local serverBox
 local protocolLogin
 local motdEnabled = true
 local tokenWindow
 local authErrorBox
 local hasAttemptedAuthenticator = false
+
+-- The "Server" dropdown holds Servers_init (init.lua) and nothing else: each
+-- option shows an entry's name and carries its host as data, and the host,
+-- port and client version all come from the entry. There is no other way
+-- to name a server from this screen.
+local function selectedServer()
+    local option = serverBox and serverBox:getCurrentOption()
+    local host = option and option.data
+    return host, host and Servers_init[host]
+end
 
 -- private functions
 local function onError(protocol, message, errorCode)
@@ -145,7 +155,8 @@ local function onUpdateNeeded(protocol, signature)
 end
 
 local function updateLabelText()
-    if enterGame:getChildById('clientComboBox') and tonumber(enterGame:getChildById('clientComboBox'):getText()) > 1080 then
+    local _, server = selectedServer()
+    if server and server.protocol > 1080 then
         enterGame:setText("Journey Onwards")
         enterGame:getChildById('emailLabel'):setText("Email:")
         enterGame:getChildById('rememberEmailBox'):setText("Remember Email:")
@@ -156,13 +167,6 @@ local function updateLabelText()
     end
 end
 
-local function loadServerListModule()
-    local module = g_modules.getModule('client_serverlist')
-
-    if module and not module:isLoaded() then
-        module:load()
-    end
-end
 
 -- public functions
 function EnterGame.init()
@@ -175,23 +179,32 @@ function EnterGame.init()
       }
     })
 
-    local host = g_settings.get('host')
-    local port = g_settings.get('port')
     local stayLogged = g_settings.getBoolean('staylogged')
-    local autologin = g_settings.getBoolean('autologin')
-    local httpLogin = g_settings.getBoolean('httpLogin')
-    local clientVersion = g_settings.getInteger('client-version')
 
-    if not clientVersion or clientVersion == 0 then
-        clientVersion = 860
+    -- The dropdown is Servers_init in name order; the last server logged
+    -- into is preselected when it is still listed, otherwise the first.
+    serverBox = enterGame:getChildById('serverComboBox')
+    local hosts = {}
+    for host in pairs(Servers_init or {}) do
+        table.insert(hosts, host)
+    end
+    table.sort(hosts, function(a, b)
+        return (Servers_init[a].name or a) < (Servers_init[b].name or b)
+    end)
+    for _, host in ipairs(hosts) do
+        serverBox:addOption(Servers_init[host].name or host, host)
+    end
+    if #hosts == 0 then
+        g_logger.error('Servers_init (init.lua) is empty: the login screen has no server to offer.')
+    end
+    local savedHost = g_settings.get('host')
+    if savedHost and Servers_init and Servers_init[savedHost] then
+        serverBox:setCurrentOptionByData(savedHost)
     end
 
-    if not port or port == 0 then
-        port = 7171
-    end
-
+    local host, server = selectedServer()
     local servers = g_settings.getNode("ServerList") or {}
-    local serverData = servers[host] or {}
+    local serverData = host and servers[host] or {}
     if serverData and serverData.account then
         EnterGame.setAccountName(serverData.account)
         EnterGame.setPassword(serverData.password)
@@ -201,55 +214,18 @@ function EnterGame.init()
         EnterGame.setPassword('')
         enterGame:getChildById('rememberEmailBox'):setChecked(false)
     end
-    
+
     enterGame:getChildById('autoLoginBox'):setChecked(serverData.autologin == true)
-    enterGame:getChildById('serverHostTextEdit'):setText(host)
-    enterGame:getChildById('serverPortTextEdit'):setText(port)
     enterGame:getChildById('stayLoggedBox'):setChecked(stayLogged)
-    enterGame:getChildById('httpLoginBox'):setChecked(httpLogin)
+    enterGame:getChildById('httpLoginBox'):setChecked(server and server.httpLogin == true)
 
-    local installedClients = {}
-    if modules.client_assets and modules.client_assets.getInstalledClientVersions then
-        installedClients = modules.client_assets.getInstalledClientVersions()
-    else
-        for _, dirItem in ipairs(g_resources.listDirectoryFiles('/data/things/')) do
-            if tonumber(dirItem) then
-                installedClients[dirItem] = true
-            end
-        end
-    end
-
-    local amountInstalledClients = 0
-    for _ in pairs(installedClients) do
-        amountInstalledClients = amountInstalledClients + 1
-    end
-    local canDownloadAssets = modules.client_assets and modules.client_assets.isEnabled and modules.client_assets.isEnabled()
-
-    clientBox = enterGame:getChildById('clientComboBox')
-
-    for _, proto in pairs(g_game.getSupportedClients()) do
-        local protoStr = tostring(proto)
-        if installedClients[protoStr] or amountInstalledClients == 0 or (canDownloadAssets and proto >= 1281) then
-            installedClients[protoStr] = nil
-            clientBox:addOption(proto)
-        end
-    end
-
-    for protoStr, status in pairs(installedClients) do
-        if status then
-            print(string.format('Warning: %s recognized as an installed client, but not supported.', protoStr))
-        end
-    end
-
-    clientBox:setCurrentOption(clientVersion)
-
-    connect(clientBox, {
-        onOptionChange = EnterGame.onClientVersionChange
+    connect(serverBox, {
+        onOptionChange = EnterGame.onServerChange
     })
 
     connect(enterGame:getChildById('rememberEmailBox'), {
         onCheckChange = function(self, checked)
-            local host = enterGame:getChildById('serverHostTextEdit'):getText()
+            local host = selectedServer()
             local account = enterGame:getChildById('accountNameTextEdit'):getText()
             local password = enterGame:getChildById('accountPasswordTextEdit'):getText()
 
@@ -269,23 +245,7 @@ function EnterGame.init()
         end
     })
 
-    if Servers_init and next(Servers_init) ~= nil then
-        local server = Servers_init[host]
-        enterGame.disableToken = not (server and server.useAuthenticator)
-        if table.size(Servers_init) == 1 then
-            local hostInit, valuesInit = next(Servers_init)
-            EnterGame.setUniqueServer(hostInit, valuesInit.port, valuesInit.protocol)
-            EnterGame.setHttpLogin(valuesInit.httpLogin)
-        elseif not host or host == "" then
-            local hostInit, valuesInit = next(Servers_init)
-            EnterGame.setDefaultServer(hostInit, valuesInit.port, valuesInit.protocol)
-            EnterGame.setHttpLogin(valuesInit.httpLogin)
-        end
-    else
-        EnterGame.toggleStayLoggedBox(clientVersion, true)
-    end
-
-    updateLabelText()
+    EnterGame.applyServer(true)
 
     enterGame:hide()
 
@@ -316,13 +276,6 @@ function EnterGame.showPanels()
     modules.client_topmenu.show()
 end
 
-function EnterGame.showServerList()
-    loadServerListModule()
-
-    if ServerList then
-        ServerList.show()
-    end
-end
 
 function EnterGame.firstShow()
     EnterGame.show()
@@ -355,8 +308,8 @@ end
 function EnterGame.terminate()
     Keybind.delete("Misc.", "Change Character")
 
-    disconnect(clientBox, {
-        onOptionChange = EnterGame.onClientVersionChange
+    disconnect(serverBox, {
+        onOptionChange = EnterGame.onServerChange
     })
     disconnect(g_game, {
         onGameStart = EnterGame.hidePanels
@@ -370,9 +323,7 @@ function EnterGame.terminate()
         enterGame = nil
     end
 
-    if clientBox then
-        clientBox = nil
-    end
+    serverBox = nil
 
     if motdWindow then
         motdWindow:destroy()
@@ -619,10 +570,22 @@ function EnterGame.toggleStayLoggedBox(clientVersion, init)
     enterGame.stayLoggedBoxEnabled = enabled
 end
 
-function EnterGame.onClientVersionChange(comboBox, text, data)
-    local clientVersion = tonumber(text)
-    EnterGame.toggleStayLoggedBox(clientVersion)
+-- Everything on the screen that depends on which server is selected: the
+-- two-factor token field, the HTTP login box, the stay-logged box and the
+-- account/email wording, all of which follow the entry's protocol. init
+-- passes true so the window is sized without being moved.
+function EnterGame.applyServer(init)
+    local host, server = selectedServer()
+    enterGame.disableToken = not (server and server.useAuthenticator)
+    if server then
+        EnterGame.setHttpLogin(server.httpLogin == true)
+        EnterGame.toggleStayLoggedBox(server.protocol, init)
+    end
     updateLabelText()
+end
+
+function EnterGame.onServerChange(comboBox, text, data)
+    EnterGame.applyServer(false)
 end
 
 function EnterGame.tryHttpLogin(clientVersion, httpLogin)
@@ -782,9 +745,17 @@ function EnterGame.doLogin()
     G.account = enterGame:getChildById('accountNameTextEdit'):getText()
     G.password = enterGame:getChildById('accountPasswordTextEdit'):getText()
     G.stayLogged = enterGame:getChildById('stayLoggedBox'):isChecked()
-    G.host = enterGame:getChildById('serverHostTextEdit'):getText()
-    G.port = tonumber(enterGame:getChildById('serverPortTextEdit'):getText())
-    local clientVersion = tonumber(clientBox:getText())
+    local host, server = selectedServer()
+    if not server then
+        local errorBox = displayErrorBox(tr('Login Error'), tr('No server is selected.'))
+        connect(errorBox, {
+            onOk = EnterGame.show
+        })
+        return
+    end
+    G.host = host
+    G.port = server.port
+    local clientVersion = server.protocol
     G.clientVersion = clientVersion
     local httpLogin = enterGame:getChildById('httpLoginBox'):isChecked()
 
@@ -797,7 +768,6 @@ function EnterGame.doLogin()
     end
 
     g_settings.set('host', G.host)
-    g_settings.set('port', G.port)
     g_settings.set('client-version', clientVersion)
 
     if clientVersion >= 1281 and modules.client_assets and modules.client_assets.ensureClientVersion and
@@ -869,85 +839,18 @@ function EnterGame.displayMotd()
     end
 end
 
+-- Kept for client_serverlist, which picks a server from its own window:
+-- only a host that is in the dropdown can be chosen, since the screen has
+-- nowhere else to put one.
 function EnterGame.setDefaultServer(host, port, protocol)
-    local hostTextEdit = enterGame:getChildById('serverHostTextEdit')
-    local portTextEdit = enterGame:getChildById('serverPortTextEdit')
-    local clientLabel = enterGame:getChildById('clientLabel')
-    local accountTextEdit = enterGame:getChildById('accountNameTextEdit')
-    local passwordTextEdit = enterGame:getChildById('accountPasswordTextEdit')
-
-    if hostTextEdit:getText() ~= host then
-        hostTextEdit:setText(host)
-        portTextEdit:setText(port)
-        clientBox:setCurrentOption(protocol)
-        accountTextEdit:setText('')
-        passwordTextEdit:setText('')
-    end
-end
-
-function EnterGame.setUniqueServer(host, port, protocol, windowWidth, windowHeight)
-    local hostTextEdit = enterGame:getChildById('serverHostTextEdit')
-    hostTextEdit:setText(host)
-    hostTextEdit:setVisible(false)
-    hostTextEdit:setHeight(0)
-
-    local portTextEdit = enterGame:getChildById('serverPortTextEdit')
-    portTextEdit:setText(port)
-    portTextEdit:setVisible(false)
-    portTextEdit:setHeight(0)
-
-    local stayLoggedBox = enterGame:getChildById('stayLoggedBox')
-    stayLoggedBox:setChecked(false)
-    stayLoggedBox:setOn(false)
-
-    local clientVersion = tonumber(protocol)
-    clientBox:setCurrentOption(clientVersion)
-    clientBox:setVisible(false)
-    clientBox:setHeight(0)
-
-    local serverLabel = enterGame:getChildById('serverLabel')
-    serverLabel:setVisible(false)
-    serverLabel:setHeight(0)
-
-    local portLabel = enterGame:getChildById('portLabel')
-    portLabel:setVisible(false)
-    portLabel:setHeight(0)
-
-    local clientLabel = enterGame:getChildById('clientLabel')
-    clientLabel:setVisible(false)
-    clientLabel:setHeight(0)
-
-    local httpLoginBox = enterGame:getChildById('httpLoginBox')
-    httpLoginBox:setVisible(false)
-    httpLoginBox:setHeight(0)
-
-    local serverListButton = enterGame:getChildById('serverListButton')
-    serverListButton:setVisible(false)
-    serverListButton:setHeight(0)
-    serverListButton:setWidth(0)
-
-    local rememberEmailBox = enterGame:getChildById('rememberEmailBox')
-    rememberEmailBox:setMarginTop(5)
-
-    if not windowWidth then
-        windowWidth = 380
-    end
-    enterGame:setWidth(windowWidth)
-    if not windowHeight then
-        windowHeight = 229
+    local current = selectedServer()
+    if current == host or not Servers_init or not Servers_init[host] then
+        return
     end
 
-    enterGame:setHeight(windowHeight)
-    enterGame.disableToken = true
-    local server = Servers_init[host]
-    enterGame.disableToken = not (server and server.useAuthenticator)
-
-    -- preload the assets
-    -- this is for the client_bottommenu module
-    -- it needs images of outfits
-    -- so it can display the boosted creature
-    g_game.setClientVersion(clientVersion)
-    g_game.setProtocolVersion(g_game.getClientProtocolVersion(clientVersion))
+    serverBox:setCurrentOptionByData(host)
+    enterGame:getChildById('accountNameTextEdit'):setText('')
+    enterGame:getChildById('accountPasswordTextEdit'):setText('')
 end
 
 function EnterGame.setServerInfo(message)
@@ -1037,10 +940,14 @@ function EnterGame.showAuthenticatorInput()
         
         G.account = enterGame:getChildById('accountNameTextEdit'):getText()
         G.password = enterGame:getChildById('accountPasswordTextEdit'):getText()
-        G.host = enterGame:getChildById('serverHostTextEdit'):getText()
-        G.port = tonumber(enterGame:getChildById('serverPortTextEdit'):getText())
+        local host, server = selectedServer()
+        if not server then
+            return
+        end
+        G.host = host
+        G.port = server.port
         G.authenticatorToken = token
-        local clientVersion = tonumber(clientBox:getText())
+        local clientVersion = server.protocol
         local httpLogin = enterGame:getChildById('httpLoginBox'):isChecked()
         
         if tokenWindow then

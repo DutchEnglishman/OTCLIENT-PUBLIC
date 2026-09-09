@@ -72,11 +72,10 @@ MessageSettings = {
         screenTarget = 'statusLabel',
         consoleOption = 'showBoostedMessagesInConsole'
     },
-    othersStatus = {
-        color = TextColors.white,
-        consoleTab = 'Server Log',
-        consoleOption = 'showOthersStatusMessagesInConsole'
-    },
+    -- othersStatus sat here with an option and a checkbox of its own, and no
+    -- message mode was ever mapped to it, so none of the three did anything.
+    -- Other people's status lines are filtered by involvesLocalPlayer below
+    -- instead, because on this protocol they cannot be told apart by mode.
     statusSmall = {
         color = TextColors.white,
         screenTarget = 'statusLabel'
@@ -236,6 +235,54 @@ function calculateVisibleTime(text)
     return math.max(#text * 50, 4000)
 end
 
+-- Whether a Server Log line is about the player reading it.
+--
+-- It has to be decided from the text, because the mode cannot tell: OTSERV's
+-- Game::combatChangeHealth sends MESSAGE_STATUS_DEFAULT for all three views of
+-- the same hit -- the attacker's, the victim's, and every bystander's -- so on
+-- this protocol they arrive as one indistinguishable MessageModes.Status.
+--
+-- What separates them is person. The server writes the reader's own lines in
+-- the second person ("You lose 40 hitpoints", "... due to your attack") and
+-- everybody else's in the third ("Crodar loses 150 hitpoints due to an attack
+-- by Malvenor"). So: my name, or a second-person pronoun, means it is mine.
+--
+-- Matched on word boundaries. Without them a monster called "Younger Bonelord"
+-- contains "you" and every line naming it would look personal.
+local function involvesLocalPlayer(text)
+    local player = g_game.getLocalPlayer()
+    if not player then
+        return true
+    end
+
+    local lower = text:lower()
+    local name = player:getName()
+    if name and name ~= '' then
+        -- Whole word, not a substring: a player called Bo otherwise matches
+        -- "Bonelord" and "Boris" and never hides anything. Non-word characters
+        -- are escaped because names carry apostrophes (Bo'Ques).
+        local escaped = name:lower():gsub('(%W)', '%%%1')
+        if lower:find('%f[%w]' .. escaped .. '%f[%W]') then
+            return true
+        end
+    end
+
+    return lower:find('%f[%a]you%f[%A]') ~= nil or lower:find('%f[%a]your%f[%A]') ~= nil
+end
+
+-- Only the status family is filtered. Those are the combat and experience lines
+-- the option is about; info, event, loot and private messages are addressed to
+-- the reader already and are left alone whatever the setting says.
+function wantedInServerLog(msgtype, text)
+    if msgtype ~= MessageSettings.status and msgtype ~= MessageSettings.statusOwn then
+        return true
+    end
+    if not modules.client_options.getOption('hideOthersServerLogMessages') then
+        return true
+    end
+    return involvesLocalPlayer(text)
+end
+
 function displayMessage(mode, text)
 
     if not g_game.isOnline() then
@@ -285,7 +332,8 @@ function displayMessage(mode, text)
     end
 
     if msgtype.consoleTab ~= nil and
-        (msgtype.consoleOption == nil or modules.client_options.getOption(msgtype.consoleOption)) then
+        (msgtype.consoleOption == nil or modules.client_options.getOption(msgtype.consoleOption)) and
+        wantedInServerLog(msgtype, text) then
         if msgtype == MessageSettings.loot or msgtype == MessageSettings.valuableLoot then
             local lootColoredText = ItemsDatabase.setColorLootMessage(text)
             local lootTabName = tr(msgtype.consoleTab)
@@ -296,7 +344,10 @@ function displayMessage(mode, text)
         end
     end
 
-    if msgtype.screenTarget then
+    -- The same line is also flashed above the chat, so it is filtered on the
+    -- same test: hidden from the log but still shown on screen would not be
+    -- hiding it at all.
+    if msgtype.screenTarget and wantedInServerLog(msgtype, text) then
         local label = messagesPanel:recursiveGetChildById(msgtype.screenTarget)
         if msgtype == MessageSettings.loot and not modules.client_options.getOption('showLootMessagesOnScreen') then
             return

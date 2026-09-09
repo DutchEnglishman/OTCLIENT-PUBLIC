@@ -227,3 +227,64 @@ end
 function toggle()
     AutoLoot.toggle()
 end
+
+-- The three entry points game_interface's createThingMenu calls for the
+-- "Add to Autoloot" row. They take a Thing, which carries a CLIENT id, while
+-- the loot list is keyed by SERVER id -- itemCatalog is the only bridge
+-- between the two, so an item missing from it gets no menu row at all rather
+-- than a row that cannot work.
+local function catalogEntryFor(thing)
+    if not thing or not thing:isItem() then
+        return nil
+    end
+
+    return AutoLoot.getItemDataByClientId(thing:getId())
+end
+
+function canAutoloot(thing)
+    if not thing or not thing:isPickupable() then
+        return false
+    end
+
+    return catalogEntryFor(thing) ~= nil
+end
+
+function getAutolootMenuLabel(thing)
+    local itemData = catalogEntryFor(thing)
+
+    if itemData and AutoLoot.isItemAlreadyAdded(itemData.serverId) then
+        return tr('Remove from Autoloot')
+    end
+
+    return tr('Add to Autoloot')
+end
+
+function toggleAutoloot(thing)
+    local itemData = catalogEntryFor(thing)
+
+    if not itemData then
+        return
+    end
+
+    local alreadyAdded, slotIndex =
+        AutoLoot.isItemAlreadyAdded(itemData.serverId)
+
+    if alreadyAdded then
+        AutoLoot.removeItemFromSlot(slotIndex)
+        return
+    end
+
+    -- Checked here rather than left to addSearchResult, which only prints to
+    -- the console: a menu click has to say something the player can see.
+    if not AutoLoot.getFirstFreeUnlockedSlot() then
+        if modules.game_textmessage then
+            modules.game_textmessage.displayFailureMessage(
+                tr('All unlocked autoloot slots are full.')
+            )
+        end
+
+        return
+    end
+
+    AutoLoot.addSearchResult(itemData.serverId, itemData.clientId)
+end

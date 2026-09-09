@@ -11,8 +11,29 @@ function controllerNpcTrader:isLegacyMode()
     return self.legacyMode
 end
 
-function controllerNpcTrader:onInit()
+-- A shop that trades in something other than gold announces itself over this,
+-- right after the shop list: "<label>|<balance>". The goods packet only ever
+-- carries the player's gold (protocolgame.cpp, sendSaleItemList), so without
+-- this the window would price everything in "gold" and show the player's coin
+-- purse next to costs denominated in task points or hourly tokens.
+local SHOP_CURRENCY_OPCODE = 203
 
+local function onShopCurrency(protocol, code, buffer)
+    local label, balance = string.match(buffer, "^(.-)|(.*)$")
+    if not label then
+        return false
+    end
+
+    -- Only the legacy window reads this; the redesigned one still prices in
+    -- gold and is unreachable on this protocol anyway.
+    if controllerNpcTrader:isLegacyMode() and setShopCurrency then
+        setShopCurrency(label, tonumber(balance))
+    end
+    return true
+end
+
+function controllerNpcTrader:onInit()
+    ProtocolGame.registerExtendedOpcode(SHOP_CURRENCY_OPCODE, onShopCurrency)
 end
 
 function controllerNpcTrader:onGameStart()
@@ -85,6 +106,7 @@ function controllerNpcTrader:disconnectNpcTalkEvent()
 end
 
 function controllerNpcTrader:onTerminate()
+    ProtocolGame.unregisterExtendedOpcode(SHOP_CURRENCY_OPCODE, onShopCurrency)
     if self:isLegacyMode() then
         self:legacy_terminate()
     else

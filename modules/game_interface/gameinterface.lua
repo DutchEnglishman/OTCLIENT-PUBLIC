@@ -862,6 +862,15 @@ function createThingMenu(menuPosition, lookThing, useThing, creatureThing)
         end)
     end
 
+    -- Autoloot keys its list by SERVER item id and a Thing only carries a
+    -- client id, so the module answers canAutoloot for the items its catalog
+    -- can bridge -- the row is absent for the rest, never dead.
+    if lookThing and modules.game_autoloot and modules.game_autoloot.canAutoloot(lookThing) then
+        menu:addOption(modules.game_autoloot.getAutolootMenuLabel(lookThing), function()
+            modules.game_autoloot.toggleAutoloot(lookThing)
+        end)
+    end
+
     if not classic and not mobile then
         shortcut = '(Ctrl)'
     else

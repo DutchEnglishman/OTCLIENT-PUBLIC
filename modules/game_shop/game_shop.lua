@@ -229,9 +229,22 @@ function nextPage()
     historyPanel:getChildById("prevPageButton"):setVisible(currentPage > 1)
 end
 
+-- Selecting a category dims its button. The per-category background art sits
+-- over that button, so it has to be dimmed by the same amount or the row ends
+-- up half bright and half dark.
+local function setCategoryChecked(button, checked)
+    button:setChecked(checked)
+
+    local parent = button:getParent()
+    local background = parent and parent:getChildById("background")
+    if background then
+        background:setImageColor(checked and "#b0b0b0" or "#ffffff")
+    end
+end
+
 function deselect()
     if selected then
-        selected:getChildById("button"):setChecked(false)
+        setCategoryChecked(selected:getChildById("button"), false)
         local arrow = selected:getChildById("selectArrow")
         if arrow then
             arrow:hide()
@@ -258,8 +271,14 @@ end
 
 function onGameShopFetchOffers(data)
     offers[data.category] = data.offers
-    if not selected and data.category == "Premium Time" then
-        select(gameShopWindow:getChildById("categoriesList"):getChildren()[1]:getChildById("button"))
+    -- Opens whichever category is first in the sidebar. This used to test for
+    -- the literal name "Premium Time", so a server whose first category is
+    -- named anything else opened the window with nothing selected.
+    if not selected then
+        local first = gameShopWindow:getChildById("categoriesList"):getChildren()[1]
+        if first and first:getId() == data.category then
+            select(first:getChildById("button"))
+        end
     end
 end
 
@@ -278,6 +297,16 @@ function addCategory(data)
     category:setId(data.title)
     category:getChildById("button"):setIconClip(data.iconId * 13 .. " 0 13 13")
     category:getChildById("name"):setText(data.title)
+
+    -- Optional per-category art behind the label. Categories without one keep
+    -- the plain button, so this stays back-compatible with any server that
+    -- does not send the field.
+    local background = category:getChildById("background")
+    if background and data.background then
+        background:setImageSource("/game_shop/images/" .. data.background)
+        background:setImageSmooth(true)
+        background:show()
+    end
 end
 
 function onGameShopUpdatePoints(data)
@@ -309,7 +338,7 @@ function onGameShopUpdatePoints(data)
         transferWindow.taskPointsCoin:hide()
     end
 
-    transferWindow.coinsBalance:setText(tr("Transferable Tibia Coins: ") .. comma_value(premiumPoints))
+    transferWindow.coinsBalance:setText(tr("Transferable Premium Coins: ") .. comma_value(premiumPoints))
     transferWindow.coinsAmountScrollbar:setMaximum(premiumPoints)
 end
 
@@ -331,11 +360,11 @@ function select(self, ignoreSearch)
             selfParent:getChildById("expandArrow"):hide()
             select(panel:getChildren()[1]:getChildById("button"))
         else
-            self:setChecked(true)
+            setCategoryChecked(self, true)
         end
     else
         if selected then
-            selected:getChildById("button"):setChecked(false)
+            setCategoryChecked(selected:getChildById("button"), false)
 
             local arrow = selected:getChildById("selectArrow")
             if arrow then
@@ -345,7 +374,7 @@ function select(self, ignoreSearch)
 
         selected = selfParent
 
-        self:setChecked(true)
+        setCategoryChecked(self, true)
         selfParent:getChildById("selectArrow"):show()
     end
 

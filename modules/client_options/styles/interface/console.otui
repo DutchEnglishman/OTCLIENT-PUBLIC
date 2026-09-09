@@ -41,8 +41,8 @@ UIWidget
     height: 22
   
     OptionCheckBox
-      id: showOthersStatusMessagesInConsole
-      !text: tr('Show others status messages in console')
+      id: hideOthersServerLogMessages
+      !text: tr("Disable server log messages that don't involve me")
 
   SmallReversedQtPanel
     anchors.left: parent.left

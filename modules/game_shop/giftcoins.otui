@@ -3,7 +3,7 @@ GiftCoinsLabel < Label
 
 MainWindow
   id: transferWindow
-  !text: tr('Gift Tibia Coins')
+  !text: tr('Gift Premium Coins')
   size: 280 238
   color: #909090
   @onEscape: modules.game_shop.cancelGiftCoins()
@@ -17,7 +17,7 @@ MainWindow
     margin-top: 4
     text-wrap: true
     height: 56
-    text: Please select the amount of Tibia Coins you like to gift and enter the name of the character that should receive the Tibia Coins.
+    text: Please select the amount of Premium Coins you like to gift and enter the name of the character that should receive the Premium Coins.
 
   GiftCoinsLabel
     anchors.top: prev.bottom
@@ -39,7 +39,7 @@ MainWindow
     margin-top: 10
     text-align: left
     text-horizontal-auto-resize: true
-    text: Transferable Tibia Coins:
+    text: Transferable Premium Coins:
 
   UIWidget
     anchors.left: prev.right

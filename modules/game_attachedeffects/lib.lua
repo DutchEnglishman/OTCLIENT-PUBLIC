@@ -196,6 +196,12 @@ AttachedEffectManager = {
         executeConfig(effect, AttachedEffectManager.getConfig(effect:getId(), category, thingId))
     end,
     getDataThing = function(thing)
+        -- A Tile is attachable too (floor rarity shine) but is not a Thing,
+        -- so it has none of the predicates below.
+        if not thing.isCreature then
+            return ThingInvalidCategory, 0
+        end
+
         if thing:isCreature() then
             return ThingCategoryCreature, thing:getOutfit().type
         end

@@ -73,6 +73,18 @@ local ENABLE_SERVERS = true
 -- without deleting or commenting out individual entries.
 --
 
+---
+-- The world's name, as shown in the login screen's Server dropdown.
+--
+-- One name per edition we launch, so this is the single line that changes when
+-- a new world opens. Nothing else should spell it out: read WORLD_NAME rather
+-- than repeating the string, or the next edition ships under two names.
+--
+-- The server keeps its own copy in config.lua (serverName), which is what the
+-- character list's World column shows and what the status protocol advertises.
+-- The two are not wired together, so a new edition has to change both.
+WORLD_NAME = "Shattered Realm"
+
 Servers_init = {}
 
 if ENABLE_SERVERS then
@@ -82,38 +94,25 @@ if ENABLE_SERVERS then
     -- Each entry defines port, protocol, and authentication options.
     -- @table Servers_init
     --
+    -- The login screen's "Server" dropdown is exactly this table
+    -- (client_entergame/entergame.lua): one row per entry, shown by `name`,
+    -- keyed by the host it connects to. There is no host, port or client
+    -- version field on the screen any more, so an entry here is the only
+    -- way to reach a server.
+    -- @table Servers_init
+    -- @field name Text shown in the dropdown; WORLD_NAME above, not a literal
+    -- @field port TCP port of the login server
+    -- @field protocol Client version to speak
+    -- @field httpLogin Whether the login goes over HTTP instead of the game protocol
+    -- @field useAuthenticator Whether the server asks for a two-factor token
+    --
     Servers_init = {
-
-        -- Local login server
-        ---
-        -- Configuration for local login server.
-        -- @class table
-        -- @name local_login
-        -- @field port Port used for HTTP connection
-        -- @field protocol Protocol identifier used by the application
-        -- @field httpLogin Enables HTTP-based login on the server
-        -- @field useAuthenticator Enables additional authentication layer
-        --
-        ["http://127.0.0.1/login.php"] = {
-            port = 80,
-            protocol = 1511,
-            httpLogin = true,
-            useAuthenticator = false
-        },
-
-        -- External server
-        ---
-        -- Configuration for external server ip.net.
-        -- @class table
-        -- @name ip_net
-        -- @field port TCP port used for connection
-        -- @field protocol Protocol identifier used by the server
-        -- @field httpLogin Indicates if the server allows HTTP login
-        --
-        ["ip.net"] = {
+        ["95.216.205.57"] = {
+            name = WORLD_NAME,
             port = 7171,
             protocol = 860,
-            httpLogin = false
+            httpLogin = false,
+            useAuthenticator = false
         }
     }
 end

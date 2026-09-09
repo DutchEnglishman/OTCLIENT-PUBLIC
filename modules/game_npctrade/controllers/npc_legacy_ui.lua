@@ -1,7 +1,16 @@
 local BUY = 1
 local SELL = 2
-local CURRENCY = 'gold'
-local CURRENCY_DECIMAL = false
+local DEFAULT_CURRENCY = 'gold'
+local DEFAULT_CURRENCY_DECIMAL = false
+local CURRENCY = DEFAULT_CURRENCY
+local CURRENCY_DECIMAL = DEFAULT_CURRENCY_DECIMAL
+
+-- Set by a shop that trades in something other than gold (see
+-- setShopCurrency). The goods packet only ever carries the player's gold
+-- (protocolgame.cpp, sendSaleItemList), so a shop charging task points or
+-- hourly tokens has to send its own balance or the window would show a
+-- number that has nothing to do with what it is about to spend.
+local shopBalance = nil
 local WEIGHT_UNIT = 'oz'
 local LAST_INVENTORY = 10
 
@@ -214,6 +223,33 @@ function setCurrency(currency, decimal)
     CURRENCY_DECIMAL = decimal
 end
 
+-- Called from the shop-currency extended opcode. `label` is what every price
+-- and the balance are denominated in; `balance` is how much of it the player
+-- holds, which the server has to tell us because the goods packet cannot.
+-- Passing no label puts the window back on gold.
+function setShopCurrency(label, balance)
+    if label and label ~= '' then
+        CURRENCY = label
+        CURRENCY_DECIMAL = false
+        shopBalance = tonumber(balance) or 0
+    else
+        CURRENCY = DEFAULT_CURRENCY
+        CURRENCY_DECIMAL = DEFAULT_CURRENCY_DECIMAL
+        shopBalance = nil
+    end
+
+    if not initialized then
+        return
+    end
+
+    -- Both, in this order, the same way onTradeTypeChange does it. The price
+    -- written into each tile is baked in by refreshTradeItems; refreshPlayerGoods
+    -- only re-evaluates what is enabled and redraws the balance, so on its own
+    -- the tiles would keep whatever currency they were built with.
+    refreshTradeItems()
+    refreshPlayerGoods()
+end
+
 function setShowWeight(state)
     showWeight = state
     weightDesc:setVisible(state)
@@ -284,11 +320,18 @@ function getSellQuantityLegacy(item)
     return math.max(0, playerItems[item:getId()] - removeAmount)
 end
 
+-- No money check here on purpose. The goods packet only ever carries the
+-- player's GOLD (protocolgame.cpp, sendSaleItemList), but an NPC's onBuy
+-- callback is free to charge something else entirely -- the Task Trader
+-- spends task points and the Hourly Trader spends hourly tokens. Gating on
+-- gold made those shops unusable: the button stayed dead and the quantity
+-- slider clamped to zero before the server was ever asked.
+--
+-- Affordability is settled by the NPC, which refuses and says why. Capacity
+-- is still checked here because that one the client does know.
 function canTradeItemLegacy(item)
     if getCurrentTradeType() == BUY then
-        return
-            (ignoreCapacity:isChecked() or (not ignoreCapacity:isChecked() and playerFreeCapacity >= item.weight)) and
-                playerMoney >= getItemPrice(item, true)
+        return ignoreCapacity:isChecked() or playerFreeCapacity >= item.weight
     else
         return getSellQuantityLegacy(item.ptr) > 0
     end
@@ -302,8 +345,11 @@ function refreshItem(item)
         if ignoreCapacity:isChecked() then
             capacityMaxCount = 65535
         end
-        local priceMaxCount = math.floor(playerMoney / getItemPrice(item, true))
-        local finalCount = math.max(0, math.min(getMaxAmount(), math.min(priceMaxCount, capacityMaxCount)))
+        -- Not clamped by gold, for the same reason canTradeItemLegacy does not
+        -- check it: the price may be in a currency the goods packet never
+        -- mentions. getMaxAmount() is the engine's own per-purchase ceiling
+        -- (100, matching the amount > 100 guard in Game::playerPurchaseItem).
+        local finalCount = math.max(0, math.min(getMaxAmount(), capacityMaxCount))
         quantityScroll:setMinimum(1)
         quantityScroll:setMaximum(finalCount)
     else
@@ -365,7 +411,7 @@ function refreshPlayerGoods()
 
     checkSellAllTooltip()
 
-    moneyLabel:setText(formatCurrency(playerMoney))
+    moneyLabel:setText(formatCurrency(shopBalance or playerMoney))
     capacityLabel:setText(string.format('%.2f', playerFreeCapacity) .. ' ' .. WEIGHT_UNIT)
 
     local currentTradeType = getCurrentTradeType()
@@ -402,6 +448,14 @@ function refreshPlayerGoods()
 end
 
 function onOpenNpcTrade(items)
+    -- Back to gold before anything is drawn. A shop trading in something else
+    -- announces it in the extended opcode it sends straight after this packet,
+    -- so without the reset the previous shop's label and balance would leak
+    -- into an ordinary gold merchant.
+    CURRENCY = DEFAULT_CURRENCY
+    CURRENCY_DECIMAL = DEFAULT_CURRENCY_DECIMAL
+    shopBalance = nil
+
     tradeItems[BUY] = {}
     tradeItems[SELL] = {}
 

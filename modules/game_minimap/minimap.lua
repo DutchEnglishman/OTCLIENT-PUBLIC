@@ -5,6 +5,10 @@ local otmm = true
 local oldPos = nil
 local fullscreenWidget
 local fullscreenControls
+-- Which floor the map is showing. Nothing draws it any more -- both the docked
+-- panel and the full map pick floors with a pair of arrow buttons -- so this
+-- is purely the 0..15 clamp upLayer/downLayer stop at, kept in step with the
+-- player's own floor by onPositionChange and by fullscreen().
 local virtualFloor = 7
 local currentDayTime = {
     h = 12,
@@ -17,21 +21,6 @@ local currentDayTime = {
 -- rose, reset -- was therefore dead while fullscreen. Go through here instead.
 local function minimapUi()
     return mapController.ui.minimapBorder.minimap or fullscreenWidget
-end
-
--- Updates the fullscreen overlay's layer strip while it exists. The docked
--- panel no longer has one -- its floor is driven by the two arrow buttons --
--- so there is nothing to refresh there.
-local function refreshVirtualFloors()
-    local panels = {}
-    if fullscreenControls and not fullscreenControls:isDestroyed() then
-        table.insert(panels, fullscreenControls.layersPanel)
-    end
-
-    for _, panel in ipairs(panels) do
-        panel.layersMark:setMarginTop(((virtualFloor + 1) * 4) - 3)
-        panel.automapLayers:setImageClip((virtualFloor * 14) .. ' 0 14 67')
-    end
 end
 
 local function onPositionChange()
@@ -56,7 +45,6 @@ local function onPositionChange()
 
     minimapWidget:setCrossPosition(pos)
     virtualFloor = pos.z
-    refreshVirtualFloors()
 end
 
 mapController = Controller:new()
@@ -234,16 +222,16 @@ function fullscreen()
         -- module's, so every one of these came back nil ("attempt to call
         -- global 'downLayer'"). The docked panel's copies work only because
         -- loadUI compiles their expressions inside the loading module.
-        fullscreenControls.layersPanel.layerUp.onClick = upLayer
-        fullscreenControls.layersPanel.layerDown.onClick = downLayer
+        fullscreenControls.floorUp.onClick = upLayer
+        fullscreenControls.floorDown.onClick = downLayer
         fullscreenControls.zoomIn.onClick = zoomIn
         fullscreenControls.zoomOut.onClick = zoomOut
 
         local player = g_game.getLocalPlayer()
         pos = player and player:getPosition() or nil
         if pos then
-            -- Keep the layer strip honest: it reads virtualFloor, and the map
-            -- has just jumped to the player's floor.
+            -- Keep the clamp honest: the map has just jumped to the player's
+            -- floor, so that is where the arrow buttons count from.
             virtualFloor = pos.z
         end
     end
@@ -251,7 +239,6 @@ function fullscreen()
     pos = pos or minimapWidget:getCameraPosition()
     minimapWidget:setZoom(zoom)
     minimapWidget:setCameraPosition(pos)
-    refreshVirtualFloors()
 end
 
 function upLayer()
@@ -261,7 +248,6 @@ function upLayer()
 
     minimapUi():floorUp(1)
     virtualFloor = virtualFloor - 1
-    refreshVirtualFloors()
 end
 
 function downLayer()
@@ -271,7 +257,6 @@ function downLayer()
 
     minimapUi():floorDown(1)
     virtualFloor = virtualFloor + 1
-    refreshVirtualFloors()
 end
 
 function onClickRoseButton(dir)
@@ -299,7 +284,6 @@ function resetMap()
     local player = g_game.getLocalPlayer()
     if player then
         virtualFloor = player:getPosition().z
-        refreshVirtualFloors()
     end
 end
 

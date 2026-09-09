@@ -1,0 +1,33 @@
+// A fixed 20x20 badge. Deliberately not inside a box layout: horizontalBox
+// resizes its children to the container, which stretched these and squeezed
+// them together. Positions are set with explicit anchors instead.
+BoostIcon < UIWidget
+  size: 20 20
+  fixed-size: true
+  focusable: false
+  phantom: false
+
+  // Countdown sits on the icon rather than under it, on a dark strip so the
+  // digits stay readable over whatever art is behind them.
+  UIWidget
+    id: timerBackground
+    height: 8
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    background-color: #000000B4
+    phantom: true
+
+    Label
+      id: timer
+      anchors.fill: parent
+      text-align: center
+      font: verdana-7px-rounded
+      color: #FFFFFF
+      phantom: true
+
+UIWidget
+  id: globalBoostsBar
+  size: 20 20
+  phantom: true
+  focusable: false

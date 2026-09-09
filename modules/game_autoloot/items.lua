@@ -5418,7 +5418,7 @@ AutoLoot.itemCatalog = {
     { serverId = 2459, clientId = 3353, name = 'iron helmet' },
     { serverId = 5474, clientId = 5473, name = 'iron maiden' },
     { serverId = 5475, clientId = 5474, name = 'iron maiden' },
-    { serverId = 5880, clientId = 5880, name = 'iron ore' },
+    { serverId = 5880, clientId = 5880, name = 'metal' },
     { serverId = 9084, clientId = 5025, name = 'iron pillar' },
     { serverId = 13069, clientId = 12105, name = 'iron token' },
     { serverId = 9207, clientId = 8291, name = 'iron wall' },

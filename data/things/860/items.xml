@@ -9288,7 +9288,7 @@
 		<attribute key="weight" value="10" />
 		<attribute key="showcount" value="0" />
 	</item>
-	<item id="5880" article="an" name="iron ore">
+	<item id="5880" article="a" name="metal">
 		<attribute key="weight" value="200" />
 		<attribute key="showcount" value="0" />
 	</item>

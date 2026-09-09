@@ -46,10 +46,18 @@ function UIMessageBox.display(title, message, buttons, onEnterCallback, onEscape
     messageBox.holder = messageBox:getChildById('holder')
 
     currentSizes.height = currentSizes.height + 22
-    for i = 1, #buttons do
+    -- Built back to front so the row still hangs off the right edge while
+    -- reading left to right: the LAST button is the one pinned to the parent,
+    -- and each earlier one is placed to the left of the one before it.
+    --
+    -- Forwards, the first button was pinned right and the rest ran leftwards
+    -- from it, so every caller's list came out reversed -- {Yes, No} drew as
+    -- "No Yes". Every call site in the client passes them in reading order, so
+    -- they were all backwards, not just the shop's purchase prompt.
+    for i = #buttons, 1, -1 do
         local button = messageBox:addButton(buttons[i].text, buttons[i].callback)
         button:addAnchor(AnchorTop, 'parent', AnchorTop)
-        if i == 1 then
+        if i == #buttons then
             button:addAnchor(AnchorRight, 'parent', AnchorRight)
             currentSizes.height = currentSizes.height + button:getHeight() + 22
         else
@@ -197,18 +205,29 @@ function UIMessageBox.displaySHOP(title, message, description, buttons, onEnterC
     messageBox.holder = messageBox:getChildById('holder')
 
     currentSizes.height = currentSizes.height + 22
-    for i = 1, #buttons do
+    -- Back to front, for the same reason as UIMessageBox.display above: the
+    -- row stays pinned to the right edge, but the caller's list now reads left
+    -- to right instead of being drawn reversed.
+    --
+    -- Position and emphasis are separate here. The highlight belongs to the
+    -- caller's FIRST button, which is the one it means as the primary action;
+    -- the anchor belongs to the LAST, which is the one that touches the edge.
+    -- Keying both off `i == 1` is what tied them together before.
+    for i = #buttons, 1, -1 do
         local button = messageBox:addButton(buttons[i].text, buttons[i].callback)
         button:addAnchor(AnchorTop, 'parent', AnchorTop)
-        if i == 1 then
+
+        if i == #buttons then
             button:addAnchor(AnchorRight, 'parent', AnchorRight)
             currentSizes.height = currentSizes.height + button:getHeight() + 22
-            button:setImageSource('/images/options/blue_large')
-            button:setImageClip("0 0 108 20")
         else
             button:addAnchor(AnchorRight, 'prev', AnchorLeft)
-
             button:setMarginRight(10)
+        end
+
+        if i == 1 then
+            button:setImageSource('/images/options/blue_large')
+            button:setImageClip("0 0 108 20")
         end
     end
 

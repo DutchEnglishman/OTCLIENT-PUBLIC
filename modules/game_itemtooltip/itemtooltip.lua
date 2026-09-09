@@ -24,9 +24,10 @@ local SECTION_COLORS = {
     N = '#FFFFFF', -- name (recoloured by rarity)
     R = '#FFFFFF', -- rarity (recoloured by rarity)
     L = '#A2E2C2', -- item level
-    S = '#FFBB22', -- item stats
+    S = '#FFBB22', -- item stats, read across (weapons)
+    B = '#FFBB22', -- item stats, one pair per line (everything else)
     P = '#7FD4FF', -- what the sockets add up to
-    F = '#E257E3', -- refine rolls
+    F = '#5FD35F', -- refine rolls
     A = '#2266FF', -- attributes
 }
 
@@ -45,7 +46,7 @@ local RARITY_COLORS = {
 -- underneath it with no rule breaking them up.
 local SECTION_GROUPS = {
     { 'R', 'L' },
-    { 'S' },
+    { 'S', 'B' },
     { 'K' },
     { 'P' },
     { 'A' },
@@ -103,8 +104,8 @@ local SOCKET_STYLES = {
     ['T'] = 'ItemTooltipSocketMinorPhysical',   -- Minor Physical %
     ['U'] = 'ItemTooltipSocketMajorPhysical',   -- Major Physical %
     ['V'] = 'ItemTooltipSocketGreater',         -- Greater Gem (two rolled powers)
-    ['W'] = 'ItemTooltipSocketMinorYellow',     -- Minor Holy
-    ['X'] = 'ItemTooltipSocketMajorYellow',     -- Major Holy
+    ['W'] = 'ItemTooltipSocketMinorYellow',     -- Minor Holy Damage
+    ['X'] = 'ItemTooltipSocketMajorYellow',     -- Major Holy Damage
 }
 local SOCKET_STYLE_EMPTY = 'ItemTooltipSocket'
 local SOCKET_WIDTH = 12
@@ -120,11 +121,26 @@ local SOCKET_ROW_GAP = 3
 -- centred block: names on its left edge, values on its right, so the numbers --
 -- and the % after them -- line up down the whole tooltip.
 --
--- S is deliberately absent: the base stats arrive as one comma-joined summary
--- line ("Atk: 47, Ice: 13, Def: 48"), which holds several colons and would be
--- torn apart at the wrong one. R and L are out because they sit with the name
--- as the item's identity rather than as a table.
-local TWO_COLUMN_TAGS = { F = true, A = true, P = true }
+-- B is the base stats of a non-weapon, one "Physical Prot: 5%" per line, and
+-- shares this block so its values sit in the same column as the rolls under
+-- them. S is deliberately absent: a weapon's base stats arrive as one
+-- bar-joined summary line ("Atk: 47 | Ice: 13 | Def: 48"), which holds several
+-- colons and would be torn apart at the wrong one; it gets its own grid below.
+-- R and L are out because they sit with the name as the item's identity
+-- rather than as a table.
+local TWO_COLUMN_TAGS = { F = true, A = true, P = true, B = true }
+
+-- The base stats are a grid, not a sentence. The server joins them with " | "
+-- (data/tooltip/tooltip_core.lua, extractStats); here they are split back into
+-- cells, wrapped STATS_PER_ROW to a row, and every column is made as wide as
+-- its widest cell across ALL rows -- so the bars between the columns stand in
+-- one line down the block instead of drifting with each row's text. An item
+-- with seven resistances used to be one line wider than everything else in
+-- the tooltip put together.
+local STATS_TAG = 'S'
+local STATS_PER_ROW = 3
+-- Air on each side of a bar.
+local STAT_DIVIDER_GAP = 4
 
 -- Space between the longest label and the value column, and the whole knob for
 -- how far apart the two sit. In the default font a space is 4px wide
@@ -325,6 +341,9 @@ local function rowHeight(row)
     if row.sockets then
         return SOCKET_HEIGHT + row.topGap
     end
+    if row.cells then
+        return row.cells[row.first].widget:getHeight()
+    end
 
     return (row.entry or row.label).widget:getHeight()
 end
@@ -347,6 +366,9 @@ local function renderTooltip(payload, item)
     -- both of them line up with either.
     local labelWidth = 0
     local valueWidth = 0
+    -- Widest cell seen in each stats column, across every stats row.
+    local statColumns = {}
+    local statDividerWidth = 0
 
     for _, group in ipairs(SECTION_GROUPS) do
         local groupRows = {}
@@ -377,6 +399,38 @@ local function renderTooltip(payload, item)
                             width = rowWidth,
                             topGap = first > 1 and SOCKET_ROW_GAP or 0,
                         }
+                    end
+                elseif tag == STATS_TAG then
+                    local cells = {}
+                    for cell in text:gmatch('[^|]+') do
+                        local trimmed = cell:match('^%s*(.-)%s*$')
+                        if trimmed ~= '' then
+                            cells[#cells + 1] = trimmed
+                        end
+                    end
+
+                    for first = 1, #cells, STATS_PER_ROW do
+                        local inRow = math.min(STATS_PER_ROW, #cells - first + 1)
+                        -- A short LAST row is centred under the full ones: a
+                        -- lone seventh stat sits in the middle column rather
+                        -- than hanging off the left edge. Only after a full row,
+                        -- so every column it skips already has a width.
+                        local offset = first > 1 and math.floor((STATS_PER_ROW - inRow) / 2) or 0
+                        local row = { cells = {}, dividers = {}, first = offset + 1, last = offset + inRow }
+                        for i = 1, inRow do
+                            local column = offset + i
+                            local entry = createOutlinedLabel(cells[first + i - 1], SECTION_COLORS[STATS_TAG])
+                            row.cells[column] = entry
+                            statColumns[column] = math.max(statColumns[column] or 0, entry.widget:getWidth())
+                            -- Bars only between two cells of THIS row; a
+                            -- centred orphan gets none.
+                            if i > 1 then
+                                local divider = createOutlinedLabel('|', SECTION_COLORS[STATS_TAG])
+                                row.dividers[column - 1] = divider
+                                statDividerWidth = math.max(statDividerWidth, divider.widget:getWidth())
+                            end
+                        end
+                        groupRows[#groupRows + 1] = row
                     end
                 else
                     local color = SECTION_COLORS[tag]
@@ -427,6 +481,18 @@ local function renderTooltip(payload, item)
     if labelWidth > 0 then
         tableWidth = labelWidth + COLUMN_GAP + valueWidth
         contentWidth = math.max(contentWidth, tableWidth)
+    end
+
+    -- Columns plus a bar and its air between each adjacent pair. Only the
+    -- widest row has every column; a shorter last row stops early but its
+    -- cells still sit on the same column edges.
+    local statTableWidth = 0
+    if #statColumns > 0 then
+        for _, width in ipairs(statColumns) do
+            statTableWidth = statTableWidth + width
+        end
+        statTableWidth = statTableWidth + (#statColumns - 1) * (STAT_DIVIDER_GAP * 2 + statDividerWidth)
+        contentWidth = math.max(contentWidth, statTableWidth)
     end
 
     -- Header: weight left, name between, sprite right.
@@ -482,25 +548,56 @@ local function renderTooltip(payload, item)
     -- from the right. Computed here because it needs the final contentWidth.
     local tableX = PADDING + math.floor((contentWidth - tableWidth) / 2)
 
-    -- The sprite overhangs the body by design (see the note above), which is
-    -- safe under the centred lines a weapon tooltip opens with -- but a
-    -- tooltip that goes straight from the name into the two-column pairs (a
-    -- Greater Gem's rolls) puts its right-aligned values directly beneath
-    -- the sprite. Rather than pushing the body down, the window grows a strip
-    -- on the RIGHT, sliding the sprite clear of the value column -- and only
-    -- by the exact horizontal overlap, so nothing gets airier than it must.
-    -- Tooltips whose centred lines already fill the sprite's span add zero.
+    -- The sprite overhangs the body by design (see the note above). Any row
+    -- that falls within the sprite's height AND reaches under it -- a stats
+    -- grid's right column on an amulet, a Greater Gem's right-aligned rolls --
+    -- would be drawn through it. Rather than pushing the body down, the
+    -- window grows a strip on the RIGHT, sliding the sprite clear, and only by
+    -- the largest horizontal overlap found, so nothing gets airier than it
+    -- must. Tooltips whose rows stop short of the sprite add zero.
+    --
+    -- Walks the rows with the same y bookkeeping the placing pass uses below,
+    -- so "within the sprite's height" means the same thing in both.
     local spriteStrip = 0
-    -- Keyed on the body STARTING with a pair row, not on a vertical-span walk:
-    -- equipment always opens with something centred (rarity, item level,
-    -- stats, sockets) before its pairs, and those tooltips read fine with the
-    -- overhang -- widening them too made everything airier for nothing. Only
-    -- the gem shape -- name, then straight into the rolls -- collides.
-    if sprite and tableWidth > 0 and rows[1] and rows[1].label then
-        do
-            local valueRight = tableX + tableWidth
-            local spriteLeft = contentWidth + PADDING * 2 - FRAME_INSET_X - SPRITE_SIZE
-            spriteStrip = math.max(0, valueRight + HEADER_GAP - spriteLeft)
+    if sprite then
+        local statX = PADDING + math.floor((contentWidth - statTableWidth) / 2)
+        local spriteLeft = contentWidth + PADDING * 2 - FRAME_INSET_X - SPRITE_SIZE
+        local spriteBottom = FRAME_INSET_Y + SPRITE_SIZE
+        local rowY = FRAME_INSET_Y + headerHeight
+        for _, row in ipairs(rows) do
+            if rowY >= spriteBottom then
+                break
+            end
+            local rightEdge = nil
+            if row.separator then
+                rowY = rowY + SEPARATOR_BLOCK
+            else
+                if row.sockets then
+                    rightEdge = PADDING + math.floor((contentWidth + row.width) / 2)
+                elseif row.cells then
+                    local x = statX
+                    for column = 1, row.last do
+                        if column > 1 then
+                            x = x + STAT_DIVIDER_GAP * 2 + statDividerWidth
+                        end
+                        x = x + statColumns[column]
+                    end
+                    rightEdge = x
+                elseif row.label then
+                    rightEdge = tableX + tableWidth
+                elseif row.flush then
+                    local width = row.entry.widget:getWidth()
+                    rightEdge = math.max(PADDING, math.min(tableX, PADDING + contentWidth - width)) + width
+                else
+                    -- Centred in the content width: its ink ends half its
+                    -- text width past the middle.
+                    rightEdge = PADDING + math.floor((contentWidth + row.entry.widget:getWidth()) / 2)
+                end
+                rowY = rowY + rowHeight(row)
+            end
+            if rightEdge then
+                spriteStrip = math.max(spriteStrip, rightEdge + HEADER_GAP - spriteLeft)
+            end
         end
     end
 
@@ -566,6 +663,25 @@ local function renderTooltip(payload, item)
                 socket:addAnchor(AnchorTop, 'parent', AnchorTop)
                 socket:setMarginLeft(x + (i - 1) * (SOCKET_WIDTH + SOCKET_GAP))
                 socket:setMarginTop(y + row.topGap)
+            end
+            y = y + rowHeight(row)
+        elseif row.cells then
+            -- Centred as one block; within it every cell starts on its
+            -- column's left edge, so the bars line up row over row. Columns
+            -- the row skips (a centred orphan) still advance x by their width.
+            local x = PADDING + math.floor((contentWidth - statTableWidth) / 2)
+            for column = 1, row.last do
+                if column > 1 then
+                    x = x + STAT_DIVIDER_GAP
+                    if row.dividers[column - 1] then
+                        placeOutlinedLabel(row.dividers[column - 1], x, y)
+                    end
+                    x = x + statDividerWidth + STAT_DIVIDER_GAP
+                end
+                if row.cells[column] then
+                    placeOutlinedLabel(row.cells[column], x, y)
+                end
+                x = x + statColumns[column]
             end
             y = y + rowHeight(row)
         elseif row.label then

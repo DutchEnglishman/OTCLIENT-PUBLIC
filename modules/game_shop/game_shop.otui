@@ -13,13 +13,30 @@ ShopCategory < FlatPanel
     icon-align: left
     icon-offset: 6 0
     @onClick: modules.game_shop.select(self)
+    # Selected category: the normal button graphic, dimmed. This used to clip
+    # "0 46 22 23" -- a TabButton-sized cell at y=46 of buttons.png, which is
+    # only 43x40, so it sampled past the end of the sheet and the selection
+    # came out as a garbled pattern.
     $checked:
-      image-clip: 0 46 22 23
-      text-offset: 1 1
-    
+      image-color: #b0b0b0
+
+  # Per-category background, named by the server in its category payload. Sits
+  # over the button so the art shows, under the label so the text stays
+  # readable, and phantom so the click still lands on the button beneath it.
+  # Left margin clears the 13px icon rather than painting over it.
+  UIWidget
+    id: background
+    anchors.fill: prev
+    margin-left: 20
+    margin-right: 1
+    margin-top: 1
+    margin-bottom: 1
+    phantom: true
+    visible: false
+
   Label
     id: name
-    anchors.fill: prev
+    anchors.fill: button
     text-offset: 24 0
     text-align: left
     color: #C0C0C0
@@ -58,9 +75,12 @@ ShopSubCategory < UIWidget
     icon-align: left
     icon-offset: 6 0
     @onClick: modules.game_shop.select(self)
+    # Selected category: the normal button graphic, dimmed. This used to clip
+    # "0 46 22 23" -- a TabButton-sized cell at y=46 of buttons.png, which is
+    # only 43x40, so it sampled past the end of the sheet and the selection
+    # came out as a garbled pattern.
     $checked:
-      image-clip: 0 46 22 23
-      text-offset: 1 1
+      image-color: #b0b0b0
     
   Label
     id: name

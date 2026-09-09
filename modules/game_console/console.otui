@@ -468,7 +468,12 @@ Panel
     margin-right: 5
     margin-left: 5
     margin-bottom: 3
-    shift-navigation: false
+    // Left and Right walk instead of moving the caret. With this off,
+    // UITextEdit::onKeyPress swallows both arrows (uitextedit.cpp) and the walk
+    // bindings on gameRootPanel, which sits further up the same propagation
+    // chain, never see them. Shift+Left and Shift+Right still move the caret,
+    // and so do Home and End, which are not gated on this flag.
+    shift-navigation: true
     max-length: 255
     height: 18
     placeholder:  "Type here to chat"

@@ -135,23 +135,9 @@ function init()
     onClose = onItemsChanged
   })
 
-  -- Fallback entry point until a crafting station (action id 38820, see
-  -- data/scripts/crafting/crafting_registration.lua on the server) is placed
-  -- on the map -- without it there would be no way to ever open this window.
-  -- Uses the Keybind system (like game_hotkeys' own Ctrl+K toggle and
-  -- game_tasksystem's Ctrl+Shift+K), not raw g_keyboard.bindKeyDown -- a
-  -- panel-scoped binding stops firing once this window holds keyboard focus.
-  Keybind.new("Windows", "Show/hide Crafting", "Ctrl+Shift+C", "")
-  Keybind.bind("Windows", "Show/hide Crafting", {
-    {
-      type = KEY_DOWN,
-      callback = toggleWindow,
-    }
-  })
-
-  -- "Crafting" topbar button removed by request -- the window itself still
-  -- works and is still reachable via its Ctrl+Shift+C keybind above (and via
-  -- a crafting station once one is placed on the map).
+  -- No keybind and no topbar button: the window opens only when the server
+  -- says so -- when the player uses an anvil (crafting_registration.lua on the
+  -- server) -- and the server closes it again when they walk away from it.
 
   if g_game.isOnline() then
     create()
@@ -176,8 +162,6 @@ function terminate()
     onUpdateItem = onItemsChanged,
     onClose = onItemsChanged
   })
-
-  Keybind.delete("Windows", "Show/hide Crafting")
 
   if craftingButton then
     craftingButton:destroy()
@@ -341,6 +325,8 @@ function onExtendedOpcode(protocol, code, buffer)
   elseif action == "show" then
     selectItem(selectedCraftId)
     show()
+  elseif action == "close" then
+    hide()
   elseif action == "refineInput" then
     -- Authoritative slot state. The drop handler fills the slot optimistically,
     -- so this is what clears it when the server refused the item, and when an
@@ -816,9 +802,8 @@ function show()
   window:raise()
   window:focus()
 
-  -- The Ctrl+Shift+C keybind opens the window without the server hearing about
-  -- it, so this is what makes an opened window show current counts rather than
-  -- the ones from login.
+  -- Resync on open, so the window shows current counts rather than the ones
+  -- from login.
   requestRefresh()
   startRefreshTicker()
 end
@@ -829,18 +814,6 @@ function hide()
   end
   window:hide()
   stopRefreshTicker()
-end
-
-function toggleWindow()
-  if not window then
-    return
-  end
-
-  if window:isVisible() then
-    hide()
-  else
-    show()
-  end
 end
 
 function comma_value(amount)
