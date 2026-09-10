@@ -11,7 +11,7 @@ Panels.TradeMessage = function(parent)
       context.sayChannel(trade, context.storage.autoTradeMessage)
     end
   end, parent)
-  context.addTextEdit("autoTradeMessage", context.storage.autoTradeMessage or "I'm using OTClient Redemption - https://github.com/mehah/otclient", function(widget, text)
+  context.addTextEdit("autoTradeMessage", context.storage.autoTradeMessage or "I'm using OTClient Shattered Realms - https://github.com/mehah/otclient", function(widget, text)
     context.storage.autoTradeMessage = text
   end, parent)
 end

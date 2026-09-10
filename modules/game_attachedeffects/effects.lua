@@ -443,3 +443,35 @@ for r, rarity in ipairs({ 'rare', 'epic', 'legendary' }) do
             })
     end
 end
+
+-- The viscount statues' eyes, held on the statue's own tile while it is lit
+-- (data/scripts/viscounts/viscounts_statues.lua, extended opcode 73). Two
+-- textures because the circle uses two sprites: server 9239 faces one way and
+-- 9240 the other, and their faces are nowhere near the same place. The glow is
+-- baked into a 64x64 canvas -- the size of the statues' own 2x2 sprite -- at
+-- the eye pixels, which is why both can use the plain 2x2 tile offset below
+-- and nothing has to be worked out per statue at run time.
+--
+-- TO MOVE THE EYES: tools/effect-generators/make_statue_eyes.ps1 holds a pupil
+-- pair per statue and rebuilds both textures. Canvas pixel (x, y) is sprite
+-- pixel (x, y): neither statue has a dat displacement, an item is drawn at
+-- dest - displacement - 32 (ThingType::draw) and this texture at dest - offset
+-- (AttachedEffect::draw), so with offset 32 the two frames coincide. Checked
+-- by matching the sprite into an in-game screenshot at the client's 2.25
+-- scale: the glow landed within half a pixel of where the canvas said. The
+-- sockets were read off the sprite with a gamma lift, not off screenshots.
+-- 9240 faces east, so its pair is vertical.
+--
+-- fade breathes it rather than an animated texture: one still frame and the
+-- client does the pulsing, which is why there is no APNG here.
+-- light 180 is pure red: Color::from8bit multiplies out to r 255, g 0, b 0.
+AttachedEffectManager.register(285, 'Statue eyes A', '/images/game/effects/statue_eyes_a', ThingExternalTexture, {
+    offset = { 32, 32, true },
+    fade = { 45, 100, 700 },
+    light = { color = 180, intensity = 2 }
+})
+AttachedEffectManager.register(286, 'Statue eyes B', '/images/game/effects/statue_eyes_b', ThingExternalTexture, {
+    offset = { 32, 32, true },
+    fade = { 45, 100, 700 },
+    light = { color = 180, intensity = 2 }
+})

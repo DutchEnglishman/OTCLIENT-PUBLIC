@@ -1280,6 +1280,121 @@ TrackerButton < Panel
     margin-top: 3
 
 
+// The Bestiary Tracker's own row. TrackerButton above stays as it is because
+// the Bosstiary Tracker still uses it, and that is the only path which renders
+// the three fixed 54px stage bars -- Cyclopedia.refreshTracker returns early
+// unless isBoss. Those three bars are what forced the 16px sprite: they sit
+// under the creature and three of them already span the miniwindow's width,
+// leaving nothing beside the sprite and no room under it.
+//
+// This server's bestiary has four incremental stages rather than Tibia's three
+// thresholds, so its row shows a single full-width bar instead. That frees the
+// whole left edge, so the creature can be a real tile: 48px, half the 96px the
+// Bestiary tab itself draws (bestiary.otui), with the name, the kill count and
+// the bar stacked in the column beside it.
+BestiaryTrackerEntry < Panel
+  height: 52
+  margin-bottom: 5
+  phantom: false
+  border-width: 1
+  border-color: alpha
+  padding: 1
+
+  $hover:
+    border-color: white
+
+  UICreature
+    id: creature
+    size: 48 48
+    anchors.left: parent.left
+    anchors.verticalCenter: parent.verticalCenter
+    phantom: true
+
+  UIWidget
+    id: spacer
+    width: 5
+    anchors.left: creature.right
+    anchors.top: creature.top
+
+  Label
+    id: label
+    anchors.left: spacer.right
+    anchors.top: creature.top
+    margin-top: 6
+    margin-left: 2
+    text-auto-resize: true
+    color: #888888
+
+  Label
+    id: kills
+    anchors.left: spacer.right
+    anchors.top: label.bottom
+    margin-top: 2
+    margin-left: 2
+    text-align: left
+    text-auto-resize: true
+    color: #888888
+
+  // Stage stars, on the bar's line at the right edge -- the one place in the
+  // row with space to spare. They cannot share the count's line: the count
+  // reaches 11 characters ("1999 / 2000", ~72px) and four stars are 36, which
+  // together overrun the ~98px column. Here they take 36 and leave the bar 58,
+  // which still reads fine.
+  //
+  // Grey base with a gold layer clipped over it, the same two-widget idiom and
+  // the same 9px-wide art the Bestiary tab's own star row uses
+  // (bestiary.otui StarBase/StarFill, Cyclopedia.SetBestiaryStars). Both
+  // widths are set from the feed's totalStages rather than fixed at four, so
+  // changing a tier's stage list in task_system_config.lua needs nothing here.
+  //
+  // Declared before killsBar, and anchored to kills rather than to the bar,
+  // because the bar's right edge anchors to starBase -- pointing the two at
+  // each other would be a circular anchor. margin-top 2 centres a 10px star on
+  // the 8px bar that starts 3px below kills.
+  UIWidget
+    id: starBase
+    anchors.right: parent.right
+    anchors.top: kills.bottom
+    margin-top: 2
+    height: 10
+    width: 36
+    image-source: /game_cyclopedia/images/boss/icon_star_inactive
+    image-repeated: true
+    phantom: true
+
+  UIWidget
+    id: starFill
+    anchors.left: starBase.left
+    anchors.top: starBase.top
+    height: 10
+    width: 0
+    image-source: /game_cyclopedia/images/boss/icon_star_gold
+    image-repeated: true
+    phantom: true
+
+  LifeProgressBar
+    id: killsBar
+    height: 8
+    anchors.left: spacer.right
+    anchors.right: starBase.left
+    anchors.top: kills.bottom
+    margin-top: 3
+    margin-left: 2
+    margin-right: 4
+    phantom: true
+
+
+// A rule between tracker rows. Its own style rather than a bottom border on
+// the row, for two reasons: the row's border is transparent until $hover turns
+// all four sides white, and the last of the five rows would carry a trailing
+// line. A separate widget is placed only between rows.
+//
+// margin-bottom matches BestiaryTrackerEntry's own, so the gap reads the same
+// above the rule as below it.
+BestiaryTrackerSeparator < HorizontalSeparator
+  margin-bottom: 5
+
+
 BestiaryTracker < MiniWindow
   id: BestiaryTracker
   @onClose: modules.game_cyclopedia.Cyclopedia.onTrackerClose(self:getText())

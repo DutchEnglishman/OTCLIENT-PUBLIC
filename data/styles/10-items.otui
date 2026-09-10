@@ -20,24 +20,23 @@ Item < UIItem
     phantom: true
     focusable: false
     visible: false
-    image-smooth: true
 
   // Shown by game_protect on an item the player has locked. Declared here
   // rather than built at runtime so it follows the same path as the tier badge
   // above -- every Item widget gets one, hidden, and the module only ever flips
-  // visible. Bottom left is the free corner: the stack count sits bottom right.
+  // visible. Top right, the same corner as the tier badge: the stack count
+  // sits bottom right, and at 8x10 the lock is small enough to share.
   UIWidget
     id: protectIcon
-    size: 8 12
-    image-source: /images/game/actionbar/locked
-    anchors.left: parent.left
-    anchors.bottom: parent.bottom
-    margin-left: 1
-    margin-bottom: 1
+    size: 8 10
+    image-source: /game_protect/images/lock
+    anchors.top: parent.top
+    anchors.right: parent.right
+    margin-top: 1
+    margin-right: 1
     phantom: true
     focusable: false
     visible: false
-    image-smooth: true
 
 MainInventoryItem < UIWidget
   image-source: /images/inventory/containerslot
@@ -51,16 +50,15 @@ MainInventoryItem < UIWidget
   // UIWidget, not a UIItem, so it does not inherit that style's children.
   UIWidget
     id: protectIcon
-    size: 8 12
-    image-source: /images/game/actionbar/locked
-    anchors.left: parent.left
-    anchors.bottom: parent.bottom
-    margin-left: 1
-    margin-bottom: 1
+    size: 8 10
+    image-source: /game_protect/images/lock
+    anchors.top: parent.top
+    anchors.right: parent.right
+    margin-top: 1
+    margin-right: 1
     phantom: true
     focusable: false
     visible: false
-    image-smooth: true
 
   UIWidget
     id: backpack

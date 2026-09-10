@@ -832,10 +832,18 @@ function Cyclopedia.refreshBestiaryTracker()
     local panel = trackerMiniWindow.contentsPanel
     panel:destroyChildren()
 
-    for _, entry in ipairs(Cyclopedia.getRecentKills()) do
+    for i, entry in ipairs(Cyclopedia.getRecentKills()) do
         local raceId, race = Cyclopedia.findRaceByName(entry.name)
 
-        local widget = g_ui.createWidget("TrackerButton", panel)
+        -- Between rows only, so no rule above the first or below the last. The
+        -- panel is a verticalBox, so the separator just takes its turn in the
+        -- flow; every iteration below creates a row, so "not the first" is the
+        -- same test as "there is a row above this one".
+        if i > 1 then
+            g_ui.createWidget("BestiaryTrackerSeparator", panel)
+        end
+
+        local widget = g_ui.createWidget("BestiaryTrackerEntry", panel)
         widget:setId(raceId or 0)
         widget.trackerType = 0
 
@@ -848,24 +856,42 @@ function Cyclopedia.refreshBestiaryTracker()
             widget.creature:getCreature():setStaticWalking(0)
         end
 
-        local killsText = string.format("%d / %d", entry.current, entry.goal)
+        -- Every stage cleared. The wire cannot say so with stageIndex alone:
+        -- sendRecentKills clamps it to totalStages (task_system_core.lua), so a
+        -- finished monster and one still on its last stage both arrive as
+        -- totalStages. goal is what separates them -- getTaskProgress fills
+        -- current/goal only for a stage still in progress, and no tier has a
+        -- stage amount of 0, so goal == 0 means finished and nothing else.
+        local allStagesDone = (entry.goal or 0) == 0
+
+        local killsText = allStagesDone and "Complete" or
+                              string.format("%d / %d", entry.current, entry.goal)
         widget.kills:setText(killsText)
-        widget.label:setTextOverflowLength(math.max(11, 18 - string.len(killsText)))
+        -- The count sits on its own line under the name now, so the name gets
+        -- the whole column instead of whatever the count left of one line --
+        -- 11 characters before, 15 now. The column is about 100px wide beside a
+        -- 48px tile, measured at the narrower width the row has once the
+        -- miniwindow shows its scrollbar (184 panel - 3 - 1 margins - 15
+        -- scrollbar - 10 padding = 155), and verdana-11px averages a touch
+        -- under 7px a character, so 15 keeps a caps-heavy name off the edge.
+        widget.label:setTextOverflowLength(15)
         widget.label:setText(race and race.name or titleCaseMonsterName(entry.name))
 
-        -- One bar for the stage in progress -- the three-segment layout the
-        -- widget ships with maps to real Tibia's 3 thresholds, which doesn't
-        -- line up with this server's 4 incremental stages.
-        widget.ProgressBorder1:setVisible(false)
-        widget.ProgressBorder2:setVisible(false)
-        widget.ProgressBorder3:setVisible(false)
-        widget.killsBar2:setVisible(false)
-        widget.ProgressBack33:setVisible(false)
-        widget.ProgressBack55:setVisible(false)
-
-        local percent = entry.goal > 0 and math.min(100, math.floor(entry.current / entry.goal * 100)) or 0
+        -- 100 rather than 0 when finished: the old expression fell to 0 for a
+        -- goal of 0, which drew an empty bar beside a full row of gold stars.
+        local percent = allStagesDone and 100 or
+                            math.min(100, math.floor(entry.current / entry.goal * 100))
         widget.killsBar:setVisible(true)
         Cyclopedia.setBarPercent(widget, percent)
+
+        -- One star per stage in this monster's tier, gold for the stages
+        -- already behind it. stageIndex is the stage IN PROGRESS, so the number
+        -- finished is one less than it.
+        local totalStages = entry.totalStages or 0
+        local stagesDone = allStagesDone and totalStages or
+                               math.max(0, (entry.stageIndex or 1) - 1)
+        widget.starBase:setWidth(totalStages * 9)
+        widget.starFill:setWidth(math.min(stagesDone, totalStages) * 9)
 
         if raceId then
             bindTrackerWidgetClicks(widget.creature, widget)
