@@ -303,7 +303,7 @@ function Cyclopedia.setActiveSlot(widget, slot, slotData, data, bossId)
         widget.ActivedBoss.Value:setColor("#D33C3C")
         widget.ActivedBoss.RemoveButton:setEnabled(false)
     else
-        widget.ActivedBoss.Value:setColor("#C0C0C0")
+        widget.ActivedBoss.Value:setColor(g_ui.getVariable('textColor'))
         widget.ActivedBoss.RemoveButton:setEnabled(true)
     end
 

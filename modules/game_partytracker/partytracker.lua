@@ -21,7 +21,7 @@ PARTY_TRACKER_OPCODE = 67
 -- purpose: a black name on the minimap's dark ground is unreadable, and it is
 -- the marker that has to be identifiable at a glance, not the text.
 local VOCATION_COLOR = {
-    [0] = '#c0c0c0', -- None
+    [0] = g_ui.getVariable('textColor'), -- None
     [1] = '#e03030', -- Sorcerer
     [2] = '#3a7fe0', -- Druid
     [3] = '#2fa84f', -- Paladin

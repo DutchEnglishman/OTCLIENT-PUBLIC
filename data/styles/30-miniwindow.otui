@@ -62,7 +62,7 @@ MiniWindow < UIMiniWindow
     height: 1
     margin-left: 3
     margin-right: 3
-    background-color: #2a2a2a
+    background-color: $separatorColor
     phantom: true
 
   UIWidget
@@ -357,7 +357,7 @@ FloatingInputWindow < UIWindow
   font: verdana-11px-antialised
   size: 200 200
   opacity: 1
-  color: #dfdfdf
+  color: $textBright
   text-offset: 0 6
   text-align: top
   image-source:   /images/ui/window_new
@@ -370,7 +370,7 @@ FloatingInputWindow < UIWindow
   visible: false
 
   $disabled:
-    color: #dfdfdf88
+    color: $textDisabled
 
   $dragging:
     opacity: 0.8

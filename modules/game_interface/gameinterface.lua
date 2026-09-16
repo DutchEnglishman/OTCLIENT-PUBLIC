@@ -853,13 +853,27 @@ function createThingMenu(menuPosition, lookThing, useThing, creatureThing)
         end
     end
 
-    -- Server-side lock: a protected item is invisible to shop NPCs, cannot be
-    -- taken by a script, and survives water, dustbins and lava. Moving it around
-    -- is deliberately still allowed.
-    if lookThing and lookThing:isItem() and modules.game_protect then
-        menu:addOption(modules.game_protect.getMenuLabel(lookThing), function()
-            modules.game_protect.toggle(lookThing)
-        end)
+    if not classic and not mobile then
+        shortcut = '(Ctrl)'
+    else
+        shortcut = nil
+    end
+
+    -- Open sits directly under Look: opening is what a right-click on a bag is
+    -- almost always for, so the item-management rows go below it.
+    if useThing and useThing:isContainer() then
+        if useThing:getParentContainer() then
+            menu:addOption(tr('Open'), function()
+                g_game.open(useThing, useThing:getParentContainer())
+            end, shortcut)
+            menu:addOption(tr('Open in new window'), function()
+                g_game.open(useThing)
+            end)
+        else
+            menu:addOption(tr('Open'), function()
+                g_game.open(useThing)
+            end, shortcut)
+        end
     end
 
     -- Autoloot keys its list by SERVER item id and a Thing only carries a
@@ -871,26 +885,26 @@ function createThingMenu(menuPosition, lookThing, useThing, creatureThing)
         end)
     end
 
-    if not classic and not mobile then
-        shortcut = '(Ctrl)'
-    else
-        shortcut = nil
+    -- Sends the bag to the server, which walks it -- including bags inside it --
+    -- and moves every stackable into the stackable depot. Only offered on a
+    -- container, and the server still refuses it unless you are beside the box.
+    if lookThing and modules.game_stackabledepot and modules.game_stackabledepot.canStow(lookThing) then
+        menu:addOption(tr("Stash Stackables"), function()
+            modules.game_stackabledepot.stow(lookThing)
+        end)
     end
+
+    -- Server-side lock: a protected item is invisible to shop NPCs, cannot be
+    -- taken by a script, and survives water, dustbins and lava. Moving it around
+    -- is deliberately still allowed.
+    if lookThing and lookThing:isItem() and modules.game_protect then
+        menu:addOption(modules.game_protect.getMenuLabel(lookThing), function()
+            modules.game_protect.toggle(lookThing)
+        end)
+    end
+
     if useThing then
-        if useThing:isContainer() then
-            if useThing:getParentContainer() then
-                menu:addOption(tr('Open'), function()
-                    g_game.open(useThing, useThing:getParentContainer())
-                end, shortcut)
-                menu:addOption(tr('Open in new window'), function()
-                    g_game.open(useThing)
-                end)
-            else
-                menu:addOption(tr('Open'), function()
-                    g_game.open(useThing)
-                end, shortcut)
-            end
-        else
+        if not useThing:isContainer() then
             if useThing:isMultiUse() then
                 menu:addOption(tr('Use with ...'), function()
                     startUseWith(useThing)

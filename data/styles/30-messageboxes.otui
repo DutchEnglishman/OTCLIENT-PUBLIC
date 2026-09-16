@@ -1,26 +1,39 @@
+// Every general, info, error and cancel box in the client is this widget, so it wears the
+// 6px carved moulding (see NewWindow in 10-windows.otui for the number set: 6 + 2 = border
+// 8, + a 17-row band = image-border-top 25). The 10px one is not an option here -- the box
+// starts at 246x116 and the full frame's 27-row band alone would take a quarter of it.
+//
+// This box has NO padding and never has: every child anchors to the full rect and places
+// itself by margin, and UIMessageBox.display measures the height in Lua from those same
+// margins. So the frame is paid for twice, in the same two places -- each margin that used
+// to clear a 16-row band now clears a 25-row one, and uimessagebox.lua adds the 17px the
+// box did not have to find before (9 at the top, 8 for the bottom moulding).
 MessageBoxWindow < UIMessageBox
   icon-rect: 4 4 16 16
-  size: 246 116
-  image-source: /images/ui/window
-  image-border: 4
-  image-border-top: 16
-  image-border-bottom: 4
+  size: 246 133
+  image-source: /images/ui/window_carved_slim
+  image-border: 8
+  image-border-top: 25
+  image-border-bottom: 8
   &minimizedHeight: 17
   anchors.centerIn: parent
   draggable: false
 
+  // Same 8 as the default: a thinner bottom slice would cut the moulding in half and the
+  // remainder would tile up the body. Kept rather than dropped because `on` reaches this
+  // widget through UIMiniWindow, which no message box uses today but still inherits.
   $on:
-    image-border-bottom: 2
+    image-border-bottom: 8
 
   UIWidget
     id: miniwindowTopBar
     anchors.top: parent.top
     anchors.right: parent.right
     anchors.left: parent.left
-    margin-right: 3
-    margin-left: 3
-    margin-top: 2
-    height: 18
+    margin-right: 8
+    margin-left: 8
+    margin-top: 8
+    height: 17
     phantom: true
 
   Label
@@ -33,7 +46,7 @@ MessageBoxWindow < UIMessageBox
     anchors.left: parent.left
     anchors.right: parent.right
     opacity: 0.5
-    margin-top: 3
+    margin-top: 9
 
   Label
     id: content
@@ -42,9 +55,9 @@ MessageBoxWindow < UIMessageBox
     text-wrap: true
     text-auto-resize: true
     overflow-wrap: anywhere
-    color: #c0c0c0ff
+    color: $textColor
     margin-left: 15
-    margin-top: 32
+    margin-top: 41
 
   HorizontalSeparator
     id: messageBoxSeparator
@@ -62,30 +75,34 @@ MessageBoxWindow < UIMessageBox
     anchors.top: prev.bottom
     anchors.bottom: parent.bottom
     margin-top: 12
+    margin-bottom: 8
 
+// The store's purchase prompt. Same frame and the same two-places rule as the box above;
+// its height is fixed at one figure in UIMessageBox.displaySHOP rather than measured, so
+// that figure carries the 17px instead.
 MessageBoxShopWindow < UIMessageBox
   icon-rect: 4 4 16 16
-  size: 246 116
-  image-source: /images/ui/window_new
-  image-border: 4
-  image-border-top: 16
-  image-border-bottom: 4
+  size: 246 133
+  image-source: /images/ui/window_carved_slim
+  image-border: 8
+  image-border-top: 25
+  image-border-bottom: 8
   &minimizedHeight: 17
   anchors.centerIn: parent
   draggable: false
 
   $on:
-    image-border-bottom: 2
+    image-border-bottom: 8
 
   UIWidget
     id: miniwindowTopBar
     anchors.top: parent.top
     anchors.right: parent.right
     anchors.left: parent.left
-    margin-right: 3
-    margin-left: 3
-    margin-top: 2
-    height: 18
+    margin-right: 8
+    margin-left: 8
+    margin-top: 8
+    height: 17
     phantom: true
 
   Label
@@ -99,6 +116,7 @@ MessageBoxShopWindow < UIMessageBox
     anchors.right: parent.right
     text-vertical-auto-resize: true
     opacity: 0.5
+    margin-top: 9
     margin-right: 10
   Label
     id: content
@@ -107,9 +125,9 @@ MessageBoxShopWindow < UIMessageBox
     text-wrap: true
     text-auto-resize: true
     overflow-wrap: anywhere
-    color: #c0c0c0ff
+    color: $textColor
     margin-left: 15
-    margin-top: 32
+    margin-top: 41
 
   UIWidget
 
@@ -149,3 +167,4 @@ MessageBoxShopWindow < UIMessageBox
     anchors.bottom: parent.bottom
     margin-top: 12
     margin-right: 10
+    margin-bottom: 8

@@ -236,13 +236,13 @@ function getConvictionBonusTooltip(index)
 			  else
 				  setStringColor(t, "�", "white")
 			  end
-			  setStringColor(t, " Enables the casting of support spells while active and Focus secondary group cooldown -8s\n", "#707070")
+			  setStringColor(t, " Enables the casting of support spells while active and Focus secondary group cooldown -8s\n", g_ui.getVariable('textMuted'))
 			if not secondSpellIsUnlocked(attribute) then
 				setStringColor(t, "�", "white")
 			else
 				setStringColor(t, "�", "white")
 			end
-			setStringColor(t, " -6s Cooldown; distance skill bonus increased by +5%", "#707070")
+			setStringColor(t, " -6s Cooldown; distance skill bonus increased by +5%", g_ui.getVariable('textMuted'))
 			return t
 		end
 	end
@@ -300,411 +300,411 @@ function getConvictionBonus(index, fullMessage)
 	elseif bonus.conviction == "spell_1" then
 		if vocation == KNIGHT then
 			local t = {}
-			setStringColor(t, "Augmented Front Sweep\n", (points >= bonus.maxPoints and "#C0C0C0" or "#707070"))
+			setStringColor(t, "Augmented Front Sweep\n", (points >= bonus.maxPoints and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			if not firstSpellIsUnlocked(attribute) then
 				setStringColor(t, "�", "white")
 			else
 				setStringColor(t, "�", "white")
 			end
-			setStringColor(t, ": Adds 5% life leech to this\nspell\n", (firstSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070"))
+			setStringColor(t, ": Adds 5% life leech to this\nspell\n", (firstSpellIsUnlocked(attribute) and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			if not secondSpellIsUnlocked(attribute) then
 				setStringColor(t, "�", "white")
 			else
 				setStringColor(t, "�", "white")
 			end
-			setStringColor(t, ": +14% Base Damage", (secondSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070"))
+			setStringColor(t, ": +14% Base Damage", (secondSpellIsUnlocked(attribute) and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			return t
 		elseif vocation == PALADIN then
 			local t = {}
-			setStringColor(t, "Augmented Sharpshooter\n", (points >= bonus.maxPoints and "#C0C0C0" or "#707070"))
+			setStringColor(t, "Augmented Sharpshooter\n", (points >= bonus.maxPoints and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			if not firstSpellIsUnlocked(attribute) then
 				setStringColor(t, "�", "white")
 			else
 				setStringColor(t, "�", "white")
 			end
-			setStringColor(t, ": Enables the casting of\nsupport spells while activ...\n", (firstSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070"))
+			setStringColor(t, ": Enables the casting of\nsupport spells while activ...\n", (firstSpellIsUnlocked(attribute) and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			if not secondSpellIsUnlocked(attribute) then
 				setStringColor(t, "�", "white")
 			else
 				setStringColor(t, "�", "white")
 			end
-			setStringColor(t, ": -6s Cooldown; distance\nskill bonus increased by ...", (secondSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070"))
+			setStringColor(t, ": -6s Cooldown; distance\nskill bonus increased by ...", (secondSpellIsUnlocked(attribute) and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			return t
 		elseif vocation == SORCERER then
 			local t = {}
-			setStringColor(t, "Augmented Focus Spells\n", (points >= bonus.maxPoints and "#C0C0C0" or "#707070"))
+			setStringColor(t, "Augmented Focus Spells\n", (points >= bonus.maxPoints and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			if not firstSpellIsUnlocked(attribute) then
 				setStringColor(t, "�", "white")
 			else
 				setStringColor(t, "�", "white")
 			end
-			setStringColor(t, ": +8% Base Damage for Hell's\nCore and Rage of the Skies\n", (firstSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070"))
+			setStringColor(t, ": +8% Base Damage for Hell's\nCore and Rage of the Skies\n", (firstSpellIsUnlocked(attribute) and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			if not secondSpellIsUnlocked(attribute) then
 				setStringColor(t, "�", "white")
 			else
 				setStringColor(t, "�", "white")
 			end
-			setStringColor(t, ": -4s Cooldown; Focus\nsecondary group cooldow...", (secondSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070"))
+			setStringColor(t, ": -4s Cooldown; Focus\nsecondary group cooldow...", (secondSpellIsUnlocked(attribute) and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			return t
 		elseif vocation == DRUID then
 			local t = {}
-			setStringColor(t, "Augmented Strong Ice Wave\n", (points >= bonus.maxPoints and "#C0C0C0" or "#707070"))
+			setStringColor(t, "Augmented Strong Ice Wave\n", (points >= bonus.maxPoints and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			if not firstSpellIsUnlocked(attribute) then
 				setStringColor(t, "�", "white")
 			else
 				setStringColor(t, "�", "white")
 			end
-			setStringColor(t, ": Adds 3% mana leech to\nthis spell\n", (firstSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070"))
+			setStringColor(t, ": Adds 3% mana leech to\nthis spell\n", (firstSpellIsUnlocked(attribute) and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			if not secondSpellIsUnlocked(attribute) then
 				setStringColor(t, "�", "white")
 			else
 				setStringColor(t, "�", "white")
 			end
-			setStringColor(t, ": +8% Base Damage", (secondSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070"))
+			setStringColor(t, ": +8% Base Damage", (secondSpellIsUnlocked(attribute) and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			return t
 		elseif vocation == MONK then
 			local t = {}
-			setStringColor(t, "Aug. Chained Penance\n", (points >= bonus.maxPoints and "#C0C0C0" or "#707070"))
+			setStringColor(t, "Aug. Chained Penance\n", (points >= bonus.maxPoints and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			if not firstSpellIsUnlocked(attribute) then
 				setStringColor(t, "�", "white")
 			else
 				setStringColor(t, "�", "white")
 			end
-			setStringColor(t, ": Jumps to +1 additional\ntarget\n", (firstSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070"))
+			setStringColor(t, ": Jumps to +1 additional\ntarget\n", (firstSpellIsUnlocked(attribute) and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			if not secondSpellIsUnlocked(attribute) then
 				setStringColor(t, "�", "white")
 			else
 				setStringColor(t, "�", "white")
 			end
-			setStringColor(t, ": +18% Base Damage", (secondSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070"))
+			setStringColor(t, ": +18% Base Damage", (secondSpellIsUnlocked(attribute) and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			return t
 		end
 	elseif bonus.conviction == "spell_2" then
 		if vocation == KNIGHT then
 			local t = {}
-			setStringColor(t, "Augmented Groundshaker\n", (points >= bonus.maxPoints and "#C0C0C0" or "#707070"))
+			setStringColor(t, "Augmented Groundshaker\n", (points >= bonus.maxPoints and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			if not firstSpellIsUnlocked(attribute) then
 				setStringColor(t, "�", "white")
 			else
 				setStringColor(t, "�", "white")
 			end
-			setStringColor(t, ": +12.5% Base Damage\n", (firstSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070"))
+			setStringColor(t, ": +12.5% Base Damage\n", (firstSpellIsUnlocked(attribute) and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			if not secondSpellIsUnlocked(attribute) then
 				setStringColor(t, "�", "white")
 			else
 				setStringColor(t, "�", "white")
 			end
-			setStringColor(t, ": -2s Cooldown", (secondSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070"))
+			setStringColor(t, ": -2s Cooldown", (secondSpellIsUnlocked(attribute) and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			return t
 		elseif vocation == PALADIN then
 			local t = {}
-			setStringColor(t, "Aug. Strong Ethereal Spear\n", (points >= bonus.maxPoints and "#C0C0C0" or "#707070"))
+			setStringColor(t, "Aug. Strong Ethereal Spear\n", (points >= bonus.maxPoints and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			if not firstSpellIsUnlocked(attribute) then
 				setStringColor(t, "�", "white")
 			else
 				setStringColor(t, "�", "white")
 			end
-			setStringColor(t, ": -2s Cooldown\n", (firstSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070"))
+			setStringColor(t, ": -2s Cooldown\n", (firstSpellIsUnlocked(attribute) and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			if not secondSpellIsUnlocked(attribute) then
 				setStringColor(t, "�", "white")
 			else
 				setStringColor(t, "�", "white")
 			end
-			setStringColor(t, ": +380% Base Damage", (secondSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070"))
+			setStringColor(t, ": +380% Base Damage", (secondSpellIsUnlocked(attribute) and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			return t
 		elseif vocation == SORCERER then
 			local t = {}
-			setStringColor(t, "Augmented Magic Shield\n", (points >= bonus.maxPoints and "#C0C0C0" or "#707070"))
+			setStringColor(t, "Augmented Magic Shield\n", (points >= bonus.maxPoints and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			if not firstSpellIsUnlocked(attribute) then
 				setStringColor(t, "�", "white")
 			else
 				setStringColor(t, "�", "white")
 			end
-			setStringColor(t, ": Enhanced effect\n", (firstSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070"))
+			setStringColor(t, ": Enhanced effect\n", (firstSpellIsUnlocked(attribute) and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			if not secondSpellIsUnlocked(attribute) then
 				setStringColor(t, "�", "white")
 			else
 				setStringColor(t, "�", "white")
 			end
-			setStringColor(t, ": -6s Cooldown", (secondSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070"))
+			setStringColor(t, ": -6s Cooldown", (secondSpellIsUnlocked(attribute) and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			return t
 		elseif vocation == DRUID then
 			local t = {}
-			setStringColor(t, "Augmented Mass Healing\n", (points >= bonus.maxPoints and "#C0C0C0" or "#707070"))
+			setStringColor(t, "Augmented Mass Healing\n", (points >= bonus.maxPoints and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			if not firstSpellIsUnlocked(attribute) then
 				setStringColor(t, "�", "white")
 			else
 				setStringColor(t, "�", "white")
 			end
-			setStringColor(t, ": +5% Base Healing\n", (firstSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070"))
+			setStringColor(t, ": +5% Base Healing\n", (firstSpellIsUnlocked(attribute) and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			if not secondSpellIsUnlocked(attribute) then
 				setStringColor(t, "�", "white")
 			else
 				setStringColor(t, "�", "white")
 			end
-			setStringColor(t, ": Affected area enlarged", (secondSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070"))
+			setStringColor(t, ": Affected area enlarged", (secondSpellIsUnlocked(attribute) and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			return t
 		elseif vocation == MONK then
 			local t = {}
-			setStringColor(t, "Augmented Mass Spirit Mend\n", (points >= bonus.maxPoints and "#C0C0C0" or "#707070"))
+			setStringColor(t, "Augmented Mass Spirit Mend\n", (points >= bonus.maxPoints and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			if not firstSpellIsUnlocked(attribute) then
 				setStringColor(t, "�", "white")
 			else
 				setStringColor(t, "�", "white")
 			end
-			setStringColor(t, ": +8% Base Healing\n", (firstSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070"))
+			setStringColor(t, ": +8% Base Healing\n", (firstSpellIsUnlocked(attribute) and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			if not secondSpellIsUnlocked(attribute) then
 				setStringColor(t, "�", "white")
 			else
 				setStringColor(t, "�", "white")
 			end
-			setStringColor(t, ": Affected area enlarged", (secondSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070"))
+			setStringColor(t, ": Affected area enlarged", (secondSpellIsUnlocked(attribute) and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			return t
 		end
 	elseif bonus.conviction == "spell_3" then
 		if vocation == KNIGHT then
 			local t = {}
-			setStringColor(t, "Aug. Chivalrous Challenge\n", (points >= bonus.maxPoints and "#C0C0C0" or "#707070"))
+			setStringColor(t, "Aug. Chivalrous Challenge\n", (points >= bonus.maxPoints and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			if not firstSpellIsUnlocked(attribute) then
 				setStringColor(t, "�", "white")
 			else
 				setStringColor(t, "�", "white")
 			end
-			setStringColor(t, ": -20 Mana Cost\n", (firstSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070"))
+			setStringColor(t, ": -20 Mana Cost\n", (firstSpellIsUnlocked(attribute) and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			if not secondSpellIsUnlocked(attribute) then
 				setStringColor(t, "�", "white")
 			else
 				setStringColor(t, "�", "white")
 			end
-			setStringColor(t, ": Jumps to +1 additional\ntarget", (secondSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070"))
+			setStringColor(t, ": Jumps to +1 additional\ntarget", (secondSpellIsUnlocked(attribute) and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			return t
 		elseif vocation == PALADIN then
 			local t = {}
-			setStringColor(t, "Augmented Divine Dazzle\n", (points >= bonus.maxPoints and "#C0C0C0" or "#707070"))
+			setStringColor(t, "Augmented Divine Dazzle\n", (points >= bonus.maxPoints and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			if not firstSpellIsUnlocked(attribute) then
 				setStringColor(t, "�", "white")
 			else
 				setStringColor(t, "�", "white")
 			end
-			setStringColor(t, ": Jumps to +1 additional\ntarget\n", (firstSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070"))
+			setStringColor(t, ": Jumps to +1 additional\ntarget\n", (firstSpellIsUnlocked(attribute) and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			if not secondSpellIsUnlocked(attribute) then
 				setStringColor(t, "�", "white")
 			else
 				setStringColor(t, "�", "white")
 			end
-			setStringColor(t, ": Duration increased; -4s\nCooldown", (secondSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070"))
+			setStringColor(t, ": Duration increased; -4s\nCooldown", (secondSpellIsUnlocked(attribute) and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			return t
 		elseif vocation == SORCERER then
 			local t = {}
-			setStringColor(t, "Augmented Sap Strength\n", (points >= bonus.maxPoints and "#C0C0C0" or "#707070"))
+			setStringColor(t, "Augmented Sap Strength\n", (points >= bonus.maxPoints and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			if not firstSpellIsUnlocked(attribute) then
 				setStringColor(t, "�", "white")
 			else
 				setStringColor(t, "�", "white")
 			end
-			setStringColor(t, ": Affected area enlarged\n", (firstSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070"))
+			setStringColor(t, ": Affected area enlarged\n", (firstSpellIsUnlocked(attribute) and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			if not secondSpellIsUnlocked(attribute) then
 				setStringColor(t, "�", "white")
 			else
 				setStringColor(t, "�", "white")
 			end
-			setStringColor(t, ": Damage reduction\nincreased", (secondSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070"))
+			setStringColor(t, ": Damage reduction\nincreased", (secondSpellIsUnlocked(attribute) and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			return t
 		elseif vocation == DRUID then
 			local t = {}
-			setStringColor(t, "Augmented Nature's Embrace\n", (points >= bonus.maxPoints and "#C0C0C0" or "#707070"))
+			setStringColor(t, "Augmented Nature's Embrace\n", (points >= bonus.maxPoints and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			if not firstSpellIsUnlocked(attribute) then
 				setStringColor(t, "�", "white")
 			else
 				setStringColor(t, "�", "white")
 			end
-			setStringColor(t, ": +11% Base Healing\n", (firstSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070"))
+			setStringColor(t, ": +11% Base Healing\n", (firstSpellIsUnlocked(attribute) and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			if not secondSpellIsUnlocked(attribute) then
 				setStringColor(t, "�", "white")
 			else
 				setStringColor(t, "�", "white")
 			end
-			setStringColor(t, ": -10s Cooldown", (secondSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070"))
+			setStringColor(t, ": -10s Cooldown", (secondSpellIsUnlocked(attribute) and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			return t
 		elseif vocation == MONK then
 			local t = {}
-			setStringColor(t, "Augmented Mystic Repulse\n", (points >= bonus.maxPoints and "#C0C0C0" or "#707070"))
+			setStringColor(t, "Augmented Mystic Repulse\n", (points >= bonus.maxPoints and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			if not firstSpellIsUnlocked(attribute) then
 				setStringColor(t, "�", "white")
 			else
 				setStringColor(t, "�", "white")
 			end
-			setStringColor(t, ": -4s Cooldown\n", (firstSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070"))
+			setStringColor(t, ": -4s Cooldown\n", (firstSpellIsUnlocked(attribute) and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			if not secondSpellIsUnlocked(attribute) then
 				setStringColor(t, "�", "white")
 			else
 				setStringColor(t, "�", "white")
 			end
-			setStringColor(t, ": +40% Base Damage", (secondSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070"))
+			setStringColor(t, ": +40% Base Damage", (secondSpellIsUnlocked(attribute) and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			return t
 		end
 	elseif bonus.conviction == "spell_4" then
 		if vocation == KNIGHT then
 			local t = {}
-			setStringColor(t, "Aug. Intense Wound Cleansing\n", (points >= bonus.maxPoints and "#C0C0C0" or "#707070"))
+			setStringColor(t, "Aug. Intense Wound Cleansing\n", (points >= bonus.maxPoints and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			if not firstSpellIsUnlocked(attribute) then
 				setStringColor(t, "�", "white")
 			else
 				setStringColor(t, "�", "white")
 			end
-			setStringColor(t, ": +125% Base Healing\n", (firstSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070"))
+			setStringColor(t, ": +125% Base Healing\n", (firstSpellIsUnlocked(attribute) and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			if not secondSpellIsUnlocked(attribute) then
 				setStringColor(t, "�", "white")
 			else
 				setStringColor(t, "�", "white")
 			end
-			setStringColor(t, ": -300s Cooldown", (secondSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070"))
+			setStringColor(t, ": -300s Cooldown", (secondSpellIsUnlocked(attribute) and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			return t
 		elseif vocation == PALADIN then
 			local t = {}
-			setStringColor(t, "Augmented Swift Foot\n", (points >= bonus.maxPoints and "#C0C0C0" or "#707070"))
+			setStringColor(t, "Augmented Swift Foot\n", (points >= bonus.maxPoints and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			if not firstSpellIsUnlocked(attribute) then
 				setStringColor(t, "�", "white")
 			else
 				setStringColor(t, "�", "white")
 			end
-			setStringColor(t, ": Focus secondary group\ncooldown -8s. Attacks an...\n", (firstSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070"))
+			setStringColor(t, ": Focus secondary group\ncooldown -8s. Attacks an...\n", (firstSpellIsUnlocked(attribute) and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			if not secondSpellIsUnlocked(attribute) then
 				setStringColor(t, "�", "white")
 			else
 				setStringColor(t, "�", "white")
 			end
-			setStringColor(t, ": -6s Cooldown and the\ndamage dealt is no longe...", (secondSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070"))
+			setStringColor(t, ": -6s Cooldown and the\ndamage dealt is no longe...", (secondSpellIsUnlocked(attribute) and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			return t
 		elseif vocation == SORCERER then
 			local t = {}
-			setStringColor(t, "Augmented Energy Wave\n", (points >= bonus.maxPoints and "#C0C0C0" or "#707070"))
+			setStringColor(t, "Augmented Energy Wave\n", (points >= bonus.maxPoints and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			if not firstSpellIsUnlocked(attribute) then
 				setStringColor(t, "�", "white")
 			else
 				setStringColor(t, "�", "white")
 			end
-			setStringColor(t, ": +5% Base Damage\n", (firstSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070"))
+			setStringColor(t, ": +5% Base Damage\n", (firstSpellIsUnlocked(attribute) and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			if not secondSpellIsUnlocked(attribute) then
 				setStringColor(t, "�", "white")
 			else
 				setStringColor(t, "�", "white")
 			end
-			setStringColor(t, ": Affected area enlarged", (secondSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070"))
+			setStringColor(t, ": Affected area enlarged", (secondSpellIsUnlocked(attribute) and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			return t
 		elseif vocation == DRUID then
 			local t = {}
-			setStringColor(t, "Augmented Terra Wave\n", (points >= bonus.maxPoints and "#C0C0C0" or "#707070"))
+			setStringColor(t, "Augmented Terra Wave\n", (points >= bonus.maxPoints and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			if not firstSpellIsUnlocked(attribute) then
 				setStringColor(t, "�", "white")
 			else
 				setStringColor(t, "�", "white")
 			end
-			setStringColor(t, ": +5% Base Damage\n", (firstSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070"))
+			setStringColor(t, ": +5% Base Damage\n", (firstSpellIsUnlocked(attribute) and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			if not secondSpellIsUnlocked(attribute) then
 				setStringColor(t, "�", "white")
 			else
 				setStringColor(t, "�", "white")
 			end
-			setStringColor(t, ": Adds 5% life leech to this\nspell", (secondSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070"))
+			setStringColor(t, ": Adds 5% life leech to this\nspell", (secondSpellIsUnlocked(attribute) and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			return t
 		elseif vocation == MONK then
 			local t = {}
-			setStringColor(t, "Augmented Flurry of Blows\n", (points >= bonus.maxPoints and "#C0C0C0" or "#707070"))
+			setStringColor(t, "Augmented Flurry of Blows\n", (points >= bonus.maxPoints and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			if not firstSpellIsUnlocked(attribute) then
 				setStringColor(t, "�", "white")
 			else
 				setStringColor(t, "�", "white")
 			end
-			setStringColor(t, ": Adds 5% life leech to this\n spell\n", (firstSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070"))
+			setStringColor(t, ": Adds 5% life leech to this\n spell\n", (firstSpellIsUnlocked(attribute) and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			if not secondSpellIsUnlocked(attribute) then
 				setStringColor(t, "�", "white")
 			else
 				setStringColor(t, "�", "white")
 			end
-			setStringColor(t, ": +15% Base Damage", (secondSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070"))
+			setStringColor(t, ": +15% Base Damage", (secondSpellIsUnlocked(attribute) and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			return t
 		end
 	elseif bonus.conviction == "spell_5" then
 		if vocation == KNIGHT then
 			local t = {}
-			setStringColor(t, "Augmented Fierce Berserk\n", (points >= bonus.maxPoints and "#C0C0C0" or "#707070"))
+			setStringColor(t, "Augmented Fierce Berserk\n", (points >= bonus.maxPoints and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			if not firstSpellIsUnlocked(attribute) then
 				setStringColor(t, "�", "white")
 			else
 				setStringColor(t, "�", "white")
 			end
-			setStringColor(t, ": -30 Mana Cost\n", (firstSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070"))
+			setStringColor(t, ": -30 Mana Cost\n", (firstSpellIsUnlocked(attribute) and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			if not secondSpellIsUnlocked(attribute) then
 				setStringColor(t, "�", "white")
 			else
 				setStringColor(t, "�", "white")
 			end
-			setStringColor(t, ": +10% Base Damage", (secondSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070"))
+			setStringColor(t, ": +10% Base Damage", (secondSpellIsUnlocked(attribute) and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			return t
 		elseif vocation == PALADIN then
 			local t = {}
-			setStringColor(t, "Augmented Divine Caldera\n", (points >= bonus.maxPoints and "#C0C0C0" or "#707070"))
+			setStringColor(t, "Augmented Divine Caldera\n", (points >= bonus.maxPoints and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			if not firstSpellIsUnlocked(attribute) then
 				setStringColor(t, "�", "white")
 			else
 				setStringColor(t, "�", "white")
 			end
-			setStringColor(t, ": -20 Mana Cost\n", (firstSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070"))
+			setStringColor(t, ": -20 Mana Cost\n", (firstSpellIsUnlocked(attribute) and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			if not secondSpellIsUnlocked(attribute) then
 				setStringColor(t, "�", "white")
 			else
 				setStringColor(t, "�", "white")
 			end
-			setStringColor(t, ": +8.5% Base Damage", (secondSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070"))
+			setStringColor(t, ": +8.5% Base Damage", (secondSpellIsUnlocked(attribute) and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			return t
 		elseif vocation == SORCERER then
 			local t = {}
-			setStringColor(t, "Augmented Great Fire Wave\n", (points >= bonus.maxPoints and "#C0C0C0" or "#707070"))
+			setStringColor(t, "Augmented Great Fire Wave\n", (points >= bonus.maxPoints and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			if not firstSpellIsUnlocked(attribute) then
 				setStringColor(t, "�", "white")
 			else
 				setStringColor(t, "�", "white")
 			end
-			setStringColor(t, ": Adds 15% critical extra\ndamage for this spell and...\n", (firstSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070"))
+			setStringColor(t, ": Adds 15% critical extra\ndamage for this spell and...\n", (firstSpellIsUnlocked(attribute) and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			if not secondSpellIsUnlocked(attribute) then
 				setStringColor(t, "�", "white")
 			else
 				setStringColor(t, "�", "white")
 			end
-			setStringColor(t, ": +5% Base Damage", (secondSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070"))
+			setStringColor(t, ": +5% Base Damage", (secondSpellIsUnlocked(attribute) and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			return t
 		elseif vocation == DRUID then
 			local t = {}
-			setStringColor(t, "Augmented Heal Friend\n", (points >= bonus.maxPoints and "#C0C0C0" or "#707070"))
+			setStringColor(t, "Augmented Heal Friend\n", (points >= bonus.maxPoints and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			if not firstSpellIsUnlocked(attribute) then
 				setStringColor(t, "�", "white")
 			else
 				setStringColor(t, "�", "white")
 			end
-			setStringColor(t, ": -10 Mana Cost\n", (firstSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070"))
+			setStringColor(t, ": -10 Mana Cost\n", (firstSpellIsUnlocked(attribute) and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			if not secondSpellIsUnlocked(attribute) then
 				setStringColor(t, "�", "white")
 			else
 				setStringColor(t, "�", "white")
 			end
-			setStringColor(t, ": +5% Base Healing", (secondSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070"))
+			setStringColor(t, ": +5% Base Healing", (secondSpellIsUnlocked(attribute) and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			return t
 		elseif vocation == MONK then
 			local t = {}
-			setStringColor(t, "Aug. Sweeping Takedown\n", (points >= bonus.maxPoints and "#C0C0C0" or "#707070"))
+			setStringColor(t, "Aug. Sweeping Takedown\n", (points >= bonus.maxPoints and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			if not firstSpellIsUnlocked(attribute) then
 				setStringColor(t, "�", "white")
 			else
 				setStringColor(t, "�", "white")
 			end
-			setStringColor(t, ": Adds 3% mana leech to\nthis spell\n", (firstSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070"))
+			setStringColor(t, ": Adds 3% mana leech to\nthis spell\n", (firstSpellIsUnlocked(attribute) and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			if not secondSpellIsUnlocked(attribute) then
 				setStringColor(t, "�", "white")
 			else
 				setStringColor(t, "�", "white")
 			end
-			setStringColor(t, ": Adds 25% critical extra \ndamage for this spell and ...", (secondSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070"))
+			setStringColor(t, ": Adds 25% critical extra \ndamage for this spell and ...", (secondSpellIsUnlocked(attribute) and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			return t
 		end
 	elseif bonus.conviction == "special_1" then
@@ -1242,7 +1242,7 @@ function getConvictionPerks()
 				  setStringColor(message, "�", "white")
 			  end
 			  setStringColor(message, "+11% Base Healing\n", "#3F3F3F")
-			  setStringColor(message, ": -10s Cooldown", (secondSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070"))
+			  setStringColor(message, ": -10s Cooldown", (secondSpellIsUnlocked(attribute) and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
 			convictions[t].tooltip = message
 		elseif vocation == MONK then
 			if not convictions[t] then

@@ -46,7 +46,7 @@ UIWidget
       !text: tr('Unlock')
       //font: verdana-bold-8px-antialiased
       text-offset: 0 -1
-      color: #C0C0C0
+      color: $textColor
       enabled: false
       @onClick: modules.game_cyclopedia.Cyclopedia.actionCharmButton(self)
     BorderBox
@@ -113,7 +113,7 @@ UIWidget
       anchors.horizontalCenter: parent.horizontalCenter
       anchors.bottom: parent.bottom
       margin-bottom: 10
-      color: #C0C0C0
+      color: $textColor
       placeholder: Type to search
       placeholder-color: #6E706F
       padding-top: 1
@@ -124,7 +124,7 @@ UIWidget
       anchors.left: SearchEdit.left
       anchors.bottom: SearchEdit.top
       margin-bottom: 5
-      color: #C0C0C0
+      color: $textColor
       !text: tr('Search') .. ':'
     BorderBox
       id: CreaturesBase
@@ -150,7 +150,7 @@ UIWidget
           cell-spacing: 2
           flow: true
         CharmCreatureName
-          background-color: #484848
+          background-color: $panelFillLight
         CharmCreatureName
           background-color: #414141
       VerticalScrollBar
@@ -165,7 +165,7 @@ UIWidget
       anchors.left: CreaturesBase.left
       anchors.bottom: CreaturesBase.top
       margin-bottom: 5
-      color: #C0C0C0
+      color: $textColor
       !text: tr('Select Creature') .. ':'
   BorderBox
     id: ListBase

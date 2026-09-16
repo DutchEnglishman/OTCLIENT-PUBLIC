@@ -418,7 +418,7 @@ function addKeybind(category, action, primary, secondary)
     local row = panels.keybindsPanel.tablePanel.keybinds:addRow({ {
         coloredText = {
             text = text,
-            color = '#c0c0c0'
+            color = g_ui.getVariable('textColor')
         },
         width = 286
     }, {

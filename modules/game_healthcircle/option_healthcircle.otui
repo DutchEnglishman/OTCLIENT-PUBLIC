@@ -83,7 +83,7 @@ UIWidget
       !text: tr('Skill:')
       anchors.left: parent.left
       margin-left: 18
-      color: #c0c0c0ff
+      color: $textColor
       anchors.verticalCenter: parent.verticalCenter
 
     QtComboBox
@@ -144,7 +144,7 @@ UIWidget
       !text: tr('Bar Style:')
       anchors.left: parent.left
       margin-left: 18
-      color: #c0c0c0ff
+      color: $textColor
       anchors.verticalCenter: parent.verticalCenter
 
     QtComboBox

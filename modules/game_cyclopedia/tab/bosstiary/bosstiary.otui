@@ -96,12 +96,16 @@ UIWidget
     anchors.top: parent.top
     margin-top: 10
     margin-left: 10
-    image-source: /images/ui/window_new
-    image-border: 10
+    // Was window_new at border 10, which put that image's band and its accent line inside
+    // the tiled middle and repeated them down the panel. Panel surface, real band, sliced
+    // at what it was built for.
+    image-source: /images/ui/panel_window_header
+    image-border: 4
+    image-border-top: 20
     height: 70
     !text: tr('Filter')
     text-align: top
-    text-offset: 0 4
+    text-offset: 0 6
     color: #919191
     CheckBox
       id: BaneCheck

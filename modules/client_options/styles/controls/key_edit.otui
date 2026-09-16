@@ -8,7 +8,7 @@ MainWindow
   Label
     font: verdana-11px-monochrome
     text-align: center
-    color: #c0c0c0
+    color: $textColor
     text: Mode: "Chat On"
   
   FlatPanel
@@ -16,19 +16,19 @@ MainWindow
     height: 33
     font: verdana-11px-monochrome
     text-align: center
-    color: #c0c0c0
+    color: $textColor
   
   Label
     id: info
     font: verdana-11px-monochrome
-    color: #c0c0c0
+    color: $textColor
     text-wrap: true
     text-auto-resize: true
   
   Label
     id: alone
     font: verdana-11px-monochrome
-    color: #c0c0c0
+    color: $textColor
     !text: tr("This action must be bound to a single key.")
     visible: false
   

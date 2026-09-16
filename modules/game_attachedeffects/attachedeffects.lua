@@ -189,12 +189,119 @@ local function clearBloodlust()
     bloodlust = {}
 end
 
+-- "lunge,<creatureId>,<dx>,<dy>,<outMs>,<backMs>": the body leans dx,dy
+-- sprite pixels over outMs and settles back over backMs, on this clock
+-- from one message -- Lord Morvane putting his weight behind a throw, the
+-- way the pulse is Annihilon rising for a stomp. Only the drawn outfit
+-- moves (Creature::setSpriteShift): the creature, its tile and the tile's
+-- effects stay where they are. Stepped every frame like the tether ball.
+-- A client built without the binding shows nothing and is otherwise
+-- unaffected.
+local lunges = {} -- creature id -> event
+
+local function lungeStep(creatureId, dx, dy, outMs, backMs, startedAt)
+    local creature = g_map.getCreatureById(creatureId)
+    if not creature then
+        lunges[creatureId] = nil
+        return
+    end
+    local elapsed = g_clock.millis() - startedAt
+    local f
+    if elapsed < outMs then
+        f = elapsed / outMs
+        f = 1 - (1 - f) * (1 - f) -- fast off the mark, easing into the lean
+    elseif elapsed < outMs + backMs then
+        f = 1 - (elapsed - outMs) / backMs
+    else
+        creature:setSpriteShift(0, 0)
+        lunges[creatureId] = nil
+        return
+    end
+    creature:setSpriteShift(math.floor(dx * f + 0.5), math.floor(dy * f + 0.5))
+    lunges[creatureId] = scheduleEvent(function() lungeStep(creatureId, dx, dy, outMs, backMs, startedAt) end, 1)
+end
+
+local function lunge(creature, dx, dy, outMs, backMs)
+    if not creature.setSpriteShift then
+        return
+    end
+    local creatureId = creature:getId()
+    if lunges[creatureId] then
+        removeEvent(lunges[creatureId])
+    end
+    lungeStep(creatureId, dx, dy, math.max(1, outMs), math.max(1, backMs), g_clock.millis())
+end
+
+-- "hop,<creatureId>,<fromDx>,<fromDy>,<ms>,<height>": the body is drawn
+-- fromDx,fromDy sprite pixels from where the creature now stands (the
+-- tile it was just moved from, in pixels) and springs to its place over
+-- ms in an arc height px high -- Lord Morvane leaping back before a
+-- dagger burst. The server sends it right after moving him, so the move
+-- itself is never seen and the leap is what shows. One shift animation per
+-- creature: a hop cuts a lunge short and the other way round.
+local function hopStep(creatureId, dx, dy, ms, height, startedAt)
+    local creature = g_map.getCreatureById(creatureId)
+    if not creature then
+        lunges[creatureId] = nil
+        return
+    end
+    local f = (g_clock.millis() - startedAt) / ms
+    if f >= 1 then
+        creature:setSpriteShift(0, 0)
+        lunges[creatureId] = nil
+        return
+    end
+    local eased = f * f * (3 - 2 * f)
+    local x = dx * (1 - eased)
+    local y = dy * (1 - eased) - height * math.sin(math.pi * f)
+    creature:setSpriteShift(math.floor(x + 0.5), math.floor(y + 0.5))
+    lunges[creatureId] = scheduleEvent(function() hopStep(creatureId, dx, dy, ms, height, startedAt) end, 1)
+end
+
+local function hop(creature, dx, dy, ms, height)
+    if not creature.setSpriteShift then
+        return
+    end
+    local creatureId = creature:getId()
+    if lunges[creatureId] then
+        removeEvent(lunges[creatureId])
+    end
+    hopStep(creatureId, dx, dy, math.max(1, ms), height, g_clock.millis())
+end
+
+local function clearLunges()
+    for creatureId, event in pairs(lunges) do
+        removeEvent(event)
+        local creature = g_map.getCreatureById(creatureId)
+        if creature and creature.setSpriteShift then
+            creature:setSpriteShift(0, 0)
+        end
+    end
+    lunges = {}
+end
+
 local function onExtendedOpcode(protocol, opcode, buffer)
     local pulseId, pulseScale, upMs, downMs = buffer:match('^pulse,(%d+),([%d.]+),(%d+),(%d+)$')
     if pulseId then
         local creature = g_map.getCreatureById(tonumber(pulseId))
         if creature then
             pulse(creature, tonumber(pulseScale), tonumber(upMs), tonumber(downMs))
+        end
+        return
+    end
+    local lungeId, dx, dy, outMs, backMs = buffer:match('^lunge,(%d+),(-?%d+),(-?%d+),(%d+),(%d+)$')
+    if lungeId then
+        local creature = g_map.getCreatureById(tonumber(lungeId))
+        if creature then
+            lunge(creature, tonumber(dx), tonumber(dy), tonumber(outMs), tonumber(backMs))
+        end
+        return
+    end
+    local hopId, fromDx, fromDy, hopMs, height = buffer:match('^hop,(%d+),(-?%d+),(-?%d+),(%d+),(%d+)$')
+    if hopId then
+        local creature = g_map.getCreatureById(tonumber(hopId))
+        if creature then
+            hop(creature, tonumber(fromDx), tonumber(fromDy), tonumber(hopMs), tonumber(height))
         end
         return
     end
@@ -228,104 +335,46 @@ end
 -- data/scripts/loot_shine/loot_shine.lua), so a shine that stops being
 -- refreshed belongs to a tile the player walked away from or whose item
 -- vanished without a move event; it is dropped after SHINE_TTL_MS either
--- way and comes back with the next repeat if it was only out of view. A
--- tile carrying an effect survives the map re-send that happens every step
--- (Tile::canErase), so attaching once is enough.
+-- way and comes back with the next repeat if it was only out of view.
 --
--- The glint runs along the item's long axis, read once per item id from
--- its sprite silhouette: a bow lying NE-SW gets a glint travelling NE to
--- SW, a blade lying flat gets one running west to east, and anything squat
--- gets the default NW to SE.
+-- The shine is a fragment shader worn by the item itself
+-- (game_shaders/shaders/fragment/rarity_shine_*.frag), not a texture laid over
+-- the tile, and that is what makes it fit the weapon. The shader only ever
+-- runs on the item's own sprite quad and discards where the sprite is
+-- transparent, so it covers every pixel of the piece -- including the cells of
+-- a 2x2 sprite that reach a tile up and left of the one it stands on
+-- (ThingType::draw subtracts (m_size - 1) * 32) -- and not one pixel of the
+-- bare tile around it. A 32x32 texture on the tile could do neither: it
+-- painted the whole square and only ever the square, and needed the item's
+-- long axis guessed from its silhouette to choose a sweep direction. The
+-- shader is handed the silhouette by the hardware, so that guesswork is gone.
 local RARITY_SHINE_OPCODE = 72
 local SHINE_TTL_MS = 7000
--- rarity id (OTSERV upgrade_system_const.lua) -> the first of that rarity's
--- four effects; the axis is added to it (effects.lua registers 20-31).
-local SHINE_EFFECT_BASE = { [2] = 20, [3] = 24, [4] = 28 }
-local SHINE_AXIS_NWSE, SHINE_AXIS_NESW, SHINE_AXIS_WE, SHINE_AXIS_NS = 0, 1, 2, 3
-local SHINE_EFFECT_IDS = {}
-for id = 20, 31 do
-    table.insert(SHINE_EFFECT_IDS, id)
-end
+-- rarity id (OTSERV upgrade_system_const.lua) -> the shader registered for it
+-- in game_shaders (shaders.lua, ITEM_SHADERS). Common gets none.
+local SHINE_SHADERS = {
+    [2] = 'Item - Rarity Shine Rare',
+    [3] = 'Item - Rarity Shine Epic',
+    [4] = 'Item - Rarity Shine Legendary',
+}
 local shines = {}
-local shineAxisByItem = {}
 
--- Principal axis of the sprite's opaque pixels, binned to the four glint
--- directions. nil while the sprite has not loaded yet, so the caller does
--- not cache a guess.
-local function readShineAxis(clientId)
-    local thingType = g_things.getThingType(clientId, ThingCategoryItem)
-    if not thingType then
-        return SHINE_AXIS_NWSE
-    end
-
-    local sprites = thingType:getSprites()
-    local width, height = thingType:getWidth(), thingType:getHeight()
-    local side = g_gameConfig.getSpriteSize()
-    local n, sx, sy, sxx, syy, sxy = 0, 0, 0, 0, 0, 0
-    for h = 0, height - 1 do
-        for w = 0, width - 1 do
-            -- Sprite index for the first layer, pattern and phase; sprite 0
-            -- is the bottom-right cell of a multi-cell item.
-            local spriteId = sprites[h * width + w + 1]
-            if spriteId and spriteId > 0 then
-                local mask = g_sprites.getSpriteAlphaMask(spriteId)
-                if mask == '' then
-                    return nil
-                end
-                local ox, oy = (width - 1 - w) * side, (height - 1 - h) * side
-                for i = 1, #mask do
-                    if mask:byte(i) >= 128 then
-                        local x = ox + (i - 1) % side
-                        local y = oy + math.floor((i - 1) / side)
-                        n = n + 1
-                        sx, sy = sx + x, sy + y
-                        sxx, syy, sxy = sxx + x * x, syy + y * y, sxy + x * y
-                    end
-                end
-            end
+-- The server names the tile and the client id of the piece lying on it, which
+-- is as fine a grain as the 8.6 tile packet allows: two items of one id on a
+-- tile are the same item as far as the client knows and both wear the shine.
+-- The tile-wide texture lit everything on the tile regardless, so this is the
+-- narrower of the two.
+local function wearShine(tile, itemId, shader)
+    for _, item in ipairs(tile:getItems()) do
+        if not item:isGround() and item:getId() == itemId then
+            item:setShader(shader)
         end
     end
-
-    if n < 16 then
-        return SHINE_AXIS_NWSE
-    end
-    local mx, my = sx / n, sy / n
-    local cxx, cyy, cxy = sxx / n - mx * mx, syy / n - my * my, sxy / n - mx * my
-    local half = (cxx + cyy) / 2
-    local spread = math.sqrt(math.max(0, half * half - (cxx * cyy - cxy * cxy)))
-    local major, minor = half + spread, half - spread
-    if major < 1.6 * minor then
-        return SHINE_AXIS_NWSE
-    end
-
-    -- Screen y grows downwards, so a positive angle leans NW-SE.
-    local degrees = math.deg(0.5 * math.atan2(2 * cxy, cxx - cyy))
-    if degrees > 67.5 or degrees < -67.5 then
-        return SHINE_AXIS_NS
-    elseif degrees > 22.5 then
-        return SHINE_AXIS_NWSE
-    elseif degrees < -22.5 then
-        return SHINE_AXIS_NESW
-    end
-    return SHINE_AXIS_WE
 end
 
-local function shineAxisFor(clientId)
-    local axis = shineAxisByItem[clientId]
-    if axis == nil then
-        axis = readShineAxis(clientId)
-        if axis == nil then
-            return SHINE_AXIS_NWSE
-        end
-        shineAxisByItem[clientId] = axis
-    end
-    return axis
-end
-
-local function clearShine(tile)
-    for _, id in ipairs(SHINE_EFFECT_IDS) do
-        tile:detachEffectById(id)
-    end
+-- An empty name is how Thing::setShader spells "none".
+local function clearShine(tile, itemId)
+    wearShine(tile, itemId, '')
 end
 
 local function onRarityShineOpcode(protocol, opcode, buffer)
@@ -334,31 +383,33 @@ local function onRarityShineOpcode(protocol, opcode, buffer)
         return
     end
 
+    -- Whatever this tile was wearing comes off first, so a tile whose rarity
+    -- or whose item changed does not keep the old shader on the old id. A
+    -- plain repeat for an unchanged tile puts the same shader straight back
+    -- below, within this call, so nothing is drawn in between.
     local key = x .. ',' .. y .. ',' .. z
-    local pos = { x = tonumber(x), y = tonumber(y), z = tonumber(z) }
-    local tile = g_map.getTile(pos)
-    if action ~= 'on' or not tile then
-        if tile then
-            clearShine(tile)
+    local previous = shines[key]
+    if previous then
+        local previousTile = g_map.getTile(previous.pos)
+        if previousTile then
+            clearShine(previousTile, previous.itemId)
         end
         shines[key] = nil
+    end
+
+    local shader = SHINE_SHADERS[tonumber(rarity)]
+    itemId = tonumber(itemId)
+    if action ~= 'on' or not shader or not itemId then
         return
     end
 
-    local base = SHINE_EFFECT_BASE[tonumber(rarity)]
-    if not base then
-        return
+    local pos = { x = tonumber(x), y = tonumber(y), z = tonumber(z) }
+    shines[key] = { pos = pos, itemId = itemId, shader = shader, seen = g_clock.millis() }
+
+    local tile = g_map.getTile(pos)
+    if tile then
+        wearShine(tile, itemId, shader)
     end
-    local effectId = base + shineAxisFor(tonumber(itemId) or 0)
-    if not tile:getAttachedEffectById(effectId) then
-        local effect = g_attachedEffects.getById(effectId)
-        if not effect then
-            return
-        end
-        clearShine(tile)
-        tile:attachEffect(effect)
-    end
-    shines[key] = { pos = pos, seen = g_clock.millis() }
 end
 
 -- The client cannot tell a rare item from a common one, but it can tell an
@@ -373,16 +424,26 @@ local function holdsAnItem(tile)
     return false
 end
 
-local function expireShines()
+-- Puts the shader back as well as dropping shines that stopped being
+-- refreshed. Back, because a re-described tile is cleaned before its contents
+-- are rebuilt, and the items come back as new objects wearing nothing
+-- (ProtocolGame::setTileDescription calls Map::cleanTile first): that happens
+-- to the row or column each step uncovers, and to everything in view on a
+-- floor change or a teleport, so putting the shader on once is not enough.
+-- Cheap to repeat -- only the few tiles the server named are visited, and
+-- setShader is a name lookup and a byte -- which is why this rides the
+-- expiry pass instead of hooking every route an item can arrive by.
+local function refreshShines()
     local now = g_clock.millis()
     for key, shine in pairs(shines) do
         local tile = g_map.getTile(shine.pos)
-        local stale = now - shine.seen > SHINE_TTL_MS
-        if stale or (tile and not holdsAnItem(tile)) then
+        if now - shine.seen > SHINE_TTL_MS or (tile and not holdsAnItem(tile)) then
             if tile then
-                clearShine(tile)
+                clearShine(tile, shine.itemId)
             end
             shines[key] = nil
+        elseif tile then
+            wearShine(tile, shine.itemId, shine.shader)
         end
     end
 end
@@ -569,6 +630,346 @@ local function dropTileEffect(pos, effectId)
         tile:detachEffectById(effectId)
     end
     heldTileEffects[tileEffectKey(pos, effectId)] = nil
+end
+
+-- Lord Morvane's throws (OTSERV data/scripts/boss_skills/morvane_throws.lua)
+-- run on THIS clock from one message each, like the tether ball, the
+-- server stepping the damage along the same figures on its own.
+--
+-- "axes,<runId>,<x>,<y>,<z>,<angle>,<reach>,<halfWidth>,<flightMs>": two
+-- axes leave the tile x,y,z together and fly a figure of eight lying
+-- along <angle> (centidegrees in screen sense: 0 east, 9000 south),
+-- <reach> centitiles long and <halfWidth> centitiles to either side at
+-- the widest, one on each mirror image of the curve, so they cross at the
+-- waist, meet again at the far end and come back to the thrower. Each is
+-- an effect on the throw tile whose offset is recomputed every frame from
+-- the curve; lemniscate() below is a copy of the server's, and the two
+-- must stay the same or the warning and the damage part company with the
+-- picture. A shadow rides the ground under each axe, the axe itself
+-- AXE_LIFT_PX above it.
+local AXE_EFFECTS = { 288, 289 }
+local AXE_SHADOW_EFFECTS = { 299, 300 }
+local AXE_LIFT_PX = 9
+local AXE_SAMPLES = 600
+local axeRuns = {} -- runId -> {event, pos, startedAt, flightMs, points, axes}
+
+-- The curve as points at equal steps of ARC LENGTH, in tiles from the
+-- throw tile's centre, each with its mirror image (mx, my). Bernoulli's
+-- lemniscate with its near end on the thrower, the far lobe reaching
+-- `reach`, scaled sideways so the lobes are halfWidth wide.
+local function lemniscate(angle, reach, halfWidth, samples)
+    local a = reach / 2
+    local k = halfWidth / (a * 0.35355)
+    local cosA, sinA = math.cos(angle), math.sin(angle)
+    local raw = {}
+    local n = 720
+    for i = 0, n do
+        local t = math.pi + 2 * math.pi * i / n
+        local d = 1 + math.sin(t) ^ 2
+        raw[#raw + 1] = { x = a * math.cos(t) / d + a, y = a * k * math.sin(t) * math.cos(t) / d }
+    end
+    local lengths = { 0 }
+    for i = 2, #raw do
+        local dx, dy = raw[i].x - raw[i - 1].x, raw[i].y - raw[i - 1].y
+        lengths[i] = lengths[i - 1] + math.sqrt(dx * dx + dy * dy)
+    end
+    local total = lengths[#raw]
+    local points = {}
+    local j = 2
+    for s = 0, samples do
+        local target = total * s / samples
+        while j < #raw and lengths[j] < target do
+            j = j + 1
+        end
+        local span = lengths[j] - lengths[j - 1]
+        local f = span > 0 and (target - lengths[j - 1]) / span or 0
+        local x = raw[j - 1].x + (raw[j].x - raw[j - 1].x) * f
+        local y = raw[j - 1].y + (raw[j].y - raw[j - 1].y) * f
+        points[s + 1] = { x = x * cosA - y * sinA, y = x * sinA + y * cosA, mx = x * cosA + y * sinA, my = x * sinA - y * cosA }
+    end
+    return points
+end
+
+local function axeRunClear(run)
+    if run.event then
+        removeEvent(run.event)
+        run.event = nil
+    end
+    local tile = g_map.getTile(run.pos)
+    if tile then
+        for _, axe in ipairs(run.axes) do
+            tile:detachEffect(axe.blade)
+            tile:detachEffect(axe.shadow)
+        end
+    end
+    run.axes = {}
+end
+
+local function axeRunStep(runId)
+    local run = axeRuns[runId]
+    if not run then
+        return
+    end
+    local elapsed = g_clock.millis() - run.startedAt
+    if elapsed >= run.flightMs then
+        axeRunClear(run)
+        axeRuns[runId] = nil
+        return
+    end
+    local s = elapsed / run.flightMs * (#run.points - 1)
+    local i = math.floor(s)
+    local f = s - i
+    local p, q = run.points[i + 1], run.points[math.min(i + 2, #run.points)]
+    for n, axe in ipairs(run.axes) do
+        local x, y
+        if n == 1 then
+            x, y = p.x + (q.x - p.x) * f, p.y + (q.y - p.y) * f
+        else
+            x, y = p.mx + (q.mx - p.mx) * f, p.my + (q.my - p.my) * f
+        end
+        local px, py = math.floor(x * 32 + 0.5), math.floor(y * 32 + 0.5)
+        axe.blade:setOffset(-px, -py + AXE_LIFT_PX)
+        axe.shadow:setOffset(-px, -py)
+    end
+    run.event = scheduleEvent(function() axeRunStep(runId) end, 1)
+end
+
+local function onAxes(buffer)
+    local runId, x, y, z, angle, reach, halfWidth, flightMs = buffer:match('^axes,([^,]+),(%d+),(%d+),(%d+),(-?%d+),(%d+),(%d+),(%d+)$')
+    if not runId then
+        return
+    end
+    local pos = { x = tonumber(x), y = tonumber(y), z = tonumber(z) }
+    local tile = g_map.getTile(pos)
+    if not tile then
+        return
+    end
+    if axeRuns[runId] then
+        axeRunClear(axeRuns[runId])
+    end
+    local run = {
+        pos = pos, startedAt = g_clock.millis(), flightMs = tonumber(flightMs), axes = {},
+        points = lemniscate(math.rad(tonumber(angle) / 100), tonumber(reach) / 100, tonumber(halfWidth) / 100, AXE_SAMPLES)
+    }
+    for n = 1, 2 do
+        local blade = g_attachedEffects.getById(AXE_EFFECTS[n])
+        local shadow = g_attachedEffects.getById(AXE_SHADOW_EFFECTS[n])
+        if not blade or not shadow then
+            return
+        end
+        -- the engine's own timer takes them off if the stepping ever stops
+        blade:setDuration(run.flightMs + 200)
+        shadow:setDuration(run.flightMs + 200)
+        tile:attachEffect(shadow)
+        tile:attachEffect(blade)
+        run.axes[n] = { blade = blade, shadow = shadow }
+    end
+    axeRuns[runId] = run
+    axeRunStep(runId)
+end
+
+local function clearAxeRuns()
+    for _, run in pairs(axeRuns) do
+        axeRunClear(run)
+    end
+    axeRuns = {}
+end
+
+-- "daggers,<runId>,<x>,<y>,<z>,<angle>,<spread>,<msPerTile>,<staggerMs>,
+-- <landMs>,<lane>|<lane>|<lane>": one salvo of three daggers from the
+-- tile x,y,z, at <angle> - <spread>, <angle> and <angle> + <spread>
+-- (centidegrees, screen sense; a spread of 0 sends all three down one
+-- line, in file). Each <lane> is "<len>:<stuck>:<lx>:<ly>": the dagger
+-- flies straight for <len> centitiles at <msPerTile> and ends on tile
+-- lx,ly, in the wall beyond it when <stuck> is 1. The three leave
+-- <staggerMs> apart. The server sends one message per salvo, each aimed
+-- afresh. A dagger is a tile effect on
+-- the throw tile moved by offset every frame, drawn at the nearest of 24
+-- rotations (DAGGER_FLIGHT_FIRST + r for r * 15 degrees); where it stops
+-- it is left for <landMs> either lying on its tile (DAGGER_LAND_FIRST + r,
+-- under creatures) or stuck head-first in the wall it ran into
+-- (DAGGER_STUCK_FIRST + r, the tip reaching into the wall tile the way the
+-- spear's does). The server steps the damage down the same lanes.
+local DAGGER_FLIGHT_FIRST, DAGGER_LAND_FIRST, DAGGER_STUCK_FIRST = 301, 325, 357
+local DAGGER_LIFT_PX = 5
+local daggerRuns = {} -- runId -> {event, pos, daggers}
+
+local function daggerRotation(angleDeg)
+    return math.floor((angleDeg % 360) / 15 + 0.5) % 24
+end
+
+local function daggerRunClear(run)
+    if run.event then
+        removeEvent(run.event)
+        run.event = nil
+    end
+    local tile = g_map.getTile(run.pos)
+    if tile then
+        for _, dagger in ipairs(run.daggers) do
+            if dagger.effect then
+                tile:detachEffect(dagger.effect)
+                dagger.effect = nil
+            end
+        end
+    end
+end
+
+local function daggerRunStep(runId)
+    local run = daggerRuns[runId]
+    if not run then
+        return
+    end
+    local elapsed = g_clock.millis() - run.startedAt
+    local tile = g_map.getTile(run.pos)
+    local flying = false
+    for _, dagger in ipairs(run.daggers) do
+        if not dagger.done then
+            local f = (elapsed - dagger.startMs) / dagger.flightMs
+            if f >= 1 then
+                dagger.done = true
+                if tile and dagger.effect then
+                    tile:detachEffect(dagger.effect)
+                    dagger.effect = nil
+                end
+                holdTileEffect(dagger.landPos, (dagger.stuck and DAGGER_STUCK_FIRST or DAGGER_LAND_FIRST) + dagger.rotation, run.landMs)
+            elseif f >= 0 then
+                flying = true
+                if not dagger.effect and tile then
+                    local effect = g_attachedEffects.getById(DAGGER_FLIGHT_FIRST + dagger.rotation)
+                    if effect then
+                        effect:setDuration(dagger.flightMs + 200)
+                        tile:attachEffect(effect)
+                        dagger.effect = effect
+                    end
+                end
+                if dagger.effect then
+                    local px = math.floor(dagger.dirX * f * dagger.len * 32 + 0.5)
+                    local py = math.floor(dagger.dirY * f * dagger.len * 32 + 0.5)
+                    dagger.effect:setOffset(-px, -py + DAGGER_LIFT_PX)
+                end
+            else
+                flying = true -- not launched yet
+            end
+        end
+    end
+    if not flying then
+        daggerRuns[runId] = nil
+        return
+    end
+    run.event = scheduleEvent(function() daggerRunStep(runId) end, 1)
+end
+
+local function onDaggers(buffer)
+    local runId, x, y, z, angle, spread, msPerTile, staggerMs, landMs, lanes =
+        buffer:match('^daggers,([^,]+),(%d+),(%d+),(%d+),(-?%d+),(%d+),(%d+),(%d+),(%d+),([%d:|]+)$')
+    if not runId then
+        return
+    end
+    local pos = { x = tonumber(x), y = tonumber(y), z = tonumber(z) }
+    if daggerRuns[runId] then
+        daggerRunClear(daggerRuns[runId])
+    end
+    angle, spread, msPerTile, staggerMs = tonumber(angle) / 100, tonumber(spread) / 100, tonumber(msPerTile), tonumber(staggerMs)
+    local run = { pos = pos, startedAt = g_clock.millis(), landMs = tonumber(landMs), daggers = {} }
+    local lane = 0
+    for len, stuck, lx, ly in lanes:gmatch('(%d+):([01]):(%d+):(%d+)') do
+        local laneAngle = angle + (lane - 1) * spread
+        local rad = math.rad(laneAngle)
+        len = tonumber(len) / 100
+        run.daggers[#run.daggers + 1] = {
+            startMs = lane * staggerMs,
+            flightMs = math.max(1, len * msPerTile),
+            len = len, dirX = math.cos(rad), dirY = math.sin(rad),
+            rotation = daggerRotation(laneAngle), stuck = stuck == '1',
+            landPos = { x = tonumber(lx), y = tonumber(ly), z = pos.z },
+        }
+        lane = lane + 1
+    end
+    daggerRuns[runId] = run
+    daggerRunStep(runId)
+end
+
+local function clearDaggerRuns()
+    for _, run in pairs(daggerRuns) do
+        daggerRunClear(run)
+    end
+    daggerRuns = {}
+end
+
+-- "spear,<runId>,<x>,<y>,<z>,<dir>,<tiles>,<msPerTile>,<stuck>,<holdMs>":
+-- a spear leaves x,y,z along <dir> (the server's numbering: 0 north, 1
+-- east, 2 south, 3 west, 4 south-west, 5 south-east, 6 north-west, 7
+-- north-east) in one AttachedEffect:move over <tiles> tiles at
+-- <msPerTile> each, and on arrival either sticks in the wall beyond the
+-- last tile (<stuck> 1: the stuck image, its head reaching into the wall
+-- tile, held <holdMs>) or lies on the ground there (0). Zero tiles is a
+-- wall right in front of the thrower: no flight, the spear sticks from
+-- his own tile. One flying and one stuck image per direction.
+local SPEAR_DROP_EFFECT = 298
+local SPEAR_DROP_MS = 1500
+local SPEAR_STEPS = { [0] = { 0, -1 }, [1] = { 1, 0 }, [2] = { 0, 1 }, [3] = { -1, 0 }, [4] = { -1, 1 }, [5] = { 1, 1 }, [6] = { -1, -1 }, [7] = { 1, -1 } }
+local SPEAR_FLY = { [0] = 290, [1] = 291, [2] = 292, [3] = 293, [4] = 349, [5] = 350, [6] = 351, [7] = 352 }
+local SPEAR_STUCK = { [0] = 294, [1] = 295, [2] = 296, [3] = 297, [4] = 353, [5] = 354, [6] = 355, [7] = 356 }
+local spearRuns = {} -- runId -> {event, pos, effectId}
+
+local function spearRunClear(run)
+    if run.event then
+        removeEvent(run.event)
+        run.event = nil
+    end
+    if run.pos then
+        local tile = g_map.getTile(run.pos)
+        if tile then
+            tile:detachEffectById(run.effectId)
+        end
+        run.pos = nil
+    end
+end
+
+local function onSpear(buffer)
+    local runId, x, y, z, dir, tiles, msPerTile, stuck, holdMs = buffer:match('^spear,([^,]+),(%d+),(%d+),(%d+),([0-7]),(%d+),(%d+),([01]),(%d+)$')
+    if not runId then
+        return
+    end
+    dir, tiles, msPerTile = tonumber(dir), tonumber(tiles), tonumber(msPerTile)
+    local from = { x = tonumber(x), y = tonumber(y), z = tonumber(z) }
+    local step = SPEAR_STEPS[dir]
+    local to = { x = from.x + step[1] * tiles, y = from.y + step[2] * tiles, z = from.z }
+    local function land()
+        if stuck == '1' then
+            holdTileEffect(to, SPEAR_STUCK[dir], tonumber(holdMs))
+        else
+            holdTileEffect(to, SPEAR_DROP_EFFECT, SPEAR_DROP_MS)
+        end
+    end
+    if spearRuns[runId] then
+        spearRunClear(spearRuns[runId])
+        spearRuns[runId] = nil
+    end
+    local tile = g_map.getTile(from)
+    local effect = tile and g_attachedEffects.getById(SPEAR_FLY[dir])
+    if tiles == 0 or not effect then
+        land()
+        return
+    end
+    local flightMs = tiles * msPerTile
+    effect:setDuration(flightMs)
+    tile:attachEffect(effect)
+    effect:move(from, to)
+    local run = { pos = from, effectId = SPEAR_FLY[dir] }
+    run.event = scheduleEvent(function()
+        spearRunClear(run)
+        spearRuns[runId] = nil
+        land()
+    end, flightMs)
+    spearRuns[runId] = run
+end
+
+local function clearSpearRuns()
+    for _, run in pairs(spearRuns) do
+        spearRunClear(run)
+    end
+    spearRuns = {}
 end
 
 -- Flamethrower jets (OTSERV flamethrowers.lua, the textured styles) grow
@@ -768,7 +1169,126 @@ local function onJetRetract(buffer)
     end)
 end
 
+-- The brothers' tether as a tube (OTSERV brothers_link.lua, TETHER_LOOK
+-- "tube"), opcode 73 "tether,<idA>,<idB>,<ox>,<oy>": the map is switched
+-- to the 'Map - Tether' shader, which draws one continuous lit tube
+-- between the two creatures' body centres (UIMap:setShaderAnchor hands
+-- the shader where each is DRAWN every frame, walk offset included;
+-- tether.frag does the rest), ox,oy being where on the body it aims.
+-- Held like a tile effect: the server repeats it every half second and
+-- it is dropped TETHER_TTL_MS after the last repeat, or at once on
+-- "tetheroff". The shader the player had is put back when it ends.
+local TETHER_SHADER = 'Map - Tether'
+local TETHER_TTL_MS = 1500
+local tether = nil
+
+-- The ball riding the tube, "tetherball,<runId>,<startPermille>,<remainingMs>":
+-- the server says where along the tube it is now and how long it has left to
+-- reach the far body; this side glides it there on its own frame clock, as
+-- u_Anchor2 (progress 0..1, and a flag that a ball is in flight). A re-send
+-- with the same runId is a re-sync after a bend; "ballstop" or the tether
+-- ending takes it off.
+local tetherBall = nil
+
+local function tetherBallStep()
+    local map = modules.game_interface.getMapPanel()
+    if not tetherBall or not tether or not map then
+        return
+    end
+    local elapsed = g_clock.millis() - tetherBall.startedAt
+    local progress = tetherBall.startProgress + (1 - tetherBall.startProgress) * math.min(1, elapsed / math.max(1, tetherBall.durationMs))
+    -- progress runs from the flow's start; the shader counts from Latrivan
+    if tetherBall.flow < 0 then
+        progress = 1 - progress
+    end
+    map:setShaderPoint(2, progress, 1)
+    if elapsed >= tetherBall.durationMs then
+        tetherBall = nil
+        map:setShaderPoint(2, -1, -1)
+        return
+    end
+    -- Every frame, not every 16 ms: the dispatcher runs a due event once per
+    -- frame, and at 150+ fps a 16 ms step held the ball still for two or
+    -- three frames at a time.
+    scheduleEvent(tetherBallStep, 1)
+end
+
+local function tetherBallOff()
+    tetherBall = nil
+    local map = modules.game_interface.getMapPanel()
+    if map then
+        map:setShaderPoint(2, -1, -1)
+    end
+end
+
+local function tetherBallOn(runId, startPermille, remainingMs)
+    if not tether then
+        return
+    end
+    -- A re-send of the ball already in flight (the server repeats it when the
+    -- line bends) is ignored: its figure is the tile the ball is ON, a step
+    -- behind the glide, and taking it snapped the ball back a tile every time
+    -- a brother walked. The tube's ends are the anchors, so a bend needs no
+    -- re-sync here; the glide runs out on its original clock.
+    if tetherBall and tetherBall.runId == runId then
+        return
+    end
+    local running = tetherBall ~= nil
+    tetherBall = { runId = runId, startProgress = startPermille / 1000, durationMs = remainingMs, startedAt = g_clock.millis(), flow = tether.flow or 1 }
+    if not running then
+        tetherBallStep()
+    end
+end
+
+local function tetherOff()
+    if not tether then
+        return
+    end
+    tetherBallOff()
+    local map = modules.game_interface.getMapPanel()
+    if map then
+        map:clearShaderAnchors()
+        map:setShader(tether.previousShader, 0, 0)
+    end
+    tether = nil
+end
+
+-- idA is always Latrivan and idB Golgordan (the colours are theirs); flow
+-- is +1 while the energy runs from A to B and -1 the other way, and is what
+-- the ball's progress (sent from the flow's own start) is converted with.
+local function tetherOn(idA, idB, ox, oy, flow)
+    local a, b = g_map.getCreatureById(idA), g_map.getCreatureById(idB)
+    local map = modules.game_interface.getMapPanel()
+    if not a or not b or not map then
+        return
+    end
+    if not tether then
+        local current = map:getShader()
+        tether = { previousShader = (current and current.getName and current:getName()) or 'Map - Default' }
+        map:setShader(TETHER_SHADER, 0, 0)
+    end
+    tether.seen = g_clock.millis()
+    tether.flow = flow
+    map:setShaderAnchor(0, a, ox, oy)
+    map:setShaderAnchor(1, b, ox, oy)
+    map:setShaderPoint(3, flow, 1)
+end
+
 local function onTileEffectOpcode(protocol, opcode, buffer)
+    local idA, idB, ox, oy, flow = buffer:match('^tether,(%d+),(%d+),(-?%d+),(-?%d+),(-?1)$')
+    if idA then
+        tetherOn(tonumber(idA), tonumber(idB), tonumber(ox), tonumber(oy), tonumber(flow))
+        return
+    end
+    if buffer == 'tetheroff' then
+        tetherOff()
+        return
+    end
+    local ballId, startPermille, remainingMs = buffer:match('^tetherball,([^,]+),(%d+),(%d+)$')
+    if ballId then
+        tetherBallOn(ballId, tonumber(startPermille), tonumber(remainingMs))
+        return
+    end
     if buffer:sub(1, 8) == 'jetgrow,' then
         onJetGrow(buffer)
         return
@@ -781,9 +1301,24 @@ local function onTileEffectOpcode(protocol, opcode, buffer)
         onBallRun(buffer)
         return
     end
+    if buffer:sub(1, 5) == 'axes,' then
+        onAxes(buffer)
+        return
+    end
+    if buffer:sub(1, 6) == 'spear,' then
+        onSpear(buffer)
+        return
+    end
+    if buffer:sub(1, 8) == 'daggers,' then
+        onDaggers(buffer)
+        return
+    end
     local stopId = buffer:match('^ballstop,([^,]+)$')
     if stopId then
         onBallStop(stopId)
+        if tetherBall and tetherBall.runId == stopId then
+            tetherBallOff()
+        end
         return
     end
 
@@ -833,6 +1368,9 @@ local function expireHeldTileEffects()
             heldTileEffects[key] = nil
         end
     end
+    if tether and now - tether.seen > TETHER_TTL_MS then
+        tetherOff()
+    end
 end
 
 controller = Controller:new()
@@ -843,7 +1381,7 @@ function controller:onGameStart()
     ProtocolGame.registerExtendedOpcode(TILE_EFFECT_OPCODE, onTileEffectOpcode)
     shines = {}
     heldTileEffects = {}
-    controller:cycleEvent(expireShines, 250)
+    controller:cycleEvent(refreshShines, 250)
     controller:cycleEvent(expireHeldTileEffects, 250)
 
     controller:registerEvents(LocalPlayer, {
@@ -873,9 +1411,14 @@ function controller:onGameEnd()
     ProtocolGame.unregisterExtendedOpcode(TILE_EFFECT_OPCODE)
     shines = {}
     heldTileEffects = {}
+    tetherOff()
     clearBallRuns()
     clearBlazeRuns()
+    clearAxeRuns()
+    clearSpearRuns()
+    clearDaggerRuns()
     clearBloodlust()
+    clearLunges()
     -- g_game.getLocalPlayer():clearAttachedEffects()
 end
 

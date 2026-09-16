@@ -6,7 +6,7 @@ UIWidget
     !text: 'Antialiasing Mode:'
     anchors.left: parent.left
     margin-left: 18
-    color: #c0c0c0ff
+    color: $textColor
     anchors.top: parent.top
 
   QtComboBox

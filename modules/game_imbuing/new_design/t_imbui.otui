@@ -834,7 +834,7 @@ ScrollImbue < UIWidget
 NewMainWindow
   id: imbuingWindow
   !text: tr('Imbuement Shrine')
-  size: 740 640
+  size: 748 654
   @onEscape: modules.game_imbuing.close()
   Panel
     id: contentPanel

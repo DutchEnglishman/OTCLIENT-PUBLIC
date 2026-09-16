@@ -31,11 +31,32 @@ function init()
         onSizeChange = onContainerChangeSize,
         onUpdateItem = onContainerUpdateItem
     })
-    connect(Game, {
-        onGameEnd = clean()
+    -- `Game` is not a global -- no bound class goes by that name -- and clean()
+    -- was being CALLED here rather than passed, so connect() received nil twice
+    -- over and returned at its own first line (`if not object then return end`,
+    -- util.lua:44). Nothing has ever run at game end in this module. g_game is
+    -- the table the engine actually fires these on: Game::processGameEnd ->
+    -- callGlobalField("g_game", "onGameEnd").
+    connect(g_game, {
+        onGameStart = onGameStart,
+        onGameEnd = onGameEnd
     })
 
+    ContainerRestore.install()
+
     reloadContainers()
+end
+
+function onGameStart()
+    ContainerRestore.restore()
+end
+
+function onGameEnd()
+    -- Save first. It reads g_game.getContainers(), and Game::processGameEnd
+    -- only calls resetGameStates() -- which empties that -- after this signal
+    -- has returned. getCharacterName() is still set here for the same reason.
+    ContainerRestore.onGameEnd()
+    clean()
 end
 
 function terminate()
@@ -45,9 +66,12 @@ function terminate()
         onSizeChange = onContainerChangeSize,
         onUpdateItem = onContainerUpdateItem
     })
-    disconnect(Game, {
-        onGameEnd = clean()
+    disconnect(g_game, {
+        onGameStart = onGameStart,
+        onGameEnd = onGameEnd
     })
+
+    ContainerRestore.uninstall()
 end
 
 function reloadContainers()
@@ -930,7 +954,11 @@ function onContainerOpen(container, previousContainer)
     else
         containerWindow = g_ui.createWidget('ContainerWindow')
     end
-    containerWindow:setId('container' .. container:getId())
+    -- Keyed on the route to the bag, not on container:getId(). That id is
+    -- whichever container slot happened to be free when this opened, so it
+    -- names a different bag every session and a saved size would land on the
+    -- wrong window. See ContainerRestore.windowId.
+    containerWindow:setId(ContainerRestore.windowId(container))
     local containerPanel = containerWindow:getChildById('contentsPanel')
 
     -- Reclaim the scrollbar's reserved strip for the item grid.
@@ -1139,10 +1167,19 @@ function onContainerOpen(container, previousContainer)
                         mousePos.x <= winX + winW - TOLERANCE_HORIZONTAL and
                         mousePos.y >= winY + TOLERANCE_VERTICAL and 
                         mousePos.y <= winY + winH - TOLERANCE_VERTICAL
-        containerWindow:setDraggable(inBounds and containerWindow:getChildByPos(mousePos) ~= containerPanel)
+        -- Not while locked. This pair used to run unconditionally, handing the
+        -- drag straight back on the next press after lock() took it away --
+        -- UIManager reads isDraggable when the drag starts (uimanager.cpp:158),
+        -- which is after this handler, so a locked container still moved.
+        if not containerWindow.locked then
+            containerWindow:setDraggable(inBounds and containerWindow:getChildByPos(mousePos) ~= containerPanel)
+        end
         return inBounds
     end
     containerWindow.onMouseRelease = function(widget, mousePos, mouseButton)
+        if containerWindow.locked then
+            return false
+        end
         containerWindow:setDraggable(true)
     end
     containerWindow.onDrop = function(container, widget, mousePos)
@@ -1180,9 +1217,15 @@ function onContainerOpen(container, previousContainer)
     if currentSortMode and currentSortMode ~= 'none' and not isManualSortEnabled then
         sortContainerItems(container, currentSortMode)
     end
+
+    ContainerRestore.applyWindowSettings(containerWindow)
+    -- Last: during a restore this is what drives the next hop, and that hop
+    -- reads this window's container.
+    ContainerRestore.onContainerOpen(container)
 end
 
 function onContainerClose(container)
+    ContainerRestore.onContainerClose(container)
     destroy(container)
 end
 

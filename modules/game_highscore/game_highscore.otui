@@ -148,7 +148,10 @@ MainWindow
     !text: tr('Highscores Filter')
     padding-top: 21
     margin-bottom: 21
-    image-source: /images/ui/window_new
+    // Plain, not the header variant: the caption above is drawn at -54, i.e. clear above
+    // this panel, so it never wanted a band. Was window_new at border 4, whose tiled
+    // middle starts inside that image's band and repeated its accent line down the body.
+    image-source: /images/ui/panel_window
     image-border: 4
     color: #BFBFBF
     font: verdana-11px-monochrome
@@ -289,7 +292,7 @@ MainWindow
     Label
       anchors.fill: parent
       font: verdana-11px-antialised
-      color: #dfdfdf88
+      color: $textDisabled
       !text: tr('Rank')
       text-offset: 5 3
 
@@ -307,7 +310,7 @@ MainWindow
     Label
       anchors.fill: parent
       font: verdana-11px-antialised
-      color: #dfdfdf88
+      color: $textDisabled
       !text: tr('Character')
       text-offset: 5 3
 
@@ -323,7 +326,7 @@ MainWindow
     !text: tr('Vocation')
     size: 116 20
     font: verdana-11px-antialised
-    color: #dfdfdf88
+    color: $textDisabled
 
   VerticalSeparator
     anchors.top: data.top
@@ -337,7 +340,7 @@ MainWindow
     !text: tr('Game World')  
     size: 85 20
     font: verdana-11px-antialised
-    color: #dfdfdf88
+    color: $textDisabled
 
   VerticalSeparator
     anchors.top: data.top
@@ -351,7 +354,7 @@ MainWindow
     !text: tr('Level')  
     size: 50 20
     font: verdana-11px-antialised
-    color: #dfdfdf88
+    color: $textDisabled
 
   VerticalSeparator
     anchors.top: data.top
@@ -371,7 +374,7 @@ MainWindow
       anchors.top: parent.top
       anchors.right: parent.right
       font: verdana-11px-antialised
-      color: #dfdfdf88
+      color: $textDisabled
       !text: tr('Points')  
       margin-right: 6
       text-offset: 0 3

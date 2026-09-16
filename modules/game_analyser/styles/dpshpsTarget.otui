@@ -45,8 +45,8 @@ NewMainWindow
   anchors.horizontalCenter: parent.horizontalCenter
   !text: tr('Set DPS Target')
   font: Verdana Bold-11px
-  color: #909090
-  size: 360 134
+  color: $textDim
+  size: 368 148
   @onEscape: self:hide()
 
   Panel

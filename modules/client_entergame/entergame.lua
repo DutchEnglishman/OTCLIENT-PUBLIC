@@ -875,7 +875,7 @@ function EnterGame.showAuthenticatorInput()
     
     tokenWindow.content = tokenWindow:getChildById('content')
     tokenWindow.content:setText(tr('Please enter a new, valid token:'))
-    tokenWindow.content:setColor('#c0c0c0')
+    tokenWindow.content:setColor(g_ui.getVariable('textColor'))
     tokenWindow.content:resizeToText()
     -- Align content to the left instead of center
     tokenWindow.content:breakAnchors()

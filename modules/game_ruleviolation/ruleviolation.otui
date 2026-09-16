@@ -4,7 +4,7 @@ RVListLabel < Label
   focusable: true
 
   $focus:
-    background-color: #ffffff22
+    background-color: $hoverOverlay
     color: #ffffff
 
 RVLabel < Label

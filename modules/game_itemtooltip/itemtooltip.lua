@@ -132,26 +132,34 @@ local TWO_COLUMN_TAGS = { F = true, A = true, P = true, B = true }
 
 -- The base stats are a grid, not a sentence. The server joins them with " | "
 -- (data/tooltip/tooltip_core.lua, extractStats); here they are split back into
--- cells, wrapped STATS_PER_ROW to a row, and every column is made as wide as
--- its widest cell across ALL rows -- so the bars between the columns stand in
--- one line down the block instead of drifting with each row's text. An item
--- with seven resistances used to be one line wider than everything else in
--- the tooltip put together.
+-- cells and wrapped STATS_PER_ROW to a row, each row measured on its own cells
+-- and centred.
+--
+-- The columns were shared once, every cell padded out to the widest cell in
+-- its column across all rows, so the bars stood in one line down the block.
+-- That alignment was paid for in blank space: "Death: 10" beside a long stat
+-- on another row grew a run of spaces wide enough to read as a mistake. Rows
+-- of unequal width look better than cells of padded width.
 local STATS_TAG = 'S'
 local STATS_PER_ROW = 3
 -- Air on each side of a bar.
 local STAT_DIVIDER_GAP = 4
 
 -- Space between the longest label and the value column, and the whole knob for
--- how far apart the two sit. In the default font a space is 4px wide
--- (data/fonts/otfont/verdana-11px-antialised.otfont), and this is now zero:
--- the longest label sits directly against the widest value. That is the floor;
--- anything tighter has to come out of the shared value column itself.
+-- how far apart the two sit: exactly one space of the body font, so the
+-- tightest row in a block reads "Arm: 13" rather than "Arm:13". It was zero,
+-- which only showed on a row that set both column widths at once -- and after
+-- the columns became per-group, every single-row block is such a row.
+--
+-- Measured, not hardcoded: the body is tahomabd 10, whose space is whatever
+-- FreeType's advance rounds to (ttfloader.cpp:242), not the 4px the OTML
+-- bitmap fonts use. See getColumnGap below -- it needs the tooltip window,
+-- which does not exist yet here.
 --
 -- Only the row that has BOTH the longest label and the widest value shows this
 -- gap; every other row shows it plus the difference in value width, which is
 -- what keeps the numbers in one column.
-local COLUMN_GAP = 0
+local columnGap = nil
 
 local PADDING = 6
 local SPRITE_SIZE = 32
@@ -168,7 +176,7 @@ local WEIGHT_GAP = 9
 local SEPARATOR_GAP = 3
 local SEPARATOR_BLOCK = SEPARATOR_GAP * 2 + 1
 local SEPARATOR_WIDTH_RATIO = 1 / 3
-local WEIGHT_COLOR = '#DFDFDF'
+local WEIGHT_COLOR = g_ui.getVariable('textBright')
 -- The top row hugs the corners rather than sitting on the body's padding, but
 -- has to clear the frame: the background is sliced at image-border 5, and the
 -- outline copies reach one pixel further out than the text itself.
@@ -305,6 +313,25 @@ local function createOutlinedLabel(text, color, style)
     return { widget = label, shadows = shadows }
 end
 
+-- One space of the body font, in pixels. Measured off the font itself by the
+-- difference between a spaced and an unspaced pair, because nothing exposes a
+-- single glyph's advance to Lua. Measured ONCE -- the face is fixed in the
+-- .otui and cannot change at runtime -- and only from inside a render, so the
+-- tooltip window it parents the two throwaway labels to already exists.
+local function getColumnGap()
+    if not columnGap then
+        local spaced = g_ui.createWidget('ItemTooltipLine', tooltipWindow)
+        spaced:setText('x x')
+        local tight = g_ui.createWidget('ItemTooltipLine', tooltipWindow)
+        tight:setText('xx')
+        columnGap = math.max(0, spaced:getWidth() - tight:getWidth())
+        spaced:destroy()
+        tight:destroy()
+    end
+
+    return columnGap
+end
+
 -- Anchored rather than absolutely positioned so lines follow the window as it
 -- tracks the cursor. Anchors don't resize the parent, so there's no feedback
 -- into the explicit setSize. width = nil leaves the label at its text width.
@@ -361,17 +388,22 @@ local function renderTooltip(payload, item)
     local rows = {}
     local contentWidth = 0
     local contentHeight = 0
-    -- Measured across the WHOLE tooltip rather than per group, so a refine
-    -- value lands in the same column as an attribute's and the stats above
-    -- both of them line up with either.
-    local labelWidth = 0
-    local valueWidth = 0
-    -- Widest cell seen in each stats column, across every stats row.
-    local statColumns = {}
+    -- One column pair PER GROUP -- the block between two separators -- not one
+    -- shared by the whole tooltip. Shared, a group holding a single short row
+    -- was padded out to a label it has nothing to do with: a crown armor's
+    -- "Arm: 13" sat against the left edge with a run of blank space before the
+    -- number, because "Fire Protection:" two groups below set the column. A
+    -- separator already breaks the eye's run down the values, so there is
+    -- nothing to buy by reaching across one.
+    local tables = {}
+    -- Widest '|' seen; the same glyph everywhere, so effectively a constant.
     local statDividerWidth = 0
 
     for _, group in ipairs(SECTION_GROUPS) do
         local groupRows = {}
+        -- Shared by every pair row in this group and stamped onto each of
+        -- them, so the placing pass reads the block its own row belongs to.
+        local groupTable = { labelWidth = 0, valueWidth = 0, width = 0 }
         for _, tag in ipairs(group) do
             for _, text in ipairs(sections[tag] or {}) do
                 if tag == SOCKET_TAG then
@@ -408,28 +440,33 @@ local function renderTooltip(payload, item)
                             cells[#cells + 1] = trimmed
                         end
                     end
-
                     for first = 1, #cells, STATS_PER_ROW do
                         local inRow = math.min(STATS_PER_ROW, #cells - first + 1)
-                        -- A short LAST row is centred under the full ones: a
-                        -- lone seventh stat sits in the middle column rather
-                        -- than hanging off the left edge. Only after a full row,
-                        -- so every column it skips already has a width.
-                        local offset = first > 1 and math.floor((STATS_PER_ROW - inRow) / 2) or 0
-                        local row = { cells = {}, dividers = {}, first = offset + 1, last = offset + inRow }
+                        -- Every row is measured on its own cells and then
+                        -- centred. The columns used to be shared, so each cell
+                        -- was padded out to the widest cell in its column
+                        -- across the whole block -- which put a run of blank
+                        -- space after a short stat ("Death: 10") to reach the
+                        -- width of a long one on another line, and read as a
+                        -- typo rather than as a table. Bars no longer stand in
+                        -- one line down the block; that alignment is what the
+                        -- padding was buying.
+                        local row = { cells = {}, dividers = {}, first = 1, last = inRow }
+                        local width = 0
                         for i = 1, inRow do
-                            local column = offset + i
                             local entry = createOutlinedLabel(cells[first + i - 1], SECTION_COLORS[STATS_TAG])
-                            row.cells[column] = entry
-                            statColumns[column] = math.max(statColumns[column] or 0, entry.widget:getWidth())
-                            -- Bars only between two cells of THIS row; a
-                            -- centred orphan gets none.
+                            row.cells[i] = entry
+                            width = width + entry.widget:getWidth()
+                            -- Bars only BETWEEN two cells of this row.
                             if i > 1 then
                                 local divider = createOutlinedLabel('|', SECTION_COLORS[STATS_TAG])
-                                row.dividers[column - 1] = divider
+                                row.dividers[i - 1] = divider
                                 statDividerWidth = math.max(statDividerWidth, divider.widget:getWidth())
+                                width = width + STAT_DIVIDER_GAP * 2 + divider.widget:getWidth()
                             end
                         end
+                        row.statWidth = width
+                        contentWidth = math.max(contentWidth, width)
                         groupRows[#groupRows + 1] = row
                     end
                 else
@@ -446,22 +483,40 @@ local function renderTooltip(payload, item)
                     if label then
                         local labelEntry = createOutlinedLabel(label, color)
                         local valueEntry = createOutlinedLabel(value, color)
-                        labelWidth = math.max(labelWidth, labelEntry.widget:getWidth())
-                        valueWidth = math.max(valueWidth, valueEntry.widget:getWidth())
-                        groupRows[#groupRows + 1] = { label = labelEntry, value = valueEntry }
+                        groupTable.labelWidth =
+                            math.max(groupTable.labelWidth, labelEntry.widget:getWidth())
+                        groupTable.valueWidth =
+                            math.max(groupTable.valueWidth, valueEntry.widget:getWidth())
+                        groupRows[#groupRows + 1] =
+                            { label = labelEntry, value = valueEntry, table = groupTable }
                     else
                         local entry = createOutlinedLabel(text, color)
                         contentWidth = math.max(contentWidth, entry.widget:getWidth())
                         -- No value to column off ("Mana Shield", or an attribute
                         -- that reads as a sentence). Still left-aligned with the
                         -- names it sits among rather than centred on its own.
-                        groupRows[#groupRows + 1] = { entry = entry, flush = TWO_COLUMN_TAGS[tag] }
+                        groupRows[#groupRows + 1] =
+                            { entry = entry, flush = TWO_COLUMN_TAGS[tag] and groupTable or nil }
                     end
                 end
             end
         end
 
         if #groupRows > 0 then
+            if groupTable.labelWidth > 0 then
+                groupTable.width =
+                    groupTable.labelWidth + getColumnGap() + groupTable.valueWidth
+                contentWidth = math.max(contentWidth, groupTable.width)
+            else
+                -- No pair rows in this group, so there is no block edge for a
+                -- sentence row to start at. It is centred on the tooltip like
+                -- any other lone line instead.
+                for _, row in ipairs(groupRows) do
+                    row.flush = nil
+                end
+            end
+            tables[#tables + 1] = groupTable
+
             -- Only between groups, so no leading rule and none trailing.
             if #rows > 0 then
                 rows[#rows + 1] = {
@@ -475,24 +530,6 @@ local function renderTooltip(payload, item)
                 contentHeight = contentHeight + rowHeight(row)
             end
         end
-    end
-
-    local tableWidth = 0
-    if labelWidth > 0 then
-        tableWidth = labelWidth + COLUMN_GAP + valueWidth
-        contentWidth = math.max(contentWidth, tableWidth)
-    end
-
-    -- Columns plus a bar and its air between each adjacent pair. Only the
-    -- widest row has every column; a shorter last row stops early but its
-    -- cells still sit on the same column edges.
-    local statTableWidth = 0
-    if #statColumns > 0 then
-        for _, width in ipairs(statColumns) do
-            statTableWidth = statTableWidth + width
-        end
-        statTableWidth = statTableWidth + (#statColumns - 1) * (STAT_DIVIDER_GAP * 2 + statDividerWidth)
-        contentWidth = math.max(contentWidth, statTableWidth)
     end
 
     -- Header: weight left, name between, sprite right.
@@ -543,10 +580,12 @@ local function renderTooltip(payload, item)
     -- width rather than in the measured one.
     contentWidth = math.max(contentWidth, headerWidth) + CONTENT_PAD
 
-    -- The pair rows are centred as ONE block rather than pinned to the left
-    -- edge, so the names stand as far from the left border as the values do
-    -- from the right. Computed here because it needs the final contentWidth.
-    local tableX = PADDING + math.floor((contentWidth - tableWidth) / 2)
+    -- Each group's pair rows are centred as ONE block rather than pinned to the
+    -- left edge, so the names stand as far from the left border as the values
+    -- do from the right. Computed here because it needs the final contentWidth.
+    for _, block in ipairs(tables) do
+        block.x = PADDING + math.floor((contentWidth - block.width) / 2)
+    end
 
     -- The sprite overhangs the body by design (see the note above). Any row
     -- that falls within the sprite's height AND reaches under it -- a stats
@@ -560,7 +599,6 @@ local function renderTooltip(payload, item)
     -- so "within the sprite's height" means the same thing in both.
     local spriteStrip = 0
     if sprite then
-        local statX = PADDING + math.floor((contentWidth - statTableWidth) / 2)
         local spriteLeft = contentWidth + PADDING * 2 - FRAME_INSET_X - SPRITE_SIZE
         local spriteBottom = FRAME_INSET_Y + SPRITE_SIZE
         local rowY = FRAME_INSET_Y + headerHeight
@@ -575,19 +613,13 @@ local function renderTooltip(payload, item)
                 if row.sockets then
                     rightEdge = PADDING + math.floor((contentWidth + row.width) / 2)
                 elseif row.cells then
-                    local x = statX
-                    for column = 1, row.last do
-                        if column > 1 then
-                            x = x + STAT_DIVIDER_GAP * 2 + statDividerWidth
-                        end
-                        x = x + statColumns[column]
-                    end
-                    rightEdge = x
+                    rightEdge = PADDING + math.floor((contentWidth + row.statWidth) / 2)
                 elseif row.label then
-                    rightEdge = tableX + tableWidth
+                    rightEdge = row.table.x + row.table.width
                 elseif row.flush then
                     local width = row.entry.widget:getWidth()
-                    rightEdge = math.max(PADDING, math.min(tableX, PADDING + contentWidth - width)) + width
+                    rightEdge = math.max(PADDING,
+                        math.min(row.flush.x, PADDING + contentWidth - width)) + width
                 else
                     -- Centred in the content width: its ink ends half its
                     -- text width past the middle.
@@ -666,22 +698,18 @@ local function renderTooltip(payload, item)
             end
             y = y + rowHeight(row)
         elseif row.cells then
-            -- Centred as one block; within it every cell starts on its
-            -- column's left edge, so the bars line up row over row. Columns
-            -- the row skips (a centred orphan) still advance x by their width.
-            local x = PADDING + math.floor((contentWidth - statTableWidth) / 2)
-            for column = 1, row.last do
-                if column > 1 then
+            -- Centred on its own measured width, each cell at its natural
+            -- width. A short row is narrower than a long one instead of being
+            -- padded out to match it.
+            local x = PADDING + math.floor((contentWidth - row.statWidth) / 2)
+            for i = 1, row.last do
+                if i > 1 then
                     x = x + STAT_DIVIDER_GAP
-                    if row.dividers[column - 1] then
-                        placeOutlinedLabel(row.dividers[column - 1], x, y)
-                    end
+                    placeOutlinedLabel(row.dividers[i - 1], x, y)
                     x = x + statDividerWidth + STAT_DIVIDER_GAP
                 end
-                if row.cells[column] then
-                    placeOutlinedLabel(row.cells[column], x, y)
-                end
-                x = x + statColumns[column]
+                placeOutlinedLabel(row.cells[i], x, y)
+                x = x + row.cells[i].widget:getWidth()
             end
             y = y + rowHeight(row)
         elseif row.label then
@@ -689,16 +717,16 @@ local function renderTooltip(payload, item)
             -- The block, not the tooltip body: the body is as wide as its
             -- widest line and the base-stats summary is usually far wider than
             -- any roll, so aligning to it left a gap the eye could not bridge.
-            placeOutlinedLabel(row.label, tableX, y)
+            placeOutlinedLabel(row.label, row.table.x, y)
             placeOutlinedLabel(row.value,
-                tableX + tableWidth - row.value.widget:getWidth(), y)
+                row.table.x + row.table.width - row.value.widget:getWidth(), y)
             y = y + row.label.widget:getHeight()
         elseif row.flush then
             -- Starts with the names above it, unless it is wider than the
             -- block -- then it is pulled back so it cannot run off the edge.
             local width = row.entry.widget:getWidth()
             placeOutlinedLabel(row.entry,
-                math.max(PADDING, math.min(tableX, PADDING + contentWidth - width)), y)
+                math.max(PADDING, math.min(row.flush.x, PADDING + contentWidth - width)), y)
             y = y + row.entry.widget:getHeight()
         else
             placeOutlinedLabel(row.entry, PADDING, y, contentWidth)

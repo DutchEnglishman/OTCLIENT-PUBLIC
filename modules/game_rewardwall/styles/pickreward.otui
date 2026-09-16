@@ -4,7 +4,7 @@ MainWindow
   size: 451 390
   @onEscape: modules.game_rewardwall.destroyPickReward()
   padding: 20
-  color: #c0c0c0
+  color: $textColor
 
   Label
     id: rewardLabel
@@ -24,7 +24,7 @@ MainWindow
     margin-top: 5
     height: 267
     vertical-scrollbar: rewardListScrollBar
-    background-color: #404040
+    background-color: $panelFillRaised
 
   VerticalQtScrollBar
     id: rewardListScrollBar

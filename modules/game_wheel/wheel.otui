@@ -2,7 +2,7 @@ NewMainWindow
   id: wheelWindow
   !text: tr('Wheel Of Destiny')
   anchors.horizontalCenter: parent.horizontalCenter
-  size: 1000 645
+  size: 1008 659
   @onEscape: hide()
   @onEnter: onWheelOfDestinyApply(true)
 
@@ -113,7 +113,7 @@ NewMainWindow
       margin-top: 3
       text-auto-resize: true
       font: verdana-11px-antialised
-      color: #dfdfdf
+      color: $textBright
 
   Panel
     id: lesserFragmentPanel
@@ -142,7 +142,7 @@ NewMainWindow
       margin-top: 3
       text-auto-resize: true
       font: verdana-11px-antialised
-      color: #dfdfdf
+      color: $textBright
 
   Panel
     id: greaterFragmentPanel
@@ -171,7 +171,7 @@ NewMainWindow
       margin-top: 3
       text-auto-resize: true
       font: verdana-11px-antialised
-      color: #dfdfdf
+      color: $textBright
 
   Button
     id: hotCopy
@@ -197,7 +197,7 @@ NewMainWindow
     !text: tr('Current Preset: Default-Preset')
     text-auto-resize: true
     font: verdana-11px-antialised
-    color: #dfdfdf
+    color: $textBright
 
   Button
     id: close

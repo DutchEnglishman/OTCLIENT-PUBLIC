@@ -2,7 +2,7 @@ Window < UIWindow
   font: verdana-11px-antialised
   size: 200 200
   opacity: 1
-  color: #dfdfdf
+  color: $textBright
   text-offset: 0 6
   text-align: top
   image-source: acceptWindowBody
@@ -13,7 +13,7 @@ Window < UIWindow
   padding-top: 25
 
   $disabled:
-    color: #dfdfdf88
+    color: $textDisabled
 
   $dragging:
     opacity: 0.8
@@ -28,7 +28,7 @@ AcceptWindow < Window
 
 ButtonShop < UIButton
   font: verdana-11px-antialised
-  color: #dfdfdfff
+  color: $textBright
   size: 92 22
   text-offset: 0 0
   image-color: #dfdfdf
@@ -44,7 +44,7 @@ ButtonShop < UIButton
     image-clip: 0 44 24 22
 
   $disabled:
-    color: #dfdfdf88
+    color: $textDisabled
     opacity: 0.8
 
   

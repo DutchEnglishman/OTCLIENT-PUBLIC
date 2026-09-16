@@ -340,10 +340,10 @@ function Cyclopedia.CreateCharmItem(data)
     local player = g_game.getLocalPlayer()
     if widget.icon == 1 and player:getTotalMoney() then
         local canAfford = data.removeRuneCost <= player:getTotalMoney()
-        value:setColor(canAfford and "#C0C0C0" or "#D33C3C")
+        value:setColor(canAfford and g_ui.getVariable('textColor') or "#D33C3C")
     elseif widget.icon == 0 then
         local canAfford = data.unlockPrice <= UI.CharmsPoints
-        value:setColor(canAfford and "#C0C0C0" or "#D33C3C")
+        value:setColor(canAfford and g_ui.getVariable('textColor') or "#D33C3C")
     end
 
     widget.category = charmData.category
@@ -525,21 +525,21 @@ local function updateUIColors(widget, UI_BASE)
                 local pointsValue = charmEntry.points[widget.data.tier + 1]
                 local canAfford = pointsValue <= player:getResourceBalance(charmCategory)
                 UI.InformationBase.verticalPanelUnLockClearChram.PriceBaseCharm.Value:setColor(
-                    canAfford and "#C0C0C0" or "#D33C3C")
+                    canAfford and g_ui.getVariable('textColor') or "#D33C3C")
                 UI.InformationBase.verticalPanelUnLockClearChram.UnlockButton:setEnabled(canAfford)
             end
         else
-            UI.InformationBase.verticalPanelUnLockClearChram.PriceBaseCharm.Value:setColor("#C0C0C0")
+            UI.InformationBase.verticalPanelUnLockClearChram.PriceBaseCharm.Value:setColor(g_ui.getVariable('textColor'))
             UI.InformationBase.verticalPanelUnLockClearChram.UnlockButton:setEnabled(false)
         end
         priceValue:setText(comma_value(widget.data.removeRuneCost))
         local canAfford = widget.data.removeRuneCost <= player:getTotalMoney()
-        priceValue:setColor(canAfford and "#C0C0C0" or "#D33C3C")
+        priceValue:setColor(canAfford and g_ui.getVariable('textColor') or "#D33C3C")
         UI.InformationBase.verticalPanelUnLockClearChram.ClearButton:setEnabled(canAfford and widget.data.asignedStatus)
     else
         if widget.icon == 1 and player:getTotalMoney() then
             local canAfford = widget.data.removeRuneCost <= player:getTotalMoney()
-            priceValue:setColor(canAfford and "#C0C0C0" or "#D33C3C")
+            priceValue:setColor(canAfford and g_ui.getVariable('textColor') or "#D33C3C")
             UI_BASE.UnlockButton:setEnabled(canAfford)
 
             local priceText = (widget.data.unlocked and not widget.data.asignedStatus) and 0 or
@@ -547,7 +547,7 @@ local function updateUIColors(widget, UI_BASE)
             priceValue:setText(priceText)
         elseif widget.icon == 0 then
             local canAfford = widget.data.unlockPrice <= UI.CharmsPoints
-            priceValue:setColor(canAfford and "#C0C0C0" or "#D33C3C")
+            priceValue:setColor(canAfford and g_ui.getVariable('textColor') or "#D33C3C")
             UI_BASE.UnlockButton:setEnabled(canAfford)
             priceValue:setText(widget.data.unlockPrice)
         end
@@ -558,7 +558,7 @@ local function setupCreatureList(widget, UI_BASE)
     if (widget.data.unlocked and not widget.data.asignedStatus) or isModernUI then
         UI_BASE.UnlockButton:setText("Select")
 
-        local color = "#484848"
+        local color = g_ui.getVariable('panelFillLight')
         for index, raceId in ipairs(Cyclopedia.Charms.Monsters) do
             local creatureWidget = g_ui.createWidget("CharmCreatureName", UI_BASE.CreatureList)
             creatureWidget:setId(index)
@@ -666,7 +666,7 @@ function Cyclopedia.selectCharm(widget, isChecked)
         local creatureWidget = g_ui.createWidget("CharmCreatureName", UI_BASE.CreatureList)
         creatureWidget:setText(formatCreatureName(g_things.getRaceData(widget.data.raceId).name))
         creatureWidget:setEnabled(false)
-        creatureWidget:setColor("#707070")
+        creatureWidget:setColor(g_ui.getVariable('textMuted'))
 
         if not isModernUI then
             UI_BASE.SearchEdit:setEnabled(false)
@@ -765,7 +765,7 @@ function Cyclopedia.searchCharmMonster(text)
         searchedMonsters = Cyclopedia.Charms.Monsters
     end
 
-    local color = "#484848"
+    local color = g_ui.getVariable('panelFillLight')
 
     for _, raceId in ipairs(searchedMonsters) do
         local internalWidget = g_ui.createWidget("CharmCreatureName", UI_BASE.CreaturesBase.CreatureList)

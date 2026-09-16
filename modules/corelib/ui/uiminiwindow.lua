@@ -4,6 +4,13 @@ UIMiniWindow = extends(UIWindow, 'UIMiniWindow')
 function UIMiniWindow.create()
     local miniwindow = UIMiniWindow.internalCreate()
     miniwindow.UIMiniWindowContainer = true
+    -- UIWindow.create sets this, but UIMiniWindow.create does not chain through
+    -- it and the MiniWindow style does not restate it, so every miniwindow used
+    -- to start non-draggable while reading as unlocked. lockButton decides which
+    -- way to toggle from isDraggable(), so its first click said "unlock" on a
+    -- window that already could not be moved.
+    miniwindow:setDraggable(true)
+    miniwindow.locked = false
     return miniwindow
 end
 
@@ -168,6 +175,13 @@ function UIMiniWindow:setupOnStart()
                     height = true
                 })
             end
+        end
+
+        -- lock() and unlock() have always written this, and nothing has ever read
+        -- it back: a window locked before a relog came back movable, with the
+        -- open padlock still showing because setOn was never re-applied either.
+        if selfSettings.locked then
+            self:lock(true)
         end
 
         if selfSettings.closed then
@@ -552,13 +566,12 @@ function UIMiniWindow:isResizeable()
 end
 
 function UIMiniWindow:lock(dontSave)
+    self.locked = true
     local lockButton = self:getChildById('lockButton')
     if lockButton then
         lockButton:setOn(true)
     end
     self:setDraggable(false)
-    self:setBorderWidth(1)
-    self:setBorderColor('#d33c3c')
     if not dontSave then
         self:setSettings({
             locked = true
@@ -569,12 +582,12 @@ function UIMiniWindow:lock(dontSave)
 end
 
 function UIMiniWindow:unlock(dontSave)
+    self.locked = false
     local lockButton = self:getChildById('lockButton')
     if lockButton then
         lockButton:setOn(false)
     end
     self:setDraggable(true)
-    self:setBorderWidth(0)
     if not dontSave then
         self:setSettings({
             locked = false

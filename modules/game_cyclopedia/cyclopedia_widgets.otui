@@ -6,7 +6,7 @@ HouseBidArea < UIWidget
   margin-top: 2
   Label
     !text: tr('Set bid limit:')
-    color: #909090
+    color: $textDim
     text-align: right
     size: 90 15
     anchors.top: parent.top
@@ -33,7 +33,7 @@ HouseBidArea < UIWidget
     image-source: /images/icons/show_gui_help_grey
   Label
     id: information
-    color: #C0C0C0
+    color: $textColor
     text-auto-resize: true
     text-wrap: true
     anchors.top: parent.top
@@ -42,7 +42,7 @@ HouseBidArea < UIWidget
 House < UICheckBox
   text-align: top
   text-offset: 0 1
-  color: #909090
+  color: $textDim
   image-source: /images/ui/widget-borderimage
   image-border: 5
   padding: 5
@@ -55,14 +55,14 @@ House < UICheckBox
     id: size
     size: 100 15
     !text: tr('Size: 17sqm')
-    color: #909090
+    color: $textDim
     anchors.top: parent.top
     anchors.left: parent.left
   Label
     id: status
     !text: tr('Status: auctioned (no bid yet)')
     text-auto-resize: true
-    color: #909090
+    color: $textDim
     anchors.top: size.bottom
     anchors.left: parent.left
     margin-top: 2
@@ -70,19 +70,19 @@ House < UICheckBox
     id: beds
     size: 95 15
     !text: tr('Max. Beds: 1')
-    color: #909090
+    color: $textDim
     anchors.top: size.top
     anchors.left: size.right
   Label
     text-auto-resize: true
     !text: tr('Rent:   ')
-    color: #909090
+    color: $textDim
     anchors.top: beds.top
     anchors.left: beds.right
   Label
     id: rent
     text-auto-resize: true
-    color: #C0C0C0
+    color: $textColor
     anchors.top: prev.top
     anchors.left: prev.right
   UIWidget
@@ -124,7 +124,7 @@ CharacterAppearance < UIWidget
     margin-bottom: 10
   Label
     id: name
-    color: #C0C0C0
+    color: $textColor
     text-auto-resize: true
     anchors.top: creature.bottom
     anchors.horizontalCenter: parent.horizontalCenter
@@ -142,7 +142,7 @@ CharacterGridItem < UIWidget
   Label
     id: amount
     !text: tr('0')
-    color: #C0C0C0
+    color: $textColor
     font: verdana-11px-rounded
     text-auto-resize: true
     anchors.bottom: parent.bottom
@@ -167,7 +167,7 @@ CharacterListItem < UIWidget
   Label
     id: name
     !text: tr('Boots')
-    color: #C0C0C0
+    color: $textColor
     text-auto-resize: true
     anchors.verticalCenter: item.verticalCenter
     anchors.left: item.right
@@ -183,15 +183,15 @@ CharacterListItem < UIWidget
   Label
     id: amount
     !text: tr('1')
-    color: #C0C0C0
+    color: $textColor
     text-auto-resize: true
     anchors.verticalCenter: item.verticalCenter
     anchors.left: separator.left
     margin-left: 5
 Achievement < UICheckBox
   image-source: /images/ui/outfits/minipanel
-  image-border: 5
-  color: #C0C0C0
+  image-border: 3
+  color: $textColor
   text-auto-resize: true
   text-wrap: true
   text-offset: 10 25
@@ -201,7 +201,7 @@ Achievement < UICheckBox
   UIWidget
     id: title
     text-auto-resize: true
-    color: #909090
+    color: $textDim
     anchors.top: parent.top
     margin-top: 2
     anchors.horizontalCenter: parent.horizontalCenter
@@ -225,7 +225,7 @@ CharacterDeath < UICheckBox
     $on:
       color: #F4F4F4
     $!on:
-      color: #C0C0C0
+      color: $textColor
   VerticalSeparator
     id: separator
     anchors.top: parent.top
@@ -243,7 +243,7 @@ CharacterDeath < UICheckBox
     $on:
       color: #F4F4F4
     $!on:
-      color: #C0C0C0
+      color: $textColor
 CharacterKill < UICheckBox
   size: 450 17
   Label
@@ -255,7 +255,7 @@ CharacterKill < UICheckBox
     $on:
       color: #F4F4F4
     $!on:
-      color: #C0C0C0
+      color: $textColor
   VerticalSeparator
     id: separator
     anchors.top: parent.top
@@ -273,7 +273,7 @@ CharacterKill < UICheckBox
     $on:
       color: #F4F4F4
     $!on:
-      color: #C0C0C0
+      color: $textColor
   VerticalSeparator
     id: separatorTwo
     anchors.top: parent.top
@@ -291,7 +291,7 @@ CharacterKill < UICheckBox
     $on:
       color: #F4F4F4
     $!on:
-      color: #C0C0C0
+      color: $textColor
 CharacterElementReduction < UIWidget
   height: 20
   Label
@@ -300,7 +300,7 @@ CharacterElementReduction < UIWidget
     text-auto-resize: true
     anchors.top: parent.top
     anchors.left: parent.left
-    color: #C0C0C0
+    color: $textColor
   Label
     id: value
     !text: ('+5%')
@@ -342,7 +342,7 @@ SelectBossBossSlots < UICheckBox
   image-source: /images/ui/outfits/minipanel
   text-offset: 0 3
   text-align: top
-  image-border: 5
+  image-border: 3
   !text: tr('?')
   color: #BEBEBE
   border: 0 white
@@ -367,7 +367,7 @@ SelectBossBossSlots < UICheckBox
 SlotBossSlots < UIWidget
   size: 222 360
   image-source: /images/ui/outfits/minipanel
-  image-border: 20
+  image-border: 3
   color: #929292
   text-offset: 0 3
   text-align: top
@@ -443,7 +443,7 @@ SlotBossSlots < UIWidget
       !text: tr('Select')
       //font: verdana-bold-8px-antialiased
       text-offset: 0 -1
-      color: #C0C0C0
+      color: $textColor
       enabled: false
       margin-bottom: 2
       margin-right: 2
@@ -515,7 +515,7 @@ SlotBossSlots < UIWidget
       !text: tr('Remove')
       //font: verdana-bold-8px-antialiased
       text-offset: 0 -1
-      color: #C0C0C0
+      color: $textColor
 BossSlotProgress < UIWidget
   size: 140 35
   ProgressBackground
@@ -613,12 +613,12 @@ BorderBox < UIWidget
 SubPanel < UIWidget
   image-source: /images/ui/outfits/minipanel
   image-border: 3
-  image-border-top: 22
+  image-border-top: 3
   color: #929292
   text-offset: 0 3
   text-align: top
 ItemCategory < UIWidget
-  color: #C0C0C0
+  color: $textColor
   text-align: left
   @onCheckChange: modules.game_cyclopedia.Cyclopedia.onCategoryChange(self)
   $checked:
@@ -644,7 +644,7 @@ ItemsListBaseItem < UIWidget
     margin-left: 5
     text-auto-resize: true
     !text: tr('Item Name')
-    color: #C0C0C0
+    color: $textColor
 ItemBasicDetail < UIWidget
   UIWidget
     id: background
@@ -676,7 +676,7 @@ CharmItem < UICheckBox
   !text: tr('Title')
   image-source: /images/ui/outfits/minipanel
   image-border: 3
-  image-border-top: 22
+  image-border-top: 3
   color: #929292
   text-offset: 0 3
   text-align: top
@@ -817,7 +817,7 @@ CharacterCategoryItem < UIWidget
       text-auto-resize: true
       !text: tr('General Stats')
       //font: verdana-bold-8px-antialiased
-      color: #C0C0C0
+      color: $textColor
       $checked:
         text-offset 10 10
       $!checked:
@@ -833,11 +833,11 @@ CharacterCategoryItem < UIWidget
       visible: false
 BestiaryCategory < UIWidget
   image-source: /images/ui/outfits/minipanel
-  image-border: 20
+  image-border: 3
   !text: tr('Name')
   text-align: top
   text-offset: 0 4
-  color: #909090
+  color: $textDim
   UIWidget
     id: ClassBase
     anchors.top: parent.top
@@ -868,7 +868,7 @@ BestiaryCategory < UIWidget
     color: #C2C2C2
 BosstiaryItem < UIWidget
   image-source: /images/ui/outfits/minipanel
-  image-border: 20
+  image-border: 3
   !text: tr('?')
   text-align: top
   text-offset: 0 4
@@ -982,7 +982,7 @@ BosstiaryItem < UIWidget
     size: 64 64
 BestiaryCreature < UIWidget
   image-source: /images/ui/outfits/minipanel
-  image-border: 20
+  image-border: 3
   Label
     id: Name
     height: 20
@@ -1051,53 +1051,73 @@ BestiaryResistProgress < UIWidget
     anchors.fill: parent
     image-source: /game_cyclopedia/images/bestiary/barra
     phantom: true
-BestiaryItem < UIItem
+// One drop of a monster's loot table: sprite, item name, and the drop chance
+// off its items.xml row. A locked tile keeps the same footprint but its Item
+// is empty and the "?" slot art sits on top -- the server never sends the id
+// or name of a locked row, so there is nothing here to reveal by accident.
+BestiaryLootTile < UIWidget
+  size: 150 38
   image-source: /images/ui/2pixel_up_frame_borderimage
   image-border: 10
-  size: 34 34
-  anchors.verticalCenter: parent.verticalCenter
-  padding: 1
-  $checked:
-    image-source: /images/ui/panel_flat
-  $first:
-    anchors.left: parent.left
-  $!first:
-    anchors.left: prev.right
-    margin-left: 2
-  UIWidget
-    id: undefinedItem
-    image-source: /images/ui/undefined_item
-    anchors.fill: parent
-    visible: false
-  Label
-    id: Stackable
-    text-auto-resize: true
-    font: verdana-11px-rounded
-    anchors.bottom: parent.bottom
-    anchors.right: parent.right
-    color: #BFBFBF
-    margin-bottom: -1
-  UIWidget
-    id: Rarity
-    image-border: 5
-    padding: 1
-    anchors.fill: parent
-BestiaryItemGroup < UIWidget
-  height: 45
-  UIWidget
-    id: Items
-    anchors.fill: parent
-    margin-left: 108
-  Label
-    id: Title
+  focusable: false
+  Item
+    id: Sprite
+    size: 34 34
     anchors.left: parent.left
     anchors.verticalCenter: parent.verticalCenter
+    margin-left: 2
+    virtual: true
+    phantom: true
+  UIWidget
+    id: Locked
+    anchors.fill: Sprite
+    image-source: /game_cyclopedia/images/bestiary/undiscoveredSlot
+    visible: false
+    phantom: true
+  Label
+    id: Name
+    anchors.left: Sprite.right
+    anchors.right: parent.right
+    anchors.top: parent.top
     margin-left: 5
-    !text: tr('Common') .. ':'
+    margin-top: 5
+    margin-right: 4
+    font: verdana-11px-monochrome
+    color: #C7C7C7
+    text-wrap: false
+    phantom: true
+  Label
+    id: Percent
+    anchors.left: Name.left
+    anchors.bottom: parent.bottom
+    margin-bottom: 5
     text-auto-resize: true
+    font: verdana-11px-monochrome
+    color: #8E8E8E
+    phantom: true
+
+// One pair per variant section in the bestiary loot list: a heading, then the
+// tiles under it. Kept flat rather than nested in a section widget so the
+// shape matches the one proven in character.otui's rightPanel -- a verticalBox
+// with fit-children, alternating Label and grid Panel.
+BestiaryLootHeader < Label
+  text-auto-resize: true
+  font: verdana-11px-monochrome
+  color: #C7C7C7
+  margin-top: 6
+
+BestiaryLootGrid < Panel
+  margin-top: 3
+  layout:
+    type: grid
+    cell-size: 150 38
+    cell-spacing: 4
+    flow: true
+    fit-children: true
+
 CharmCreatureName < UICheckBox
-  color: #C0C0C0
-  background-color: #484848
+  color: $textColor
+  background-color: $panelFillLight
   @onClick: modules.game_cyclopedia.Cyclopedia.selectCreatureCharm(self, self:isChecked())
   $checked:
     background-color: #585858

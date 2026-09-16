@@ -7,14 +7,14 @@ DamageSourcePanel < UIWidget
     anchors.top: parent.top
     anchors.left: parent.left
     text-auto-resize: true
-    color: #c0c0c0
+    color: $textColor
     font: Verdana Bold-11px
   Label
     id: desc
     anchors.top: parent.top
     anchors.right: parent.right
     text-auto-resize: true
-    color: #c0c0c0
+    color: $textColor
     font: Verdana Bold-11px
 
 MiniWindow
@@ -61,7 +61,7 @@ MiniWindow
       anchors.left: parent.left
       margin-top: 5
       text-auto-resize: true
-      color: #c0c0c0
+      color: $textColor
       font: Verdana Bold-11px
     Label
       id: rcvDmgLabel
@@ -70,7 +70,7 @@ MiniWindow
       anchors.left: parent.left
       margin-top: 5
       text-auto-resize: true
-      color: #c0c0c0
+      color: $textColor
       font: Verdana Bold-11px
 
     Label
@@ -79,7 +79,7 @@ MiniWindow
       anchors.top: prev.top
       anchors.right: parent.right
       text-auto-resize: true
-      color: #c0c0c0
+      color: $textColor
       font: Verdana Bold-11px
 
     Label
@@ -89,7 +89,7 @@ MiniWindow
       anchors.left: parent.left
       margin-top: 5
       text-auto-resize: true
-      color: #c0c0c0
+      color: $textColor
       font: Verdana Bold-11px
 
     Label
@@ -98,7 +98,7 @@ MiniWindow
       anchors.top: prev.top
       anchors.right: parent.right
       text-auto-resize: true
-      color: #c0c0c0
+      color: $textColor
       font: Verdana Bold-11px
 
     HorizontalSeparator
@@ -154,7 +154,7 @@ MiniWindow
       anchors.left: parent.left
       margin-top: 5
       text-auto-resize: true
-      color: #c0c0c0
+      color: $textColor
       font: Verdana Bold-11px
 
     Panel
@@ -180,7 +180,7 @@ MiniWindow
       anchors.left: parent.left
       margin-top: 5
       text-auto-resize: true
-      color: #c0c0c0
+      color: $textColor
       font: Verdana Bold-11px
 
     Panel
@@ -206,7 +206,7 @@ MiniWindow
       anchors.left: parent.left
       margin-top: 5
       text-auto-resize: true
-      color: #c0c0c0
+      color: $textColor
       font: Verdana Bold-11px
       visible: true
 

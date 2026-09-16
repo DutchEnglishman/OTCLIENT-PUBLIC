@@ -3,7 +3,11 @@ MiniPanel < Panel
   text-align: top
   image-source: /images/ui/miniwindow
   image-border: 4
-  image-border-top: 20
+  // 4, not 20. miniwindow.png carries no title band under this skin, so rows 4..20 were
+  // flat body being held fixed for nothing -- and holding them fixed shortened the tiled
+  // middle, which is the rectangle the body grain is made periodic over. Same picture,
+  // and now the grain meets itself. Padding is untouched, so the caption has not moved.
+  image-border-top: 4
   image-border-bottom: 4
   padding-left: 4
   padding-bottom: 3
@@ -12,7 +16,7 @@ MiniPanel < Panel
 
 CategoryButton < UIButton
   font: verdana-11px-antialised
-  color: #dfdfdfff
+  color: $textBright
   size: 106 23
   image-source: /images/ui/button
   image-color: #ababab
@@ -32,7 +36,7 @@ CategoryButton < UIButton
     image-color: #ffffff
 
   $disabled:
-    color: #dfdfdf88
+    color: $textDisabled
     opacity: 0.8
 
 CategoryItem < UIItem
@@ -118,8 +122,9 @@ MainWindow
       width: 118
       @onClick: modules.game_crafting.selectCategory("weaponsmith")
 
+      // 3414 is server 2514, the mastermind shield.
       CategoryItem
-        item-id: 3264
+        item-id: 3414
 
       CategoryLabel
         text: Item refining
@@ -151,19 +156,8 @@ MainWindow
         text: Mining
 
     CategoryButton
-      id: enchanterCat
-      width: 95
-      @onClick: modules.game_crafting.selectCategory("enchanter")
-
-      CategoryItem
-        item-id: 942
-
-      CategoryLabel
-        text: Crystals
-
-    CategoryButton
       id: jewellerCat
-      width: 120
+      width: 103
       @onClick: modules.game_crafting.selectCategory("jeweller")
 
       CategoryItem
@@ -171,6 +165,20 @@ MainWindow
 
       CategoryLabel
         text: Sockets
+
+    // The widths across this panel add up to its 518, so a label that grows
+    // has to take the room off a neighbour -- this tab took 17 from Sockets.
+    CategoryButton
+      id: enchanterCat
+      width: 112
+      @onClick: modules.game_crafting.selectCategory("enchanter")
+
+      // 11800 is server 12764, the falcon greaves.
+      CategoryItem
+        item-id: 11800
+
+      CategoryLabel
+        text: Equipment
 
   HorizontalSeparator
     anchors.top: prev.bottom
@@ -216,7 +224,8 @@ MainWindow
     text-align: top
     image-source: /images/ui/miniwindow
     image-border: 4
-    image-border-top: 23
+    // was 23, same reason as MiniPanel at the top of this file
+    image-border-top: 4
     image-border-bottom: 4
     padding-bottom: 3
     padding-top: 18

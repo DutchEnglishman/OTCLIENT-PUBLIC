@@ -11,6 +11,13 @@ function UIMessageBox.create(title, okCallback, cancelCallback)
     return calendar
 end
 
+-- What the carved moulding costs this box in height, and nothing else. The frame's title
+-- band is 25 rows against the flat frame's 16, and its bottom moulding is 8 rather than 4
+-- (see MessageBoxWindow in 30-messageboxes.otui). The layout inside is untouched: the box
+-- grows by exactly what the chrome took, the same trade every other pop-up made. Width
+-- needs nothing -- horizontalPadding already insets the text 16 a side, twice the moulding.
+local FRAME_HEIGHT = 17
+
 function UIMessageBox.display(title, message, buttons, onEnterCallback, onEscapeCallback)
     local rootWidth = rootWidget and rootWidget:getWidth() or 956
     local rootHeight = rootWidget and rootWidget:getHeight() or 656
@@ -20,7 +27,7 @@ function UIMessageBox.display(title, message, buttons, onEnterCallback, onEscape
             min = 246
         },
         height = {
-            min = 56,
+            min = 56 + FRAME_HEIGHT,
             max = math.min(616, math.max(120, rootHeight - 40))
         }
     }
@@ -71,7 +78,7 @@ function UIMessageBox.display(title, message, buttons, onEnterCallback, onEscape
     messageBox.content:setWidth(finalWidth - horizontalPadding)
     messageBox.content:resizeToText()
 
-    currentSizes.height = messageBox.content:getHeight() + 20 + 22
+    currentSizes.height = messageBox.content:getHeight() + 20 + 22 + FRAME_HEIGHT
     if #buttons > 0 then
         currentSizes.height = currentSizes.height + 42
     end
@@ -170,8 +177,8 @@ function UIMessageBox.displaySHOP(title, message, description, buttons, onEnterC
             min = 390
         },
         height = {
-            min = 200,
-            max = 200
+            min = 200 + FRAME_HEIGHT,
+            max = 200 + FRAME_HEIGHT
         }
     }
     local currentSizes = {

@@ -2,7 +2,7 @@ NewMainWindow
   id: renamePreset
   !text: tr('Rename Preset')
   anchors.horizontalCenter: parent.horizontalCenter
-  size: 625 121
+  size: 633 135
   @onClose:
 
   Panel
@@ -16,7 +16,7 @@ NewMainWindow
       anchors.top: parent.top
       anchors.left: parent.left
       text-auto-resize: true
-      color: #c0c0c0
+      color: $textColor
       font: Verdana Bold-11px
 
     UIWidget
@@ -36,7 +36,7 @@ NewMainWindow
       anchors.top: prev.bottom
       anchors.left: parent.left
       anchors.right: parent.right
-      color: #c0c0c0
+      color: $textColor
       font: Verdana Bold-11px
       margin-top: 7
       @onTextChange: modules.game_wheel.WheelOfDestiny.onPresetNameChange(self:getText())

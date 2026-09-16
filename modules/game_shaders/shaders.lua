@@ -62,6 +62,11 @@ local MAP_SHADERS = { {
 }, {
     name = 'Map - Noise',
     frag = 'shaders/fragment/noise.frag'
+}, {
+    -- The brothers' tether, a tube drawn from body to body (attachedeffects.lua
+    -- switches the map to it while a tether is held and back afterwards).
+    name = 'Map - Tether',
+    frag = 'shaders/fragment/tether.frag'
 } }
 
 local OUTFIT_SHADERS = {
@@ -209,6 +214,24 @@ local MOUNT_SHADERS = { {
 }, {
     name = 'Mount - Rainbow',
     frag = 'shaders/fragment/party.frag'
+} }
+
+-- Worn by a floor item whose upgrade-system rarity is Rare or better, put on
+-- and taken off by game_attachedeffects on the server's word (opcode 72) --
+-- the same arrangement as Monster - Bloodlust above, and for the same reason:
+-- nothing picks these from the combo boxes, so there is no Default entry.
+-- One shader per rarity because the colour has to be baked in: the only
+-- per-item uniform the draw path offers is u_ItemId, and Item::internalDraw
+-- leaves it unset.
+local ITEM_SHADERS = { {
+    name = 'Item - Rarity Shine Rare',
+    frag = 'shaders/fragment/rarity_shine_rare.frag'
+}, {
+    name = 'Item - Rarity Shine Epic',
+    frag = 'shaders/fragment/rarity_shine_epic.frag'
+}, {
+    name = 'Item - Rarity Shine Legendary',
+    frag = 'shaders/fragment/rarity_shine_legendary.frag'
 } }
 
 -- Text shaders for improved readability and visual effects
@@ -390,6 +413,10 @@ function ShaderController:onInit()
 
     for _, opts in pairs(MOUNT_SHADERS) do
         registerShader(opts, 'setupMountShader')
+    end
+
+    for _, opts in pairs(ITEM_SHADERS) do
+        registerShader(opts, 'setupItemShader')
     end
 
     for _, opts in pairs(TEXT_SHADERS) do

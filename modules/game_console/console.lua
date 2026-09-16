@@ -694,12 +694,12 @@ function onTabChange(tabBar, tab)
     end
 
     if tab.isOnRedMessage then
-        tab:setColor('#dfdfdfff')
+        tab:setColor(g_ui.getVariable('textBright'))
         tab.isOnRedMessage = false
     end
 
     if tab.newMessageEvent ~= nil then
-        tab:setColor('#dfdfdfff')
+        tab:setColor(g_ui.getVariable('textBright'))
         removeEvent(tab.newMessageEvent)
         tab.newMessageEvent = nil
     end
@@ -925,7 +925,7 @@ function addTab(name, focus)
                 tab:setColor('#f75f5fff')
             end
             if tab.newMessageEvent ~= nil then
-                tab:setColor('#dfdfdfff')
+                tab:setColor(g_ui.getVariable('textBright'))
             end
         end
     end
@@ -1341,7 +1341,7 @@ local function changeNewNessageColor(tab)
         return
     end
 
-    tab:setColor('#dfdfdfff')
+    tab:setColor(g_ui.getVariable('textBright'))
     tab.newMessageEvent = scheduleEvent(function()
         tab:setColor('#f75f5fff')
         tab.isOnRedMessage = true
@@ -1618,12 +1618,12 @@ function processChannelTabMenu(tab, mousePos, mouseButton)
         menu:addSeparator()
     end
     if readOnlyModeEnabled and activeactiveReadOnlyTabName == channelName then
-        menu:addOption(tr("Close read-only"), function()
+        menu:addOption(tr("Close secondary window"), function()
             clearReadOnlyTab()
             toggleReadOnlyMode()
         end)
     else
-        menu:addOption(tr("Open read-only"), function()
+        menu:addOption(tr("Open secondary window"), function()
             activateReadOnlyMode(channelName)
         end)
     end
@@ -2230,7 +2230,7 @@ function onChannelList(channelList)
     g_keyboard.bindKeyPress('Up', function()
         channelListPanel:focusPreviousChild(KeyboardFocusReason)
     end, channelsWindow)
-    local selectedBackground = "#ffffff22"
+    local selectedBackground = g_ui.getVariable('hoverOverlay')
     local count = 0
     channelListPanel.onChildFocusChange = function(self, focusedChild, oldFocusedChild)
         if oldFocusedChild and oldFocusedChild.baseBackground then
@@ -2783,7 +2783,7 @@ function activateReadOnlyMode(channelName)
         end
         if tab.isOnRedMessage then
             if consoleTabBar:getCurrentTab() == tab then
-                tab:setColor('#dfdfdfff')
+                tab:setColor(g_ui.getVariable('textBright'))
             else
                 tab:setColor('#7f7f7fff')
             end
@@ -2807,7 +2807,7 @@ function onReadOnlyMouseClick()
             })
             contextMenu:addSeparator()
         end
-        contextMenu:addOption(tr("Close Read-Only Tab"), function()
+        contextMenu:addOption(tr("Close secondary window"), function()
             clearReadOnlyTab()
             toggleReadOnlyMode()
         end)
@@ -2909,12 +2909,12 @@ function addClonedMenuOptions(sourceTab, targetMenu, excludedOptions)
     end
     if not excludedOptions["readonly"] then
         if readOnlyModeEnabled and activeactiveReadOnlyTabName == currentChannelName then
-            targetMenu:addOption(tr("Close read-only"), function()
+            targetMenu:addOption(tr("Close secondary window"), function()
                 clearReadOnlyTab()
                 toggleReadOnlyMode()
             end)
         else
-            targetMenu:addOption(tr("Open read-only"), function()
+            targetMenu:addOption(tr("Open secondary window"), function()
                 activateReadOnlyMode(currentChannelName)
             end)
         end

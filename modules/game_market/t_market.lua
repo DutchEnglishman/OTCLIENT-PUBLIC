@@ -781,11 +781,11 @@ function onMarketBrowse(intOffers, nameOffers)
             colorCount = colorCount + 1
 
             local count = getDepotItemCount(itemID, tier)
-            widget.piecePrice:setColor(count > 0 and "#c0c0c0" or "#808080")
-            widget.totalPrice:setColor(count > 0 and "#c0c0c0" or "#808080")
-            widget.name:setColor(count > 0 and "#c0c0c0" or "#808080")
-            widget.amount:setColor(count > 0 and "#c0c0c0" or "#808080")
-            widget.endAt:setColor(count > 0 and "#c0c0c0" or "#808080")
+            widget.piecePrice:setColor(count > 0 and g_ui.getVariable('textColor') or "#808080")
+            widget.totalPrice:setColor(count > 0 and g_ui.getVariable('textColor') or "#808080")
+            widget.name:setColor(count > 0 and g_ui.getVariable('textColor') or "#808080")
+            widget.amount:setColor(count > 0 and g_ui.getVariable('textColor') or "#808080")
+            widget.endAt:setColor(count > 0 and g_ui.getVariable('textColor') or "#808080")
             table.insert(cache.SCROLL_BUY_OFFERS.listPool, widget)
         end
     end
@@ -845,11 +845,11 @@ function onMarketBrowse(intOffers, nameOffers)
             end
 
             local hasMoney = getTotalMoney() >= unitPrice
-            widget.piecePrice:setColor(hasMoney and "#c0c0c0" or "#808080")
-            widget.totalPrice:setColor(hasMoney and "#c0c0c0" or "#808080")
-            widget.name:setColor(hasMoney and "#c0c0c0" or "#808080")
-            widget.amount:setColor(hasMoney and "#c0c0c0" or "#808080")
-            widget.endAt:setColor(hasMoney and "#c0c0c0" or "#808080")
+            widget.piecePrice:setColor(hasMoney and g_ui.getVariable('textColor') or "#808080")
+            widget.totalPrice:setColor(hasMoney and g_ui.getVariable('textColor') or "#808080")
+            widget.name:setColor(hasMoney and g_ui.getVariable('textColor') or "#808080")
+            widget.amount:setColor(hasMoney and g_ui.getVariable('textColor') or "#808080")
+            widget.endAt:setColor(hasMoney and g_ui.getVariable('textColor') or "#808080")
             colorCount = colorCount + 1
             table.insert(cache.SCROLL_SELL_OFFERS.listPool, widget)
         end
@@ -921,19 +921,19 @@ function onBuyListValueChange(scroll, value, delta)
             widget.totalPrice:setText(convertGold(totalPrice))
 
             local count = getDepotItemCount(lastItemID, lastItemTier)
-            widget.piecePrice:setColor(count > 0 and "#c0c0c0" or "#808080")
-            widget.totalPrice:setColor(count > 0 and "#c0c0c0" or "#808080")
-            widget.name:setColor(count > 0 and "#c0c0c0" or "#808080")
-            widget.amount:setColor(count > 0 and "#c0c0c0" or "#808080")
-            widget.endAt:setColor(count > 0 and "#c0c0c0" or "#808080")
+            widget.piecePrice:setColor(count > 0 and g_ui.getVariable('textColor') or "#808080")
+            widget.totalPrice:setColor(count > 0 and g_ui.getVariable('textColor') or "#808080")
+            widget.name:setColor(count > 0 and g_ui.getVariable('textColor') or "#808080")
+            widget.amount:setColor(count > 0 and g_ui.getVariable('textColor') or "#808080")
+            widget.endAt:setColor(count > 0 and g_ui.getVariable('textColor') or "#808080")
 
             if index == cache.SCROLL_BUY_OFFERS.lastSelected then
                 widget:setBackgroundColor('#585858')
-                widget.piecePrice:setColor("#f4f4f4")
-                widget.totalPrice:setColor("#f4f4f4")
-                widget.name:setColor("#f4f4f4")
-                widget.amount:setColor("#f4f4f4")
-                widget.endAt:setColor("#f4f4f4")
+                widget.piecePrice:setColor(g_ui.getVariable('selectionText'))
+                widget.totalPrice:setColor(g_ui.getVariable('selectionText'))
+                widget.name:setColor(g_ui.getVariable('selectionText'))
+                widget.amount:setColor(g_ui.getVariable('selectionText'))
+                widget.endAt:setColor(g_ui.getVariable('selectionText'))
             end
         end
     end
@@ -980,19 +980,19 @@ function onSellListValueChange(scroll, value, delta)
             end
 
             local hasMoney = getTotalMoney() >= unitPrice
-            widget.piecePrice:setColor(hasMoney and "#c0c0c0" or "#808080")
-            widget.totalPrice:setColor(hasMoney and "#c0c0c0" or "#808080")
-            widget.name:setColor(hasMoney and "#c0c0c0" or "#808080")
-            widget.amount:setColor(hasMoney and "#c0c0c0" or "#808080")
-            widget.endAt:setColor(hasMoney and "#c0c0c0" or "#808080")
+            widget.piecePrice:setColor(hasMoney and g_ui.getVariable('textColor') or "#808080")
+            widget.totalPrice:setColor(hasMoney and g_ui.getVariable('textColor') or "#808080")
+            widget.name:setColor(hasMoney and g_ui.getVariable('textColor') or "#808080")
+            widget.amount:setColor(hasMoney and g_ui.getVariable('textColor') or "#808080")
+            widget.endAt:setColor(hasMoney and g_ui.getVariable('textColor') or "#808080")
 
             if index == cache.SCROLL_SELL_OFFERS.lastSelected then
                 widget:setBackgroundColor('#585858')
-                widget.piecePrice:setColor("#f4f4f4")
-                widget.totalPrice:setColor("#f4f4f4")
-                widget.name:setColor("#f4f4f4")
-                widget.amount:setColor("#f4f4f4")
-                widget.endAt:setColor("#f4f4f4")
+                widget.piecePrice:setColor(g_ui.getVariable('selectionText'))
+                widget.totalPrice:setColor(g_ui.getVariable('selectionText'))
+                widget.name:setColor(g_ui.getVariable('selectionText'))
+                widget.amount:setColor(g_ui.getVariable('selectionText'))
+                widget.endAt:setColor(g_ui.getVariable('selectionText'))
             end
         end
     end
@@ -1042,7 +1042,7 @@ function onItemListValueChange(scroll, value, delta)
                 isSelected = lastSelectedItem.itemId == data.thingType:getId() and data.tier == (lastSelectedItem.tier or 0)
             end
 
-            local backgroundColor = isSelected and '#585858' or '#363636'
+            local backgroundColor = isSelected and '#585858' or g_ui.getVariable('panelFill')
             widget:setBackgroundColor(backgroundColor)
             if isSelected then
                 lastSelectedItem.lastWidget = widget
@@ -1094,7 +1094,7 @@ function onSelectChildCategory(widget, selected, keepFilter)
 
     if lastSelectedCategory then
         lastSelectedCategory:setBackgroundColor(lastSelectedCategory.color)
-        lastSelectedCategory:setColor('#c0c0c0')
+        lastSelectedCategory:setColor(g_ui.getVariable('textColor'))
     end
 
     local itemList = marketWindow:recursiveGetChildById("itemList")
@@ -1104,7 +1104,7 @@ function onSelectChildCategory(widget, selected, keepFilter)
 
     lastSelectedCategory = selected
     selected:setBackgroundColor('#585858')
-    selected:setColor('#f4f4f4')
+    selected:setColor(g_ui.getVariable('selectionText'))
 
     isRebuildingCategory = true
 
@@ -1190,7 +1190,7 @@ function onSelectChildCategory(widget, selected, keepFilter)
             widget.name:setTooltip(itemInfo.marketData.name)
         end
 
-        widget:setBackgroundColor('#363636')
+        widget:setBackgroundColor(g_ui.getVariable('panelFill'))
         widget.item:getItem():setCount(count)
         widget.item.itemIndex = i
         widget.item:setTooltip(tr("%s%s%s%s", comma_value(count), "x", (count > 65000 and "+ " or " "),
@@ -1282,11 +1282,11 @@ function onSelectChildItem(widget, selected, oldFocus)
     end
 
     if oldFocus then
-        oldFocus:setBackgroundColor('#363636')
+        oldFocus:setBackgroundColor(g_ui.getVariable('panelFill'))
     end
 
     if lastSelectedItem.lastWidget then
-        lastSelectedItem.lastWidget:setBackgroundColor('#363636')
+        lastSelectedItem.lastWidget:setBackgroundColor(g_ui.getVariable('panelFill'))
     end
 
     selected:setBackgroundColor('#585858')
@@ -1401,7 +1401,7 @@ function onSelectSellOffer(widget, selected, oldFocus)
     if oldFocus then
         local offer = sellOffers[cache.SCROLL_SELL_OFFERS.lastSelected]
         local offerPrice = offer and offer.price or 0
-        local color = money >= offerPrice and "#c0c0c0" or "#808080"
+        local color = money >= offerPrice and g_ui.getVariable('textColor') or "#808080"
         oldFocus:setBackgroundColor(oldFocus:getId())
         oldFocus.piecePrice:setColor(color)
         oldFocus.totalPrice:setColor(color)
@@ -1411,11 +1411,11 @@ function onSelectSellOffer(widget, selected, oldFocus)
     end
 
     selected:setBackgroundColor('#585858')
-    selected.piecePrice:setColor("#f4f4f4")
-    selected.totalPrice:setColor("#f4f4f4")
-    selected.name:setColor("#f4f4f4")
-    selected.amount:setColor("#f4f4f4")
-    selected.endAt:setColor("#f4f4f4")
+    selected.piecePrice:setColor(g_ui.getVariable('selectionText'))
+    selected.totalPrice:setColor(g_ui.getVariable('selectionText'))
+    selected.name:setColor(g_ui.getVariable('selectionText'))
+    selected.amount:setColor(g_ui.getVariable('selectionText'))
+    selected.endAt:setColor(g_ui.getVariable('selectionText'))
     cache.SCROLL_SELL_OFFERS.lastSelected = selected.offerId
 
     local currentOffer = sellOffers[cache.SCROLL_SELL_OFFERS.lastSelected]
@@ -1466,7 +1466,7 @@ function onSelectBuyOffer(widget, selected, oldFocus)
 
     local count = getDepotItemCount(lastItemID, lastItemTier)
     if oldFocus then
-        local color = count > 0 and "#c0c0c0" or "#808080"
+        local color = count > 0 and g_ui.getVariable('textColor') or "#808080"
         oldFocus:setBackgroundColor(oldFocus:getId())
         oldFocus.piecePrice:setColor(color)
         oldFocus.totalPrice:setColor(color)
@@ -1476,11 +1476,11 @@ function onSelectBuyOffer(widget, selected, oldFocus)
     end
 
     selected:setBackgroundColor('#585858')
-    selected.piecePrice:setColor("#f4f4f4")
-    selected.totalPrice:setColor("#f4f4f4")
-    selected.name:setColor("#f4f4f4")
-    selected.amount:setColor("#f4f4f4")
-    selected.endAt:setColor("#f4f4f4")
+    selected.piecePrice:setColor(g_ui.getVariable('selectionText'))
+    selected.totalPrice:setColor(g_ui.getVariable('selectionText'))
+    selected.name:setColor(g_ui.getVariable('selectionText'))
+    selected.amount:setColor(g_ui.getVariable('selectionText'))
+    selected.endAt:setColor(g_ui.getVariable('selectionText'))
     cache.SCROLL_BUY_OFFERS.lastSelected = selected.offerId
 
     if count == 0 then
@@ -1900,7 +1900,7 @@ function onSearchItem(textField)
             local colour = colourCount % 2 == 0 and '#484848' or '#414141'
             if pair[2] == lastSelectedCategory:getText() then
                 lastSelectedCategory:setBackgroundColor(colour)
-                lastSelectedCategory:setColor('#c0c0c0')
+                lastSelectedCategory:setColor(g_ui.getVariable('textColor'))
             end
             colourCount = colourCount + 1
         end
@@ -1987,7 +1987,7 @@ function onSearchItem(textField)
             widget.name:setTooltip(itemInfo.marketData.name)
         end
 
-        widget:setBackgroundColor('#363636')
+        widget:setBackgroundColor(g_ui.getVariable('panelFill'))
         widget.item:getItem():setCount(count)
         widget.item.itemIndex = i -- Store item index as property
         widget.item:setTooltip(tr("%s%s%s%s", comma_value(count), "x", (count > 65000 and "+ " or " "),
@@ -2040,7 +2040,7 @@ function onShowRedirect(item)
             local colour = colourCount % 2 == 0 and '#484848' or '#414141'
             if pair[2] == lastSelectedCategory:getText() then
                 lastSelectedCategory:setBackgroundColor(colour)
-                lastSelectedCategory:setColor('#c0c0c0')
+                lastSelectedCategory:setColor(g_ui.getVariable('textColor'))
             end
             colourCount = colourCount + 1
         end
@@ -2132,7 +2132,7 @@ function onShowRedirect(item)
             widget.name:setTooltip(itemInfo.marketData.name)
         end
 
-        widget:setBackgroundColor('#363636')
+        widget:setBackgroundColor(g_ui.getVariable('panelFill'))
         widget.item:getItem():setCount(count)
         widget.item.itemIndex = i
         widget.item:setTooltip(tr("%s%s%s%s", comma_value(count), "x", (count > 65000 and "+ " or " "),

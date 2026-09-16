@@ -10,7 +10,7 @@ MainWindow
     anchors.top: parent.top
     anchors.left: parent.left
     size: 668 36
-    background-color: #404040
+    background-color: $panelFillRaised
     border-width-top: 1
     border-color-top: black
     border-width-left: 1
@@ -236,7 +236,7 @@ MainWindow
     !text: tr('Close')
     //font: verdana-bold-8px-antialiased
     text-offset: 0 -1
-    color: #C0C0C0
+    color: $textColor
     @onClick: toggle()
   Button
     id: BackButton
@@ -247,7 +247,7 @@ MainWindow
     !text: tr('Back')
     //font: verdana-bold-8px-antialiased
     text-offset: 0 -1
-    color: #C0C0C0
+    color: $textColor
     enabled: false
     @onClick: toggleBack()
   HorizontalSeparator
@@ -363,4 +363,4 @@ MainWindow
     font: small-9px
     @onClick: modules.game_cyclopedia.Cyclopedia.toggleBestiaryTracker()
     text-offset: 0 -1
-    color: #C0C0C0
+    color: $textColor

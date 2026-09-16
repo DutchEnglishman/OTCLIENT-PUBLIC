@@ -6,7 +6,7 @@ HotkeyListLabel < UILabel
   phantom: false
 
   $focus:
-    background-color: #ffffff22
+    background-color: $hoverOverlay
 
 // The four use-type buttons. ButtonBox centres its label; these read as a list
 // of options rather than a row of captions, so the text is flush left with a

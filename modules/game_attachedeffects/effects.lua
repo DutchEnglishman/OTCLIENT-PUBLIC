@@ -430,19 +430,11 @@ for variant = 1, 3 do
     })
 end
 
--- Floor rarity shine (attachedeffects.lua, opcode 72): a glint sweeping the
--- tile along the item's long axis, drawn over the items. Four axes per
--- rarity: id = 20 + 4 * (rare 0 / epic 1 / legendary 2) + axis, axes in the
--- order NW-SE, NE-SW, W-E, N-S (SHINE_AXIS_* in attachedeffects.lua).
--- Colours are the tooltip's; Common gets none.
-for r, rarity in ipairs({ 'rare', 'epic', 'legendary' }) do
-    for a, axis in ipairs({ 'nwse', 'nesw', 'we', 'ns' }) do
-        AttachedEffectManager.register(20 + 4 * (r - 1) + (a - 1), 'Rarity Shine ' .. rarity .. ' ' .. axis,
-            '/images/game/effects/rarity_shine_' .. rarity .. '_' .. axis, ThingExternalTexture, {
-                offset = { 0, 0, true }
-            })
-    end
-end
+-- Effect ids 20-31 were the floor rarity shine: three rarities x four sweep
+-- axes of 32x32 glint textures laid on the tile. The shine is a fragment
+-- shader worn by the item now (game_shaders ITEM_SHADERS, driven from
+-- attachedeffects.lua), so it is masked by the sprite instead of the tile and
+-- needs no texture or axis of its own. The ids are free.
 
 -- The viscount statues' eyes, held on the statue's own tile while it is lit
 -- (data/scripts/viscounts/viscounts_statues.lua, extended opcode 73). Two
@@ -475,3 +467,112 @@ AttachedEffectManager.register(286, 'Statue eyes B', '/images/game/effects/statu
     fade = { 45, 100, 700 },
     light = { color = 180, intensity = 2 }
 })
+
+-- Lord Morvane's throws (OTSERV data/scripts/boss_skills/morvane_throws.lua;
+-- opcode 73 "axes" and "spear" and opcode 71 "lunge" in attachedeffects.lua;
+-- textures by tools/effect-generators/make_morvane.ps1).
+-- 287: the warning under every tile a throw is about to cross, a looping
+-- pulse the server holds for the length of the warning. Under creatures.
+AttachedEffectManager.register(287, 'Blade warning', '/images/game/effects/blade_warning', ThingExternalTexture, {
+    offset = { 0, 0, false }
+})
+-- 288/289: the two axes, spinning opposite ways so they can be told apart
+-- as they cross; 299/300 their shadows, one id each because they sit on
+-- the same tile. All four ride the throw tile and are moved by offset
+-- every frame: the axes above everything, like a missile, the shadows at
+-- the borders' order so they lie on the ground under whoever they pass.
+AttachedEffectManager.register(288, 'Throwing axe', '/images/game/effects/axe_cw', ThingExternalTexture, {
+    offset = { 0, 0, true },
+    drawOrder = 4
+})
+AttachedEffectManager.register(289, 'Throwing axe, widdershins', '/images/game/effects/axe_ccw', ThingExternalTexture, {
+    offset = { 0, 0, true },
+    drawOrder = 4
+})
+for n = 1, 2 do
+    AttachedEffectManager.register(298 + n, 'Throwing axe shadow ' .. n, '/images/game/effects/axe_shadow', ThingExternalTexture, {
+        offset = { 0, 0, false },
+        drawOrder = 1
+    })
+end
+-- 290-293: the spear in flight, one per direction N/E/S/W, glided by
+-- AttachedEffect:move; 294-297: stuck in the wall, the same order; 298:
+-- lying on the floor where there was no wall. All 64x64 with the tile as
+-- the middle square (offset 16,16), so the stuck head can reach 6 px into
+-- the wall tile: a wall drawn after this tile covers it, one drawn before
+-- is painted over at its face, and either way the head is in the wall.
+for d, dir in ipairs({ 'n', 'e', 's', 'w' }) do
+    AttachedEffectManager.register(289 + d, 'Spear flying ' .. dir, '/images/game/effects/spear_fly_' .. dir, ThingExternalTexture, {
+        offset = { 16, 16, true },
+        drawOrder = 4
+    })
+    AttachedEffectManager.register(293 + d, 'Spear stuck ' .. dir, '/images/game/effects/spear_stuck_' .. dir, ThingExternalTexture, {
+        offset = { 16, 16, true }
+    })
+end
+AttachedEffectManager.register(298, 'Spear dropped', '/images/game/effects/spear_drop', ThingExternalTexture, {
+    offset = { 16, 16, true }
+})
+-- 301-324: a throwing dagger in flight at r * 15 degrees clockwise from
+-- east, r = id - 301, above everything; 325-348 the same dagger lying
+-- where it landed, under creatures. The fan flies at any angle, so
+-- attachedeffects.lua picks the nearest rotation.
+for r = 0, 23 do
+    AttachedEffectManager.register(301 + r, 'Throwing dagger ' .. (r * 15), '/images/game/effects/dagger_' .. r, ThingExternalTexture, {
+        offset = { 0, 0, true },
+        drawOrder = 4
+    })
+    AttachedEffectManager.register(325 + r, 'Landed dagger ' .. (r * 15), '/images/game/effects/dagger_' .. r .. '_land', ThingExternalTexture, {
+        offset = { 0, 0, false }
+    })
+end
+-- 349-352 / 353-356: the spear flying and stuck along the diagonals, in
+-- the server's order south-west, south-east, north-west, north-east
+-- (directions 4-7), the same 64x64 layout as the cardinals at 290-297.
+for d, dir in ipairs({ 'sw', 'se', 'nw', 'ne' }) do
+    AttachedEffectManager.register(348 + d, 'Spear flying ' .. dir, '/images/game/effects/spear_fly_' .. dir, ThingExternalTexture, {
+        offset = { 16, 16, true },
+        drawOrder = 4
+    })
+    AttachedEffectManager.register(352 + d, 'Spear stuck ' .. dir, '/images/game/effects/spear_stuck_' .. dir, ThingExternalTexture, {
+        offset = { 16, 16, true }
+    })
+end
+-- 357-380: the dagger stuck head-first in the wall its lane ran into, one
+-- per rotation like 301-324, on a 64x64 canvas with the tile as its
+-- middle square so the tip can reach 6 px into the wall tile; quivers,
+-- then rests. Held on the last floor tile of the lane.
+for r = 0, 23 do
+    AttachedEffectManager.register(357 + r, 'Stuck dagger ' .. (r * 15), '/images/game/effects/dagger_' .. r .. '_stuck', ThingExternalTexture, {
+        offset = { 16, 16, true }
+    })
+end
+-- 381/382: the wound, worn by whoever a dagger (small) or the spear (big)
+-- hits, put on with opcode 71 "attach" by OTSERV morvane_throws.lua and
+-- taken off by its own duration; a second hit inside that is one mark.
+-- The splat sits at 12,12 of the canvas, about mid-torso with the
+-- outfit's displacement. Drawn by make_morvane.ps1.
+AttachedEffectManager.register(381, 'Dagger wound', '/images/game/effects/wound_small', ThingExternalTexture, {
+    offset = { 0, 0, true },
+    followOwner = true,
+    duration = 550
+})
+AttachedEffectManager.register(382, 'Spear wound', '/images/game/effects/wound_big', ThingExternalTexture, {
+    offset = { 0, 0, true },
+    followOwner = true,
+    duration = 550
+})
+-- 383-390: the cleave that ends a Dagger Burst, one per direction in the
+-- server's own order (0-3 the cardinals N/E/S/W, 4-7 the slants
+-- SW/SE/NW/NE), so the message is SLASH_EFFECT + direction. 96x96 with
+-- Morvane's own tile as the middle square (offset 32,32), which is what
+-- lets one arc reach across all three tiles it cuts; at the missile's
+-- draw order, so it paints over the creatures standing in it rather than
+-- being covered by the ground of the tiles drawn after his. Laid with the
+-- plain "on" verb for its own length and gone when that runs out.
+for d, dir in ipairs({ 'n', 'e', 's', 'w', 'sw', 'se', 'nw', 'ne' }) do
+    AttachedEffectManager.register(382 + d, 'Morvane cleave ' .. dir, '/images/game/effects/slash_' .. dir, ThingExternalTexture, {
+        offset = { 32, 32, true },
+        drawOrder = 4
+    })
+end

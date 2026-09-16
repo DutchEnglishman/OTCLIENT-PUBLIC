@@ -177,7 +177,7 @@ UIWidget
             cell-spacing: 2
             flow: true
           CharmCreatureName
-            background-color: #484848
+            background-color: $panelFillLight
           CharmCreatureName
             background-color: #414141
         VerticalQtScrollBar
@@ -335,7 +335,7 @@ UIWidget
         padding: 1
         width: 10
         focusable: true
-        background-color: #404040
+        background-color: $panelFillRaised
         border-width: 1
         border-color: #272727
         padding: 1

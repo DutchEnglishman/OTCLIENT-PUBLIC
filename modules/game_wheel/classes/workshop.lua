@@ -251,8 +251,8 @@ function Workshop.onSelectChild(list, selected)
     local maxTier = isSupreme and supremeTier or basicTier
     local modID = selected.cache.modID
     local imageClipSize = isSupreme and 35 or 30
-    local activeColor = "#c0c0c0"
-    local inactiveColor = "#707070"
+    local activeColor = g_ui.getVariable('textColor')
+    local inactiveColor = g_ui.getVariable('textMuted')
 	local modDesc = fragmentWindow:recursiveGetChildById("modDesc")
 
     for i = 0, 3 do

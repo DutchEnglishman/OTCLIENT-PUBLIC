@@ -27,13 +27,13 @@ PlayerOptionInfo < Panel
     !text: tr('Remove Player')
     font: Verdana Bold-11px
     text-auto-resize: true
-    color: #C0C0C0
+    color: $textColor
     image-source: /images/ui/checkbox
     image-clip: 0 0 12 12
 
 NewMainWindow
   id: advancedOptionsWindow
-  size: 450 320
+  size: 458 334
   !text: tr('Loot Splitter - Advanced Options')
   anchors.horizontalCenter: parent.horizontalCenter
   Panel

@@ -13,7 +13,7 @@ DescriptionLine < UIWidget
   Label
     id: text
     font: verdana-11px-antialised
-    color: #dfdfdf
+    color: $textBright
     text-wrap: true
     text-auto-resize: true
     anchors.left: parent.left
@@ -126,7 +126,7 @@ StoreLightFlatPanel < UIWidget
 
 StoreButton < UIButton
   font: verdana-11px-antialised
-  color: #dfdfdfff
+  color: $textBright
   size: 106 23
   text-offset: 0 0
   image-source:  /game_store/images/button
@@ -144,7 +144,7 @@ StoreButton < UIButton
     text-offset: 1 1
 
   $disabled:
-    color: #dfdfdf88
+    color: $textDisabled
     opacity: 0.8
 
 StoreWindow < UIWindow
@@ -152,26 +152,30 @@ StoreWindow < UIWindow
   font: verdana-11px-antialised
   size: 200 200
   opacity: 1
-  color: #dfdfdf
-  text-offset: 0 6
+  color: $textBright
+  // The same carved frame every other pop-up wears (see Window in 10-windows.otui). This
+  // image is the store's own and nothing else draws it, so the frame is baked into it
+  // rather than living under a second name. It carries no title band, so image-border-top
+  // is just the border and the caption sits on plain body as it always did.
+  text-offset: 0 18
   text-align: top
   image-source:   /game_store/images/window
-  image-border: 6
-  image-border-top: 27
+  image-border: 12
+  image-border-top: 12
   padding-top: 36
   padding-left: 16
   padding-right: 16
   padding-bottom: 16
 
   $disabled:
-    color: #dfdfdf88
+    color: $textDisabled
 
   $dragging:
     opacity: 0.8
 
 StoreFlatLabel < UILabel
   font: verdana-11px-antialised
-  color: #dfdfdf
+  color: $textBright
   size: 86 20
   text-offset: 3 3
   image-source:  /game_store/images/panel_flat
@@ -179,7 +183,7 @@ StoreFlatLabel < UILabel
   clipping: true
 
   $disabled:
-    color: #dfdfdf88
+    color: $textDisabled
 
 storeCategory < UIWidget
   size: 180 22
@@ -240,31 +244,36 @@ storeCategory < UIWidget
 
 
 
+// The purchase-status prompt. Same 6px carved moulding as every other message box (see
+// MessageBoxWindow in 30-messageboxes.otui); its height is declared here rather than
+// measured in Lua, so it carries the 17px the frame costs itself.
 confirmarSHOP < UIMessageBox
   icon-rect: 4 4 16 16
-  size: 390 165
-  image-source: /images/ui/window_new
-  image-border: 4
-  image-border-top: 16
-  image-border-bottom: 4
+  size: 390 182
+  image-source: /images/ui/window_carved_slim
+  image-border: 8
+  image-border-top: 25
+  image-border-bottom: 8
   &minimizedHeight: 17
   anchors.centerIn: parent
   draggable: true
 
   $on:
-    image-border-bottom: 2
+    image-border-bottom: 8
 
   UIWidget
     id: miniwindowTopBar
     anchors.top: parent.top
     anchors.right: parent.right
     anchors.left: parent.left
-    margin-right: 3
-    margin-left: 3
-    margin-top: 2
-    height: 18
+    margin-right: 8
+    margin-left: 8
+    margin-top: 8
+    height: 17
     phantom: true
 
+  // The dragon hangs above the window, so it keeps the offset it had: it clears the top
+  // edge either way and the moulding starts below it.
   UIWidget
     id: miniwindowTopBar2
     anchors.top: parent.top
@@ -285,6 +294,7 @@ confirmarSHOP < UIMessageBox
     anchors.left: parent.left
     anchors.right: parent.right
     opacity: 0.5
+    margin-top: 9
 
   Label
     id: content
@@ -293,8 +303,8 @@ confirmarSHOP < UIMessageBox
     text-wrap: true
     text-auto-resize: true
     text-offset: 5 0
-    color: #c0c0c0ff
-    margin-top: 32
+    color: $textColor
+    margin-top: 41
     text-align: center
 
   Label
@@ -345,6 +355,7 @@ confirmarSHOP < UIMessageBox
     anchors.top: prev.bottom
     anchors.bottom: parent.bottom
     margin-top: 12
+    margin-bottom: 8
 
 BorderBox < UIWidget
   border-width-top: 1

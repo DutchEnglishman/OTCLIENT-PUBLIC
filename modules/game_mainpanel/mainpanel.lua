@@ -10,7 +10,7 @@ local optionPanel = nil
 local buttonConfigs = {}
 local buttonOrder = {}
 local COLORS = {
-    BASE_1 = "#484848",
+    BASE_1 = g_ui.getVariable('panelFillLight'),
     BASE_2 = "#414141"
 }
 

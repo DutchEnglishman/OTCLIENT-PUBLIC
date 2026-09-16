@@ -243,7 +243,7 @@ function PartyHuntAnalyser:updateWindow(updateMembers, ignoreVisible)
 		local playerName = PartyHuntAnalyser.membersName[id] or "Unknown"
 		widget.name:setText(playerName)
 		if not data[5] then
-			widget.name:setColor("#707070")
+			widget.name:setColor(g_ui.getVariable('textMuted'))
 		end
 		widget.balance:setText(comma_value(playerBalance))
 		widget.balance:setColor(playerBalance >= 0 and "#44ad25" or "#ff9854")

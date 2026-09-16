@@ -656,7 +656,7 @@ function showItems()
     if g_game.getClientVersion() >= 1410 then
         controllerCyclopedia.ui.CharmsBase1410:setVisible(false)
     end
-    local CategoryColor = "#484848"
+    local CategoryColor = g_ui.getVariable('panelFillLight')
 
     for _, data in ipairs(Cyclopedia.CategoryItems) do
         local ItemCat = g_ui.createWidget("ItemCategory", UI.CategoryList)
@@ -852,7 +852,7 @@ function Cyclopedia.internalCreateItem(data)
     if Cyclopedia.Items.isInDropTracker(data:getId()) then
         item.Name:setColor("#FF9854")  -- Orange color for tracked items
     else
-        item.Name:setColor("#c0c0c0")  -- Default color
+        item.Name:setColor(g_ui.getVariable('textColor'))  -- Default color
     end
 
     function item.onClick(widget)
@@ -941,7 +941,7 @@ function Cyclopedia.internalCreateItem(data)
         end
 
         local buy, sell = Cyclopedia.formatSaleData(internalData:getNpcSaleData())
-        local sellColor = "#484848"
+        local sellColor = g_ui.getVariable('panelFillLight')
 
         for index, value in ipairs(sell) do
             local t_widget = g_ui.createWidget("UIWidget", UI.InfoBase.SellBase.List)
@@ -962,7 +962,7 @@ function Cyclopedia.internalCreateItem(data)
             sellColor = sellColor == "#484848" and "#414141" or "#484848"
         end
 
-        local buyColor = "#484848"
+        local buyColor = g_ui.getVariable('panelFillLight')
 
         for index, value in ipairs(buy) do
             local t_widget = g_ui.createWidget("UIWidget", UI.InfoBase.BuyBase.List)
@@ -1145,14 +1145,14 @@ function Cyclopedia.loadItemDetail(data)
     for _, description in ipairs(data.descriptions) do
         local widget = g_ui.createWidget("UIWidget", UI.InfoBase.DetailsBase.List)
         widget:setText(description.key .. ": " .. description.value)
-        widget:setColor("#C0C0C0")
+        widget:setColor(g_ui.getVariable('textColor'))
         widget:setTextWrap(true)
     end
 
     if classification > 0 then
         local widget = g_ui.createWidget("UIWidget", UI.InfoBase.DetailsBase.List)
         widget:setText("Classification: " .. classification)
-        widget:setColor("#C0C0C0")
+        widget:setColor(g_ui.getVariable('textColor'))
     end
 end
 
@@ -1269,7 +1269,7 @@ function Cyclopedia.Items.updateItemVisualFeedback(itemId, isTracked)
                 if isTracked then
                     widget.Name:setColor("#FF9854")  -- Orange color for tracked items
                 else
-                    widget.Name:setColor("#c0c0c0")  -- Default color
+                    widget.Name:setColor(g_ui.getVariable('textColor'))  -- Default color
                 end
             end
         end
@@ -1333,7 +1333,7 @@ function Cyclopedia.Items.removeAllFromDropTrackerDirectly()
     if UI and UI.ItemListBase and UI.ItemListBase.List then
         for _, widget in pairs(UI.ItemListBase.List:getChildren()) do
             if widget.Name then
-                widget.Name:setColor("#c0c0c0")  -- Reset to default color
+                widget.Name:setColor(g_ui.getVariable('textColor'))  -- Reset to default color
             end
         end
     end

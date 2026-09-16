@@ -2,7 +2,7 @@ InviteNameWindow < NewMainWindow
   id: inviteCharacterName
   !text: tr('Invite player to selected chat channel')
   anchors.horizontalCenter: parent.horizontalCenter
-  size: 360 121
+  size: 368 135
 
   Panel
     id: contentPanel
@@ -50,7 +50,7 @@ ExcludeNameWindow < NewMainWindow
   id: excludeCharacterName
   !text: tr('Exclude player from selected chat channel')
   anchors.horizontalCenter: parent.horizontalCenter
-  size: 360 121
+  size: 368 135
 
   Panel
     id: contentPanel
@@ -101,8 +101,8 @@ ConsoleLabel < UITextEdit
   margin-left: 2
   text-wrap: true
   text-auto-resize: true
-  selection-color: #f4f4f4ff
-  selection-background-color: #808080ff
+  selection-color: $selectionText
+  selection-background-color: $selectionFill
   change-cursor-image: false
   cursor-visible: false
   editable: false
@@ -170,7 +170,7 @@ ConsoleTabBarButton < UIButton
 
   $checked:
     image-clip: 0 0 96 18
-    color: #dfdfdfff
+    color: $textBright
 
   $on !checked:
     image-clip: 0 18 96 18
@@ -426,7 +426,7 @@ Panel
     size: 96 18
     image-clip: 0 0 96 18
     icon: /images/game/console/readOnly
-    color: #dfdfdfff
+    color: $textBright
     font: verdana-11px-rounded
     padding: 5
     tab-spacing: 0
@@ -435,11 +435,11 @@ Panel
     padding-right: 20
     $checked:
       image-clip: 0 0 96 18
-      color: #dfdfdfff
+      color: $textBright
 
     $on !checked:
       image-clip: 0 0 96 18
-      color: #dfdfdfff
+      color: $textBright
 
   UIButton
     id: sayModeButton
@@ -477,7 +477,7 @@ Panel
     max-length: 255
     height: 18
     placeholder:  "Type here to chat"
-    placeholder-color: #707070
+    placeholder-color: $textMuted
     @onTextChange: onTextChange(self:getText())
 
   TopToggleButton
@@ -487,7 +487,7 @@ Panel
     margin-bottom: 3
     margin-right: 3
     size: 64 18
-    color: #c0c0c0ff
+    color: $textColor
     font: cipsoftFont
     !text: tr('WASD On')
     &isChecked: false

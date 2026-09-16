@@ -51,11 +51,11 @@ CalendarDay < UICalendar
   UIWidget
     id: fill
     anchors.fill: parent
-    background-color: #484848ff
+    background-color: $panelFillLight
     phantom: true
 
     $on:
-      background-color: #484848ff
+      background-color: $panelFillLight
 
     $!on:
       background-color: #414141ff
@@ -159,7 +159,7 @@ CalendarTopMark < UICalendar
   height: 14
   text-align: top
   text-offset: 0 -2
-  background-color: #363636ff
+  background-color: $panelFill
 
   UIWidget
     height: 1

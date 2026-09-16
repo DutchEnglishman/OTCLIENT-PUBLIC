@@ -1,0 +1,14 @@
+Module
+  name: game_dungeons
+  description: Dungeon browser - requirements, leaderboards and queue
+  author: Custom
+  sandboxed: true
+
+  dependencies:
+    - game_interface
+
+  scripts:
+    - dungeons
+
+  @onLoad: DungeonsUI.init()
+  @onUnload: DungeonsUI.terminate()

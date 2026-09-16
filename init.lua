@@ -177,6 +177,21 @@ g_resources.searchAndAddPackages('/', '.otpkg', true)
 -- load settings
 g_configs.loadSettings('/config.otml')
 
+-- UI skin: a folder under data/skins/<name>/ that mirrors the virtual root
+-- (images/ui/..., game_store/images/..., styles/00-theme.otui), mounted IN FRONT
+-- of data/ and modules/ so any file it carries shadows the stock one and nothing
+-- stock is edited. nil = the stock look. A change needs a restart: images resolve
+-- lazily, but styles are parsed once when client_styles loads.
+-- 'carved' is the textured basalt-and-gold look (tools/skin-generators/make_carved.ps1);
+-- 'shattered' the flat green-black one it replaced (make_shattered.ps1). Swap back by
+-- naming it here.
+local SKIN = 'carved'
+if SKIN then
+    if not g_resources.addSearchPath(g_resources.getWorkDir() .. 'data/skins/' .. SKIN, true) then
+        g_logger.error('Skin "' .. SKIN .. '" not found under data/skins/ -- using the stock look.')
+    end
+end
+
 g_modules.discoverModules()
 
 -- libraries modules 0-99

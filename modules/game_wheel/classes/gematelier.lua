@@ -653,7 +653,7 @@ function GemAtelier.onSelectGem(selected, clicked)
 	local goldWidget = panel.clickedContent.switchCost.gold
 
 	goldWidget:setText((price / 1000) .. "k")
-	goldWidget:setColor(enough and "#c0c0c0" or "#d33c3c")
+	goldWidget:setColor(enough and g_ui.getVariable('textColor') or "#d33c3c")
 	panel.clickedContent.switchCost:setTooltip(comma_value(price))
 
 	local alreadyEquipped = false
@@ -768,11 +768,11 @@ function GemAtelier.setupModAvailable(widget, gemType, vesselCount, gemData)
 	if GemAtelier.isVesselAvailable(gemDomain, vesselCount) then
 		fragmentType:setShader("")
 		modItem:setShader("")
-		modLabel:setColor("#c0c0c0")
+		modLabel:setColor(g_ui.getVariable('textColor'))
 	else
 		fragmentType:setShader("image_black_white")
 		modItem:setShader("image_black_white")
-		modLabel:setColor("#707070")
+		modLabel:setColor(g_ui.getVariable('textMuted'))
 	end
 
 	potentialLevel:setVisible(false)

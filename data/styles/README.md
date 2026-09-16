@@ -7,7 +7,7 @@ OTML files can now expose lightweight variables that keep palettes, spacing toke
 
 * Declare a variable by prefixing a node tag with `&` and assigning a literal value, for example `&primaryColor: #33AAFF`.
 * Use that variable later in the file by writing `$primaryColor` in fields that expect literals (colors, borders, paddings, etc.). The parser resolves these references before Lua expression evaluation occurs.
-* Variables inherit down the tree. A definition near the root of a `.otui` is also saved into `OTMLDocument::globalAliases`, which allows other files loaded afterward to reuse the same tokens.
+* Variables inherit down the tree. A definition at the root of a `.otui` is also written to a process-wide registry (`OTMLDocument::globalAliases()`), and every later parse is seeded from that registry, so any file loaded afterwards can use the same `$name`. `data/styles/00-theme.otui` is the palette that relies on this: it loads first (styles import in sorted name order) and the other style and module files read it. Lua reads the same registry with `g_ui.getVariable('name')`, which logs an error for a name nothing has defined.
 * A variable can reference another variable (`&accentColor: $primaryColor`). Cycles and undefined references are reported in the console so you can catch mistakes early.
 * Outer quotes are stripped during resolution; the unquoted literal is substituted directly, which keeps the value from being re-evaluated as a Lua expression.
 

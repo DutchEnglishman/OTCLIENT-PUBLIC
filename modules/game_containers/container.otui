@@ -174,7 +174,7 @@ ContainersSubMenuOption < ThickCheckBox
     background-color: #ffffff1a
 
   $disabled:
-    color: #c0c0c0ff
+    color: $textColor
 
 ContainersListOption < UIButton
   text-align: left
@@ -188,7 +188,7 @@ ContainersListOption < UIButton
     background-color: #ffffff1a
 
   $disabled:
-    color: #c0c0c0ff
+    color: $textColor
 
 ContainersSubMenu < PopupMenu
   id: containersSubMenu

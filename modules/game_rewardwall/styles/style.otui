@@ -55,7 +55,7 @@ RewardButton < UIWidget
 
 RewardButton3 < UIButton
   font: verdana-11px-antialised
-  color: #dfdfdfff
+  color: $textBright
   size: 106 23
   text-offset: 0 0
   image-source: /images/ui/button
@@ -139,7 +139,7 @@ OfferBuyPrice < FlatPanel
   height: 21
   text: 0
   text-align: center
-  color: #C0C0C0
+  color: $textColor
   icon: /images/store/coin
   icon-size: 12 12
   icon-offset-x: 88
@@ -205,7 +205,7 @@ TextListWithScroll < Panel
     padding: 1
     width: 10
     focusable: false
-    background-color: #404040
+    background-color: $panelFillRaised
   VerticalQtScrollBar
     id: spellsScrollBar
     anchors.top: prev.top

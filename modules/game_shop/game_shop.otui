@@ -39,7 +39,7 @@ ShopCategory < FlatPanel
     anchors.fill: button
     text-offset: 24 0
     text-align: left
-    color: #C0C0C0
+    color: $textColor
 
   UIWidget
     id: expandArrow
@@ -87,7 +87,7 @@ ShopSubCategory < UIWidget
     anchors.fill: prev
     text-offset: 24 0
     text-align: left
-    color: #C0C0C0
+    color: $textColor
 
   UIWidget
     id: selectArrow
@@ -101,7 +101,7 @@ ShopSubCategory < UIWidget
 HistoryLabel < Label
   anchors.top: parent.top
   anchors.bottom: parent.bottom
-  color: #C0C0C0
+  color: $textColor
   text-offset: 3 0
 
 HistoryWidget < UIWidget
@@ -192,7 +192,7 @@ OfferBuyPrice < FlatPanel
   height: 21
   text: 0
   text-align: center
-  color: #C0C0C0
+  color: $textColor
   icon: images/coin
   icon-size: 12 12
   icon-offset-x: 88
@@ -207,7 +207,7 @@ OfferDescriptionLabel < Label
   text-align: topLeft
   text-wrap: true
   text-vertical-auto-resize: true
-  color: #C0C0C0
+  color: $textColor
 
 ShopBalanceWidget < FlatPanel
   image-color: #A0A0A0
@@ -220,7 +220,7 @@ ShopBalanceWidget < FlatPanel
     margin-right: 20
     text-align: right
     text: 0
-    color: #C0C0C0
+    color: $textColor
 
   UIWidget
     id: coin
@@ -242,7 +242,7 @@ ShopBalanceSecondWidget < FlatPanel
     margin-right: 20
     text-align: right
     text: 0
-    color: #C0C0C0
+    color: $textColor
 
   UIWidget
     anchors.right: parent.right
@@ -256,7 +256,7 @@ OfferPriceLabel < Label
   margin-right: 6
   margin-bottom: 2
   text-align: right
-  color: #C0C0C0
+  color: $textColor
   visible: false
 
 OfferWidget < FlatPanel
@@ -343,13 +343,13 @@ OfferWidget < FlatPanel
     margin: 8
     text-align: topLeft
     text-wrap: true
-    color: #C0C0C0
+    color: $textColor
 
 MainWindow
   id: shopWindow
   !text: 'Store'
   size: 776 533
-  color: #909090
+  color: $textDim
   @onEscape: modules.game_shop.hide()
   @onEnter: modules.game_shop.onSearch()
 
@@ -374,7 +374,7 @@ MainWindow
     margin-right: 29
     placeholder: Type to search
     placeholder-color: #667070
-    color: #C0C0C0
+    color: $textColor
     @onTextChange: modules.game_shop.onTypeSearch(self)
 
   Button
@@ -408,7 +408,7 @@ MainWindow
     width: 64
     anchors.right: parent.right
     anchors.bottom: parent.bottom
-    color: #C0C0C0
+    color: $textColor
     focusable: false
     @onClick: modules.game_shop.hide()
 
@@ -419,7 +419,7 @@ MainWindow
     anchors.top: prev.top
     anchors.right: prev.left
     margin-right: 5
-    color: #C0C0C0
+    color: $textColor
     focusable: false
     @onClick: modules.game_shop.showHistory()
 
@@ -442,7 +442,7 @@ MainWindow
     text: Get
     text-align: left
     text-offset: 16 0
-    color: #C0C0C0
+    color: $textColor
     image-color: #89ff89
     icon: images/coin
     icon-size: 12 12
@@ -545,7 +545,7 @@ MainWindow
       anchors.left: prevPageButton.right
       anchors.right: nextPageButton.left
       text-align: center
-      color: #C0C0C0
+      color: $textColor
       text: Page 1/1
 
   FlatPanel
@@ -593,7 +593,7 @@ MainWindow
         anchors.fill: parent
         text-align: top
         margin-top: 3
-        color: #C0C0C0
+        color: $textColor
 
       FlatPanel
         id: imagePanel

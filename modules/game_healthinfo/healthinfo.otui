@@ -31,7 +31,7 @@ PhantomMiniWindow
       anchors.verticalCenter: parent.verticalCenter
       width: 44
       text-align: left
-      color: #c0c0c0ff
+      color: $textColor
 
     UIWidget
       id: total
@@ -80,7 +80,7 @@ PhantomMiniWindow
       anchors.verticalCenter: parent.verticalCenter
       width: 44
       text-align: left
-      color: #c0c0c0ff
+      color: $textColor
 
     UIWidget
       id: total

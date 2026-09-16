@@ -132,85 +132,130 @@ function Cyclopedia.SetBestiaryDiamonds(value)
     UI.ListBase.CreatureInfo.DiamondFill:setWidth(value * 9)
 end
 
-function Cyclopedia.CreateCreatureItems(data)
-    UI.ListBase.CreatureInfo.ItemsBase.Itemlist:destroyChildren()
-    local itemsPerRow = 15
-    local itemSlotSpacing = 36
-    for index, _ in pairs(data) do
-        local widget = g_ui.createWidget("BestiaryItemGroup", UI.ListBase.CreatureInfo.ItemsBase.Itemlist)
-        widget:setId(index)
-        local rowCount = math.max(1, math.ceil(#data[index] / itemsPerRow))
-        local slotCount = rowCount * itemsPerRow
-        widget:setHeight(45 + ((rowCount - 1) * itemSlotSpacing))
-        widget.Title:breakAnchors()
-        widget.Title:addAnchor(AnchorLeft, "parent", AnchorLeft)
-        widget.Title:addAnchor(AnchorTop, "parent", AnchorTop)
-        widget.Title:setMarginLeft(5)
-        widget.Title:setMarginTop(16)
+-- The monster whose detail screen is open, lowercased to match the loot
+-- channel's key. A payload that arrives for anything else is a stale answer to
+-- a page the player has already left, and is dropped rather than drawn over
+-- whatever is on screen now.
+local openMonsterName = nil
 
-        if index == 0 then
-            widget.Title:setText(tr("Common") .. ":")
-        elseif index == 1 then
-            widget.Title:setText(tr("Uncommon") .. ":")
-        elseif index == 2 then
-            widget.Title:setText(tr("Semi-Rare") .. ":")
-        elseif index == 3 then
-            widget.Title:setText(tr("Rare") .. ":")
-        else
-            widget.Title:setText(tr("Very Rare") .. ":")
+-- chance is out of 100000 (the server's MAX_LOOTCHANCE), so a percentage is
+-- chance / 1000. It is the RAW items.xml figure -- rateLoot is deliberately
+-- not folded in, so the number here can always be checked against the monster's
+-- own xml. Precision follows the size of it: the rarest rows are a thousandth
+-- of a percent and would every one of them read "0.00%" at two decimals.
+local function formatDropChance(chance)
+    local percent = chance / 1000
+    if percent >= 0.01 then
+        return string.format("%.2f%%", percent)
+    end
+    return string.format("%.3f%%", percent)
+end
+
+function Cyclopedia.onBestiaryUnlockClick(mode)
+    if openMonsterName then
+        Cyclopedia.buyBestiaryLoot(openMonsterName, mode)
+    end
+end
+
+-- Called from the loot channel's parser, which is also how a purchase reports
+-- back -- the server answers a BUY with a fresh loot table rather than an ack,
+-- so this is the only redraw path and there is no optimistic state to unwind
+-- when a purchase is refused.
+function Cyclopedia.refreshBestiaryLoot(monsterName)
+    if openMonsterName and monsterName == openMonsterName then
+        Cyclopedia.CreateCreatureItems()
+    end
+end
+
+-- One tile. Locked rows arrive as itemId 0 with no name, so there is nothing
+-- to hide client-side -- the tile is empty because it is empty.
+local function createLootTile(parent, row, gates)
+    local widget = g_ui.createWidget("BestiaryLootTile", parent)
+
+    if row.unlocked then
+        widget.Sprite:setItemId(row.itemId)
+        widget.Name:setText(row.name)
+        widget.Percent:setText(formatDropChance(row.chance))
+        widget:setTooltip(string.format("%s\n%s chance to drop", row.name, formatDropChance(row.chance)))
+
+        -- The quick-loot menu the old rarity-row tiles carried. It hangs
+        -- off the tile rather than the Item, which is phantom so the
+        -- tooltip covers the whole row.
+        widget.onMouseRelease = function(self, mousePosition, mouseButton)
+            return onAddLootClick(self.Sprite, mousePosition, mouseButton)
         end
+        return false
+    end
 
-        local itemRows = {}
-        local itemWidgets = {}
-        for rowIndex = 1, rowCount do
-            local row = g_ui.createWidget("UIWidget", widget.Items)
-            row:setId("row" .. rowIndex)
-            row:setHeight(34)
-            row:addAnchor(AnchorLeft, "parent", AnchorLeft)
-            row:addAnchor(AnchorRight, "parent", AnchorRight)
+    widget.Locked:setVisible(true)
+    widget.Name:setText(tr("Unknown"))
+    widget.Name:setColor("#6E706F")
+    widget.Percent:setText("???")
 
-            if rowIndex == 1 then
-                row:addAnchor(AnchorTop, "parent", AnchorTop)
-                row:setMarginTop(5)
-            else
-                row:addAnchor(AnchorTop, "row" .. (rowIndex - 1), AnchorBottom)
-                row:setMarginTop(2)
-            end
+    local gate = gates[row.gate]
+    if gate then
+        widget:setTooltip(string.format("Revealed at %d kills, or with task points.\nLooting one reveals it too.", gate))
+    end
+    return true
+end
 
-            itemRows[rowIndex] = row
-        end
+function Cyclopedia.CreateCreatureItems()
+    local base = UI.ListBase.CreatureInfo.ItemsBase
+    base.Itemlist:destroyChildren()
 
-        for i = 1, slotCount do
-            local rowIndex = math.ceil(i / itemsPerRow)
-            local item = g_ui.createWidget("BestiaryItem", itemRows[rowIndex])
-            item:setId(i)
-            itemWidgets[i] = item
-        end
+    local loot = openMonsterName and Cyclopedia.getBestiaryLoot(openMonsterName)
+    if not loot then
+        -- One frame at most in practice: the request goes out as the detail
+        -- packet is parsed, so this is only ever seen if the server is a
+        -- deploy behind and never answers.
+        base.LootStatus:setText(tr("Loading loot table..."))
+        base.UnlockStageButton:setEnabled(false)
+        base.UnlockAllButton:setEnabled(false)
+        return
+    end
 
-        for itemIndex, itemData in ipairs(data[index]) do
-            local thing = g_things.getThingType(itemData.id, ThingCategoryItem)
-            local itemWidget = itemWidgets[itemIndex]
-            itemWidget:setItemId(itemData.id)
-            itemWidget.id = itemData.id
-            itemWidget.classification = thing:getClassification()
+    base.UnlockStageButton:setText(string.format("Unlock Next (%d)", loot.stageCost))
+    base.UnlockAllButton:setText(string.format("Unlock All (%d)", loot.allCost))
 
-            if itemData.id == 0 then
-                itemWidget.undefinedItem:setVisible(true)
-            end
+    -- Older servers send one row group and no sections; fall back to drawing
+    -- that as the only list rather than an empty window.
+    local sections = loot.sections or {{title = "Normal", rows = loot.rows}}
 
-            if itemData.id > 0 then
-                if itemData.stackable then
-                    itemWidget.Stackable:setText("1+")
-                else
-                    itemWidget.Stackable:setText("1")
+    local lockedCount = 0
+    local totalRows = 0
+    for _, section in ipairs(sections) do
+        -- A variant with nothing of its own is skipped entirely: a heading
+        -- over an empty grid reads as a bug rather than as "no drops".
+        if #section.rows > 0 then
+            local header = g_ui.createWidget("BestiaryLootHeader", base.Itemlist)
+            header:setText(section.title)
+
+            local grid = g_ui.createWidget("BestiaryLootGrid", base.Itemlist)
+            for _, row in ipairs(section.rows) do
+                if createLootTile(grid, row, loot.gates) then
+                    lockedCount = lockedCount + 1
                 end
+                totalRows = totalRows + 1
             end
-
-            ItemsDatabase.setRarityItem(itemWidget, itemWidget:getItem())
-
-            itemWidget.onMouseRelease = onAddLootClick
         end
     end
+
+    local remaining = loot.gatesTotal - loot.gatesOpen
+
+    if totalRows == 0 then
+        base.LootStatus:setText(tr("This creature drops nothing."))
+    elseif lockedCount == 0 then
+        base.LootStatus:setText(string.format("All %d drops revealed.", totalRows))
+    else
+        local nextGate = loot.gates[loot.gatesOpen + 1]
+        base.LootStatus:setText(string.format("%d of %d drops hidden%s", lockedCount, totalRows,
+            nextGate and string.format(" - next reveal at %d kills.", nextGate) or "."))
+    end
+
+    base.UnlockStageButton:setEnabled(remaining > 0)
+    -- Buying "all" with one gate left is the same reveal as buying "next" for
+    -- half the points, so it is shut off rather than offered as a worse deal.
+    base.UnlockAllButton:setEnabled(remaining > 1)
 end
 
 function Cyclopedia.loadBestiarySelectedCreature(data)
@@ -241,6 +286,13 @@ function Cyclopedia.loadBestiarySelectedCreature(data)
         UI.ListBase.CreatureInfo.LeftBase.Sprite:getCreature():setShader("Outfit - cyclopedia-black")
     end
 
+    -- The three fields carry the bestiary's kill gates in bar order now --
+    -- left, middle, right, ascending (1000 / 2000 / 4000 for every non-boss
+    -- tier). Their wire names are Tibia's and no longer describe what is in
+    -- them: OTSERV used to fill them with gates[2], gates[1] and "the gate
+    -- most recently crossed", which is why the middle segment used to want
+    -- fewer kills than the left one and the right one moved as you killed.
+    -- See ProtocolGame::sendBestiaryMonsterData.
     Cyclopedia.SetBestiaryProgress(60, UI.ListBase.CreatureInfo.ProgressBack, UI.ListBase.CreatureInfo.ProgressBack33,
         UI.ListBase.CreatureInfo.ProgressBack55, data.killCounter, data.thirdDifficulty, data.secondUnlock,
         data.lastProgressKillCount)
@@ -252,12 +304,18 @@ function Cyclopedia.loadBestiarySelectedCreature(data)
         fullText = "(fully unlocked)"
     end
 
-    UI.ListBase.CreatureInfo.ProgressBorder1:setTooltip(string.format(" %d / %d %s", data.killCounter,
-        data.thirdDifficulty, fullText))
-    UI.ListBase.CreatureInfo.ProgressBorder2:setTooltip(string.format(" %d / %d %s", data.killCounter,
-        data.secondUnlock, fullText))
-    UI.ListBase.CreatureInfo.ProgressBorder3:setTooltip(string.format(" %d / %d %s", data.killCounter,
-        data.lastProgressKillCount, fullText))
+    -- Each segment says what its own gate reveals, since that is the whole
+    -- point of crossing it. Kept in step with bestiary_unlocks_config.lua's
+    -- lootOneIn, which is what actually decides the split.
+    local gateText = {"reveals drops down to 1 in 50", "reveals drops down to 1 in 100",
+                      "reveals every remaining drop"}
+
+    UI.ListBase.CreatureInfo.ProgressBorder1:setTooltip(string.format(" %d / %d %s\n %s", data.killCounter,
+        data.thirdDifficulty, fullText, gateText[1]))
+    UI.ListBase.CreatureInfo.ProgressBorder2:setTooltip(string.format(" %d / %d %s\n %s", data.killCounter,
+        data.secondUnlock, fullText, gateText[2]))
+    UI.ListBase.CreatureInfo.ProgressBorder3:setTooltip(string.format(" %d / %d %s\n %s", data.killCounter,
+        data.lastProgressKillCount, fullText, gateText[3]))
 
     -- data.currentLevel is now just a wire-parse gate on OTSERV (always 2,
     -- see the comment on ProtocolGame::sendBestiaryMonsterData) -- it no
@@ -350,7 +408,14 @@ function Cyclopedia.loadBestiarySelectedCreature(data)
 
     if not table.empty(data.combat) then
         for i = 1, 8 do
-            local combat = Cyclopedia.calculateCombatValues(data.combat[i])
+            -- Defaulted, not assumed present. calculateCombatValues compares its
+            -- argument with `< 100`, so a single missing element raises "attempt
+            -- to compare nil with number" and takes the whole creature panel down
+            -- with it -- loot table, stats, everything after this loop. A server
+            -- that sends seven elements, or numbers them from the wrong base,
+            -- should cost one bar and not the page. 100 is the neutral reading,
+            -- which is what an absent resistance means anyway.
+            local combat = Cyclopedia.calculateCombatValues(data.combat[i] or 100)
             UI.ListBase.CreatureInfo[resists[i]].Fill:setMarginRight(combat.margin)
             UI.ListBase.CreatureInfo[resists[i]].Fill:setBackgroundColor(combat.color)
             UI.ListBase.CreatureInfo[resists[i]]:setTooltip(string.format("Sensitive to %s : %s", string.gsub(
@@ -362,24 +427,20 @@ function Cyclopedia.loadBestiarySelectedCreature(data)
         end
     end
 
-    local lootData = {}
-    for _, value in ipairs(data.loot) do
-        local loot = {
-            name = value.name,
-            id = value.itemId,
-            type = value.type,
-            difficulty = value.diffculty,
-            stackable = value.stackable == 1 and true or false
-        }
-
-        if not lootData[value.diffculty] then
-            lootData[value.diffculty] = {}
-        end
-
-        table.insert(lootData[value.diffculty], loot)
+    -- data.loot (the native packet's loot block) is deliberately unread.
+    -- OTSERV sends it empty -- a lootCount of 0 -- because its per-item fields
+    -- are id/difficulty/specialEvent/name/amount with nowhere to carry a drop
+    -- percentage or an unlocked flag. The real table comes over the loot
+    -- channel instead (BESTIARY_LOOT_OPCODE in game_cyclopedia.lua).
+    --
+    -- Requested by NAME rather than raceId: the server side of that channel is
+    -- Lua, which has no access to the C++ race id table. raceData.name is
+    -- title-cased here and lowercased on the way out.
+    openMonsterName = raceData.name and raceData.name:lower() or nil
+    Cyclopedia.CreateCreatureItems()
+    if openMonsterName then
+        Cyclopedia.requestBestiaryLoot(openMonsterName)
     end
-
-    Cyclopedia.CreateCreatureItems(lootData)
     -- The "Location(s)" panel was removed from bestiary.otui -- data.location
     -- is still parsed off the wire, it just has nowhere to render.
 
@@ -422,7 +483,7 @@ function Cyclopedia.CreateBestiaryCategoryItem(Data)
     widget:setText(Data.name)
     widget.ClassIcon:setImageSource("/game_cyclopedia/images/bestiary/creatures/" .. Data.name:lower():gsub(" ", "_"))
     widget.Category = Data.name
-    widget:setColor("#C0C0C0")
+    widget:setColor(g_ui.getVariable('textColor'))
     widget.TotalValue:setText(string.format("Total: %d", Data.amount))
     widget.KnownValue:setText(string.format("Known: %d", Data.know))
 
@@ -595,16 +656,18 @@ function Cyclopedia.CreateBestiaryCreaturesItem(data)
         widget.AnimusMastery:setVisible(false)
     end
 
-    -- Every tile stays clickable regardless of kill count (the detail
-    -- screen does its own per-field gating). "%d / 3" would go negative at
-    -- 0 kills -- clamp instead of the old "?" placeholder.
-    if data.currentLevel >= 4 then
+    -- Every tile stays clickable regardless of kill count (the detail screen
+    -- does its own per-field gating). currentLevel is the count of kill gates
+    -- crossed, 0-3 -- it is read straight now, where it used to be offset by
+    -- one against a four-threshold ladder that no longer exists (see
+    -- Bestiary::TIERS in OTSERV's src/bestiary.cpp).
+    if data.currentLevel >= 3 then
         widget.Finalized:setVisible(true)
         widget.KillsLabel:setVisible(false)
     else
         widget.Finalized:setVisible(false)
         widget.KillsLabel:setVisible(true)
-        widget.KillsLabel:setText(string.format("%d / 3", math.max(0, data.currentLevel - 1)))
+        widget.KillsLabel:setText(string.format("%d / 3", math.max(0, data.currentLevel)))
     end
 
     if seenOnce then
@@ -1397,7 +1460,7 @@ function onAddLootClick(widget, mousePosition, mouseButton)
         end)
     end
 
-    menu:display(menuPosition)
+    menu:display(mousePosition)
 
     return true
 end

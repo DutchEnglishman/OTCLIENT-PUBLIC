@@ -448,18 +448,18 @@ function WheelOfDestiny.onMouseMove(widget, position, offset)
 
   wheelOfDestinyWindow.info.tabContent.information.tabContent.dedication2:setText(getDedicationBonus(index))
   if WheelOfDestiny.pointInvested[index] > 0 then
-    wheelOfDestinyWindow.info.tabContent.information.tabContent.dedication2:setColor("#c0c0c0")
+    wheelOfDestinyWindow.info.tabContent.information.tabContent.dedication2:setColor(g_ui.getVariable('textColor'))
   else
-    wheelOfDestinyWindow.info.tabContent.information.tabContent.dedication2:setColor("#707070")
+    wheelOfDestinyWindow.info.tabContent.information.tabContent.dedication2:setColor(g_ui.getVariable('textMuted'))
   end
 
   local conviction = getConvictionBonus(index, true)
   if type(conviction) == "string" then
     wheelOfDestinyWindow.info.tabContent.information.tabContent.conviction2:setText(conviction)
     if WheelOfDestiny.pointInvested[index] >= bonus.maxPoints then
-      wheelOfDestinyWindow.info.tabContent.information.tabContent.conviction2:setColor("#c0c0c0")
+      wheelOfDestinyWindow.info.tabContent.information.tabContent.conviction2:setColor(g_ui.getVariable('textColor'))
     else
-      wheelOfDestinyWindow.info.tabContent.information.tabContent.conviction2:setColor("#707070")
+      wheelOfDestinyWindow.info.tabContent.information.tabContent.conviction2:setColor(g_ui.getVariable('textMuted'))
     end
   elseif type(conviction) == "table" then
     wheelOfDestinyWindow.info.tabContent.information.tabContent.conviction2:setColoredText(conviction)
@@ -1220,9 +1220,9 @@ function WheelOfDestiny.configureDedication(index)
   wheelOfDestinyWindow.selection.tabContent.dedication:setText(getDedicationBonus(index))
   wheelOfDestinyWindow.selection.tabContent.information:setTooltip(getDedicationTooltip(index))
   if WheelOfDestiny.pointInvested[index] > 0 then
-    wheelOfDestinyWindow.selection.tabContent.dedication:setColor("#c0c0c0")
+    wheelOfDestinyWindow.selection.tabContent.dedication:setColor(g_ui.getVariable('textColor'))
   else
-    wheelOfDestinyWindow.selection.tabContent.dedication:setColor("#707070")
+    wheelOfDestinyWindow.selection.tabContent.dedication:setColor(g_ui.getVariable('textMuted'))
   end
 end
 
@@ -1236,9 +1236,9 @@ function WheelOfDestiny.configureConviction(index)
     wheelOfDestinyWindow.selection.tabContent.conviction:setText(conviction)
 
     if WheelOfDestiny.pointInvested[index] >= bonus.maxPoints then
-      wheelOfDestinyWindow.selection.tabContent.conviction:setColor("#c0c0c0")
+      wheelOfDestinyWindow.selection.tabContent.conviction:setColor(g_ui.getVariable('textColor'))
     else
-      wheelOfDestinyWindow.selection.tabContent.conviction:setColor("#707070")
+      wheelOfDestinyWindow.selection.tabContent.conviction:setColor(g_ui.getVariable('textMuted'))
     end
   elseif type(conviction) == "table" then
     wheelOfDestinyWindow.selection.tabContent.conviction:setTooltip(tooltip)
@@ -2165,13 +2165,13 @@ function WheelOfDestiny.onWheelPassiveClick(domain)
   wheelOfDestinyWindow.selection.tabContent.information1:setTooltip(m2)
 
   if passive == 1000 then
-    wheelOfDestinyWindow.selection.tabContent.dedication:setColor("#c0c0c0")
+    wheelOfDestinyWindow.selection.tabContent.dedication:setColor(g_ui.getVariable('textColor'))
   else
-    wheelOfDestinyWindow.selection.tabContent.dedication:setColor("#707070")
+    wheelOfDestinyWindow.selection.tabContent.dedication:setColor(g_ui.getVariable('textMuted'))
   end
 
   wheelOfDestinyWindow.selection.tabContent.conviction:setText("Locked")
-  wheelOfDestinyWindow.selection.tabContent.conviction:setColor("#c0c0c0")
+  wheelOfDestinyWindow.selection.tabContent.conviction:setColor(g_ui.getVariable('textColor'))
 
   if passive >= 1000 then
     wheelOfDestinyWindow.selection.tabContent.conviction:setText("Stage 3")
@@ -3069,8 +3069,8 @@ function WheelOfDestiny.onPresetClick(list, selection, oldSelection)
 	if oldSelection then
 		local widgetIndex = list:getChildIndex(oldSelection)
 		oldSelection:setBackgroundColor(widgetIndex % 2 == 0 and "#484848" or "#414141")
-		oldSelection.name:setColor("#c0c0c0")
-		oldSelection.points:setColor("#c0c0c0")
+		oldSelection.name:setColor(g_ui.getVariable('textColor'))
+		oldSelection.points:setColor(g_ui.getVariable('textColor'))
 	end
 
   local player = g_game.getLocalPlayer()
@@ -3081,8 +3081,8 @@ function WheelOfDestiny.onPresetClick(list, selection, oldSelection)
     return
   end
 
-	selection.name:setColor("#f4f4f4")
-	selection.points:setColor("#f4f4f4")
+	selection.name:setColor(g_ui.getVariable('selectionText'))
+	selection.points:setColor(g_ui.getVariable('selectionText'))
 
   WheelOfDestiny.currentPreset = presetData
 
@@ -3410,43 +3410,43 @@ function WheelOfDestiny.onGemVesselClick(domain)
     if data.gemType == 0 then
       local text = {}
       decription, gemSlot1 = Workshop.getGemInformationByBonus(data.lesserBonus, false, data.gemID, 0)
-      setStringColor(text, decription, (filledCount >= 1 and "#c0c0c0" or "#707070"))
+      setStringColor(text, decription, (filledCount >= 1 and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
       wheelOfDestinyWindow.selection.gemContent.modification0:setColoredText(text)
     elseif data.gemType == 1 then
       local text = {}
       decription, gemSlot1 = Workshop.getGemInformationByBonus(data.lesserBonus, false, data.gemID, 0)
-      setStringColor(text, decription, (filledCount >= 1 and "#c0c0c0" or "#707070"))
+      setStringColor(text, decription, (filledCount >= 1 and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
       wheelOfDestinyWindow.selection.gemContent.modification0:setColoredText(text)
 
       text = {}
       decription, gemSlot2 = Workshop.getGemInformationByBonus(data.regularBonus, false, data.gemID, 1)
-      setStringColor(text, decription, (filledCount >= 2 and "#c0c0c0" or "#707070"))
+      setStringColor(text, decription, (filledCount >= 2 and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
       wheelOfDestinyWindow.selection.gemContent.modification1:setColoredText(text)
     elseif data.gemType == 2 then
       local text = {}
       decription, gemSlot1 = Workshop.getGemInformationByBonus(data.lesserBonus, false, data.gemID, 0)
-      setStringColor(text, decription, (filledCount >= 1 and "#c0c0c0" or "#707070"))
+      setStringColor(text, decription, (filledCount >= 1 and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
       wheelOfDestinyWindow.selection.gemContent.modification0:setColoredText(text)
 
       text = {}
       decription, gemSlot2 = Workshop.getGemInformationByBonus(data.regularBonus, false, data.gemID, 1)
-      setStringColor(text, decription, (filledCount >= 2 and "#c0c0c0" or "#707070"))
+      setStringColor(text, decription, (filledCount >= 2 and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
       wheelOfDestinyWindow.selection.gemContent.modification1:setColoredText(text)
 
       text = {}
       decription, gemSlot3 = Workshop.getGemInformationByBonus(data.supremeBonus, true, data.gemID, 2)
-      setStringColor(text, decription, (filledCount == 3 and "#c0c0c0" or "#707070"))
+      setStringColor(text, decription, (filledCount == 3 and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
       wheelOfDestinyWindow.selection.gemContent.modification2:setColoredText(text)
     end
 
     local text = {}
-    setStringColor(text, tr("+%s Damage and Healing", (data.gemType == 2 and 2 or 1)), (filledCount == 3 and "#c0c0c0" or "#707070"))
+    setStringColor(text, tr("+%s Damage and Healing", (data.gemType == 2 and 2 or 1)), (filledCount == 3 and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')))
     wheelOfDestinyWindow.selection.gemContent.VRBonus:setColoredText(text)
 
 
     local replaceStr = {[0] = "�", [1] = "�", [2] = "�", [3] = "�"}
     local coloredStr = {}
-    setStringColor(coloredStr, formatedName .. " ", "#c0c0c0")
+    setStringColor(coloredStr, formatedName .. " ", g_ui.getVariable('textColor'))
     if data then
       setStringColor(coloredStr, replaceStr[gemSlot1], "white")
       if data.gemType >= 1 then

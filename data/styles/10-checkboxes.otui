@@ -43,7 +43,7 @@ ThickCheckBox < UICheckBox
   size: 18 18
   text-align: left
   text-offset: 18 0
-  color: #dfdfdf
+  color: $textBright
   image-color: #dfdfdfff
   image-rect: 0 0 12 12
   image-offset: 3 3
@@ -60,7 +60,7 @@ ThickCheckBox < UICheckBox
 
   $disabled:
     image-color: #dfdfdf88
-    color: #dfdfdf88
+    color: $textDisabled
     opacity: 0.8
 
 ColorBox < UICheckBox
@@ -97,7 +97,7 @@ ButtonBox < UICheckBox
     change-cursor-image: false
 
   $disabled:
-    color: #dfdfdf88
+    color: $textDisabled
     image-color: #dfdfdf88
     change-cursor-image: false
 
@@ -108,7 +108,7 @@ QtCheckBox < UICheckBox
   size: 14 14
   text-align: left
   text-offset: 18 1
-  color: #dfdfdfff
+  color: $textBright
   image-color: #dfdfdfff
   image-rect: 0 0 14 14
   image-source: /images/ui/newcheckbox
@@ -149,7 +149,7 @@ fakeCheckBox < UICheckBox
 
   $disabled:
     image-color: #dfdfdf88
-    color: #dfdfdf88
+    color: $textDisabled
     opacity: 0.8
 
 CheckBoxButton < UICheckBox
@@ -167,6 +167,6 @@ CheckBoxButton < UICheckBox
   $!checked:
     text-offset: 0 0
   $disabled:
-    color: #dfdfdf88
+    color: $textDisabled
     opacity: 0.8
     change-cursor-image: false

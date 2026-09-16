@@ -32,7 +32,7 @@ FragmentPanel < UIWidget
     margin-right: 9
     !text: tr('x 1')
     font: Verdana Bold-11px
-    color: #c0c0c0
+    color: $textColor
     tooltip-delayed: true
     tooltip: This mod can be found %s time(s) on gems in your invetory.
 
@@ -77,14 +77,14 @@ Panel
       anchors.horizontalCenter: parent.horizontalCenter
       anchors.top: parent.top
       !text: tr('Enhance Mod Grade')
-      color: #c0c0c0
+      color: $textColor
       margin-top: 2
     Label
       anchors.horizontalCenter: parent.horizontalCenter
       anchors.verticalCenter: parent.verticalCenter
       !text: tr('There is no mod that matches your filters.')
       font:  Verdana Bold-11px
-      color: #c0c0c0
+      color: $textColor
       margin-top: 2
   Panel
     id: modGrade
@@ -98,7 +98,7 @@ Panel
       anchors.horizontalCenter: parent.horizontalCenter
       anchors.top: parent.top
       !text: tr('Enhance Mod Grade')
-      color: #c0c0c0
+      color: $textColor
       margin-top: 2
 
     UIButton
@@ -148,7 +148,7 @@ Panel
         margin-top: 2
         text-auto-resize: true
         font: Verdana Bold-11px
-        color: #c0c0c0
+        color: $textColor
         tooltip-delayed: true
         $!on:
           color: #d33c3c
@@ -180,7 +180,7 @@ Panel
         margin-top: 2
         text-auto-resize: true
         font: Verdana Bold-11px
-        color: #c0c0c0
+        color: $textColor
         $!on:
           color: #d33c3c
 
@@ -202,7 +202,7 @@ Panel
         anchors.top: parent.top
         margin-top: 4
         font: Verdana Bold-11px
-        color: #c0c0c0
+        color: $textColor
         text: Dodge
         text-allign: center
 
@@ -486,7 +486,7 @@ Panel
         anchors.left: modBg3.right
         !text: tr('Grade I')
         font: Verdana Bold-11px
-        color: #c0c0c0
+        color: $textColor
         margin-left: 113
         margin-top: 85
       Label
@@ -495,7 +495,7 @@ Panel
         anchors.top: prev.bottom
         !text: tr('+x%% Some Bonus')
         font: Verdana Bold-11px
-        color: #c0c0c0
+        color: $textColor
         //color: #707070
         text-auto-resize: true
         text-align: center
@@ -537,7 +537,7 @@ Panel
       anchors.top: prev.top
       anchors.left: prev.right
       margin-left: 6
-      color: #c0c0c0
+      color: $textColor
       @onOptionChange: modules.game_wheel.Workshop.showFragmentList(false, false, false)
       @onSetup: |
         self:addOption("All")
@@ -576,7 +576,7 @@ Panel
         !text: tr('Page 0 / 0 (0 Mods)')
         text-auto-resize: true
         font: Verdana Bold-11px
-        color: #c0c0c0
+        color: $textColor
       UIButton
         id: rightArrow
         size: 20 20

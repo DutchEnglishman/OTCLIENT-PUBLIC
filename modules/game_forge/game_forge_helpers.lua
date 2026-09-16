@@ -137,7 +137,7 @@ Helpers.baseResult = {
 
 Helpers.green = "#44ad25"
 Helpers.red = "#d33c3c"
-Helpers.grey = "#c0c0c0"
+Helpers.grey = g_ui.getVariable('textColor')
 
 function Helpers.handleDescription(data, currentType)
     if currentType == "convert-dust" then

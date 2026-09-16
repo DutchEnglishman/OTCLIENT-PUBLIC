@@ -52,9 +52,11 @@ Module
     - game_quickloot
     - game_cyclopedia
     - game_tasksystem
+    - game_dungeons
     - game_crafting
     - game_itemtooltip
     - game_itemshare
+    - game_stackabledepot
     - game_trainer
     - game_widgets
     - game_creatureinformation

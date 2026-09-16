@@ -34,7 +34,7 @@ local actualUsed = {}
 local bonusShrine = 0
 -- @ const
 local COLORS = {
-    BASE_1 = "#484848",
+    BASE_1 = g_ui.getVariable('panelFillLight'),
     BASE_2 = "#414141"
 }
 local ZONE = {
@@ -126,8 +126,8 @@ local function premiumStatusWindwos(isPremium)
                                                                      "Great! You benefit from the best possible rewards and bonuses due to your premium status." or
                                                                      "With a Premium account, you would benefit from even better rewards and bonuses.")
     rewardWallController.ui.premiumStatus.premiumButton:setOn(not isPremium)
-    rewardWallController.ui.infoPanel.free:setColor(isPremium and "#909090" or "#FFFFFF")
-    rewardWallController.ui.infoPanel.premium:setColor(isPremium and "#FFFFFF" or "#909090")
+    rewardWallController.ui.infoPanel.free:setColor(isPremium and g_ui.getVariable('textDim') or "#FFFFFF")
+    rewardWallController.ui.infoPanel.premium:setColor(isPremium and "#FFFFFF" or g_ui.getVariable('textDim'))
     if isPremium then
         for i, widget in pairs(rewardWallController.ui.restingAreaPanel.bonusIcons:getChildren()) do
             if widget then
@@ -288,7 +288,7 @@ local function onDailyRewardCollectionState(state)
         [DailyRewardStatus.DAILY_REWARD_NOTCOLLECTED] = "You did not claim your daily reward in time. If you don't claim your reward now, your [color=#D33C3C]streak will be reset.[/color]",
         [DailyRewardStatus.DAILY_REWARD_NOTAVAILABLE] ="idk",
     }
-    rewardWallController.ui.restingAreaPanel.streakWarning:parseColoredText(text[state],"#c0c0c0")
+    rewardWallController.ui.restingAreaPanel.streakWarning:parseColoredText(text[state],g_ui.getVariable('textColor'))
 end 
 ]]
 
@@ -369,7 +369,7 @@ local function onRewardHistory(rewardHistory)
     transferHistory:destroyChildren()
 
     local headerRow = g_ui.createWidget("historyData2", transferHistory)
-    headerRow:setBackgroundColor("#363636")
+    headerRow:setBackgroundColor(g_ui.getVariable('panelFill'))
     headerRow:setBorderColor("#00000077")
     headerRow:setBorderWidth(1)
     headerRow.date:setText("Date")
@@ -536,7 +536,7 @@ function rewardWallController:onClickDisplayWindowsPickRewardWindow(event)
                                                                    g_game:getLocalPlayer():getFreeCapacity() .. " oz")
 
             local text = string.format("You have selected [color=#D33C3C]0[/color] of %d reward items", itemsToSelect)
-            windowsPickWindow:getChildById('rewardLabel'):parseColoredText(text, "#c0c0c0")
+            windowsPickWindow:getChildById('rewardLabel'):parseColoredText(text, g_ui.getVariable('textColor'))
 
             for i, item in pairs(event.target.rewardItem) do
                 local getItem = g_ui.createWidget('ItemReward', windowsPickWindow:getChildById('rewardList'))

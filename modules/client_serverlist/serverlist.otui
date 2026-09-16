@@ -12,7 +12,7 @@ ServerWidget < UIWidget
   @onSetup: self:updateOnStates()
 
   $focus:
-    background-color: #ffffff22
+    background-color: $hoverOverlay
 
   Label
     id: details

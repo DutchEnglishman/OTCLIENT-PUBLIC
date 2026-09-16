@@ -9,10 +9,11 @@ UIWidget
     anchors.right: parent.right
     margin-top: 10
     height: 50
-    image-source: /images/ui/window_new
-    image-border: 10
+    image-source: /images/ui/panel_window_header
+    image-border: 4
+    image-border-top: 20
     color: #929292
-    text-offset: 0 3
+    text-offset: 0 6
     text-align: top
     !text: tr('Progress')
     Label
@@ -22,7 +23,7 @@ UIWidget
       margin-left: 10
       margin-bottom: 10
       !text: tr('Boss Points')
-      color: #C0C0C0
+      color: $textColor
       text-auto-resize: true
     ProgressBackground
       id: PointsBar
@@ -78,7 +79,7 @@ UIWidget
     anchors.right: RightBase.left
     anchors.top: RightBase.top
     !text: tr('Boosted Boss: The Source Of Co...')
-    color: #C0C0C0
+    color: $textColor
     margin-left: 5
   UIWidget
     id: PedestalBase

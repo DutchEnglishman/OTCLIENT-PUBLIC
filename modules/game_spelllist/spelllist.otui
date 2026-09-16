@@ -10,7 +10,7 @@ SpellListLabel < Label
   image-source: /images/game/spells/spell-icons-32x32
 
   $focus:
-    background-color: #ffffff22
+    background-color: $hoverOverlay
     color: #ffffff
 
 SpellInfoLabel < Label

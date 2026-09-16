@@ -52,7 +52,7 @@ local questLogCache = {
 
 -- const
 local COLORS = {
-    BASE_1 = "#484848",
+    BASE_1 = g_ui.getVariable('panelFillLight'),
     BASE_2 = "#414141",
     SELECTED = "#585858"
 }
@@ -1275,7 +1275,7 @@ function questLogController:onInit()
     UITextList.questLogList = questLogController.ui.panelQuestLog.areaPanelQuestList.questList
     UITextList.questLogLine = questLogController.ui.panelQuestLineSelected.ScrollAreaQuestList.questList
     UITextList.questLogInfo = questLogController.ui.panelQuestLineSelected.panelQuestInfo.questList
-    UITextList.questLogInfo:setBackgroundColor('#363636')
+    UITextList.questLogInfo:setBackgroundColor(g_ui.getVariable('panelFill'))
 
     UITextEdit.search = questLogController.ui.panelQuestLog.textEditSearchQuest
     UIlabel.numberQuestComplete = questLogController:findWidget("#lblCompleteNumber")

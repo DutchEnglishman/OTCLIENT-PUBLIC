@@ -4,6 +4,8 @@ Module
   author: edubart, baxnie
   website: https://github.com/edubart/otclient
   sandboxed: true
-  scripts: [containers]
+  scripts:
+    - restore
+    - containers
   @onLoad: init()
   @onUnload: terminate()

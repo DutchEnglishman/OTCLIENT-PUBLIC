@@ -171,7 +171,7 @@ local function refreshFoodRow()
     local widget = row:getChildById('value')
     if widget then
         widget:setText(formatFoodTime(foodSeconds))
-        widget:setColor(foodSeconds > 0 and '#C0C0C0' or '#F55E5E')
+        widget:setColor(foodSeconds > 0 and g_ui.getVariable('textColor') or '#F55E5E')
     end
 end
 
@@ -212,7 +212,7 @@ local function setResistanceRow(rowId, value)
         valueWidget:setText(value .. '%')
         valueWidget:setColor(
             value > 0 and '#44AD25'
-                or (value < 0 and '#F55E5E' or '#C0C0C0')
+                or (value < 0 and '#F55E5E' or g_ui.getVariable('textColor'))
         )
     end
 
@@ -810,7 +810,7 @@ function setSkillValue(id, value)
         
             widget:setText(text)
             local color = (displayValue > 0 and 'green')
-                or (displayValue == 0 and '#C0C0C0')
+                or (displayValue == 0 and g_ui.getVariable('textColor'))
                 or 'red'
             widget:setColor(color)
         else
@@ -818,7 +818,7 @@ function setSkillValue(id, value)
         end
     else
         widget:setText(value)
-        widget:setColor('#C0C0C0')
+        widget:setColor(g_ui.getVariable('textColor'))
     end
 
     if id == 'capacity' then
@@ -833,7 +833,7 @@ function setSkillValue(id, value)
                 widget:setColor('#44ad25')
             else
                 local ratio = totalCap > 0 and (freeCap / totalCap * 100) or 100
-                widget:setColor(ratio <= 20 and '#b22222' or '#C0C0C0')
+                widget:setColor(ratio <= 20 and '#b22222' or g_ui.getVariable('textColor'))
             end
             if totalCap > 0 then
                 skill:setTooltip(tr('You have %s of %s capacity left', comma_value(freeCap), comma_value(totalCap)))

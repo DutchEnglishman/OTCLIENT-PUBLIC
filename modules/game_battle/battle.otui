@@ -315,7 +315,7 @@ BattleListMenuOption < ThickCheckBox
     background-color: #ffffff1a
 
   $disabled:
-    color: #c0c0c0ff
+    color: $textColor
 
 BattleListMenuButton < UIButton
   text-align: left
@@ -329,7 +329,7 @@ BattleListMenuButton < UIButton
     background-color: #ffffff1a
 
   $disabled:
-    color: #c0c0c0ff
+    color: $textColor
 
 BattleListSubMenu < PopupMenu
   id: battleListSubMenu

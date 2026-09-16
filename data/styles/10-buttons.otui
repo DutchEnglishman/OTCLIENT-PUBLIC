@@ -1,6 +1,6 @@
 Button < UIButton
   font: cipsoftFont
-  color: #dfdfdfff
+  color: $textBright
   size: 43 20
   text-offset: 0 2
   image-source: /images/ui/buttons
@@ -25,7 +25,7 @@ Button < UIButton
     text-offset: 1 1
 
   $disabled:
-    color: #dfdfdf88
+    color: $textDisabled
     opacity: 0.8
     change-cursor-image: false
 
@@ -37,13 +37,13 @@ TabButton < UIButton
   image-border: 3
   text-offset: 0 1
   icon-color: #dfdfdf
-  color: #dfdfdf
+  color: $textBright
   change-cursor-image: true
   cursor: pointer
 
   $hover !on:
     image-clip: 0 23 22 23
-    color: #dfdfdf
+    color: $textBright
 
   $disabled:
     image-color: #dfdfdf66
@@ -52,7 +52,7 @@ TabButton < UIButton
 
   $on:
     image-clip: 0 46 22 23
-    color: #dfdfdf
+    color: $textBright
 
 NextButton < UIButton
   size: 12 21
@@ -226,7 +226,7 @@ QtButton < UIButton
     text-offset: 1 1
 
   $disabled:
-    color: #dfdfdf88
+    color: $textDisabled
     opacity: 0.8
 
 BigPremiumButton < UIButton
@@ -239,7 +239,7 @@ BigPremiumButton < UIButton
   $!on:
     image-clip: 0 74 128 37
   $disabled:
-    color: #dfdfdf88
+    color: $textDisabled
     opacity: 0.8
 
 MiniPremiumButton < UIButton

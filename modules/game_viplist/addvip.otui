@@ -14,7 +14,7 @@ FloatingInputWindow
     !text: tr('Add to VIP list')
     text-align: center
     font: verdana-11px-antialised
-    color: #909090
+    color: $textDim
     anchors.top: parent.top
     anchors.left: parent.left
     anchors.right: parent.right

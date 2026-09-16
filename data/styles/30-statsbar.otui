@@ -295,7 +295,7 @@ TopStatsSkillElement < UIWidget
   Label
     id: level
     !text: '99999'
-    color: #c0c0c0ff
+    color: $textColor
     text-align: right
     anchors.left: parent.left
     anchors.verticalCenter: parent.verticalCenter
@@ -1019,7 +1019,7 @@ BottomStatsSkillElement < UIWidget
   Label
     id: levelBottom
     !text: '99999'
-    color: #c0c0c0ff
+    color: $textColor
     text-align: right
     anchors.left: parent.left
     anchors.verticalCenter: parent.verticalCenter

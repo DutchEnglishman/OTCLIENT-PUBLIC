@@ -10,7 +10,7 @@ ImbuementTrackerMenuOption < ThickCheckBox
     background-color: #ffffff1a
 
   $disabled:
-    color: #c0c0c0ff
+    color: $textColor
 
 ImbuementTrackerMenu < PopupMenu
   id: imbuementTrackerMenu

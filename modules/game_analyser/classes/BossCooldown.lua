@@ -179,7 +179,7 @@ function BossCooldown:checkTicks()
 		if bossCooldownLabel then
 			if widget.tick <= 0 then
 				bossCooldownLabel:setText("No Cooldown")
-				bossCooldownLabel:setColor("#c0c0c0")
+				bossCooldownLabel:setColor(g_ui.getVariable('textColor'))
 				if widget.type ~= "nocd" then
 					needUpdate = true
 					widget.cooldown = os.time() + 60 * 365 * 60 * 24
@@ -298,7 +298,7 @@ function BossCooldown:updateWindow()
 		if bossCooldownLabel then
 			if resttime <= 0 then
 				bossCooldownLabel:setText("No Cooldown")
-				bossCooldownLabel:setColor("#c0c0c0")
+				bossCooldownLabel:setColor(g_ui.getVariable('textColor'))
 				widget.type = "nocd"
 			elseif resttime <= 60 then
 				bossCooldownLabel:setText(resttime .. "s")

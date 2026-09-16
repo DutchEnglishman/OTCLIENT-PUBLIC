@@ -309,7 +309,7 @@ function onExtendedOpcode(protocol, code, buffer)
     -- Redraw when the chunk actually covers the recipe on screen. This was
     -- keyed on from == 1, and the server pages at ten, so refreshed counts for
     -- anything past the tenth recipe reached the table and never the window --
-    -- alchemist has twelve recipes and enchanter eighteen.
+    -- the Mining tab has twenty-one recipes.
     --
     -- renderCraftAmount rather than selectItem: selectItem resets the batch
     -- slider to one, which a refresh arriving mid-craft would now do out from
