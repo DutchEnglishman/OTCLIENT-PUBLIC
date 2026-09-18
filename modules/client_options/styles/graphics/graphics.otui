@@ -123,3 +123,15 @@ UIWidget
       id: showMounts
       !text: tr('Show mounts')
       !tooltip: tr('Draw players and creatures on their mounts. Turn this off to see everyone on foot.')
+
+  SmallReversedQtPanel
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    margin-top: 7
+    height: 22
+
+    OptionCheckBox
+      id: mouseSelectionGraphics
+      !text: tr('Mouse selection graphics')
+      !tooltip: tr('Draw the crosshair square on the tile under the cursor and the yellow pulse on the thing it holds. Off hides both, whatever the Interface options say.')

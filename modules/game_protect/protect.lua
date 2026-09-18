@@ -149,8 +149,10 @@ local function onOpcode(proto, code, buffer)
     end
 
     local slots = {}
-    for _, slot in ipairs(payload.s or {}) do
-        slots[slot] = true
+    if type(payload.s) == 'table' then
+        for _, slot in ipairs(payload.s) do
+            slots[slot] = true
+        end
     end
     protectedSlots[payload.c] = slots
 

@@ -121,33 +121,41 @@ local function passes(entry)
 end
 
 local function populate(data)
-    perTile = data.perTile or perTile
-    tileCount = data.tiles or tileCount
+    -- Floored at one: the cell split below divides by this and subtracts the
+    -- result, so a zero would never reduce `remaining` and the loop would never
+    -- end.
+    perTile = math.max(1, tonumber(data.perTile) or perTile)
+    tileCount = tonumber(data.tiles) or tileCount
 
     stored = {}
     local grid = window:getChildById('grid')
     grid:destroyChildren()
 
     local used, drawn = 0, 0
-    for _, entry in ipairs(data.items or {}) do
-        stored[entry.s] = {count = entry.c, clientId = entry.i, name = entry.n}
-        used = used + math.ceil(entry.c / perTile)
+    for _, entry in ipairs(type(data.items) == 'table' and data.items or {}) do
+        -- An entry missing its server id, count or name cannot be drawn or
+        -- clicked, and the id is a table index: a nil one would throw.
+        if type(entry) == 'table' and entry.s ~= nil and type(entry.c) == 'number'
+            and type(entry.n) == 'string' then
+            stored[entry.s] = {count = entry.c, clientId = entry.i, name = entry.n}
+            used = used + math.ceil(entry.c / perTile)
 
-        if passes(entry) then
-            -- Full cells first, then whatever is left over in the last one.
-            local remaining = entry.c
-            while remaining > 0 do
-                local onTile = math.min(remaining, perTile)
-                local tile = g_ui.createWidget('DepotTile', grid)
-                tile:getChildById('sprite'):setItemId(entry.i)
-                tile:getChildById('amount'):setText(onTile)
-                tile:setTooltip(entry.n .. ' (' .. entry.c .. ' stored)')
-                tile.onClick = function()
-                    askAmount(entry.s)
+            if passes(entry) then
+                -- Full cells first, then whatever is left over in the last one.
+                local remaining = entry.c
+                while remaining > 0 do
+                    local onTile = math.min(remaining, perTile)
+                    local tile = g_ui.createWidget('DepotTile', grid)
+                    tile:getChildById('sprite'):setItemId(entry.i)
+                    tile:getChildById('amount'):setText(onTile)
+                    tile:setTooltip(entry.n .. ' (' .. entry.c .. ' stored)')
+                    tile.onClick = function()
+                        askAmount(entry.s)
+                    end
+
+                    remaining = remaining - onTile
+                    drawn = drawn + 1
                 end
-
-                remaining = remaining - onTile
-                drawn = drawn + 1
             end
         end
     end
@@ -193,8 +201,12 @@ function buildFilters(categories)
     end
 
     add('all', 'All', nil)
-    for _, category in ipairs(categories or {}) do
-        add(category.key, category.label, category.key)
+    for _, category in ipairs(type(categories) == 'table' and categories or {}) do
+        -- The key is a table index here, so a category without one has to be
+        -- skipped rather than throwing the whole row away.
+        if type(category) == 'table' and category.key ~= nil then
+            add(category.key, category.label or tostring(category.key), category.key)
+        end
     end
 
     -- Keeps the chosen filter across a refresh, unless the server stopped
@@ -212,6 +224,12 @@ function onExtendedOpcode(protocol, code, buffer)
 
     local ok, data = pcall(json.decode, buffer)
     if not ok or type(data) ~= 'table' then
+        return
+    end
+
+    -- A payload arriving after terminate() (or before init finished) has no
+    -- window to draw into; every branch below touches one.
+    if not window then
         return
     end
 

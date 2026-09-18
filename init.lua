@@ -117,7 +117,7 @@ if ENABLE_SERVERS then
     }
 end
 
-g_app.setName("OTClient - Shattered Realms");
+g_app.setName("The Shattered Realms");
 g_app.setCompactName("otclient");
 g_app.setOrganizationName("otcr");
 

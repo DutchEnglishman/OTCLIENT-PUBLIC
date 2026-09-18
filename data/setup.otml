@@ -36,18 +36,26 @@ game
     walk-animation-speed: 0.7
 
   player
-    diagonal-walk-speed: 3
+    // What a diagonal step costs the PLAYER, in plain step durations. This is
+    // not taste: it has to be the server's own figure or every diagonal is dead
+    // time. TFS charges a player two (Creature::onCreatureMove takes the shared
+    // diagonal cost of 3 back down by one for a player) and lets him step again
+    // at that point, so a 3 here made the client sit out a whole extra step
+    // duration on every diagonal that the server was already done waiting for.
+    // Monsters keep 3 under `creature` above, which is what TFS charges them.
+    diagonal-walk-speed: 2
 
   render
     // Milliseconds one animation frame is held. Bigger is slower. Engine
-    // defaults (gameconfig.h:133) are 500 / 500 / 75 / 75; invisible and item
-    // sit well past those on purpose, because stock reads as frantic here.
+    // defaults (gameconfig.h:133) are 500 / 500 / 75 / 75; invisible sits
+    // past its default on purpose, because stock reads as frantic here.
     //
     // invisible = creature invisibility sparkles
-    // item      = torches, fire and energy fields, every animated map item
+    // item      = torches, fire and energy fields, every animated map item,
+    //             and creature sprite animation (creature.cpp:489)
     // effect    = magic effects, missile = projectiles in flight
     invisible-ticks-per-frame: 750
-    item-ticks-per-frame: 900
+    item-ticks-per-frame: 500
     effect-ticks-per-frame: 75
     missile-ticks-per-frame: 75
     animated-text-duration: 1000

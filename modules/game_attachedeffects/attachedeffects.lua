@@ -1149,7 +1149,11 @@ local function onJetRetract(buffer)
     local n = #tiles
     if n < 2 then
         blazeEnd(runId, run)
-        holdTileEffect(tiles[1], base + BLAZE_SPOUT, 0)
+        -- A route that parsed to no tile at all has no nozzle to put the spout
+        -- on, and holdTileEffect would hand g_map.getTile a nil position.
+        if n == 1 then
+            holdTileEffect(tiles[1], base + BLAZE_SPOUT, 0)
+        end
         return
     end
 
@@ -1191,8 +1195,14 @@ local tether = nil
 local tetherBall = nil
 
 local function tetherBallStep()
+    if not tetherBall or not tether then
+        return
+    end
     local map = modules.game_interface.getMapPanel()
-    if not tetherBall or not tether or not map then
+    if not map then
+        -- The run is still live, so a missing panel is a frame to skip, not a
+        -- reason to park the ball: tetherBallOn would refuse to restart it.
+        scheduleEvent(tetherBallStep, 1)
         return
     end
     local elapsed = g_clock.millis() - tetherBall.startedAt

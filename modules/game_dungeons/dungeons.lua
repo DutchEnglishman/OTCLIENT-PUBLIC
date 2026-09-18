@@ -167,10 +167,14 @@ local function fillList(dungeons)
     dungeonNames = {}
 
     for _, dungeon in ipairs(dungeons) do
-        local row = g_ui.createWidget('DungeonListLabel', dungeonList)
-        row:setId(dungeon.key)
-        row:setText(dungeon.name)
-        dungeonNames[dungeon.key] = dungeon.name
+        -- The key is both the row's widget id and a table index here, so a
+        -- dungeon without one cannot be listed.
+        if type(dungeon) == 'table' and type(dungeon.key) == 'string' then
+            local row = g_ui.createWidget('DungeonListLabel', dungeonList)
+            row:setId(dungeon.key)
+            row:setText(dungeon.name or dungeon.key)
+            dungeonNames[dungeon.key] = dungeon.name or dungeon.key
+        end
     end
 
     local first = dungeonList:getChildByIndex(1)
@@ -189,11 +193,13 @@ local function fillTiers(tiers, currentTier)
     tierList:destroyChildren()
 
     for _, tier in ipairs(tiers) do
-        local button = g_ui.createWidget('DungeonTierButton', tierList)
-        button:setText(tier.name)
-        button:setOn(tier.key == currentTier)
-        button.onClick = function()
-            DungeonsUI.selectTier(tier.key)
+        if type(tier) == 'table' and tier.key ~= nil then
+            local button = g_ui.createWidget('DungeonTierButton', tierList)
+            button:setText(tier.name or tostring(tier.key))
+            button:setOn(tier.key == currentTier)
+            button.onClick = function()
+                DungeonsUI.selectTier(tier.key)
+            end
         end
     end
 end
@@ -216,23 +222,24 @@ end
 local function fillRequirements(data)
     local panel = DungeonsUI.window:getChildById('reqPanel')
 
-    panel:getChildById('levelReqLabel'):setText(tr('Level required') .. ': ' .. data.levelReq)
+    panel:getChildById('levelReqLabel'):setText(tr('Level required') .. ': ' .. (data.levelReq or 0))
     panel:getChildById('levelReqLabel'):setColor(data.levelOk and '#c0c0c0' or '#d05050')
 
-    local items = data.itemReq or {}
+    local items = type(data.itemReq) == 'table' and data.itemReq or {}
     for slot = 1, REQ_SLOTS do
         local widget = panel:getChildById('reqItem' .. slot)
         local req = items[slot]
 
-        if req then
-            widget:setItemId(req.id)
-            widget:setItemCount(req.count)
+        if type(req) == 'table' then
+            widget:setItemId(req.id or 0)
+            widget:setItemCount(req.count or 1)
             -- Money is counted across gold, platinum and crystal, so naming the
             -- coin the slot happens to draw would misstate what is checked.
             if req.money then
-                widget:setTooltip(string.format('%d gold (you have %d)', req.count, req.have))
+                widget:setTooltip(string.format('%d gold (you have %d)', req.count or 0, req.have or 0))
             else
-                widget:setTooltip(string.format('%dx %s (you have %d)', req.count, req.name, req.have))
+                widget:setTooltip(string.format('%dx %s (you have %d)', req.count or 0,
+                    tostring(req.name), req.have or 0))
             end
             widget:show()
         else
@@ -253,7 +260,10 @@ local function fillRequirements(data)
     -- The panel draws three slots; anything past that is named in text rather
     -- than silently dropped.
     for slot = REQ_SLOTS + 1, #items do
-        lines[#lines + 1] = string.format('%dx %s', items[slot].count, items[slot].name)
+        local extra = items[slot]
+        if type(extra) == 'table' then
+            lines[#lines + 1] = string.format('%dx %s', extra.count or 0, tostring(extra.name))
+        end
     end
 
     -- Stated rather than checked: where the player is standing changes as they
@@ -276,10 +286,12 @@ local function fillLeaderboard(panelId, rows)
     end
 
     for index, entry in ipairs(rows) do
-        local row = g_ui.createWidget('DungeonRankRow', rowsPanel)
-        row:getChildById('rank'):setText(index .. '.')
-        row:getChildById('name'):setText(entry.name)
-        row:getChildById('time'):setText(formatTime(entry.seconds))
+        if type(entry) == 'table' then
+            local row = g_ui.createWidget('DungeonRankRow', rowsPanel)
+            row:getChildById('rank'):setText(index .. '.')
+            row:getChildById('name'):setText(entry.name or '')
+            row:getChildById('time'):setText(formatTime(entry.seconds))
+        end
     end
 end
 
@@ -288,10 +300,12 @@ local function fillItemGrid(panelId, items)
     grid:destroyChildren()
 
     for _, item in ipairs(items) do
-        local widget = g_ui.createWidget('Item', grid)
-        widget:setVirtual(true)
-        widget:setItemId(item.id)
-        widget:setTooltip(item.name)
+        if type(item) == 'table' then
+            local widget = g_ui.createWidget('Item', grid)
+            widget:setVirtual(true)
+            widget:setItemId(item.id or 0)
+            widget:setTooltip(item.name or '')
+        end
     end
 end
 
@@ -303,20 +317,31 @@ local function fillQueue(data)
     panel:getChildById('joinButton'):setEnabled(data.blocked == nil)
 end
 
+-- Every fill* walks its argument with ipairs, so a field that arrived as
+-- something other than a list has to become an empty panel rather than throw.
+local function list(value)
+    return type(value) == 'table' and value or {}
+end
+
 function DungeonsUI.onExtendedOpcode(_protocol, _opcode, buffer)
     local ok, message = pcall(json.decode, buffer)
     if not ok or type(message) ~= 'table' then
         return
     end
 
-    local data = message.data or {}
+    local data = type(message.data) == 'table' and message.data or {}
+
+    -- Nothing to draw into once the module has been terminated.
+    if not DungeonsUI.window then
+        return
+    end
 
     if message.action == 'list' then
-        fillList(data.dungeons or {})
+        fillList(list(data.dungeons))
     elseif message.action == 'detail' then
         -- A reply for a dungeon the player has since clicked away from would
         -- repaint the panels with the wrong one.
-        if data.key ~= selectedKey then
+        if type(data.key) ~= 'string' or data.key ~= selectedKey then
             return
         end
 
@@ -324,12 +349,12 @@ function DungeonsUI.onExtendedOpcode(_protocol, _opcode, buffer)
         -- The banner caption is the dungeon's own title, which is not always
         -- the shorter name the left-hand list carries.
         fillBanner(data.key, data.title or data.name or dungeonNames[data.key] or '')
-        fillTiers(data.tiers or {}, data.tier)
+        fillTiers(list(data.tiers), data.tier)
         fillRequirements(data)
-        fillLeaderboard('soloPanel', data.solo or {})
-        fillLeaderboard('groupPanel', data.group or {})
-        fillItemGrid('bossRewards', data.bossRewards or {})
-        fillItemGrid('loot', data.loot or {})
+        fillLeaderboard('soloPanel', list(data.solo))
+        fillLeaderboard('groupPanel', list(data.group))
+        fillItemGrid('bossRewards', list(data.bossRewards))
+        fillItemGrid('loot', list(data.loot))
         fillQueue(data)
     end
 end

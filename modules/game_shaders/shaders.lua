@@ -67,7 +67,145 @@ local MAP_SHADERS = { {
     -- switches the map to it while a tether is held and back afterwards).
     name = 'Map - Tether',
     frag = 'shaders/fragment/tether.frag'
+}, {
+    -- Steady wind: litter blown across the world, purely additive over the map.
+    -- One of the atmospheres below.
+    name = 'Map - Wind',
+    frag = 'shaders/fragment/wind.frag'
+}, {
+    -- Drifting ash and embers, with the colour washed out of the map behind it.
+    -- One of the atmospheres below.
+    name = 'Map - Burn',
+    frag = 'shaders/fragment/burn.frag'
 } }
+
+-- Map atmospheres (OTSERV data/scripts/talkactions/atmosphere.lua, /wind and
+-- /burn) arrive here as the key of the one to show, or 'off'. One channel for all
+-- of them rather than an opcode each, because the map has ONE shader slot: showing
+-- an atmosphere is always replacing whatever was there, never stacking.
+--
+-- 'off' goes back to NO map shader rather than to whatever the player had before:
+-- this side cannot read back which shader is on. PainterShaderProgram is
+-- registered as a Lua class with only addMultiTexture bound off it and has no
+-- getName in C++ at all (luafunctions.cpp), so map:getShader() answers an object
+-- that can say nothing about itself -- which is why the tether's own
+-- `current.getName and current:getName()` always falls through to its default.
+--
+-- 'Map - Default' carries no frag, so registerShader skips it and it is never
+-- registered; ShaderManager::getShader answers nullptr for a name it does not
+-- know, and MapView::setShader takes that as "no shader". That is the same route
+-- attachShaders uses with 'Default'.
+--
+-- An atmosphere ROLLS IN rather than snapping on: this side ramps 0..1 into the
+-- shader's u_Anchor0.x (UIMap:setShaderPoint, raw floats in an anchor slot) and
+-- each shader lerps its whole effect from the untouched map by it.
+--
+-- MapView's own fade arguments are NOT what does this. They drive
+-- g_painter->setOpacity on the map draw itself (mapview.cpp), which fades the
+-- WORLD to black and back -- a blackout, not an effect ramp.
+--
+-- Swapping straight between two atmospheres would cut, so a change fades the old
+-- one out first and only then puts the new shader on the map, at 0, to fade in.
+local ATMOSPHERE_OPCODE = 76
+local ATMOSPHERE_SHADERS = {
+    wind = 'Map - Wind',
+    burn = 'Map - Burn'
+}
+local ATMOSPHERE_FADE_MS = 3000
+local ATMOSPHERE_STEP_MS = 40
+
+local atmosphere = nil      -- the key the server last asked for
+local atmosphereShown = nil -- the key whose shader is actually on the map
+local atmosphereFade = 0.0
+local atmosphereEvent = nil
+
+local function pushAtmosphereFade()
+    local map = modules.game_interface.getMapPanel()
+    if map then
+        map:setShaderPoint(0, atmosphereFade, 1.0)
+    end
+end
+
+local function showAtmosphereShader(key)
+    local map = modules.game_interface.getMapPanel()
+    if not map then
+        return
+    end
+    atmosphereShown = key
+    map:setShader(key and ATMOSPHERE_SHADERS[key] or 'Map - Default', 0, 0)
+end
+
+local function atmosphereStep()
+    atmosphereEvent = nil
+
+    -- No map panel means nothing to drive, and rescheduling from here would spin
+    -- every 40 ms for as long as the player stayed logged out. A game start
+    -- resets and restarts the ramp.
+    if not modules.game_interface.getMapPanel() then
+        return
+    end
+
+    -- Heading for full while the shader on the map is the one wanted, and for
+    -- nothing while it is on its way out.
+    local target = (atmosphereShown ~= nil and atmosphereShown == atmosphere) and 1.0 or 0.0
+    local step = ATMOSPHERE_STEP_MS / ATMOSPHERE_FADE_MS
+
+    if atmosphereFade < target then
+        atmosphereFade = math.min(target, atmosphereFade + step)
+    else
+        atmosphereFade = math.max(target, atmosphereFade - step)
+    end
+    pushAtmosphereFade()
+
+    if atmosphereFade ~= target then
+        atmosphereEvent = scheduleEvent(atmosphereStep, ATMOSPHERE_STEP_MS)
+        return
+    end
+
+    if target == 0.0 then
+        -- Faded out: either take the shader off, or put the next one on and let
+        -- the next tick start raising it.
+        showAtmosphereShader(atmosphere)
+        if atmosphere then
+            atmosphereEvent = scheduleEvent(atmosphereStep, ATMOSPHERE_STEP_MS)
+        end
+    end
+end
+
+local function setAtmosphere(key)
+    if key == atmosphere then
+        return
+    end
+    atmosphere = key
+
+    -- Nothing showing: put the shader on at once, dark, and ramp it up. Anything
+    -- else is handled by the step -- it fades out first, then swaps.
+    if atmosphereShown == nil and key ~= nil then
+        atmosphereFade = 0.0
+        showAtmosphereShader(key)
+        pushAtmosphereFade()
+    end
+
+    if not atmosphereEvent then
+        atmosphereEvent = scheduleEvent(atmosphereStep, ATMOSPHERE_STEP_MS)
+    end
+end
+
+local function resetAtmosphere()
+    if atmosphereEvent then
+        removeEvent(atmosphereEvent)
+        atmosphereEvent = nil
+    end
+    atmosphere = nil
+    atmosphereShown = nil
+    atmosphereFade = 0.0
+end
+
+local function onAtmosphereOpcode(protocol, opcode, buffer)
+    -- Anything this build does not know about reads as 'off', so an older client
+    -- clears rather than sticking on whatever it was showing.
+    setAtmosphere(ATMOSPHERE_SHADERS[buffer] and buffer or nil)
+end
 
 local OUTFIT_SHADERS = {
     {
@@ -372,13 +510,6 @@ function ShaderController:applyMonsterShader(creature)
     end
 
     creature:setShader(shaderName)
-
-    print(
-        '[SHADER] Applied ' ..
-        shaderName ..
-        ' to ' ..
-        creature:getName()
-    )
 end
 
 function ShaderController:updateVisibleMonsterShaders()
@@ -427,6 +558,8 @@ function ShaderController:onInit()
         onAppear = onMonsterShaderCreatureAppear
     })
     
+    ProtocolGame.registerExtendedOpcode(ATMOSPHERE_OPCODE, onAtmosphereOpcode)
+
     Keybind.new('Windows', 'show/hide Shader Windows', HOTKEY, '')
     Keybind.bind('Windows', 'show/hide Shader Windows', {
         {
@@ -446,12 +579,17 @@ function ShaderController:onTerminate()
     disconnect(Creature, {
         onAppear = onMonsterShaderCreatureAppear
     })
+    ProtocolGame.unregisterExtendedOpcode(ATMOSPHERE_OPCODE)
+    resetAtmosphere()
     variantShaderCreatures = {}
     g_shaders.clear()
     Keybind.delete('Windows', 'show/hide Shader Windows')
 end
 
 function ShaderController:onGameStart()
+    -- attachShaders puts the map back to no shader, so no atmosphere survives the
+    -- end of the last game; any ramp still running has to go with it.
+    resetAtmosphere()
     attachShaders()
 
     scheduleEvent(function()

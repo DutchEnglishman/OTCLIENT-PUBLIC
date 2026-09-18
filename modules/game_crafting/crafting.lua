@@ -261,20 +261,44 @@ function onExtendedOpcode(protocol, code, buffer)
   )
 
   if not status then
-    g_logger.error("[Crafting] JSON error: " .. data)
+    -- json_data is pcall's error message here; `data` is the payload local
+    -- declared below, which is still nil at this point -- concatenating it
+    -- threw a second error out of the opcode handler instead of logging.
+    g_logger.error("[Crafting] JSON error: " .. tostring(json_data))
+    return false
+  end
+
+  if type(json_data) ~= "table" then
+    return false
+  end
+
+  -- destroy() clears the window and every widget local with it on onGameEnd,
+  -- and a payload still in the socket buffer can land after that. create()
+  -- builds the window before it asks for anything, so nothing legitimate is
+  -- dropped here.
+  if not window then
     return false
   end
 
   local action = json_data.action
+  -- "money" carries a bare number here; every other action carries a table.
   local data = json_data.data
+  if action ~= "money" and action ~= "crafted" and action ~= "show" and action ~= "close"
+      and type(data) ~= "table" then
+    return false
+  end
+
   if action == "fetch" then
+    if type(data.category) ~= "string" then
+      return false
+    end
     -- The refining list is re-sent every time the slot changes, so the server
     -- flags the first message of a set as a replacement. Without it each
     -- re-send would stack another copy of the same functions.
-    if data.reset then
+    if data.reset or not Crafts[data.category] then
       Crafts[data.category] = {}
     end
-    for i = 1, #data.crafts do
+    for i = 1, #(data.crafts or {}) do
       table.insert(Crafts[data.category], data.crafts[i])
     end
     if data.category == selectedCategory then
@@ -286,7 +310,7 @@ function onExtendedOpcode(protocol, code, buffer)
     end
   elseif action == "materials" then
     local list = Crafts[data.category]
-    if not list then
+    if not list or type(data.from) ~= "number" or type(data.materials) ~= "table" then
       return
     end
 
@@ -296,7 +320,7 @@ function onExtendedOpcode(protocol, code, buffer)
       -- own list whenever the slot changes, so a chunk can land against a list
       -- the client has already replaced.
       local craft = list[data.from + i - 1]
-      if craft then
+      if craft and type(craft.materials) == "table" and type(material) == "table" then
         for x = 1, #material do
           local mats = craft.materials[x]
           if mats then

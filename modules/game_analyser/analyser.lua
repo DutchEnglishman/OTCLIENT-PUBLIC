@@ -241,6 +241,14 @@ function terminate()
     partyMemberCheckEvent = nil
   end
 
+  -- The party clock is started by onPartyAnalyzer and was never stopped here:
+  -- it kept calling updateWindow on the window destroyed above, and a module
+  -- reload left a second one ticking beside it.
+  if PartyHuntAnalyser and PartyHuntAnalyser.event then
+    PartyHuntAnalyser.event:cancel()
+    PartyHuntAnalyser.event = nil
+  end
+
 end
 
 function startNewSession(login)

@@ -890,14 +890,23 @@ function ensureWidget()
     return true
 end
 
+-- A request whose reply never lands -- the game ended while it was in flight --
+-- would otherwise sit in `pending` for the life of the client, one entry per
+-- such hover.
+local function onGameEnd()
+    hideTooltip()
+    pending = {}
+    hoveredWidget = nil
+end
+
 function init()
     ProtocolGame.registerExtendedOpcode(TOOLTIP_OPCODE, onTooltipData)
-    connect(g_game, { onGameEnd = hideTooltip })
+    connect(g_game, { onGameEnd = onGameEnd })
 end
 
 function terminate()
     ProtocolGame.unregisterExtendedOpcode(TOOLTIP_OPCODE)
-    disconnect(g_game, { onGameEnd = hideTooltip })
+    disconnect(g_game, { onGameEnd = onGameEnd })
 
     -- onMouseMove is only connected once the widget is built (lazily, on
     -- first tooltip), so only disconnect it if that actually happened.

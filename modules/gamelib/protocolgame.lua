@@ -30,7 +30,7 @@ function ProtocolGame:onExtendedOpcode(opcode, buffer)
         if status ~= 'S' and status ~= 'P' and status ~= 'E' then
             extendedJSONData[opcode] = buffer
         else
-            extendedJSONData[opcode] = extendedJSONData[opcode] .. data
+            extendedJSONData[opcode] = (extendedJSONData[opcode] or '') .. data
         end
         if status ~= 'S' and status ~= 'P' then
             local json_status, json_data = pcall(function()
@@ -38,7 +38,8 @@ function ProtocolGame:onExtendedOpcode(opcode, buffer)
             end)
             extendedJSONData[opcode] = nil
             if not json_status then
-                error('Invalid data in extended JSON opcode (' .. json_status .. '): ' .. json_data)
+                g_logger.error('Invalid data in extended JSON opcode (' .. opcode .. '): ' ..
+                                   tostring(json_data))
                 return
             end
             callback(self, opcode, json_data)
