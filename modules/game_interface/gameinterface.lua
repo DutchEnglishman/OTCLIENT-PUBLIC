@@ -1188,6 +1188,18 @@ end
 function processMouseAction(menuPosition, mouseButton, autoWalkPos, lookThing, useThing, creatureThing, attackCreature)
     local keyboardModifiers = g_keyboard.getModifiers()
 
+    -- Both mouse buttons at once is a look, in every control mode. The button being
+    -- released still reads as pressed here -- its state is cleared a dispatcher pass
+    -- later (win32window.cpp WM_LBUTTONUP/WM_RBUTTONUP) -- so testing the OTHER button
+    -- is what makes this a real two-button click. Modifier combos fall through, which
+    -- leaves Classic Control's own shift/ctrl handling of the gesture untouched.
+    if lookThing and keyboardModifiers == KeyboardNoModifier and not g_platform.isMobile() and
+        ((g_mouse.isPressed(MouseLeftButton) and mouseButton == MouseRightButton) or
+            (g_mouse.isPressed(MouseRightButton) and mouseButton == MouseLeftButton)) then
+        g_game.look(lookThing)
+        return true
+    end
+
     local smartLeftClick = modules.client_options.getOption('smartLeftClick')
     local classicControls = modules.client_options.getOption('classicControl')
     local contextUseThing = useThing
