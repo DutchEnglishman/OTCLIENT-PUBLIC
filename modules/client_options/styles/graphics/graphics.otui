@@ -34,8 +34,8 @@ UIWidget
     anchors.right: parent.right
     anchors.top: prev.bottom
     margin-top: 5
-    height:55
-    
+    height:69
+
     OptionCheckBoxMarked
       id: vsync
       !text: tr('V-Sync')
@@ -46,6 +46,12 @@ UIWidget
       id: showFps
       !tooltip: tr('Show frame rate')
       !text: tr('Show frame rate')
+      anchors.top: prev.bottom
+
+    OptionCheckBoxMarked
+      id: showPing
+      !text: tr('Show ping')
+      !tooltip: tr('Display connection speed to the server (milliseconds)')
       anchors.top: prev.bottom
 
     OptionScaleScroll

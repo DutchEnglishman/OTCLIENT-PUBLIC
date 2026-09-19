@@ -21,8 +21,8 @@ local fpsEvent = nil
 local fpsMin = -1;
 local fpsMax = -1;
 local pingPanel
-local MainPingPanel
-local mainFpsPanel
+local pingRow
+local fpsRow
 local fpsPanel2
 local PingWidget
 local pingImg
@@ -168,6 +168,11 @@ function terminate()
     if PingWidget and not PingWidget:isDestroyed() then
         PingWidget:destroy()
         PingWidget = nil
+        pingRow = nil
+        pingPanel = nil
+        pingImg = nil
+        fpsRow = nil
+        fpsPanel2 = nil
     end
     if managerAccountsButton and not managerAccountsButton:isDestroyed() then
         managerAccountsButton:destroy()
@@ -224,45 +229,45 @@ function online()
         
         if not PingWidget then
             PingWidget = g_ui.loadUI("pingFps", modules.game_interface.getMapPanel())
-            MainPingPanel = g_ui.createWidget("testPingPanel", PingWidget:getChildByIndex(1))
-            MainPingPanel:setId("ping")
-            
-            pingImg = MainPingPanel:getChildByIndex(1)
-            pingPanel = MainPingPanel:getChildByIndex(2)
-            
-            mainFpsPanel = g_ui.createWidget("testPingPanel", PingWidget:getChildByIndex(2))
-            mainFpsPanel:setId("fps")
-            fpsPanel2 = mainFpsPanel:getChildByIndex(2)
-        end
 
-        if showPing and pingFeatureAvailable then
-            pingLabel:show()
-            if pingPanel then
-                pingPanel:show()
-                pingImg:show()
-            end
-        else
-            pingLabel:hide()
-            if pingPanel then
-                pingPanel:hide()
-                pingImg:hide()
+            fpsRow = PingWidget and PingWidget:getChildById('fpsRow')
+            fpsPanel2 = fpsRow and fpsRow:getChildById('text')
+
+            pingRow = PingWidget and PingWidget:getChildById('pingRow')
+            pingPanel = pingRow and pingRow:getChildById('text')
+            pingImg = pingRow and pingRow:getChildById('icon')
+
+            -- A widget that failed to build reads exactly like an option that
+            -- is switched off, so say which piece is missing rather than
+            -- leaving a blank corner.
+            if not (fpsRow and fpsPanel2 and pingRow and pingPanel and pingImg) then
+                g_logger.error(string.format(
+                    'pingFps.otui did not build: fpsRow=%s fpsText=%s pingRow=%s pingText=%s pingIcon=%s',
+                    tostring(fpsRow ~= nil), tostring(fpsPanel2 ~= nil), tostring(pingRow ~= nil),
+                    tostring(pingPanel ~= nil), tostring(pingImg ~= nil)))
             end
         end
 
-        pingImg:setVisible(showPing)
-        pingPanel:setVisible(showPing)
-        
+        if not pingRow then
+            return
+        end
+
+        -- The rows sit in a verticalBox that skips invisible children, so
+        -- hiding the fps row is what pulls the ping line up into its place
+        -- rather than leaving a hole above it.
+        pingLabel:setVisible(showPing and pingFeatureAvailable)
+        pingRow:setVisible(showPing and pingFeatureAvailable)
+
         local showFps = modules.client_options.getOption('showFps')
-        fpsPanel2:setVisible(showFps)
+        fpsRow:setVisible(showFps)
     end)
 end
 
 function offline()
     hideGameButtons()
     pingLabel:hide()
-    if pingPanel then
-        pingPanel:hide()
-        pingImg:hide()
+    if pingRow then
+        pingRow:hide()
     end
     fpsMin = -1
 end
@@ -337,7 +342,7 @@ function updatePing(ping)
         local imagen
         if ping < 0 then
             text = 'High lag (??)'
-            imagen = nil
+            imagen = '/images/ui/high_ping'
         elseif ping >= 500 then
             text = 'High lag (' .. ping .. ' ms)'
             imagen = '/images/ui/high_ping'
@@ -349,23 +354,24 @@ function updatePing(ping)
             imagen = '/images/ui/low_ping'
         end
 
-        pingImg:setImageSource(imagen)
+        if pingImg then
+            pingImg:setImageSource(imagen)
+        end
         pingPanel:setText(text)
     end
 end
 
 function setPingVisible(enable)
     pingLabel:setVisible(enable)
-    if pingPanel then
-        pingPanel:setVisible(enable)
-        pingImg:setVisible(enable)
+    if pingRow then
+        pingRow:setVisible(enable)
     end
 end
 
 function setFpsVisible(enable)
     fpsLabel:setVisible(enable)
-    if fpsPanel2 then
-        fpsPanel2:setVisible(enable)
+    if fpsRow then
+        fpsRow:setVisible(enable)
     end
 end
 

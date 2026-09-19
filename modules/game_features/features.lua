@@ -9,6 +9,22 @@ controller:registerEvents(g_game, {
 
         g_game.enableFeature(GameFormatCreatureName)
 
+        -- Ping. The version ladder below only switches a ping feature on at 953,
+        -- so at 860 the client never started its ping timer (Game::
+        -- processGameStart) and the top menu hid the row outright regardless of
+        -- the option (client_topmenu, pingFeatureAvailable) -- there was no
+        -- number to show and nowhere to show it.
+        --
+        -- The EXTENDED one, not GameClientPing. It carries the ping on extended
+        -- opcode 2, which data/scripts/ping/ping.lua answers on the server, and
+        -- leaves the raw opcodes alone. GameClientPing would make the client read
+        -- the server's own 0x1E keepalive as a pong and stop answering it, and a
+        -- player with no pong for 60 s is logged out (Player::sendPing).
+        --
+        -- DEPLOY ORDER: server-first. Without that script the client pings into
+        -- the void and the row stays empty; nothing else changes.
+        g_game.enableFeature(GameExtendedClientPing)
+
         -- Item rarity frames. GameColorizedLootValue is the cosmetic gate
         -- that lets ItemsDatabase draw frames at all; GameItemRarity is the
         -- one that matters for the wire format -- it makes getItem() read

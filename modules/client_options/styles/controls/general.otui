@@ -14,19 +14,7 @@ UIWidget
       anchors.left: parent.left
       anchors.right: parent.right
       anchors.top: parent.top
-      height: 22
-
-      OptionCheckBoxMarked
-        id: showPing
-        !text: tr('Show connection ping')
-        !tooltip: tr('Display connection speed to the server (milliseconds)')
-
-    SmallReversedQtPanel
-      anchors.left: parent.left
-      anchors.right: parent.right
-      anchors.top: prev.bottom
       height: 32
-      margin-top: 7
 
       $mobile:
         height: 0

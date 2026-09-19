@@ -282,7 +282,8 @@ local function use_item_at_cursor_position(button)
 
     local useThing = nil
     if item:isFluidContainer() or item:isMultiUse() then
-        useThing = tile:getTopMultiUseThing()
+        -- true: the target is whatever the cursor is drawn over, mid-step creatures included.
+        useThing = tile:getTopMultiUseThing(true)
     else
         useThing = tile:getTopUseThing()
     end

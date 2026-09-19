@@ -6,10 +6,6 @@ gameRootPanel = modules.game_interface.gameBottomPanel
 gameLeftPanel = modules.game_interface.getLeftPanel()
 gameTopMenu = modules.client_topmenu.getTopMenu()
 
-function currentViewMode()
-    return modules.game_interface.currentViewMode
-end
-
 healthCircle = nil
 manaCircle = nil
 manaShieldCircle = nil
@@ -480,85 +476,79 @@ function whenSkillsChange()
     end
 end
 
+-- The drawn map rect, mirroring UIMap::updateMapSize (src/client/uimap.cpp):
+-- the padding rect inset by a pixel, letterboxed to the view's aspect ratio
+-- when keepAspectRatio is on, and centred on the padding rect either way.
+local function mapDrawRect()
+    local pad = mapPanel:getPaddingRect()
+    local width, height = pad.width - 2, pad.height - 2
+
+    if mapPanel:isKeepAspectRatioEnabled() then
+        local dimension = mapPanel:getVisibleDimension()
+        local ratio = dimension.width / dimension.height
+        if width / height > ratio then
+            width = math.floor(height * ratio)
+        else
+            height = math.floor(width / ratio)
+        end
+    end
+
+    return pad.x + math.floor((pad.width - width) / 2), pad.y + math.floor((pad.height - height) / 2), width, height
+end
+
+-- Where the player is actually drawn, which is NOT the centre of the map rect.
+-- MapView::calcFramebufferSource crops one tile off west, east and north to
+-- hide the edge void bars, and the vertical crop is one-sided: the camera tile
+-- ends up with one fewer row above it than below, so it sits exactly half a
+-- drawn tile above the rect's centre. Hanging the circles on that centre is
+-- what put them half a tile low.
+local function playerScreenCenter()
+    local x, y, width, height = mapDrawRect()
+    local dimension = mapPanel:getVisibleDimension()
+
+    -- Rows of the visible dimension the rect can actually show: the source is
+    -- fitted to the rect's aspect ratio before the crop, so a rect wider than
+    -- the dimension draws fewer rows than it asks for. Tile size cancels out.
+    local rows = math.min(dimension.height, dimension.width * height / width)
+    local halfTile = rows > 1 and height / (2 * (rows - 1)) or 0
+
+    return x + width / 2, y + height / 2 - halfTile
+end
+
 function whenMapResizeChange()
     if g_game.isOnline() then
+        local centerX, centerY = playerScreenCenter()
+
         local barDistance = 90
         if not (math.floor(mapPanel:getHeight() / 2 * 0.2) < 100) then -- 0.381
             barDistance = math.floor(mapPanel:getHeight() / 2 * 0.2)
         end
 
-        if currentViewMode() == 2 then
-            healthCircleFront:setX(math.floor(mapPanel:getWidth() / 2 - barDistance - imageSizeThin) -
-                distanceFromCenter)
-            manaCircleFront:setX(math.floor(mapPanel:getWidth() / 2 + barDistance) + distanceFromCenter)
+        healthCircle:setX(math.floor(centerX - barDistance - imageSizeThin) - distanceFromCenter)
+        healthCircleFront:setX(healthCircle:getX())
+        manaCircle:setX(math.floor(centerX + barDistance) + distanceFromCenter)
+        manaCircleFront:setX(manaCircle:getX())
 
-            healthCircle:setX(math.floor(mapPanel:getWidth() / 2 - barDistance - imageSizeThin) - distanceFromCenter)
-            manaCircle:setX(math.floor((mapPanel:getWidth() / 2 + barDistance)) + distanceFromCenter)
+        healthCircle:setY(math.floor(centerY - imageSizeBroad / 2))
+        manaCircle:setY(healthCircle:getY())
 
-            if manaShieldCircle and manaShieldCircleFront then
-                manaShieldCircle:setX(manaCircle:getX() - manaShieldImageSizeThin - manaShieldCircleOffsetX)
-                manaShieldCircleFront:setX(manaShieldCircle:getX())
-            end
+        if manaShieldCircle and manaShieldCircleFront then
+            manaShieldCircle:setX(manaCircle:getX() - manaShieldImageSizeThin - manaShieldCircleOffsetX)
+            manaShieldCircleFront:setX(manaShieldCircle:getX())
+            manaShieldCircle:setY(manaCircle:getY() + manaShieldCircleOffsetY)
+            manaShieldCircleFront:setY(manaShieldCircle:getY())
+        end
 
-            healthCircle:setY(mapPanel:getHeight() / 2 - imageSizeBroad / 2 + 0)
-            manaCircle:setY(mapPanel:getHeight() / 2 - imageSizeBroad / 2 + 0)
+        if isExpCircle then
+            expCircleFront:setX(math.floor(centerX - imageSizeBroad / 2))
+            expCircleFront:setY(math.floor(centerY - barDistance - imageSizeThin) - distanceFromCenter)
+            expCircle:setY(expCircleFront:getY())
+        end
 
-            if manaShieldCircle and manaShieldCircleFront then
-                manaShieldCircle:setY(manaCircle:getY() + manaShieldCircleOffsetY)
-                manaShieldCircleFront:setY(manaShieldCircle:getY())
-            end
-
-            if isExpCircle then
-                expCircleFront:setY(math.floor(mapPanel:getHeight() / 2 - barDistance - imageSizeThin) -
-                    distanceFromCenter)
-
-                expCircleFront:setX(math.floor(mapPanel:getWidth() / 2 - imageSizeBroad / 2))
-                expCircle:setY(math.floor(mapPanel:getHeight() / 2 - barDistance - imageSizeThin) - distanceFromCenter)
-            end
-
-            if isSkillCircle then
-                skillCircleFront:setY(math.floor(mapPanel:getHeight() / 2 + barDistance) + distanceFromCenter)
-
-                skillCircleFront:setX(math.floor(mapPanel:getWidth() / 2 - imageSizeBroad / 2))
-                skillCircle:setY(math.floor(mapPanel:getHeight() / 2 + barDistance) + distanceFromCenter)
-            end
-        else
-            healthCircleFront:setX(mapPanel:getX() + mapPanel:getWidth() / 2 - imageSizeThin - barDistance -
-                distanceFromCenter)
-            manaCircleFront:setX(mapPanel:getX() + mapPanel:getWidth() / 2 + barDistance + distanceFromCenter)
-
-            healthCircle:setX(mapPanel:getX() + mapPanel:getWidth() / 2 - imageSizeThin - barDistance -
-                distanceFromCenter)
-            manaCircle:setX(mapPanel:getX() + mapPanel:getWidth() / 2 + barDistance + distanceFromCenter)
-
-            if manaShieldCircle and manaShieldCircleFront then
-                manaShieldCircle:setX(manaCircle:getX() - manaShieldImageSizeThin - manaShieldCircleOffsetX)
-                manaShieldCircleFront:setX(manaShieldCircle:getX())
-            end
-
-            healthCircle:setY(mapPanel:getY() + mapPanel:getHeight() / 2 - imageSizeBroad / 2)
-            manaCircle:setY(mapPanel:getY() + mapPanel:getHeight() / 2 - imageSizeBroad / 2)
-
-            if manaShieldCircle and manaShieldCircleFront then
-                manaShieldCircle:setY(manaCircle:getY() + manaShieldCircleOffsetY)
-                manaShieldCircleFront:setY(manaShieldCircle:getY())
-            end
-
-            if isExpCircle then
-                expCircleFront:setY(mapPanel:getY() + mapPanel:getHeight() / 2 - imageSizeThin - barDistance -
-                    distanceFromCenter)
-
-                expCircleFront:setX(mapPanel:getX() + mapPanel:getWidth() / 2 - imageSizeBroad / 2)
-                expCircle:setY(mapPanel:getY() + mapPanel:getHeight() / 2 - imageSizeThin - barDistance -
-                    distanceFromCenter)
-            end
-
-            if isSkillCircle then
-                skillCircleFront:setY(mapPanel:getY() + mapPanel:getHeight() / 2 + barDistance + distanceFromCenter)
-
-                skillCircleFront:setX(mapPanel:getX() + mapPanel:getWidth() / 2 - imageSizeBroad / 2)
-                skillCircle:setY(mapPanel:getY() + mapPanel:getHeight() / 2 + barDistance + distanceFromCenter)
-            end
+        if isSkillCircle then
+            skillCircleFront:setX(math.floor(centerX - imageSizeBroad / 2))
+            skillCircleFront:setY(math.floor(centerY + barDistance) + distanceFromCenter)
+            skillCircle:setY(skillCircleFront:getY())
         end
 
         whenHealthChange()

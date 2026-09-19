@@ -131,12 +131,16 @@ function UIGameMap:onMouseRelease(mousePosition, mouseButton)
     if tile then
         lookThing = tile:getTopLookThing()
         useThing = tile:getTopUseThing()
-        creatureThing = tile:getTopCreature()
+        -- true = also answer for a creature that is only walking through this tile. A creature
+        -- mid-step belongs to the tile it is walking INTO, while its body is still drawn over
+        -- the tile it left, so without this a click on the body of a moving monster finds
+        -- nothing and falls through to autowalk.
+        creatureThing = tile:getTopCreature(true)
     end
 
     local autoWalkTile = g_map.getTile(autoWalkPos)
     if autoWalkTile then
-        attackCreature = autoWalkTile:getTopCreature()
+        attackCreature = autoWalkTile:getTopCreature(true)
     end
 
     local ret = modules.game_interface.processMouseAction(mousePosition, mouseButton, autoWalkPos, lookThing, useThing,

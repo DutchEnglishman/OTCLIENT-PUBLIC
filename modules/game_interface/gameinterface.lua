@@ -700,7 +700,9 @@ function onUseWith(clickedWidget, mousePosition)
         local tile = clickedWidget:getTile(mousePosition)
         if tile then
             if selectedThing:isFluidContainer() or selectedThing:isMultiUse() then
-                g_game.useWith(selectedThing, tile:getTopMultiUseThing())
+                -- true: aim at the creature the crosshair is drawn over, which for one mid-step
+                -- is not yet the tile it belongs to. See UIGameMap:onMouseRelease.
+                g_game.useWith(selectedThing, tile:getTopMultiUseThing(true))
             else
                 g_game.useWith(selectedThing, tile:getTopUseThing())
             end
@@ -719,7 +721,7 @@ function onTradeWith(clickedWidget, mousePosition)
     if clickedWidget:getClassName() == 'UIGameMap' then
         local tile = clickedWidget:getTile(mousePosition)
         if tile then
-            g_game.requestTrade(selectedThing, tile:getTopCreature())
+            g_game.requestTrade(selectedThing, tile:getTopCreature(true))
         end
     elseif clickedWidget:getClassName() == 'UICreatureButton' then
         local creature = clickedWidget:getCreature()
@@ -897,7 +899,7 @@ function createThingMenu(menuPosition, lookThing, useThing, creatureThing)
     -- Server-side lock: a protected item is invisible to shop NPCs, cannot be
     -- taken by a script, and survives water, dustbins and lava. Moving it around
     -- is deliberately still allowed.
-    if lookThing and lookThing:isItem() and modules.game_protect then
+    if lookThing and modules.game_protect and modules.game_protect.canProtect(lookThing) then
         menu:addOption(modules.game_protect.getMenuLabel(lookThing), function()
             modules.game_protect.toggle(lookThing)
         end)

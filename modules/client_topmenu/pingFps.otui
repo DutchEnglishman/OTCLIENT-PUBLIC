@@ -1,46 +1,51 @@
-testPingPanel < UIWidget
-  size: 50 50
-  padding: 3
-  focusable: false
-  pingImg
-  pingFpsLabel
-
-
-pingImg < UIWidget
+PingFpsIcon < UIWidget
+  id: icon
   size: 17 17
-  anchors.centerIn: parent
+  anchors.left: parent.left
+  anchors.verticalCenter: parent.verticalCenter
   phantom: true
   focusable: false
 
-pingFpsLabel < UIWidget
-  size: 120 14
-  anchors.top: parent.bottom
-  anchors.centerIn: parent
-  margin-left: 65
-  phantom: true
+PingFpsText < UILabel
+  id: text
+  anchors.left: parent.left
+  anchors.right: parent.right
+  anchors.verticalCenter: parent.verticalCenter
+  margin-left: 21
+  text-align: left
   font: verdana-11px-rounded
+  color: #ffffff
+  phantom: true
   focusable: false
 
+PingFpsRow < UIWidget
+  height: 18
+  phantom: true
+  focusable: false
 
+// The height must cover every row, visible or not: a child whose rect falls
+// outside its parent's is dropped by UIWidget::drawChildren, since overflow
+// defaults to Hidden. fit-children shrinks this to the visible rows, so the
+// value here is only the floor that keeps a row drawable before it runs.
 Panel
+  id: pingFpsPanel
   anchors.top: parent.top
   anchors.left: parent.left
-  height: 60
-  width: 150
-  margin-top: 35
-  Panel
-    anchors.top: parent.top
-    anchors.left: parent.left
-    anchors.right: parent.right
-    height: 20
-    layout:
-      type: horizontalBox
+  margin-top: 4
+  margin-left: 6
+  width: 160
+  height: 40
+  layout:
+    type: verticalBox
+    fit-children: true
 
-  Panel
-    anchors.top: prev.bottom
-    anchors.left: parent.left
-    anchors.right: parent.right
-    margin-top: 5
-    height: 20
-    layout:
-      type: horizontalBox
+  PingFpsRow
+    id: fpsRow
+
+    PingFpsText
+
+  PingFpsRow
+    id: pingRow
+
+    PingFpsIcon
+    PingFpsText
