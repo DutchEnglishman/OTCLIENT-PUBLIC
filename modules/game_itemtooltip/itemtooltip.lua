@@ -203,10 +203,22 @@ local nextRequestId = 0
 local pending = {}
 local hoveredWidget = nil
 
+-- How often the Alt state is sampled while a tooltip is up. Fast enough that
+-- the switch reads as instant, and it only runs while one is on screen.
+local ALT_POLL_MS = 100
+local altPollEvent = nil
+local altActive = false
+-- The payload and item of the tooltip currently on screen, so the Alt switch
+-- redraws it from what the server already sent.
+local shownPayload = nil
+local shownItem = nil
+
 -- Forward declaration: renderTooltip (below) calls this, but it's defined
 -- further down next to init(). Lua binds locals at compile time, so without
--- this it would resolve to nil.
+-- this it would resolve to nil. renderTooltip is forward-declared for the same
+-- reason: the Alt poll above it calls it.
 local ensureWidget
+local renderTooltip
 
 local function positionKey(pos)
     return string.format('%d,%d,%d', pos.x, pos.y, pos.z)
@@ -222,7 +234,37 @@ local function describeTarget(pos)
     return 'slot', pos.y, 0
 end
 
+-- Alt is a MODIFIER, not a key: PlatformWindow::processKeyDown returns as soon
+-- as it has folded Alt into keyboardModifiers and never raises a key event
+-- (src/framework/platform/platformwindow.cpp), so there is no onKeyDown or
+-- onKeyUp to hang the redraw on and the state has to be polled. Only while a
+-- tooltip is actually on screen -- hideTooltip takes the cycle down again.
+local function stopAltPoll()
+    if altPollEvent then
+        removeEvent(altPollEvent)
+        altPollEvent = nil
+    end
+end
+
+local function startAltPoll()
+    if altPollEvent then
+        return
+    end
+
+    altPollEvent = cycleEvent(function()
+        if not shownPayload or not tooltipWindow or not tooltipWindow:isVisible() then
+            return
+        end
+        if g_keyboard.isAltPressed() ~= altActive then
+            renderTooltip(shownPayload, shownItem)
+        end
+    end, ALT_POLL_MS)
+end
+
 local function hideTooltip()
+    stopAltPoll()
+    shownPayload = nil
+    shownItem = nil
     if tooltipWindow then
         tooltipWindow:hide()
     end
@@ -375,7 +417,7 @@ local function rowHeight(row)
     return (row.entry or row.label).widget:getHeight()
 end
 
-local function renderTooltip(payload, item)
+function renderTooltip(payload, item)
     if not ensureWidget() then
         return
     end
@@ -384,6 +426,24 @@ local function renderTooltip(payload, item)
 
     local sections, rarityId, weight = parseSections(payload)
     local rarityColor = RARITY_COLORS[rarityId]
+
+    -- Alt reads each roll as how good it is: the value as a percentage of the
+    -- highest that attribute could have rolled at the item's current level.
+    -- The server sends one Q per A line in the same order (0 = no band), so
+    -- the two pair by position and the percentage is folded into the line
+    -- itself -- a column of its own would be blank on every other tooltip.
+    --
+    -- splitPair takes the LAST ': ', so the suffix lands in the value column
+    -- beside the number it qualifies rather than breaking the pair.
+    altActive = g_keyboard.isAltPressed()
+    if altActive and sections.A and sections.Q then
+        for i, text in ipairs(sections.A) do
+            local quality = tonumber(sections.Q[i])
+            if quality and quality > 0 then
+                sections.A[i] = text .. ' (' .. quality .. '%)'
+            end
+        end
+    end
 
     local rows = {}
     local contentWidth = 0
@@ -734,6 +794,12 @@ local function renderTooltip(payload, item)
         end
     end
 
+    -- Kept so the Alt poll can redraw this same tooltip with the roll
+    -- qualities on or off without asking the server again.
+    shownPayload = payload
+    shownItem = item
+    startAltPoll()
+
     tooltipWindow:show()
     tooltipWindow:raise()
     moveTooltip()
@@ -907,6 +973,9 @@ end
 function terminate()
     ProtocolGame.unregisterExtendedOpcode(TOOLTIP_OPCODE)
     disconnect(g_game, { onGameEnd = onGameEnd })
+    stopAltPoll()
+    shownPayload = nil
+    shownItem = nil
 
     -- onMouseMove is only connected once the widget is built (lazily, on
     -- first tooltip), so only disconnect it if that actually happened.

@@ -182,10 +182,10 @@ g_configs.loadSettings('/config.otml')
 -- of data/ and modules/ so any file it carries shadows the stock one and nothing
 -- stock is edited. nil = the stock look. A change needs a restart: images resolve
 -- lazily, but styles are parsed once when client_styles loads.
--- 'carved' is the textured basalt-and-gold look (tools/skin-generators/make_carved.ps1);
--- 'shattered' the flat green-black one it replaced (make_shattered.ps1). Swap back by
--- naming it here.
-local SKIN = 'carved'
+-- 'slate' is the cold grey matte look (tools/skin-generators/make_slate.ps1); 'carved' the
+-- warmer basalt-and-gold one it was cut from (make_carved.ps1); 'shattered' the flat
+-- green-black one before that (make_shattered.ps1). Swap back by naming it here.
+local SKIN = 'slate'
 if SKIN then
     if not g_resources.addSearchPath(g_resources.getWorkDir() .. 'data/skins/' .. SKIN, true) then
         g_logger.error('Skin "' .. SKIN .. '" not found under data/skins/ -- using the stock look.')

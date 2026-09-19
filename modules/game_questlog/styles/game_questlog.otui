@@ -148,7 +148,8 @@ QuestLogTracker < MiniWindow
 
   UIButton
     id: menuButton
-    size: 14 14
+    size: 12 12
+    image-size: 14 14
     image-source: /images/ui/miniwindow_buttons
     image-clip: 112 0 14 14
 

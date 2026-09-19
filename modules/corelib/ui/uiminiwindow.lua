@@ -91,6 +91,45 @@ function UIMiniWindow:maximize(dontSave)
     signalcall(self.onMaximize, self)
 end
 
+-- The header button row, right to left. Every id is optional: a window that does not
+-- declare one, or hides one, simply does not get that slot.
+--
+-- This has to be laid out rather than anchored in the style, because UIAnchorLayout
+-- resolves an anchor against the hooked widget's rect without ever asking whether it is
+-- visible (uianchorlayout.cpp:48). Chaining each button off its neighbour therefore leaves
+-- a 12px hole wherever one is hidden -- and containers hide three of them, the analyser
+-- windows two, the cyclopedia three. The gaps the style shipped were uneven too (1, 7, 2,
+-- 2, 2 px), so nothing in the row lined up with anything else in it.
+local HEADER_BUTTONS = {
+    'closeButton', 'minimizeButton', 'upButton', 'toggleFilterButton',
+    'contextMenuButton', 'newWindowButton', 'lockButton'
+}
+local HEADER_BUTTON_GAP = 2     -- between two buttons
+local HEADER_BUTTON_RIGHT = 3   -- from the window's right edge to the first one
+local HEADER_BUTTON_TOP = 2     -- 12px button in a 15px header
+
+-- Re-anchors the visible header buttons into one evenly spaced row. Safe to call at any
+-- time; call it after changing whether one of them is visible.
+function UIMiniWindow:layoutHeaderButtons()
+    local previous
+    for _, id in ipairs(HEADER_BUTTONS) do
+        local button = self:getChildById(id)
+        if button and button:isExplicitlyVisible() then
+            button:breakAnchors()
+            button:addAnchor(AnchorTop, 'parent', AnchorTop)
+            button:setMarginTop(HEADER_BUTTON_TOP)
+            if previous then
+                button:addAnchor(AnchorRight, previous:getId(), AnchorLeft)
+                button:setMarginRight(HEADER_BUTTON_GAP)
+            else
+                button:addAnchor(AnchorRight, 'parent', AnchorRight)
+                button:setMarginRight(HEADER_BUTTON_RIGHT)
+            end
+            previous = button
+        end
+    end
+end
+
 function UIMiniWindow:setup()
     self:getChildById('closeButton').onClick = function()
         self:close()
@@ -122,6 +161,14 @@ function UIMiniWindow:setup()
             self:minimize()
         end
     end
+
+    -- Deferred, because a module hides its unwanted header buttons around this call and
+    -- not always before it: game_containers does it first, game_analyser right after.
+    addEvent(function()
+        if not self:isDestroyed() then
+            self:layoutHeaderButtons()
+        end
+    end)
 end
 
 function UIMiniWindow:setupOnStart()

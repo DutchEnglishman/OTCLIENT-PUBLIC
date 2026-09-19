@@ -27,3 +27,6 @@
 &selectionFill: #808080
 &selectionText: #f4f4f4
 &hoverOverlay: #ffffff22
+&headerBevelLight: #66666640
+&headerBevelShadow: #31313160
+&headerBorderColor: #2a2a2a

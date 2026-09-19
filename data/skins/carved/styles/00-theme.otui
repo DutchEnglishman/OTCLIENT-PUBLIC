@@ -23,3 +23,6 @@
 &selectionFill: #5c4620
 &selectionText: #fff3d8
 &hoverOverlay: #c99a4e22
+&headerBevelLight: #66666640
+&headerBevelShadow: #31313160
+&headerBorderColor: #0b0a07
