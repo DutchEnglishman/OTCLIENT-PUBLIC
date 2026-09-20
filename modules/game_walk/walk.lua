@@ -9,6 +9,12 @@ local lastCancelWalkTime = 0
 local NOCLIP_OPCODE = 66
 local noclip = false
 
+local BLOCKED_STEPS_OPCODE = 77
+-- Eight '0'/'1' characters, one per direction in Otc::Direction order, saying
+-- which of the steps around us the server would refuse right now. It arrives on
+-- every step we take and again whenever it changes; nil until the first lands.
+local blockedSteps = nil
+
 
 local keys = {
     { "Up",      North },
@@ -98,6 +104,33 @@ local function canChangeFloor(pos, deltaZ)
     return fromTile and fromTile:hasElevation(3) and toTile:isWalkable()
 end
 
+--- Whether the server has told us it would refuse this step.
+local function isStepBlocked(dir)
+    return blockedSteps ~= nil and blockedSteps:sub(dir + 1, dir + 1) == '1'
+end
+
+local blockedStepSentAt = {}
+
+--- A refused step may be re-sent no more often than an accepted one would be.
+--- Nothing else throttles it: the throttle on a normal walk is the prewalk, whose
+--- Creature::walk restarts m_walkTimer and so makes canWalk() false for a whole
+--- step. With the prediction suppressed that timer never restarts, and the 1 ms
+--- key repeat bindWalkKey sets would send a walk packet per tick until the
+--- server's cancel came back -- past maxPacketsPerSecond, which drops the
+--- connection. Capping it at the rate walking already runs at cannot flood by
+--- construction, and still probes often enough that a mask gone stale costs a
+--- fraction of a second rather than the step.
+local function mayRetryBlockedStep(dir, player)
+    local now = g_clock.millis()
+    local sentAt = blockedStepSentAt[dir]
+    if sentAt and now - sentAt < math.max(player:getStepDuration(), 100) then
+        return false
+    end
+
+    blockedStepSentAt[dir] = now
+    return true
+end
+
 --- Makes the player walk in the given direction.
 local function walk(dir)
     local player = g_game.getLocalPlayer()
@@ -138,7 +171,19 @@ local function walk(dir)
         local toPos = Position.translatedToDirection(player:getPosition(), dir)
         local toTile = g_map.getTile(toPos)
         if toTile and toTile:isWalkable() then
-            player:preWalk(dir)
+            -- The tile looks walkable from here, but the server has already said
+            -- it would refuse the step: a blocking= override in items.xml, a
+            -- reserved map action id, an ITEM_ATTRIBUTE_BLOCKSOLID set by a
+            -- script, or a pz-lock zone edge -- none of which the 8.6 tile packet
+            -- can carry. Predicting it draws the step and snaps back a round trip
+            -- later, which is the shove. The walk is still sent, deliberately: a
+            -- mask that has gone stale then costs one unpredicted step rather
+            -- than a step the client refuses on its own and the server allows.
+            if not isStepBlocked(dir) then
+                player:preWalk(dir)
+            elseif not mayRetryBlockedStep(dir, player) then
+                return false
+            end
         elseif noclip then
             -- The server accepts these steps, so predict them like any other
             -- walk; without a prewalk each one waits a full round-trip. Only
@@ -297,6 +342,12 @@ function WalkController:onGameStart()
         noclip = buffer == '1'
     end)
 
+    blockedSteps = nil
+    blockedStepSentAt = {}
+    ProtocolGame.registerExtendedOpcode(BLOCKED_STEPS_OPCODE, function(protocol, opcode, buffer)
+        blockedSteps = #buffer == 8 and buffer or nil
+    end)
+
     self:registerEvents(g_game, {
         onGameStart = onGameStart,
         onTeleport = onTeleport,
@@ -323,6 +374,9 @@ end
 function WalkController:onGameEnd()
     ProtocolGame.unregisterExtendedOpcode(NOCLIP_OPCODE)
     noclip = false
+    ProtocolGame.unregisterExtendedOpcode(BLOCKED_STEPS_OPCODE)
+    blockedSteps = nil
+    blockedStepSentAt = {}
     stopSmartWalk()
 end
 
