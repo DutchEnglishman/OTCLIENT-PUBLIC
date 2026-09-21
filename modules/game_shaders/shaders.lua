@@ -68,6 +68,13 @@ local MAP_SHADERS = { {
     name = 'Map - Tether',
     frag = 'shaders/fragment/tether.frag'
 }, {
+    -- Madareth's chains, iron links run from his body to each of his spikes.
+    -- Switched in and out by attachedeffects.lua the way the tether is, and for
+    -- the same reason: a line between two moving points cannot be built out of
+    -- tile effects.
+    name = 'Map - Hook Chain',
+    frag = 'shaders/fragment/hook_chain.frag'
+}, {
     -- Steady wind: litter blown across the world, purely additive over the map.
     -- One of the atmospheres below.
     name = 'Map - Wind',

@@ -599,18 +599,10 @@ for r = 0, 47 do
         drawOrder = 4
     })
 end
--- 451-474: one step of the chain behind the spike, one per 7.5 degrees over
--- HALF the circle -- a chain has no sense of its own, so a run and the same
--- run turned end for end are one texture and the client folds the 48
--- rotations onto these 24. Each is a run of links as long as one step down
--- its own angle (a tile across on a cardinal, half again as long on a
--- diagonal) and 2 px past both ends, so the links of one step meet the
--- links of the next. 64x64 with the tile as the middle square, because the
--- client pushes each link off its tile's centre with setOffset to stand it
--- on the true line. UNDER creatures, so the chain lies on the floor and
--- whoever is being dragged along it stays visible.
-for r = 0, 23 do
-    AttachedEffectManager.register(451 + r, 'Madareth chain ' .. (r * 7.5), '/images/game/effects/chain_' .. r, ThingExternalTexture, {
-        offset = { 16, 16, false }
-    })
-end
+-- The links themselves are NOT registered here: the chain between his body
+-- and each spike is drawn by the 'Map - Hook Chain' map shader, over the
+-- finished map. It was 24 rotated textures laid one per tile step, and the
+-- reason that had to go is written up in shaders/fragment/hook_chain.frag --
+-- in short, an attached effect is drawn in its own tile's pass, so the part
+-- of a link that hung over into a neighbouring tile was painted over by that
+-- tile's creatures and top items, and the run came out in pieces.

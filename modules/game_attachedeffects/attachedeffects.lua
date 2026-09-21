@@ -973,255 +973,314 @@ local function clearSpearRuns()
 end
 
 -- Madareth's Chained Spike (OTSERV madareth_hook.lua), opcode 73:
--- "chain,<phase>,<runId>,<x>,<y>,<z>,<fx>,<fy>,<tx>,<ty>,<msPerTile>,<ms>".
--- x,y,z is MADARETH'S OWN tile, and the two pairs after it are where the
--- spike starts and ends this phase, as tile offsets from there.
+-- "chain,<phase>,<runId>,<casterId>,<victimId>,<x>,<y>,<z>,<fx>,<fy>,<tx>,<ty>,<msPerTile>,<ms>".
+-- x,y,z is MADARETH'S OWN tile, the two pairs after it are where the spike
+-- starts and ends this phase as tile offsets from there, and <victimId> is
+-- whoever the barbs are in (0 while it is still flying, or when it caught
+-- nobody).
 --
--- THE CHAIN IS A STRAIGHT LINE, not a walk over tiles. A lane is laid
--- through whoever it was thrown at rather than snapped to one of eight
--- rays, so the tiles it crosses zigzag around the true line by up to half a
--- tile and a link drawn on each of their centres would step down it rather
--- than run. Both of the spike's ends ARE tile centres, so the line between
--- them is exact: it is cut into as many even steps as the far end is tiles
--- away -- its Chebyshev distance, which is the index the server counts its
--- own lane in -- and each link is attached to whichever tile its step lands
--- on and pushed off that tile's centre by the remainder with setOffset.
+-- THE CHAIN IS DRAWN BY THE 'Map - Hook Chain' MAP SHADER, not by tile
+-- effects, and only the spike is still a sprite. The links used to be 24
+-- rotated textures laid one per tile step, which quantised the angle to 7.5
+-- degrees, needed every link pushed off its tile's centre to sit on the true
+-- line, and -- the one that showed in game -- let a link that hung over into
+-- a neighbouring tile be painted over by that tile's creatures and top
+-- items, because an attached effect is drawn in its own tile's pass. A run
+-- reaching 22 px into its neighbours was cut to pieces by Madareth's own
+-- body and by anyone standing along it. The shader draws over the finished
+-- map, so nothing can cover it, there are no tiles to quantise to, and the
+-- chain is exact at any angle and any length. See the frag's own comment.
 --
--- Each link hangs off a REAL tile rather than all of them off the anchor
--- because the chain is drawn under creatures: an effect is drawn in its own
--- tile's pass, so links kept on the anchor would paint over everyone
--- standing north or west of him and be painted over by everyone south or
--- east. The spike can hang off whatever it likes -- it is at the missile's
--- draw order, over everything either way.
+-- WHAT THIS CODE DOES IS MOVE THE TWO ENDS. The shader is handed three
+-- anchors -- Madareth's body, and one far end per chain -- and redraws
+-- itself every frame from them, so a run here is a timeline that says where
+-- its far end is right now:
 --
--- Both rotate with the line, 7.5 degrees a step: CHAIN_SPIKE_FIRST + r
--- around the whole circle, CHAIN_LINK_FIRST + r over half of it, since a
--- chain looks the same either way up.
+--   out:  the far end is the spike in flight. Its position is worked out
+--         from the phase's own clock, lerped from <fx,fy> to <tx,ty>: both
+--         are tile centres, so the straight line between them is the lane.
+--         The sprite hangs off the anchor tile at the missile's draw order
+--         and is moved by setOffset every frame, the way the daggers are
+--         flown, so sprite and chain end are the same point by construction.
+--   back: the far end is the VICTIM, once there is one -- anchored to the
+--         creature, and the spike attached to them too, so both track the
+--         body sub-pixel as it is hauled in rather than sliding down a
+--         straight line the victim is not actually walking. With no victim
+--         (the chain caught nobody, or they died with the barbs in) it is
+--         the flight again in reverse.
 --
---   out:  the spike leaves <fx,fy> (his own tile) and glides to <tx,ty> in
---         one AttachedEffect:move -- both are tile centres, so the tile
---         delta it interpolates IS the true line -- and the chain lights
---         behind it, link k the moment the spike reaches it, which is what
---         makes the chain pay out rather than appear. Each link lives
---         <ms>, and so does the spike where it stops, so a run whose
---         retract never arrives clears itself instead of hanging on the
---         map.
---   back: the spike glides from <fx,fy> back to <tx,ty> and the chain is
---         reeled in with it, link k going dark as the spike passes it.
---         <tx,ty> is where whoever was caught actually ends up, which is
---         not always the tile beside him -- a wall or another creature can
---         stop the drag short, and the server works out where before it
---         sends this, so the chain never reels past its catch. The links
---         that survive the pull are RE-LAID along the shorter line before
---         it starts: they were laid along the line to the CATCH, and the
---         line to the landing leaves the same anchor at its own angle, so
---         leaving them would end the pull with a taut chain visibly bent
---         where the two part company. <ms> after it arrives the last links
---         and the spike are dropped.
+-- Anchor 0 is Madareth. He is rooted from the yell until the last chain
+-- lets go, so his tile could have served, but the anchor takes his creature
+-- for the same reason the tether takes the brothers': it lands on the outfit
+-- as drawn, whatever its size and displacement, and it costs one field.
+local HOOK_SHADER = 'Map - Hook Chain'
 local CHAIN_SPIKE_FIRST = 403
-local CHAIN_LINK_FIRST = 451
 local CHAIN_ROTATIONS = 48
-local CHAIN_LINK_ROTATIONS = 24
--- both textures are 64 px with the tile as their middle square, so a link
--- sitting dead on its own tile is pushed back by this much (effects.lua)
+-- where on Madareth the chains leave, from his body centre
+local CHAIN_BODY_OFFSET_X, CHAIN_BODY_OFFSET_Y = 0, -4
+-- and where on the victim the barbs sit, from their tile's centre
+local CHAIN_VICTIM_OFFSET_X, CHAIN_VICTIM_OFFSET_Y = 0, -2
+-- the spike texture is 64 px with the tile as its middle square, so a
+-- sprite sitting dead on its tile is pushed back by this much (effects.lua)
 local CHAIN_TEXTURE_ORIGIN = 16
-local chainRuns = {} -- runId -> {events, segs, spike, spikePos}
 
--- math.floor(v + 0.5) rounds -0.5 up to 0 and 0.5 up to 1, which bends a
--- line one way on the side where the minor axis is negative. The server
--- rounds its own lane the same way.
-local function chainRound(v)
-    return v >= 0 and math.floor(v + 0.5) or -math.floor(-v + 0.5)
+-- THE SPIKE AND THE CHAIN'S FAR END ARE THE SAME POINT, and on a creature
+-- that takes saying twice, in two different conventions, so both are worked
+-- out here rather than at the two call sites.
+--
+-- A creature's attached effects are drawn from its TILE POINT PLUS ITS WALK
+-- (Creature::internalDraw hands that to AttachableObject::drawAttachedEffect
+-- as originalDest), while a shader anchor on a creature aims at its OUTFIT'S
+-- CENTRE -- the same point plus 16 * (2 - size) less the displacement. The
+-- two are 8-ish px apart for a player, which is what put the chain beside the
+-- spike rather than in it for the whole reel, and Lua cannot reconcile them:
+-- neither getSize nor getDisplacement is bound and the figure is per outfit.
+-- setShaderAnchor's `atDrawPoint` asks for the effects' point instead, so
+-- both of these land on the victim's tile centre, their walk, and the offset.
+--
+-- The spike is deliberately left NOT following its owner, which despite the
+-- name is what keeps it on that same originalDest: followOwner adds the
+-- sprite shift and the jump, neither of which the anchor knows about.
+local function chainVictimAnchor(map, slot, victim)
+    map:setShaderAnchor(slot, victim,
+        CHAIN_TEXTURE_ORIGIN + CHAIN_VICTIM_OFFSET_X,
+        CHAIN_TEXTURE_ORIGIN + CHAIN_VICTIM_OFFSET_Y, true)
 end
+
+local function chainVictimSpikeOffset()
+    return CHAIN_TEXTURE_ORIGIN - CHAIN_VICTIM_OFFSET_X, CHAIN_TEXTURE_ORIGIN - CHAIN_VICTIM_OFFSET_Y
+end
+
+local chainRuns = {}    -- runId -> run
+local chainSlots = {}   -- shader anchor 1 and 2 -> the runId holding it
+local chainShader = nil -- {previousShader} while the map is switched to ours
+local chainEvent = nil
 
 local function chainRotation(dx, dy)
     return math.floor((math.deg(math.atan2(dy, dx)) % 360) / (360 / CHAIN_ROTATIONS) + 0.5) % CHAIN_ROTATIONS
 end
 
-local function chainTile(anchor, dx, dy)
-    return { x = anchor.x + dx, y = anchor.y + dy, z = anchor.z }
+local function chainMap()
+    return modules.game_interface.getMapPanel()
 end
 
--- How many even steps a line of <dx,dy> tiles is cut into.
-local function chainSteps(dx, dy)
-    return math.max(math.abs(dx), math.abs(dy))
+-- The map is switched to the chain shader while any chain is out and back
+-- afterwards. 'Map - Default' carries no frag, so it is never registered and
+-- setShader falls through to no shader at all -- which is what switching off
+-- means here, exactly as it does for the tether and the atmospheres: this
+-- side cannot read back which shader was on (PainterShaderProgram has no
+-- getName in C++, so getShader() answers an object that says nothing about
+-- itself).
+local function chainShaderOn()
+    local map = chainMap()
+    if not map or chainShader then
+        return map
+    end
+    local current = map:getShader()
+    chainShader = { previousShader = (current and current.getName and current:getName()) or 'Map - Default' }
+    map:setShader(HOOK_SHADER, 0, 0)
+    return map
 end
 
--- Everything a run takes off, it takes off BY OBJECT rather than by id.
--- Two of Madareth's lanes can share tiles -- two players nearly in line with
--- him give two aims a couple of degrees apart, which round to the same tiles
--- for their first steps -- and then two runs carry the same link id on the
--- very same tile; detachEffectById would take the first one it found, which
--- is as likely to be the other chain's as this one's.
-local function chainDetachSpike(run)
-    if run.spike then
-        local tile = g_map.getTile(run.spikePos)
+local function chainShaderOff()
+    if not chainShader then
+        return
+    end
+    local map = chainMap()
+    if map then
+        map:clearShaderAnchors()
+        map:setShader(chainShader.previousShader, 0, 0)
+    end
+    chainShader = nil
+end
+
+local function chainDropSpike(run)
+    if not run.spike then
+        return
+    end
+    if run.spikeOwner then
+        run.spikeOwner:detachEffect(run.spike)
+    else
+        local tile = g_map.getTile(run.anchor)
         if tile then
             tile:detachEffect(run.spike)
         end
-        run.spike, run.spikePos = nil, nil
     end
+    run.spike, run.spikeOwner = nil, nil
 end
 
-local function chainDropSegment(run, k)
-    local segment = run.segs[k]
-    if not segment then
+-- A spike that has to ride a creature can never be the one that was flying
+-- on a tile: an effect is attached to one owner. Swapping owners is a fresh
+-- effect, which is the same hand-off the spear makes between its flying and
+-- its stuck image.
+local function chainPlaceSpike(run, rotation, owner)
+    if run.spike and run.spikeOwner == owner and run.spikeRotation == rotation then
+        return run.spike
+    end
+    chainDropSpike(run)
+    local effect = g_attachedEffects.getById(CHAIN_SPIKE_FIRST + rotation)
+    if not effect then
+        return nil
+    end
+    effect:setDuration(run.lifeMs)
+    if owner then
+        effect:setOffset(chainVictimSpikeOffset())
+        owner:attachEffect(effect)
+    else
+        local tile = g_map.getTile(run.anchor)
+        if not tile then
+            return nil
+        end
+        tile:attachEffect(effect)
+    end
+    run.spike, run.spikeOwner, run.spikeRotation = effect, owner, rotation
+    return effect
+end
+
+local function chainFreeSlot(run)
+    if not run.slot then
         return
     end
-    run.segs[k] = nil
-    local tile = g_map.getTile(segment.pos)
-    if tile then
-        tile:detachEffect(segment.effect)
+    if chainSlots[run.slot] == run.runId then
+        chainSlots[run.slot] = nil
+        local map = chainMap()
+        if map then
+            map:setShaderPoint(run.slot, -1, -1)
+        end
     end
+    run.slot = nil
 end
 
-local function chainClearEvents(run)
-    for _, event in ipairs(run.events) do
-        removeEvent(event)
+local function chainTakeSlot(run)
+    if run.slot then
+        return run.slot
     end
-    run.events = {}
+    for slot = 1, 2 do
+        if not chainSlots[slot] then
+            chainSlots[slot] = run.runId
+            run.slot = slot
+            return slot
+        end
+    end
+    return nil -- he never throws more than two; a third would simply not draw
 end
 
 local function chainRunClear(run)
-    chainClearEvents(run)
-    chainDetachSpike(run)
-    for k in pairs(run.segs) do
-        chainDropSegment(run, k)
-    end
+    chainDropSpike(run)
+    chainFreeSlot(run)
+    chainRuns[run.runId] = nil
 end
 
-local function chainLater(run, ms, callback)
-    run.events[#run.events + 1] = scheduleEvent(callback, ms)
+-- One frame of every chain in the air.
+local function chainStep()
+    chainEvent = nil
+    local map = chainMap()
+    local now = g_clock.millis()
+    local live = 0
+
+    for _, run in pairs(chainRuns) do
+        if now >= run.endsAt then
+            chainRunClear(run)
+        else
+            live = live + 1
+            local slot = chainTakeSlot(run)
+            local victim = run.victimId > 0 and g_map.getCreatureById(run.victimId) or nil
+            local caster = g_map.getCreatureById(run.casterId)
+
+            if map and caster then
+                map:setShaderAnchor(0, caster, CHAIN_BODY_OFFSET_X, CHAIN_BODY_OFFSET_Y)
+            end
+
+            if victim then
+                -- The barbs are in a body: both ends follow it.
+                local at = victim:getPosition()
+                local rotation = chainRotation(at.x - run.anchor.x, at.y - run.anchor.y)
+                chainPlaceSpike(run, rotation, victim)
+                if map and slot then
+                    chainVictimAnchor(map, slot, victim)
+                end
+            else
+                -- In flight: lerp the phase's own clock down the straight
+                -- line between its two tile centres.
+                local f = 1
+                if run.durationMs > 0 then
+                    f = math.min(1, (now - run.startedAt) / run.durationMs)
+                end
+                local px = (run.fromX + (run.toX - run.fromX) * f) * 32
+                local py = (run.fromY + (run.toY - run.fromY) * f) * 32
+                local effect = chainPlaceSpike(run, run.rotation, nil)
+                if effect then
+                    effect:setOffset(CHAIN_TEXTURE_ORIGIN - px, CHAIN_TEXTURE_ORIGIN - py)
+                end
+                if map and slot then
+                    map:setShaderTile(slot, run.anchor, px + CHAIN_TEXTURE_ORIGIN, py + CHAIN_TEXTURE_ORIGIN)
+                end
+            end
+        end
+    end
+
+    if live == 0 then
+        chainShaderOff()
+        return
+    end
+    chainEvent = scheduleEvent(chainStep, 1)
 end
 
--- Puts the spike on `pos`, gliding to `glideTo` when there is one. Always
--- takes the previous one off first, so a run only ever has one spike.
---
--- `ms` is BOTH how long the glide takes and how long the effect lives:
--- AttachedEffect::move interpolates on elapsed/m_duration, and
--- AttachableObject::attachEffect schedules the removal on that same figure.
--- A spike that has to STAY where it arrived can therefore never be the one
--- that flew there -- it is handed over to a fresh one with a life of its
--- own, which is what the spear at 290-297 does with its stuck image.
-local function chainPlaceSpike(run, pos, effectId, glideTo, ms)
-    chainDetachSpike(run)
-    local tile = g_map.getTile(pos)
-    if not tile then
-        return
+local function chainWake()
+    if not chainEvent then
+        chainStep()
     end
-    local effect = g_attachedEffects.getById(effectId)
-    if not effect then
-        return
-    end
-    if ms > 0 then
-        effect:setDuration(ms)
-    end
-    tile:attachEffect(effect)
-    if glideTo then
-        effect:move(pos, glideTo)
-    end
-    run.spike, run.spikePos = effect, pos
-end
-
--- Link k of a chain whose far end is <dx,dy> tiles off in `steps` steps:
--- k/steps of the way along that line, hung on whichever tile that lands on,
--- and pushed off that tile's centre by whatever was left over.
-local function chainPlaceLink(run, anchor, dx, dy, steps, k, rotation, ms)
-    chainDropSegment(run, k)
-    local alongX, alongY = dx * k / steps, dy * k / steps
-    local tileX, tileY = chainRound(alongX), chainRound(alongY)
-    local pos = chainTile(anchor, tileX, tileY)
-    local tile = g_map.getTile(pos)
-    if not tile then
-        return
-    end
-    local effect = g_attachedEffects.getById(CHAIN_LINK_FIRST + rotation % CHAIN_LINK_ROTATIONS)
-    if not effect then
-        return
-    end
-    effect:setDuration(ms)
-    effect:setOffset(CHAIN_TEXTURE_ORIGIN - chainRound((alongX - tileX) * 32),
-                     CHAIN_TEXTURE_ORIGIN - chainRound((alongY - tileY) * 32))
-    tile:attachEffect(effect)
-    run.segs[k] = { pos = pos, effect = effect }
 end
 
 local function onChain(buffer)
-    local phase, runId, x, y, z, fx, fy, tx, ty, msPerTile, ms =
-        buffer:match('^chain,(%a+),([^,]+),(%d+),(%d+),(%d+),(-?%d+),(-?%d+),(-?%d+),(-?%d+),(%d+),(%d+)$')
+    local phase, runId, casterId, victimId, x, y, z, fx, fy, tx, ty, msPerTile, ms =
+        buffer:match('^chain,(%a+),([^,]+),(%d+),(%d+),(%d+),(%d+),(%d+),(-?%d+),(-?%d+),(-?%d+),(-?%d+),(%d+),(%d+)$')
     if not phase then
         return
     end
     fx, fy, tx, ty = tonumber(fx), tonumber(fy), tonumber(tx), tonumber(ty)
     msPerTile, ms = tonumber(msPerTile), tonumber(ms)
-    local anchor = { x = tonumber(x), y = tonumber(y), z = tonumber(z) }
-    local fromIdx, toIdx = chainSteps(fx, fy), chainSteps(tx, ty)
-    -- The spike lies along the chain, pointing away from him, so it takes
-    -- the angle of the line this phase ENDS on. A chain coming home empty
-    -- ends on his own tile and has no line of its own left, so it keeps the
-    -- one it went out along.
-    local rotation = toIdx > 0 and chainRotation(tx, ty) or chainRotation(fx, fy)
-    local spikeId = CHAIN_SPIKE_FIRST + rotation
-    local run = chainRuns[runId]
 
+    local run = chainRuns[runId]
     if phase == 'out' then
         if run then
-            chainRunClear(run)
+            chainDropSpike(run)
+        else
+            run = { runId = runId, slot = nil }
+            chainRuns[runId] = run
         end
-        run = { events = {}, segs = {} }
-        chainRuns[runId] = run
-
-        local flightMs = math.max(1, (toIdx - fromIdx) * msPerTile)
-        chainPlaceSpike(run, chainTile(anchor, fx, fy), spikeId, chainTile(anchor, tx, ty), flightMs)
-        for k = fromIdx + 1, toIdx do
-            chainLater(run, (k - fromIdx) * msPerTile, function()
-                chainPlaceLink(run, anchor, tx, ty, toIdx, k, rotation, ms)
-            end)
-        end
-        -- The glide is over: the spike comes off the tile it was moving
-        -- from and is held on the one it reached, so it stays in its catch
-        -- while the chain is taut.
-        chainLater(run, flightMs, function()
-            chainPlaceSpike(run, chainTile(anchor, tx, ty), spikeId, nil, ms)
-        end)
-        return
-    end
-
-    if phase ~= 'back' or not run then
+    elseif not run then
         -- A retract for a run this client never saw start (it walked into
         -- view, or reconnected, mid-throw): nothing of it is on the map, so
         -- there is nothing to take off.
         return
     end
-    chainClearEvents(run)
 
-    local pullMs = (fromIdx - toIdx) * msPerTile
-    local landed = chainTile(anchor, tx, ty)
-    -- the links that outlive the pull, moved onto the line it ends on
-    for k = 1, toIdx do
-        chainPlaceLink(run, anchor, tx, ty, toIdx, k, rotation, pullMs + ms)
+    -- The steps a phase covers is the far end's Chebyshev distance from his
+    -- tile, the same index the server counts its lane in.
+    local steps = math.abs(math.max(math.abs(tx), math.abs(ty)) - math.max(math.abs(fx), math.abs(fy)))
+
+    run.casterId = tonumber(casterId)
+    run.victimId = tonumber(victimId)
+    run.anchor = { x = tonumber(x), y = tonumber(y), z = tonumber(z) }
+    run.fromX, run.fromY, run.toX, run.toY = fx, fy, tx, ty
+    run.startedAt = g_clock.millis()
+    run.durationMs = math.max(1, steps * msPerTile)
+    run.lifeMs = ms
+    -- The spike points away from him along the line it is travelling; a
+    -- chain coming home empty ends on his own tile and has no line left of
+    -- its own, so it keeps the one it went out along.
+    local aimX, aimY = tx, ty
+    if aimX == 0 and aimY == 0 then
+        aimX, aimY = fx, fy
     end
-    if pullMs > 0 then
-        chainPlaceSpike(run, chainTile(anchor, fx, fy), spikeId, landed, pullMs)
-        -- and the hand-off to a still one that lives out the rest, for the
-        -- reason in chainPlaceSpike
-        chainLater(run, pullMs, function()
-            chainPlaceSpike(run, landed, spikeId, nil, ms)
-        end)
-    else
-        -- Nothing to reel: it caught someone with its barbs already at his
-        -- feet, or a wall stopped the drag before it began.
-        chainPlaceSpike(run, landed, spikeId, nil, ms)
-    end
-    for k = toIdx + 1, fromIdx do
-        chainLater(run, (fromIdx - k) * msPerTile, function()
-            chainDropSegment(run, k)
-        end)
-    end
-    chainLater(run, pullMs + ms, function()
-        chainRunClear(run)
-        chainRuns[runId] = nil
-    end)
+    run.rotation = chainRotation(aimX, aimY)
+    -- How long this run may sit here without another word from the server.
+    -- It only ever matters when Madareth dies mid-throw.
+    run.endsAt = run.startedAt + run.durationMs + ms
+
+    chainShaderOn()
+    chainWake()
 end
 
 local function clearChainRuns()
@@ -1229,6 +1288,14 @@ local function clearChainRuns()
         chainRunClear(run)
     end
     chainRuns = {}
+    chainSlots = {}
+    if chainEvent then
+        removeEvent(chainEvent)
+        chainEvent = nil
+    end
+    -- and the map goes back to what it had, or a throw cut short by a logout
+    -- would leave the chain shader on for ever with nothing to draw
+    chainShaderOff()
 end
 
 -- Flamethrower jets (OTSERV flamethrowers.lua, the textured styles) grow
