@@ -576,3 +576,41 @@ for d, dir in ipairs({ 'n', 'e', 's', 'w', 'sw', 'se', 'nw', 'ne' }) do
         drawOrder = 4
     })
 end
+
+-- Madareth's Chained Spike (OTSERV data/scripts/boss_skills/madareth_hook.lua;
+-- opcode 73 "chain" in attachedeffects.lua; textures by
+-- tools/effect-generators/make_madareth.ps1). The lane's red warning tiles
+-- are 287 above -- one warning tile serves both bosses, since it says the
+-- same thing for both: something is about to cross here.
+-- 403-450: the spike in flight and stuck in whoever it caught, ONE PER 7.5
+-- DEGREES around the circle, so the id is 403 + rotation. A lane is laid
+-- through the player it was thrown at rather than snapped to one of eight
+-- rays (see the "chain" verb in attachedeffects.lua), so the spike has to
+-- lie along whatever angle that came out at; 48 of them leaves it at most
+-- 3.75 degrees off the line it is flying, which is about a pixel across its
+-- own length. 64x64 with the tile as the middle square, like the spear at
+-- 290-297: the barbs reach past the tile's edge, which is what puts them in
+-- the creature standing on the next tile rather than short of it. Glided by
+-- AttachedEffect:move, at the missile's draw order so it paints over what
+-- it is dragging.
+for r = 0, 47 do
+    AttachedEffectManager.register(403 + r, 'Madareth spike ' .. (r * 7.5), '/images/game/effects/hook_' .. r, ThingExternalTexture, {
+        offset = { 16, 16, true },
+        drawOrder = 4
+    })
+end
+-- 451-474: one step of the chain behind the spike, one per 7.5 degrees over
+-- HALF the circle -- a chain has no sense of its own, so a run and the same
+-- run turned end for end are one texture and the client folds the 48
+-- rotations onto these 24. Each is a run of links as long as one step down
+-- its own angle (a tile across on a cardinal, half again as long on a
+-- diagonal) and 2 px past both ends, so the links of one step meet the
+-- links of the next. 64x64 with the tile as the middle square, because the
+-- client pushes each link off its tile's centre with setOffset to stand it
+-- on the true line. UNDER creatures, so the chain lies on the floor and
+-- whoever is being dragged along it stays visible.
+for r = 0, 23 do
+    AttachedEffectManager.register(451 + r, 'Madareth chain ' .. (r * 7.5), '/images/game/effects/chain_' .. r, ThingExternalTexture, {
+        offset = { 16, 16, false }
+    })
+end

@@ -972,6 +972,265 @@ local function clearSpearRuns()
     spearRuns = {}
 end
 
+-- Madareth's Chained Spike (OTSERV madareth_hook.lua), opcode 73:
+-- "chain,<phase>,<runId>,<x>,<y>,<z>,<fx>,<fy>,<tx>,<ty>,<msPerTile>,<ms>".
+-- x,y,z is MADARETH'S OWN tile, and the two pairs after it are where the
+-- spike starts and ends this phase, as tile offsets from there.
+--
+-- THE CHAIN IS A STRAIGHT LINE, not a walk over tiles. A lane is laid
+-- through whoever it was thrown at rather than snapped to one of eight
+-- rays, so the tiles it crosses zigzag around the true line by up to half a
+-- tile and a link drawn on each of their centres would step down it rather
+-- than run. Both of the spike's ends ARE tile centres, so the line between
+-- them is exact: it is cut into as many even steps as the far end is tiles
+-- away -- its Chebyshev distance, which is the index the server counts its
+-- own lane in -- and each link is attached to whichever tile its step lands
+-- on and pushed off that tile's centre by the remainder with setOffset.
+--
+-- Each link hangs off a REAL tile rather than all of them off the anchor
+-- because the chain is drawn under creatures: an effect is drawn in its own
+-- tile's pass, so links kept on the anchor would paint over everyone
+-- standing north or west of him and be painted over by everyone south or
+-- east. The spike can hang off whatever it likes -- it is at the missile's
+-- draw order, over everything either way.
+--
+-- Both rotate with the line, 7.5 degrees a step: CHAIN_SPIKE_FIRST + r
+-- around the whole circle, CHAIN_LINK_FIRST + r over half of it, since a
+-- chain looks the same either way up.
+--
+--   out:  the spike leaves <fx,fy> (his own tile) and glides to <tx,ty> in
+--         one AttachedEffect:move -- both are tile centres, so the tile
+--         delta it interpolates IS the true line -- and the chain lights
+--         behind it, link k the moment the spike reaches it, which is what
+--         makes the chain pay out rather than appear. Each link lives
+--         <ms>, and so does the spike where it stops, so a run whose
+--         retract never arrives clears itself instead of hanging on the
+--         map.
+--   back: the spike glides from <fx,fy> back to <tx,ty> and the chain is
+--         reeled in with it, link k going dark as the spike passes it.
+--         <tx,ty> is where whoever was caught actually ends up, which is
+--         not always the tile beside him -- a wall or another creature can
+--         stop the drag short, and the server works out where before it
+--         sends this, so the chain never reels past its catch. The links
+--         that survive the pull are RE-LAID along the shorter line before
+--         it starts: they were laid along the line to the CATCH, and the
+--         line to the landing leaves the same anchor at its own angle, so
+--         leaving them would end the pull with a taut chain visibly bent
+--         where the two part company. <ms> after it arrives the last links
+--         and the spike are dropped.
+local CHAIN_SPIKE_FIRST = 403
+local CHAIN_LINK_FIRST = 451
+local CHAIN_ROTATIONS = 48
+local CHAIN_LINK_ROTATIONS = 24
+-- both textures are 64 px with the tile as their middle square, so a link
+-- sitting dead on its own tile is pushed back by this much (effects.lua)
+local CHAIN_TEXTURE_ORIGIN = 16
+local chainRuns = {} -- runId -> {events, segs, spike, spikePos}
+
+-- math.floor(v + 0.5) rounds -0.5 up to 0 and 0.5 up to 1, which bends a
+-- line one way on the side where the minor axis is negative. The server
+-- rounds its own lane the same way.
+local function chainRound(v)
+    return v >= 0 and math.floor(v + 0.5) or -math.floor(-v + 0.5)
+end
+
+local function chainRotation(dx, dy)
+    return math.floor((math.deg(math.atan2(dy, dx)) % 360) / (360 / CHAIN_ROTATIONS) + 0.5) % CHAIN_ROTATIONS
+end
+
+local function chainTile(anchor, dx, dy)
+    return { x = anchor.x + dx, y = anchor.y + dy, z = anchor.z }
+end
+
+-- How many even steps a line of <dx,dy> tiles is cut into.
+local function chainSteps(dx, dy)
+    return math.max(math.abs(dx), math.abs(dy))
+end
+
+-- Everything a run takes off, it takes off BY OBJECT rather than by id.
+-- Two of Madareth's lanes can share tiles -- two players nearly in line with
+-- him give two aims a couple of degrees apart, which round to the same tiles
+-- for their first steps -- and then two runs carry the same link id on the
+-- very same tile; detachEffectById would take the first one it found, which
+-- is as likely to be the other chain's as this one's.
+local function chainDetachSpike(run)
+    if run.spike then
+        local tile = g_map.getTile(run.spikePos)
+        if tile then
+            tile:detachEffect(run.spike)
+        end
+        run.spike, run.spikePos = nil, nil
+    end
+end
+
+local function chainDropSegment(run, k)
+    local segment = run.segs[k]
+    if not segment then
+        return
+    end
+    run.segs[k] = nil
+    local tile = g_map.getTile(segment.pos)
+    if tile then
+        tile:detachEffect(segment.effect)
+    end
+end
+
+local function chainClearEvents(run)
+    for _, event in ipairs(run.events) do
+        removeEvent(event)
+    end
+    run.events = {}
+end
+
+local function chainRunClear(run)
+    chainClearEvents(run)
+    chainDetachSpike(run)
+    for k in pairs(run.segs) do
+        chainDropSegment(run, k)
+    end
+end
+
+local function chainLater(run, ms, callback)
+    run.events[#run.events + 1] = scheduleEvent(callback, ms)
+end
+
+-- Puts the spike on `pos`, gliding to `glideTo` when there is one. Always
+-- takes the previous one off first, so a run only ever has one spike.
+--
+-- `ms` is BOTH how long the glide takes and how long the effect lives:
+-- AttachedEffect::move interpolates on elapsed/m_duration, and
+-- AttachableObject::attachEffect schedules the removal on that same figure.
+-- A spike that has to STAY where it arrived can therefore never be the one
+-- that flew there -- it is handed over to a fresh one with a life of its
+-- own, which is what the spear at 290-297 does with its stuck image.
+local function chainPlaceSpike(run, pos, effectId, glideTo, ms)
+    chainDetachSpike(run)
+    local tile = g_map.getTile(pos)
+    if not tile then
+        return
+    end
+    local effect = g_attachedEffects.getById(effectId)
+    if not effect then
+        return
+    end
+    if ms > 0 then
+        effect:setDuration(ms)
+    end
+    tile:attachEffect(effect)
+    if glideTo then
+        effect:move(pos, glideTo)
+    end
+    run.spike, run.spikePos = effect, pos
+end
+
+-- Link k of a chain whose far end is <dx,dy> tiles off in `steps` steps:
+-- k/steps of the way along that line, hung on whichever tile that lands on,
+-- and pushed off that tile's centre by whatever was left over.
+local function chainPlaceLink(run, anchor, dx, dy, steps, k, rotation, ms)
+    chainDropSegment(run, k)
+    local alongX, alongY = dx * k / steps, dy * k / steps
+    local tileX, tileY = chainRound(alongX), chainRound(alongY)
+    local pos = chainTile(anchor, tileX, tileY)
+    local tile = g_map.getTile(pos)
+    if not tile then
+        return
+    end
+    local effect = g_attachedEffects.getById(CHAIN_LINK_FIRST + rotation % CHAIN_LINK_ROTATIONS)
+    if not effect then
+        return
+    end
+    effect:setDuration(ms)
+    effect:setOffset(CHAIN_TEXTURE_ORIGIN - chainRound((alongX - tileX) * 32),
+                     CHAIN_TEXTURE_ORIGIN - chainRound((alongY - tileY) * 32))
+    tile:attachEffect(effect)
+    run.segs[k] = { pos = pos, effect = effect }
+end
+
+local function onChain(buffer)
+    local phase, runId, x, y, z, fx, fy, tx, ty, msPerTile, ms =
+        buffer:match('^chain,(%a+),([^,]+),(%d+),(%d+),(%d+),(-?%d+),(-?%d+),(-?%d+),(-?%d+),(%d+),(%d+)$')
+    if not phase then
+        return
+    end
+    fx, fy, tx, ty = tonumber(fx), tonumber(fy), tonumber(tx), tonumber(ty)
+    msPerTile, ms = tonumber(msPerTile), tonumber(ms)
+    local anchor = { x = tonumber(x), y = tonumber(y), z = tonumber(z) }
+    local fromIdx, toIdx = chainSteps(fx, fy), chainSteps(tx, ty)
+    -- The spike lies along the chain, pointing away from him, so it takes
+    -- the angle of the line this phase ENDS on. A chain coming home empty
+    -- ends on his own tile and has no line of its own left, so it keeps the
+    -- one it went out along.
+    local rotation = toIdx > 0 and chainRotation(tx, ty) or chainRotation(fx, fy)
+    local spikeId = CHAIN_SPIKE_FIRST + rotation
+    local run = chainRuns[runId]
+
+    if phase == 'out' then
+        if run then
+            chainRunClear(run)
+        end
+        run = { events = {}, segs = {} }
+        chainRuns[runId] = run
+
+        local flightMs = math.max(1, (toIdx - fromIdx) * msPerTile)
+        chainPlaceSpike(run, chainTile(anchor, fx, fy), spikeId, chainTile(anchor, tx, ty), flightMs)
+        for k = fromIdx + 1, toIdx do
+            chainLater(run, (k - fromIdx) * msPerTile, function()
+                chainPlaceLink(run, anchor, tx, ty, toIdx, k, rotation, ms)
+            end)
+        end
+        -- The glide is over: the spike comes off the tile it was moving
+        -- from and is held on the one it reached, so it stays in its catch
+        -- while the chain is taut.
+        chainLater(run, flightMs, function()
+            chainPlaceSpike(run, chainTile(anchor, tx, ty), spikeId, nil, ms)
+        end)
+        return
+    end
+
+    if phase ~= 'back' or not run then
+        -- A retract for a run this client never saw start (it walked into
+        -- view, or reconnected, mid-throw): nothing of it is on the map, so
+        -- there is nothing to take off.
+        return
+    end
+    chainClearEvents(run)
+
+    local pullMs = (fromIdx - toIdx) * msPerTile
+    local landed = chainTile(anchor, tx, ty)
+    -- the links that outlive the pull, moved onto the line it ends on
+    for k = 1, toIdx do
+        chainPlaceLink(run, anchor, tx, ty, toIdx, k, rotation, pullMs + ms)
+    end
+    if pullMs > 0 then
+        chainPlaceSpike(run, chainTile(anchor, fx, fy), spikeId, landed, pullMs)
+        -- and the hand-off to a still one that lives out the rest, for the
+        -- reason in chainPlaceSpike
+        chainLater(run, pullMs, function()
+            chainPlaceSpike(run, landed, spikeId, nil, ms)
+        end)
+    else
+        -- Nothing to reel: it caught someone with its barbs already at his
+        -- feet, or a wall stopped the drag before it began.
+        chainPlaceSpike(run, landed, spikeId, nil, ms)
+    end
+    for k = toIdx + 1, fromIdx do
+        chainLater(run, (fromIdx - k) * msPerTile, function()
+            chainDropSegment(run, k)
+        end)
+    end
+    chainLater(run, pullMs + ms, function()
+        chainRunClear(run)
+        chainRuns[runId] = nil
+    end)
+end
+
+local function clearChainRuns()
+    for _, run in pairs(chainRuns) do
+        chainRunClear(run)
+    end
+    chainRuns = {}
+end
+
 -- Flamethrower jets (OTSERV flamethrowers.lua, the textured styles) grow
 -- and retract on THIS clock. "jetgrow,<runId>,<msPerTile>,<z>,<nozzle
 -- id>,<head id>,<x:y|x:y|...>" hands over the whole jet, nearest tile
@@ -1319,6 +1578,10 @@ local function onTileEffectOpcode(protocol, opcode, buffer)
         onSpear(buffer)
         return
     end
+    if buffer:sub(1, 6) == 'chain,' then
+        onChain(buffer)
+        return
+    end
     if buffer:sub(1, 8) == 'daggers,' then
         onDaggers(buffer)
         return
@@ -1427,6 +1690,7 @@ function controller:onGameEnd()
     clearAxeRuns()
     clearSpearRuns()
     clearDaggerRuns()
+    clearChainRuns()
     clearBloodlust()
     clearLunges()
     -- g_game.getLocalPlayer():clearAttachedEffects()
