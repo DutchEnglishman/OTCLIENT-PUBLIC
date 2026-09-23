@@ -54,6 +54,7 @@ function UIPopupScrollMenu:display(pos)
     end
 
     rootWidget:addChild(self)
+    self.displayPos = pos
     self:setPosition(pos)
     self:grabMouse()
     currentMenu = self
@@ -64,20 +65,20 @@ function UIPopupScrollMenu:onGeometryChange(newRect, oldRect)
     if not parent then
         return
     end
-    local ymax = parent:getY() + parent:getHeight()
-    local xmax = parent:getX() + parent:getWidth()
-    if newRect.y + newRect.height > ymax then
-        local newy = newRect.y - newRect.height
-        if newy > 0 and newy + newRect.height < ymax then
-            self:setY(newy)
+
+    -- see UIPopupMenu:onGeometryChange -- the menu is positioned a frame before it
+    -- is fitted to its options, so the placement is re-applied against its real size
+    local pos = self.displayPos
+    if pos then
+        local rect = self:getRect()
+        local x = math.max(parent:getX(), math.min(pos.x, parent:getX() + parent:getWidth() - rect.width))
+        local y = math.max(parent:getY(), math.min(pos.y, parent:getY() + parent:getHeight() - rect.height))
+        if x ~= rect.x or y ~= rect.y then
+            self:setPosition({ x = x, y = y })
+            return
         end
     end
-    if newRect.x + newRect.width > xmax then
-        local newx = newRect.x - newRect.width
-        if newx > 0 and newx + newRect.width < xmax then
-            self:setX(newx)
-        end
-    end
+
     self:bindRectToParent()
 end
 

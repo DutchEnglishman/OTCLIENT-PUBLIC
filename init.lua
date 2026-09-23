@@ -25,7 +25,9 @@ Services = {
             "data/sounds/**", "mods/**", "downloads/**"
         }
     }, -- ./updater
-    --status = "http://localhost/login.php", --./client_entergame | ./client_topmenu
+    -- The website's MyAAC login.php. Only feeds the login screen's side panels (online
+    -- count, event calendar, boosted creature and boss); logging in stays on the game protocol.
+    status = "https://shatteredrealms.net/login.php", --./client_entergame | ./client_topmenu
     --websites = "http://localhost/?subtopic=accountmanagement", --./client_entergame "Forgot password and/or email"
     --createAccount = "http://localhost/clientcreateaccount.php", --./client_entergame -- createAccount.lua
     --getCoinsUrl = "http://localhost/?subtopic=shop&step=terms", --./game_market

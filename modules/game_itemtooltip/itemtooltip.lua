@@ -427,10 +427,10 @@ function renderTooltip(payload, item)
     local sections, rarityId, weight = parseSections(payload)
     local rarityColor = RARITY_COLORS[rarityId]
 
-    -- Alt reads each roll as how good it is: the value as a percentage of the
-    -- highest that attribute could have rolled at the item's current level.
-    -- The server sends one Q per A line in the same order (0 = no band), so
-    -- the two pair by position and the percentage is folded into the line
+    -- Alt shows each roll's ceiling: the highest that attribute could roll at
+    -- the item's current level, already in the line's own unit ("15", "4%").
+    -- The server sends one Q per A line in the same order ("-" = no band), so
+    -- the two pair by position and the ceiling is folded into the line
     -- itself -- a column of its own would be blank on every other tooltip.
     --
     -- splitPair takes the LAST ': ', so the suffix lands in the value column
@@ -438,9 +438,34 @@ function renderTooltip(payload, item)
     altActive = g_keyboard.isAltPressed()
     if altActive and sections.A and sections.Q then
         for i, text in ipairs(sections.A) do
-            local quality = tonumber(sections.Q[i])
-            if quality and quality > 0 then
-                sections.A[i] = text .. ' (' .. quality .. '%)'
+            local max = sections.Q[i]
+            if max and max ~= '-' then
+                sections.A[i] = text .. ' (' .. max .. ')'
+            end
+        end
+    end
+
+    -- Base stats get the highest they could have rolled instead: one X per
+    -- base-stat row in order ("-" = not rolled), which is the cells of the
+    -- single S line on a weapon and the B lines on everything else.
+    if altActive and sections.X then
+        local function withMax(text, i)
+            local max = sections.X[i]
+            if max and max ~= '-' then
+                return text .. ' (' .. max .. ')'
+            end
+            return text
+        end
+
+        if sections.S and sections.S[1] then
+            local cells = {}
+            for cell in sections.S[1]:gmatch('[^|]+') do
+                cells[#cells + 1] = withMax(cell:match('^%s*(.-)%s*$'), #cells + 1)
+            end
+            sections.S[1] = table.concat(cells, ' | ')
+        elseif sections.B then
+            for i, text in ipairs(sections.B) do
+                sections.B[i] = withMax(text, i)
             end
         end
     end

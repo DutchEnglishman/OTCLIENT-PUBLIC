@@ -971,13 +971,13 @@ local function clearSpearRuns()
     end
     spearRuns = {}
 end
-
--- Madareth's Chained Spike (OTSERV madareth_hook.lua), opcode 73:
+-- Annihilon's Chained Spike (OTSERV annihilon_hook.lua), opcode 73:
 -- "chain,<phase>,<runId>,<casterId>,<victimId>,<x>,<y>,<z>,<fx>,<fy>,<tx>,<ty>,<msPerTile>,<ms>".
--- x,y,z is MADARETH'S OWN tile, the two pairs after it are where the spike
--- starts and ends this phase as tile offsets from there, and <victimId> is
--- whoever the barbs are in (0 while it is still flying, or when it caught
--- nobody).
+-- x,y,z is HIS OWN tile, the two pairs after it are where the spike starts and
+-- ends this phase as tile offsets from there, and <victimId> is whoever the
+-- barbs are in (0 while it is still flying, or when it caught nobody). The
+-- skill was Madareth's before it was moved to Annihilon wholesale, which is why
+-- the textures still come out of make_madareth.ps1.
 --
 -- THE CHAIN IS DRAWN BY THE 'Map - Hook Chain' MAP SHADER, not by tile
 -- effects, and only the spike is still a sprite. The links used to be 24
@@ -986,15 +986,15 @@ end
 -- line, and -- the one that showed in game -- let a link that hung over into
 -- a neighbouring tile be painted over by that tile's creatures and top
 -- items, because an attached effect is drawn in its own tile's pass. A run
--- reaching 22 px into its neighbours was cut to pieces by Madareth's own
--- body and by anyone standing along it. The shader draws over the finished
--- map, so nothing can cover it, there are no tiles to quantise to, and the
--- chain is exact at any angle and any length. See the frag's own comment.
+-- reaching 22 px into its neighbours was cut to pieces by his own body and by
+-- anyone standing along it. The shader draws over the finished map, so nothing
+-- can cover it, there are no tiles to quantise to, and the chain is exact at
+-- any angle and any length. See the frag's own comment.
 --
--- WHAT THIS CODE DOES IS MOVE THE TWO ENDS. The shader is handed three
--- anchors -- Madareth's body, and one far end per chain -- and redraws
--- itself every frame from them, so a run here is a timeline that says where
--- its far end is right now:
+-- WHAT THIS CODE DOES IS MOVE THE TWO ENDS. The shader is handed up to five
+-- anchors -- his body, and one far end per chain, of which he throws FOUR --
+-- and redraws itself every frame from them, so a run here is a timeline that
+-- says where its far end is right now:
 --
 --   out:  the far end is the spike in flight. Its position is worked out
 --         from the phase's own clock, lerped from <fx,fy> to <tx,ty>: both
@@ -1009,14 +1009,18 @@ end
 --         (the chain caught nobody, or they died with the barbs in) it is
 --         the flight again in reverse.
 --
--- Anchor 0 is Madareth. He is rooted from the yell until the last chain
--- lets go, so his tile could have served, but the anchor takes his creature
--- for the same reason the tether takes the brothers': it lands on the outfit
--- as drawn, whatever its size and displacement, and it costs one field.
+-- ONE OF THE FOUR IS THE CHAIN HE HAULS HIMSELF ALONG, and nothing here has to
+-- know which. On that chain the victim stands still and HE travels; on the
+-- other three it is the other way round. Both ends are anchored to bodies
+-- either way, so the same "back" phase draws both without a verb of its own --
+-- which is also why anchor 0 takes his creature rather than the tile it was
+-- once safe to assume he was rooted on. It lands on the outfit as drawn,
+-- whatever its size and displacement, it follows him while he is dragged, and
+-- it costs one field.
 local HOOK_SHADER = 'Map - Hook Chain'
 local CHAIN_SPIKE_FIRST = 403
 local CHAIN_ROTATIONS = 48
--- where on Madareth the chains leave, from his body centre
+-- where on his body the chains leave, from its centre
 local CHAIN_BODY_OFFSET_X, CHAIN_BODY_OFFSET_Y = 0, -4
 -- and where on the victim the barbs sit, from their tile's centre
 local CHAIN_VICTIM_OFFSET_X, CHAIN_VICTIM_OFFSET_Y = 0, -2
@@ -1052,7 +1056,7 @@ local function chainVictimSpikeOffset()
 end
 
 local chainRuns = {}    -- runId -> run
-local chainSlots = {}   -- shader anchor 1 and 2 -> the runId holding it
+local chainSlots = {}   -- shader anchor 1..CHAIN_MAX -> the runId holding it
 local chainShader = nil -- {previousShader} while the map is switched to ours
 local chainEvent = nil
 
@@ -1151,18 +1155,23 @@ local function chainFreeSlot(run)
     run.slot = nil
 end
 
+-- Anchor 0 is Annihilon himself; 1 to 4 are the far ends, one per chain. Four
+-- is what the throw can put in the air at once, and MapView carries six slots
+-- (SHADER_ANCHOR_COUNT) so the count here is the shader's, not the plumbing's.
+local CHAIN_MAX = 4
+
 local function chainTakeSlot(run)
     if run.slot then
         return run.slot
     end
-    for slot = 1, 2 do
+    for slot = 1, CHAIN_MAX do
         if not chainSlots[slot] then
             chainSlots[slot] = run.runId
             run.slot = slot
             return slot
         end
     end
-    return nil -- he never throws more than two; a third would simply not draw
+    return nil -- a fifth chain would simply not draw; he never throws one
 end
 
 local function chainRunClear(run)
@@ -1256,9 +1265,15 @@ local function onChain(buffer)
         return
     end
 
-    -- The steps a phase covers is the far end's Chebyshev distance from his
-    -- tile, the same index the server counts its lane in.
-    local steps = math.abs(math.max(math.abs(tx), math.abs(ty)) - math.max(math.abs(fx), math.abs(fy)))
+    -- How long this phase's travel takes: the Chebyshev distance BETWEEN the
+    -- two ends, which is the number of tile steps however they sit relative to
+    -- his own tile. It used to be the difference of their distances FROM him,
+    -- which is the same figure only while both ends lie on one ray out of his
+    -- feet -- true of the outward flight, and true of a reel that walked back
+    -- down its own lane, and false the moment a reel runs past his tile to a
+    -- landing on the other side of him. There it came out far too short and
+    -- the run was cleared while the victim was still being hauled.
+    local steps = math.max(math.abs(tx - fx), math.abs(ty - fy))
 
     run.casterId = tonumber(casterId)
     run.victimId = tonumber(victimId)
@@ -1276,7 +1291,7 @@ local function onChain(buffer)
     end
     run.rotation = chainRotation(aimX, aimY)
     -- How long this run may sit here without another word from the server.
-    -- It only ever matters when Madareth dies mid-throw.
+    -- It only ever matters when Annihilon dies mid-throw.
     run.endsAt = run.startedAt + run.durationMs + ms
 
     chainShaderOn()
@@ -1610,6 +1625,92 @@ local function tetherOn(idA, idB, ox, oy, flow)
     map:setShaderPoint(3, flow, 1)
 end
 
+-- "glide,<runId>,<x>,<y>,<z>,<effectId>,<dx>,<dy>,<ms>[,<landId>,<landMs>]":
+-- the elemental missiles (OTSERV data/scripts/elemental_fx/elemental_fx.lua,
+-- effects.lua 500+). The effect leaves the middle of tile x,y,z and flies
+-- in a straight line to the tile dx,dy away over <ms>, moved by offset
+-- every frame from the way the daggers fly, so any angle works; the
+-- server has already picked the rotation by choosing the id. On arrival
+-- it goes and, when given, <landId> is laid on the landing tile for
+-- <landMs> (the impact). GLIDE_LIFT_PX lifts it off the floor to about
+-- a creature's chest. GLIDE_ORIGIN is the registered offset of a 64x64
+-- missile with the tile as its middle square, which setOffset replaces
+-- rather than adds to.
+local GLIDE_LIFT_PX = 8
+local GLIDE_ORIGIN = 16
+local glideRuns = {} -- runId -> {event, pos, effect}
+
+local function glideRunClear(run)
+    if run.event then
+        removeEvent(run.event)
+        run.event = nil
+    end
+    if run.effect then
+        local tile = g_map.getTile(run.pos)
+        if tile then
+            tile:detachEffect(run.effect)
+        end
+        run.effect = nil
+    end
+end
+
+local function glideRunStep(runId)
+    local run = glideRuns[runId]
+    if not run then
+        return
+    end
+    local f = (g_clock.millis() - run.startedAt) / run.ms
+    if f >= 1 then
+        glideRunClear(run)
+        glideRuns[runId] = nil
+        if run.landId then
+            holdTileEffect(run.landPos, run.landId, run.landMs)
+        end
+        return
+    end
+    if not run.effect then
+        local tile = g_map.getTile(run.pos)
+        local effect = tile and g_attachedEffects.getById(run.effectId)
+        if effect then
+            effect:setDuration(run.ms + 200)
+            tile:attachEffect(effect)
+            run.effect = effect
+        end
+    end
+    if run.effect then
+        local px = math.floor(run.dx * f * 32 + 0.5)
+        local py = math.floor(run.dy * f * 32 + 0.5)
+        run.effect:setOffset(GLIDE_ORIGIN - px, GLIDE_ORIGIN - py + GLIDE_LIFT_PX)
+    end
+    run.event = scheduleEvent(function() glideRunStep(runId) end, 1)
+end
+
+local function onGlide(buffer)
+    local runId, x, y, z, effectId, dx, dy, ms, landId, landMs =
+        buffer:match('^glide,([^,]+),(%d+),(%d+),(%d+),(%d+),(-?%d+),(-?%d+),(%d+),?(%d*),?(%d*)$')
+    if not runId then
+        return
+    end
+    if glideRuns[runId] then
+        glideRunClear(glideRuns[runId])
+    end
+    local pos = { x = tonumber(x), y = tonumber(y), z = tonumber(z) }
+    glideRuns[runId] = {
+        pos = pos, effectId = tonumber(effectId), dx = tonumber(dx), dy = tonumber(dy),
+        ms = math.max(1, tonumber(ms)), startedAt = g_clock.millis(),
+        landId = tonumber(landId), landMs = tonumber(landMs) or 0,
+        landPos = { x = pos.x + tonumber(dx), y = pos.y + tonumber(dy), z = pos.z },
+    }
+    glideRunStep(runId)
+end
+
+local function clearGlideRuns()
+    for _, run in pairs(glideRuns) do
+        glideRunClear(run)
+    end
+    glideRuns = {}
+end
+
 local function onTileEffectOpcode(protocol, opcode, buffer)
     local idA, idB, ox, oy, flow = buffer:match('^tether,(%d+),(%d+),(-?%d+),(-?%d+),(-?1)$')
     if idA then
@@ -1647,6 +1748,10 @@ local function onTileEffectOpcode(protocol, opcode, buffer)
     end
     if buffer:sub(1, 6) == 'chain,' then
         onChain(buffer)
+        return
+    end
+    if buffer:sub(1, 6) == 'glide,' then
+        onGlide(buffer)
         return
     end
     if buffer:sub(1, 8) == 'daggers,' then
@@ -1757,6 +1862,7 @@ function controller:onGameEnd()
     clearAxeRuns()
     clearSpearRuns()
     clearDaggerRuns()
+    clearGlideRuns()
     clearChainRuns()
     clearBloodlust()
     clearLunges()

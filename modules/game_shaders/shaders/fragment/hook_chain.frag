@@ -1,12 +1,17 @@
-// Madareth's Chained Spike, drawn as up to two chains of iron links running from
-// his body to whatever each spike is in, over the finished map (registered as
-// 'Map - Hook Chain', shaders.lua; driven by attachedeffects.lua on opcode 73
-// "chain", which sets the anchors with UIMap:setShaderAnchor / setShaderTile):
-//   u_Anchor0  Madareth's body, framebuffer pixels, y down (-1,-1: no chains)
-//   u_Anchor1  the first chain's far end -- the spike (-1,-1: no such chain)
-//   u_Anchor2  the second chain's far end, when he threw two
-//   u_Anchor3  unused
-//   u_MapSize  the framebuffer's size in pixels
+// Annihilon's Chained Spike, drawn as up to FOUR chains of iron links running
+// from his body to whatever each spike is in, over the finished map (registered
+// as 'Map - Hook Chain', shaders.lua; driven by attachedeffects.lua on opcode 73
+// "chain", which sets the anchors with UIMap:setShaderAnchor / setShaderTile).
+// The skill was Madareth's before it was moved to Annihilon wholesale, which is
+// why the texture generator is still make_madareth.ps1:
+//   u_Anchor0     his body, framebuffer pixels, y down (-1,-1: no chains at all)
+//   u_Anchor1..4  one chain's far end each -- its spike (-1,-1: no such chain)
+//   u_MapSize     the framebuffer's size in pixels
+//
+// FOUR, because he hooks up to four players at once and hauls himself down one
+// of the chains while the other three reel their players in. They all leave the
+// same body, so they cross each other constantly; see main() for what a crossing
+// is made to look like.
 //
 // IT IS A SHADER BECAUSE A CHAIN IS A LINE BETWEEN TWO MOVING POINTS, and tile
 // effects could not be one. The links were 24 rotated textures laid one per tile
@@ -15,7 +20,7 @@
 // line, and -- the one that showed -- a link hanging over into a neighbouring
 // tile was painted over by that tile's creatures and top items, because an
 // attached effect is drawn in its own tile's pass. A run that reached 22 px into
-// its neighbours was cut to pieces by Madareth's own body and by anyone standing
+// its neighbours was cut to pieces by his own body and by anyone standing
 // along it. Here there are no tiles: the chain is one segment in screen space,
 // the links repeat along it at whatever angle and length it happens to have, and
 // nothing can paint over it because the map is already finished underneath.
@@ -26,13 +31,15 @@
 // generator's `roll` was for and is reproduced here in LINK_EDGE. The iron is lit
 // from the upper left off a normal taken across the link, with a rim and a
 // specular streak, and the last stretch before the spike carries the heat the
-// spike itself is drawn with: Madareth is a fire demon and the iron he throws has
+// spike itself is drawn with: Annihilon is a fire demon and the iron he throws has
 // not cooled.
 uniform sampler2D u_Tex0;
 uniform vec2 u_MapSize;
 uniform vec2 u_Anchor0;
 uniform vec2 u_Anchor1;
 uniform vec2 u_Anchor2;
+uniform vec2 u_Anchor3;
+uniform vec2 u_Anchor4;
 varying vec2 v_TexCoord;
 
 const float PITCH = 5.6;        // px from one link to the next, along the chain.
@@ -181,33 +188,51 @@ void main(void)
     // Framebuffer pixel of this fragment, y down like the anchors.
     vec2 p = vec2(v_TexCoord.x, 1.0 - v_TexCoord.y) * u_MapSize;
 
-    vec3 col = base.rgb;
-
-    // The chain SHADOW_DROP pixels above this pixel is what casts a shadow on
-    // it, so the shadow is asked for first and both chains' go down before
-    // either chain is laid, or one would be drawn onto the other's shadow.
+    // The chain SHADOW_DROP pixels above this pixel is what casts a shadow on it,
+    // so every chain's shadow is gathered first and laid down before any iron is,
+    // or one chain would be drawn onto another's shadow.
     vec2 up = p - vec2(0.0, SHADOW_DROP);
-    float coverA = 0.0, coverB = 0.0, shadeA = 0.0, shadeB = 0.0;
-    vec3 ironA = vec3(0.0), ironB = vec3(0.0);
+    float cover1 = 0.0, cover2 = 0.0, cover3 = 0.0, cover4 = 0.0;
+    float shade1 = 0.0, shade2 = 0.0, shade3 = 0.0, shade4 = 0.0;
+    vec3 iron1 = vec3(0.0), iron2 = vec3(0.0), iron3 = vec3(0.0), iron4 = vec3(0.0);
     if (u_Anchor1.x >= 0.0) {
-        ironA = chain(p, u_Anchor0, u_Anchor1, coverA);
-        chain(up, u_Anchor0, u_Anchor1, shadeA);
+        iron1 = chain(p, u_Anchor0, u_Anchor1, cover1);
+        chain(up, u_Anchor0, u_Anchor1, shade1);
     }
     if (u_Anchor2.x >= 0.0) {
-        ironB = chain(p, u_Anchor0, u_Anchor2, coverB);
-        chain(up, u_Anchor0, u_Anchor2, shadeB);
+        iron2 = chain(p, u_Anchor0, u_Anchor2, cover2);
+        chain(up, u_Anchor0, u_Anchor2, shade2);
+    }
+    if (u_Anchor3.x >= 0.0) {
+        iron3 = chain(p, u_Anchor0, u_Anchor3, cover3);
+        chain(up, u_Anchor0, u_Anchor3, shade3);
+    }
+    if (u_Anchor4.x >= 0.0) {
+        iron4 = chain(p, u_Anchor0, u_Anchor4, cover4);
+        chain(up, u_Anchor0, u_Anchor4, shade4);
     }
 
-    col *= 1.0 - max(shadeA, shadeB) * SHADOW;
-    // Whichever chain covers this pixel more owns it: two chains crossing should
-    // read as one passing over the other, not as their colours averaged.
-    if (coverA >= coverB) {
-        col = mix(col, ironB, coverB);
-        col = mix(col, ironA, coverA);
-    } else {
-        col = mix(col, ironA, coverA);
-        col = mix(col, ironB, coverB);
-    }
+    vec3 col = base.rgb;
+    col *= 1.0 - max(max(shade1, shade2), max(shade3, shade4)) * SHADOW;
+
+    // WHICHEVER CHAIN COVERS THIS PIXEL MOST OWNS IT: four chains leaving one
+    // body cross each other constantly, and a crossing has to read as one chain
+    // passing over another rather than as their colours averaged. So the winner
+    // is found first and every other chain is laid down without it, then the
+    // winner goes on top -- rather than painting all four and the winner again,
+    // which would lay the winner's own antialiased edge over itself and thicken
+    // it. A tie drops one of the two, which at equal coverage cannot be seen.
+    float best = max(max(cover1, cover2), max(cover3, cover4));
+    vec3 bestIron = iron1;
+    if (cover2 >= best) bestIron = iron2;
+    if (cover3 >= best) bestIron = iron3;
+    if (cover4 >= best) bestIron = iron4;
+
+    if (cover1 < best) col = mix(col, iron1, cover1);
+    if (cover2 < best) col = mix(col, iron2, cover2);
+    if (cover3 < best) col = mix(col, iron3, cover3);
+    if (cover4 < best) col = mix(col, iron4, cover4);
+    col = mix(col, bestIron, best);
 
     gl_FragColor = vec4(col, base.a);
 }

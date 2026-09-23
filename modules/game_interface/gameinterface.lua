@@ -1216,19 +1216,24 @@ function processMouseAction(menuPosition, mouseButton, autoWalkPos, lookThing, u
         useThing = nil
     end
 
+    -- EITHER button under Ctrl opens the context menu, decided here ahead of the
+    -- control-mode branches so the gesture means the same thing in regular,
+    -- smart-click and every Classic Control loot mode. isPrimaryModifierOnly
+    -- excludes Alt, which is what leaves Ctrl+Alt+Left to item-share (uiitem.lua).
+    local contextMenuClick = (mouseButton == MouseLeftButton or mouseButton == MouseRightButton) and
+        g_keyboard.isPrimaryModifierOnly(keyboardModifiers)
+
     -- A player standing on bare ground has no useThing after the ground
-    -- filtering above. Handle Ctrl+Right Click from the creature itself so
-    -- the player context menu works in every control/loot mode.
-    if creatureThing and creatureThing:isPlayer() and mouseButton == MouseRightButton and
-        g_keyboard.isPrimaryModifierOnly(keyboardModifiers) then
+    -- filtering above. Handle the click from the creature itself so the player
+    -- context menu works in every control/loot mode.
+    if creatureThing and creatureThing:isPlayer() and contextMenuClick then
         createThingMenu(menuPosition, lookThing, useThing, creatureThing)
         return true
     end
 
     -- Keep bare ground available to the explicit context menu even though it
     -- must remain filtered from normal right-click use/autowalk handling.
-    if mouseButton == MouseRightButton and g_keyboard.isPrimaryModifierOnly(keyboardModifiers) and
-        (lookThing or contextUseThing or creatureThing) then
+    if contextMenuClick and (lookThing or contextUseThing or creatureThing) then
         createThingMenu(menuPosition, lookThing, contextUseThing, creatureThing)
         return true
     end
@@ -1440,37 +1445,6 @@ function processMouseAction(menuPosition, mouseButton, autoWalkPos, lookThing, u
             (mouseButton == MouseLeftButton or mouseButton == MouseRightButton) then
             g_game.look(lookThing)
             return true
-        elseif useThing and g_keyboard.isPrimaryModifierOnly(keyboardModifiers) and
-            (mouseButton == MouseLeftButton or mouseButton == MouseRightButton) then
-            local smartLeftClick = modules.client_options.getOption('smartLeftClick')
-
-            if smartLeftClick then
-                local player = g_game.getLocalPlayer()
-                -- For containers in the world, Ctrl+Left Click opens them even if there's a creature
-                if (useThing:isContainer() or useThing:isLyingCorpse()) and not useThing:getParentContainer() then
-                    g_game.open(useThing)
-                    return true
-                else
-                    createThingMenu(menuPosition, lookThing, useThing, creatureThing)
-                    return true
-                end
-            else
-                if useThing:isContainer() then
-                    if useThing:getParentContainer() then
-                        g_game.open(useThing, useThing:getParentContainer())
-                    else
-                        g_game.open(useThing)
-                    end
-                    return true
-                elseif useThing:isMultiUse() then
-                    startUseWith(useThing)
-                    return true
-                else
-                    g_game.use(useThing)
-                    return true
-                end
-            end
-            return true
         elseif useThing and useThing:isContainer() and g_keyboard.isPrimaryShiftModifierOnly(keyboardModifiers) and
             (mouseButton == MouseLeftButton or mouseButton == MouseRightButton) then
             g_game.open(useThing)
@@ -1560,14 +1534,6 @@ function processMouseAction(menuPosition, mouseButton, autoWalkPos, lookThing, u
                     if g_game.isAttacking() and g_game.getChaseMode() == ChaseOpponent then
                         g_game.setChaseMode(DontChase)
                     end
-                    return true
-                end
-            end
-
-            -- Ctrl+Right click: open the normal context menu only when there is an actual target.
-            if mouseButton == MouseRightButton and keyboardModifiers == KeyboardCtrlModifier then
-                if lookThing or useThing or creatureThing then
-                    createThingMenu(menuPosition, lookThing, useThing, creatureThing)
                     return true
                 end
             end
@@ -1755,10 +1721,6 @@ function processMouseAction(menuPosition, mouseButton, autoWalkPos, lookThing, u
         elseif lookThing and ((g_mouse.isPressed(MouseLeftButton) and mouseButton == MouseRightButton) or
                 (g_mouse.isPressed(MouseRightButton) and mouseButton == MouseLeftButton)) then
             g_game.look(lookThing)
-            return true
-        elseif useThing and g_keyboard.isPrimaryModifierOnly(keyboardModifiers) and
-            (mouseButton == MouseLeftButton or mouseButton == MouseRightButton) then
-            createThingMenu(menuPosition, lookThing, useThing, creatureThing)
             return true
         elseif attackCreature and not attackCreature:isNpc() and g_keyboard.isAltPressed() and
             (mouseButton == MouseLeftButton or mouseButton == MouseRightButton) then

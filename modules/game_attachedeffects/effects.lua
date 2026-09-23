@@ -577,7 +577,7 @@ for d, dir in ipairs({ 'n', 'e', 's', 'w', 'sw', 'se', 'nw', 'ne' }) do
     })
 end
 
--- Madareth's Chained Spike (OTSERV data/scripts/boss_skills/madareth_hook.lua;
+-- Annihilon's Chained Spike (OTSERV data/scripts/boss_skills/annihilon_hook.lua;
 -- opcode 73 "chain" in attachedeffects.lua; textures by
 -- tools/effect-generators/make_madareth.ps1). The lane's red warning tiles
 -- are 287 above -- one warning tile serves both bosses, since it says the
@@ -606,3 +606,135 @@ end
 -- in short, an attached effect is drawn in its own tile's pass, so the part
 -- of a link that hung over into a neighbouring tile was painted over by that
 -- tile's creatures and top items, and the run came out in pieces.
+
+-- Hellgorak's soul sigil (OTSERV data/creaturescripts/scripts/bosses/
+-- hellgorak_room.lua; textures by tools/effect-generators/make_hellgorak.ps1).
+-- 451: the tile his ward calls for a soul on, held with the plain "on" verb
+-- of opcode 73 at remainingMs 0 and refreshed on the room's own clock, so a
+-- sigil the server stops talking about drops off by itself. Under creatures,
+-- because the whole mechanic is a player standing in it.
+--
+-- This replaced a pulsed CONST_ME_MAGIC_RED, and the reason is the reason the
+-- texture looks the way it does: a handful of sparks in the middle of a tile
+-- cannot be seen across a room and is hidden completely by whoever is standing
+-- on it. Everything bright here is at the tile's EDGE -- the ring, the corner
+-- ticks -- which is the part a body does not cover. The light is what finds it
+-- from the far side of the ward; 206 is (255, 204, 102) through
+-- Color::from8bit, the same warm gold as the texture.
+AttachedEffectManager.register(451, 'Soul sigil', '/images/game/effects/soul_sigil', ThingExternalTexture, {
+    offset = { 0, 0, false },
+    light = { color = 206, intensity = 3 }
+})
+
+-- The elemental spell animations (OTSERV data/scripts/elemental_fx/
+-- elemental_fx.lua, the ElementalFx library and its GOD command /fx;
+-- textures by tools/effect-generators/make_elements.ps1): six elements x
+-- twelve kinds of thing a spell can look like, at 500 + 60 * element +
+-- kind offset, so a server script picks an element by adding its 60.
+-- Element order and the kind offsets live in three places -- the
+-- generator (ELEMENT_ORDER, the file names), this loop and
+-- elemental_fx.lua (ELEMENTS, KIND) -- and must stay the same.
+--
+-- Which side of the creature a texture is drawn on is what sizes it: aura
+-- and the eruption's cracks are under creatures and 32x32, since an
+-- attached effect is drawn in its own tile's pass and the ground of every
+-- tile drawn after paints over the overhang (Annihilon's shatter is cut
+-- into 49 pieces for that reason); everything over creatures is drawn at
+-- the missile's order (4) and can be as big as it likes. The offset is
+-- where the TILE's top-left corner sits in the texture.
+--
+--   +0..15  missile   64x64, tile the middle square, r * 22.5 degrees
+--                     clockwise from east; glided by the "glide" verb
+--   +16     impact    64x64, tile the middle square
+--   +17     nova      160x160, caster's tile the middle square
+--   +18     aura      32x32, worn by the creature, under it
+--   +19/20  eruption  cracks 32x32 under, column 64x96 over (tile the
+--                     bottom 32 rows)
+--   +21..23 slice     64x64, tile the middle square: \, / and both
+--   +24..27 wave      N/E/S/W; north is 160x192 with the caster's tile
+--                     the bottom middle square, the others are quarter
+--                     turns of it, so the tile moves with the turn
+--   +28..35 beam      body per direction, 32x32 on the tile, in the
+--                     server's order N E S W SW SE NW NE
+--   +36..43 beamhead  64x64 tile the middle square, the same order
+--   +44     vortex    64x64, tile the middle square
+--   +45     fall      64x96, tile the bottom 32 rows
+--   +46     orbit     96x96 worn by the creature, over it, tile the
+--                     middle square
+--   +47     pillar    64x128, tile the bottom 32 rows
+local ELEMENT_FX_FIRST = 500
+local ELEMENT_FX_STRIDE = 60
+local ELEMENT_FX_ORDER = { 'earth', 'ice', 'energy', 'fire', 'death', 'physical' }
+local ELEMENT_FX_DIRS = { 'n', 'e', 's', 'w', 'sw', 'se', 'nw', 'ne' }
+-- caster tile's top-left in each wave texture: north is drawn, the rest
+-- are quarter turns of it (see Make-Wave), which carry the tile with them
+local ELEMENT_FX_WAVE_OFFSET = { n = { 64, 160 }, e = { 0, 64 }, s = { 64, 0 }, w = { 160, 64 } }
+for e, element in ipairs(ELEMENT_FX_ORDER) do
+    local base = ELEMENT_FX_FIRST + (e - 1) * ELEMENT_FX_STRIDE
+    local path = '/images/game/effects/elements/' .. element .. '_'
+    local label = element:sub(1, 1):upper() .. element:sub(2) .. ' '
+    for r = 0, 15 do
+        AttachedEffectManager.register(base + r, label .. 'missile ' .. (r * 22.5), path .. 'missile_' .. r, ThingExternalTexture, {
+            offset = { 16, 16, true },
+            drawOrder = 4
+        })
+    end
+    AttachedEffectManager.register(base + 16, label .. 'impact', path .. 'impact', ThingExternalTexture, {
+        offset = { 16, 16, true },
+        drawOrder = 4
+    })
+    AttachedEffectManager.register(base + 17, label .. 'nova', path .. 'nova', ThingExternalTexture, {
+        offset = { 64, 64, true },
+        drawOrder = 4
+    })
+    AttachedEffectManager.register(base + 18, label .. 'aura', path .. 'aura', ThingExternalTexture, {
+        offset = { 0, 0, false },
+        followOwner = true
+    })
+    AttachedEffectManager.register(base + 19, label .. 'eruption cracks', path .. 'erupt_ground', ThingExternalTexture, {
+        offset = { 0, 0, false }
+    })
+    AttachedEffectManager.register(base + 20, label .. 'eruption column', path .. 'erupt_column', ThingExternalTexture, {
+        offset = { 16, 64, true },
+        drawOrder = 4
+    })
+    for v = 1, 3 do
+        AttachedEffectManager.register(base + 20 + v, label .. 'slice ' .. v, path .. 'slice_' .. v, ThingExternalTexture, {
+            offset = { 16, 16, true },
+            drawOrder = 4
+        })
+    end
+    for d = 1, 4 do
+        local dir = ELEMENT_FX_DIRS[d]
+        AttachedEffectManager.register(base + 23 + d, label .. 'wave ' .. dir, path .. 'wave_' .. dir, ThingExternalTexture, {
+            offset = { ELEMENT_FX_WAVE_OFFSET[dir][1], ELEMENT_FX_WAVE_OFFSET[dir][2], true },
+            drawOrder = 4
+        })
+    end
+    for d, dir in ipairs(ELEMENT_FX_DIRS) do
+        AttachedEffectManager.register(base + 27 + d, label .. 'beam ' .. dir, path .. 'beam_' .. dir, ThingExternalTexture, {
+            offset = { 0, 0, true },
+            drawOrder = 4
+        })
+        AttachedEffectManager.register(base + 35 + d, label .. 'beam head ' .. dir, path .. 'beamhead_' .. dir, ThingExternalTexture, {
+            offset = { 16, 16, true },
+            drawOrder = 4
+        })
+    end
+    AttachedEffectManager.register(base + 44, label .. 'vortex', path .. 'vortex', ThingExternalTexture, {
+        offset = { 16, 16, true },
+        drawOrder = 4
+    })
+    AttachedEffectManager.register(base + 45, label .. 'fall', path .. 'fall', ThingExternalTexture, {
+        offset = { 16, 64, true },
+        drawOrder = 4
+    })
+    AttachedEffectManager.register(base + 46, label .. 'orbit', path .. 'orbit', ThingExternalTexture, {
+        offset = { 32, 32, true },
+        followOwner = true
+    })
+    AttachedEffectManager.register(base + 47, label .. 'pillar', path .. 'pillar', ThingExternalTexture, {
+        offset = { 16, 96, true },
+        drawOrder = 4
+    })
+end
