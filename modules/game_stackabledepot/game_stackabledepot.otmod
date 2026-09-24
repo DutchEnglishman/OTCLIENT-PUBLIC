@@ -1,0 +1,10 @@
+Module
+  name: game_stackabledepot
+  description: Stackable stash
+  author: Roel
+  website: None
+  sandboxed: true
+  autoload: true
+  scripts: [ stackabledepot ]
+  @onLoad: init()
+  @onUnload: terminate()

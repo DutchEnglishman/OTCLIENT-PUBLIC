@@ -199,7 +199,11 @@ function UIItem:onMouseRelease(mousePosition, mouseButton)
         return true
     end
 
-    if modules.client_options.getOption('classicControl') and not g_platform.isMobile() and
+    -- Both buttons at once is a look here too, matching the map (processMouseAction in
+    -- gameinterface.lua). Classic Control keeps it under any modifier, as it always has;
+    -- the other modes take it only bare, so their ctrl/shift combos are unchanged.
+    if not g_platform.isMobile() and
+        (modules.client_options.getOption('classicControl') or g_keyboard.getModifiers() == KeyboardNoModifier) and
         ((g_mouse.isPressed(MouseLeftButton) and mouseButton == MouseRightButton) or
             (g_mouse.isPressed(MouseRightButton) and mouseButton == MouseLeftButton)) then
         g_game.look(item)

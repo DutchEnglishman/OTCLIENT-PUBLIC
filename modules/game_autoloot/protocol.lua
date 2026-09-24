@@ -119,13 +119,6 @@ function AutoLoot.onExtendedOpcode(protocol, opcode, buffer)
         return
     end
 
-    print(
-        '[AUTOLOOT] Received opcode: ' ..
-        tostring(opcode) ..
-        ' buffer: ' ..
-        tostring(buffer)
-    )
-
     local command, payload =
         buffer:match("^([^|]+)|?(.*)$")
 

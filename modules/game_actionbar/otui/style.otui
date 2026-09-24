@@ -13,11 +13,11 @@ SpellPreview < UICheckBox
 
   $checked:
     background-color: #585858
-    color: #f4f4f4
+    color: $selectionText
 
   $disabled:
     image-color: #dfdfdf88
-    color: #dfdfdf88
+    color: $textDisabled
     opacity: 0.8
 
   UIWidget
@@ -73,11 +73,11 @@ PassivePreview < UICheckBox
     background-color: alpha
 
   $checked:
-    background-color: #ffffff22
+    background-color: $hoverOverlay
 
   $disabled:
     image-color: #dfdfdf88
-    color: #dfdfdf88
+    color: $textDisabled
     opacity: 0.8
 
   UIWidget

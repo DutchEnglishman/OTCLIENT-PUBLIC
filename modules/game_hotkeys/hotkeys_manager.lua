@@ -1018,7 +1018,8 @@ function executeHotkeyItem(action, itemId, subType)
 
         local virtualItem = Item.create(itemId)
         if virtualItem:isFluidContainer() or virtualItem:isMultiUse() then
-            return tile:getTopMultiUseThing()
+            -- true: the target is whatever the cursor is drawn over, mid-step creatures included.
+            return tile:getTopMultiUseThing(true)
         end
         return tile:getTopUseThing()
     end

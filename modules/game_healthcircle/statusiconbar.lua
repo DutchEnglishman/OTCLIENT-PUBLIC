@@ -21,7 +21,7 @@ local config = {
 local SETTINGS_FILE = '/settings_conditions_hud.json'
 local DECORATIVE_CHILD_COUNT = 2
 local SELECTED_COLOR = '#585858'
-local ROW_COLOR_ODD = '#484848'
+local ROW_COLOR_ODD = g_ui.getVariable('panelFillLight')
 local ROW_COLOR_EVEN = '#414141'
 
 local function safeCall(obj, method, ...)

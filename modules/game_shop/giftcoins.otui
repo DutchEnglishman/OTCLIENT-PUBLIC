@@ -1,11 +1,11 @@
 GiftCoinsLabel < Label
-  color: #C0C0C0
+  color: $textColor
 
 MainWindow
   id: transferWindow
   !text: tr('Gift Premium Coins')
   size: 280 238
-  color: #909090
+  color: $textDim
   @onEscape: modules.game_shop.cancelGiftCoins()
   $on:
     size: 280 300

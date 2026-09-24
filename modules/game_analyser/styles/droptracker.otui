@@ -29,7 +29,7 @@ ItemPanel < Panel
     margin-top: 5
     margin-left: 5
     text-auto-resize: true
-    color: #c0c0c0
+    color: $textColor
     font: Verdana Bold-11px
 
   Label
@@ -39,7 +39,7 @@ ItemPanel < Panel
     anchors.left: itemSlot.right
     margin-left: 5
     text-auto-resize: true
-    color: #c0c0c0
+    color: $textColor
     font: Verdana Bold-11px
 
   Label
@@ -49,7 +49,7 @@ ItemPanel < Panel
     anchors.left: prev.right
     margin-left: 5
     text-auto-resize: true
-    color: #c0c0c0
+    color: $textColor
     font: Verdana Bold-11px
 
   Panel
@@ -87,7 +87,7 @@ MonsterPanel < Panel
     anchors.left: monster.right
     margin-left: 5
     text-auto-resize: true
-    color: #c0c0c0
+    color: $textColor
     font: Verdana Bold-11px
   Label
     id: drops
@@ -96,7 +96,7 @@ MonsterPanel < Panel
     anchors.left: prev.right
     margin-left: 5
     text-auto-resize: true
-    color: #c0c0c0
+    color: $textColor
     font: Verdana Bold-11px
 
 MiniWindow

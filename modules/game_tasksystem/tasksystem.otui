@@ -6,7 +6,7 @@ TaskListLabel < UILabel
   phantom: false
 
   $focus:
-    background-color: #ffffff22
+    background-color: $hoverOverlay
 
 TaskMonsterTile < UIWidget
   size: 64 58
@@ -14,7 +14,7 @@ TaskMonsterTile < UIWidget
   background-color: alpha
 
   $hover:
-    background-color: #ffffff22
+    background-color: $hoverOverlay
 
   @onClick: modules.game_tasksystem.onMonsterTileClick(self)
 

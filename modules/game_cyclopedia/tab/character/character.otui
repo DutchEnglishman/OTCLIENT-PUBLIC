@@ -6,7 +6,7 @@ InfoLabel < Panel
     anchors.left: parent.left
     anchors.verticalCenter: parent.verticalCenter
     text-auto-resize: true
-    color: #C0C0C0
+    color: $textColor
   Label
     id: value
     anchors.right: parent.right
@@ -31,7 +31,7 @@ BlessingLabel < Panel
     anchors.left: parent.left
     anchors.verticalCenter: parent.verticalCenter
     text-auto-resize: true
-    color: #C0C0C0
+    color: $textColor
   Label
     id: value
     anchors.right: parent.right
@@ -57,7 +57,7 @@ UIWidget
     anchors.top: parent.top
     margin-top: 10
     image-source: /images/ui/outfits/minipanel
-    image-border: 20
+    image-border: 3
     size: 170 130
     color: #929292
     text-offset: 0 3
@@ -191,7 +191,7 @@ UIWidget
       margin-right: 5
       margin-bottom: 5
       height: 140
-      background-color: #363636
+      background-color: $panelFill
       UIScrollArea
         id: List
         vertical-scrollbar: ListScrollbar
@@ -245,9 +245,9 @@ UIWidget
       anchors.right: separator.right
       SkillNameLabel
         !text: tr('Level')
-        color: #C0C0C0
+        color: $textColor
       SkillValueLabel
-        color: #C0C0C0
+        color: $textColor
       SkillCharacterPercentPanel
         background-color: #C00000
     CharacterSkillBase
@@ -258,9 +258,9 @@ UIWidget
       margin-top: 10
       SkillNameLabel
         !text: tr('Experience')
-        color: #C0C0C0
+        color: $textColor
       SkillValueLabel
-        color: #C0C0C0
+        color: $textColor
     CharacterSkillBase
       id: expGainRate
       anchors.top: experience.bottom
@@ -269,7 +269,7 @@ UIWidget
       margin-top: 1
       SkillNameLabel
         !text: tr('XP Gain Rate')
-        color: #C0C0C0
+        color: $textColor
       SkillValueLabel
         color: #44AD25
     UIWidget
@@ -302,9 +302,9 @@ UIWidget
       margin-top: 10
       SkillNameLabel
         !text: tr('Hit Points')
-        color: #C0C0C0
+        color: $textColor
       SkillValueLabel
-        color: #C0C0C0
+        color: $textColor
     CharacterSkillBase
       id: mana
       anchors.top: health.bottom
@@ -313,9 +313,9 @@ UIWidget
       margin-top: 1
       SkillNameLabel
         !text: tr('Mana')
-        color: #C0C0C0
+        color: $textColor
       SkillValueLabel
-        color: #C0C0C0
+        color: $textColor
     CharacterSkillBase
       id: capacity
       anchors.top: mana.bottom
@@ -324,9 +324,9 @@ UIWidget
       margin-top: 1
       SkillNameLabel
         !text: tr('Capacity')
-        color: #C0C0C0
+        color: $textColor
       SkillValueLabel
-        color: #C0C0C0
+        color: $textColor
     CharacterSkillBase
       id: speed
       anchors.top: capacity.bottom
@@ -335,9 +335,9 @@ UIWidget
       margin-top: 1
       SkillNameLabel
         !text: tr('Speed')
-        color: #C0C0C0
+        color: $textColor
       SkillValueLabel
-        color: #C0C0C0
+        color: $textColor
     CharacterSkillBase
       id: food
       anchors.top: speed.bottom
@@ -346,9 +346,9 @@ UIWidget
       margin-top: 1
       SkillNameLabel
         !text: tr('Food')
-        color: #C0C0C0
+        color: $textColor
       SkillValueLabel
-        color: #C0C0C0
+        color: $textColor
     CharacterSkillBase
       id: stamina
       anchors.top: food.bottom
@@ -357,9 +357,9 @@ UIWidget
       margin-top: 1
       SkillNameLabel
         !text: tr('Stamina')
-        color: #C0C0C0
+        color: $textColor
       SkillValueLabel
-        color: #C0C0C0
+        color: $textColor
       SkillCharacterPercentPanel
         background-color: green
     CharacterSkillBase
@@ -370,9 +370,9 @@ UIWidget
       margin-top: 5
       SkillNameLabel
         !text: tr('Offline Training')
-        color: #C0C0C0
+        color: $textColor
       SkillValueLabel
-        color: #C0C0C0
+        color: $textColor
       SkillCharacterPercentPanel
         background-color: #C00000
 
@@ -392,10 +392,10 @@ UIWidget
       margin-top: 10
       SkillNameLabel
         !text: tr('Account Status')
-        color: #C0C0C0
+        color: $textColor
       SkillValueLabel
         !text: tr('33')
-        color: #C0C0C0
+        color: $textColor
     CharacterSkillBase
       id: accountOnline
       anchors.top: accountStatus.bottom
@@ -404,10 +404,10 @@ UIWidget
       margin-top: 5
       SkillNameLabel
         !text: tr('Account Premium')
-        color: #C0C0C0
+        color: $textColor
       SkillValueLabel
         !text: tr('33')
-        color: #C0C0C0
+        color: $textColor
     CharacterSkillBase
       id: loyaltyTitle
       anchors.top: accountOnline.bottom
@@ -416,15 +416,15 @@ UIWidget
       margin-top: 5
       SkillNameLabel
         !text: tr('Loyalty Title')
-        color: #C0C0C0
+        color: $textColor
       SkillValueLabel
         !text: tr('33')
-        color: #C0C0C0
+        color: $textColor
 
     Label
       id: skillsLabel
       !text: tr('Skills')
-      color: #C0C0C0
+      color: $textColor
       anchors.top: level.top
       anchors.horizontalCenter: parent.horizontalCenter
       margin-left: 125
@@ -436,7 +436,7 @@ UIWidget
       margin-top: 10
       SkillNameLabel
         !text: tr('Magic')
-        color: #C0C0C0
+        color: $textColor
       SkillValueLabel
       SkillCharacterIcon
         anchors.left: parent.left
@@ -454,7 +454,7 @@ UIWidget
       margin-top: 13
       SkillNameLabel
         !text: tr('Fist')
-        color: #C0C0C0
+        color: $textColor
       SkillValueLabel
       SkillCharacterIcon
         anchors.left: parent.left
@@ -472,7 +472,7 @@ UIWidget
       margin-top: 13
       SkillNameLabel
         !text: tr('Club')
-        color: #C0C0C0
+        color: $textColor
       SkillValueLabel
       SkillCharacterIcon
         anchors.left: parent.left
@@ -490,7 +490,7 @@ UIWidget
       margin-top: 13
       SkillNameLabel
         !text: tr('Sword')
-        color: #C0C0C0
+        color: $textColor
       SkillValueLabel
       SkillCharacterIcon
         anchors.left: parent.left
@@ -508,7 +508,7 @@ UIWidget
       margin-top: 13
       SkillNameLabel
         !text: tr('Axe')
-        color: #C0C0C0
+        color: $textColor
       SkillValueLabel
       SkillCharacterIcon
         anchors.left: parent.left
@@ -526,7 +526,7 @@ UIWidget
       margin-top: 13
       SkillNameLabel
         !text: tr('Distance')
-        color: #C0C0C0
+        color: $textColor
       SkillValueLabel
       SkillCharacterIcon
         anchors.left: parent.left
@@ -544,7 +544,7 @@ UIWidget
       margin-top: 13
       SkillNameLabel
         !text: tr('Shielding')
-        color: #C0C0C0
+        color: $textColor
       SkillValueLabel
       SkillCharacterIcon
         anchors.left: parent.left
@@ -562,7 +562,7 @@ UIWidget
       margin-top: 13
       SkillNameLabel
         !text: tr('Fishing')
-        color: #C0C0C0
+        color: $textColor
       SkillValueLabel
       SkillCharacterIcon
         anchors.left: parent.left
@@ -635,9 +635,9 @@ UIWidget
       margin-left: 5
       SkillNameLabel
         !text: tr('Attack Value:')
-        color: #C0C0C0
+        color: $textColor
       SkillValueLabel
-        color: #C0C0C0
+        color: $textColor
         anchors.right: next.left
         margin-right: 8
         !text: ('100')
@@ -652,15 +652,15 @@ UIWidget
       margin-top: 0
       SkillNameLabel
         !text: tr('Converted Damage:')
-        color: #C0C0C0
+        color: $textColor
       SkillValueLabel
         id: none
-        color: #C0C0C0
+        color: $textColor
         !text: tr('None')
         margin-right: 2
         visible: false
       SkillValueLabel
-        color: #C0C0C0
+        color: $textColor
         anchors.right: next.left
         margin-right: 8
         !text: ('100')
@@ -675,9 +675,9 @@ UIWidget
       margin-top: 0
       SkillNameLabel
         !text: tr('Defence Value:')
-        color: #C0C0C0
+        color: $textColor
       SkillValueLabel
-        color: #C0C0C0
+        color: $textColor
         margin-right: 2
     CharacterSkillBase
       id: armor
@@ -687,9 +687,9 @@ UIWidget
       margin-top: 1
       SkillNameLabel
         !text: tr('Armor Value:')
-        color: #C0C0C0
+        color: $textColor
       SkillValueLabel
-        color: #C0C0C0
+        color: $textColor
         margin-right: 2
     CharacterSkillBase
       id: mitigation
@@ -699,9 +699,9 @@ UIWidget
       margin-top: 0
       SkillNameLabel
         !text: tr('Mitigation:')
-        color: #C0C0C0
+        color: $textColor
       SkillValueLabel
-        color: #C0C0C0
+        color: $textColor
         margin-right: 2
     CharacterSkillBase
       id: blessings
@@ -711,9 +711,9 @@ UIWidget
       margin-top: 1
       SkillNameLabel
         !text: tr('Blessings:')
-        color: #C0C0C0
+        color: $textColor
       SkillValueLabel
-        color: #C0C0C0
+        color: $textColor
         margin-right: 20
       UIButton
         id: blessButton
@@ -742,7 +742,7 @@ UIWidget
       margin-top: 1
       SkillNameLabel
         !text: tr('Damage Reduction:')
-        color: #C0C0C0
+        color: $textColor
     Panel
       id: reductionNone
       anchors.top: reduction.bottom
@@ -768,7 +768,7 @@ UIWidget
       margin-top: 1
       SkillNameLabel
         !text: tr('Concoctions:')
-        color: #C0C0C0  
+        color: $textColor
     CharacterSkillBase
       id: concoctionPanel
       anchors.top: prev.bottom
@@ -788,7 +788,7 @@ UIWidget
       margin-top: 1
       SkillNameLabel
         !text: tr('Critical Hit:')
-        color: #C0C0C0
+        color: $textColor
     CharacterSkillBase
       id: criticalChance
       anchors.top: criticalHit.bottom
@@ -798,9 +798,9 @@ UIWidget
       margin-top: 0
       SkillNameLabel
         !text: tr('Chance')
-        color: #C0C0C0
+        color: $textColor
       SkillValueLabel
-        color: #C0C0C0
+        color: $textColor
         margin-right: 2
     CharacterSkillBase
       id: criticalDamage
@@ -811,9 +811,9 @@ UIWidget
       margin-top: 0
       SkillNameLabel
         !text: tr('Extra Damage')
-        color: #C0C0C0
+        color: $textColor
       SkillValueLabel
-        color: #C0C0C0
+        color: $textColor
         margin-right: 2
     CharacterSkillBase
       id: lifeLeech
@@ -824,9 +824,9 @@ UIWidget
       margin-top: 0
       SkillNameLabel
         !text: tr('Life Leech:')
-        color: #C0C0C0
+        color: $textColor
       SkillValueLabel
-        color: #C0C0C0
+        color: $textColor
         margin-right: 2
     CharacterSkillBase
       id: manaLeech
@@ -837,9 +837,9 @@ UIWidget
       margin-top: 0
       SkillNameLabel
         !text: tr('Mana Leech:')
-        color: #C0C0C0
+        color: $textColor
       SkillValueLabel
-        color: #C0C0C0
+        color: $textColor
         margin-right: 2
   UIWidget
     id: RecentDeaths
@@ -864,7 +864,7 @@ UIWidget
         UIWidget
           anchors.fill: parent
           margin: 1
-          background-color: #363636
+          background-color: $panelFill
         Label
           !text: tr('Data and Time')
           anchors.top: parent.top
@@ -872,7 +872,7 @@ UIWidget
           anchors.left: parent.left
           margin-left: 3
           margin-top: 1
-          color: #C0C0C0
+          color: $textColor
           width: 154
         VerticalSeparator
           id: separator
@@ -887,7 +887,7 @@ UIWidget
           anchors.right: parent.right
           margin-left: 5
           margin-top: 1
-          color: #C0C0C0
+          color: $textColor
       UIScrollArea
         id: List
         vertical-scrollbar: ListScrollbar
@@ -895,7 +895,7 @@ UIWidget
         margin: 1
         margin-top: 16
         padding-right: 15
-        background-color: #404040
+        background-color: $panelFillRaised
         layout:
           type: verticalBox
           spacing: 3
@@ -917,7 +917,7 @@ UIWidget
       anchors.left: parent.left
       margin-top: 7
       text-offset: 0 -1
-      color: #C0C0C0
+      color: $textColor
       enabled: false
     Button
       id: next
@@ -929,12 +929,12 @@ UIWidget
       margin-right: -5
       margin-top: 7
       text-offset: 0 -1
-      color: #C0C0C0
+      color: $textColor
       enabled: false
     Label
       id: pages
       !text: tr('Page 1 / 1')
-      color: #C0C0C0
+      color: $textColor
       anchors.verticalCenter: previous.verticalCenter
       anchors.horizontalCenter: parent.horizontalCenter
   UIWidget
@@ -960,7 +960,7 @@ UIWidget
         UIWidget
           anchors.fill: parent
           margin: 1
-          background-color: #363636
+          background-color: $panelFill
         Label
           !text: tr('Data and Time')
           anchors.top: parent.top
@@ -968,7 +968,7 @@ UIWidget
           anchors.left: parent.left
           margin-left: 3
           margin-top: 1
-          color: #C0C0C0
+          color: $textColor
           width: 154
         VerticalSeparator
           id: separator
@@ -983,7 +983,7 @@ UIWidget
           anchors.right: parent.right
           margin-left: 5
           margin-top: 1
-          color: #C0C0C0
+          color: $textColor
         VerticalSeparator
           id: separatorTwo
           anchors.top: parent.top
@@ -998,7 +998,7 @@ UIWidget
           anchors.right: parent.right
           margin-left: 5
           margin-top: 1
-          color: #C0C0C0
+          color: $textColor
       UIScrollArea
         id: List
         vertical-scrollbar: ListScrollbar
@@ -1006,7 +1006,7 @@ UIWidget
         margin: 1
         margin-top: 16
         padding-right: 15
-        background-color: #404040
+        background-color: $panelFillRaised
         layout:
           type: verticalBox
           spacing: -1
@@ -1028,7 +1028,7 @@ UIWidget
       anchors.left: parent.left
       margin-top: 7
       text-offset: 0 -1
-      color: #C0C0C0
+      color: $textColor
       enabled: false
     Button
       id: next
@@ -1040,12 +1040,12 @@ UIWidget
       margin-right: -5
       margin-top: 7
       text-offset: 0 -1
-      color: #C0C0C0
+      color: $textColor
       enabled: false
     Label
       id: pages
       !text: tr('Page 1 / 1')
-      color: #C0C0C0
+      color: $textColor
       anchors.verticalCenter: previous.verticalCenter
       anchors.horizontalCenter: parent.horizontalCenter
   UIWidget
@@ -1066,14 +1066,14 @@ UIWidget
         id: Points
         text-auto-resize: true
         !text: tr('Achievements Points: ') .. 0
-        color: #C0C0C0
+        color: $textColor
         anchors.top: parent.top
         anchors.left: parent.left
       Label
         id: gradeOne
         text-auto-resize: true
         !text: tr('Grade 1: ') .. 0
-        color: #C0C0C0
+        color: $textColor
         anchors.top: prev.bottom
         anchors.right: parent.right
         margin-right: 14
@@ -1087,7 +1087,7 @@ UIWidget
         id: gradeTwo
         text-auto-resize: true
         !text: tr('Grade 2: ') .. 0
-        color: #C0C0C0
+        color: $textColor
         anchors.top: gradeOne.bottom
         anchors.right: gradeOne.right
       UIWidget
@@ -1102,7 +1102,7 @@ UIWidget
         id: gradeThree
         text-auto-resize: true
         !text: tr('Grade 3: ') .. 0
-        color: #C0C0C0
+        color: $textColor
         anchors.top: gradeTwo.bottom
         anchors.right: gradeTwo.right
       UIWidget
@@ -1117,7 +1117,7 @@ UIWidget
         id: gradeFour
         text-auto-resize: true
         !text: tr('Grade 4: ') .. 0
-        color: #C0C0C0
+        color: $textColor
         anchors.top: gradeThree.bottom
         anchors.right: gradeThree.right
       UIWidget
@@ -1142,7 +1142,7 @@ UIWidget
         id: all
         width: 85
         text: All
-        color: #C0C0C0
+        color: $textColor
         text-offset: 15 0
         anchors.top: parent.top
         anchors.left: parent.left
@@ -1153,7 +1153,7 @@ UIWidget
         id: locked
         width: 85
         text: Locked
-        color: #C0C0C0
+        color: $textColor
         text-offset: 15 0
         anchors.top: all.bottom
         anchors.left: all.left
@@ -1163,7 +1163,7 @@ UIWidget
         id: accomplished
         width: 100
         text: Accomplished
-        color: #C0C0C0
+        color: $textColor
         text-offset: 15 0
         anchors.top: locked.bottom
         anchors.left: locked.left
@@ -1306,7 +1306,7 @@ UIWidget
         UIWidget
           anchors.fill: parent
           margin: 1
-          background-color: #363636
+          background-color: $panelFill
         Label
           !text: tr('Name')
           anchors.top: parent.top
@@ -1314,7 +1314,7 @@ UIWidget
           anchors.left: parent.left
           margin-left: 3
           margin-top: 1
-          color: #C0C0C0
+          color: $textColor
           width: 154
         VerticalSeparator
           id: separator
@@ -1330,7 +1330,7 @@ UIWidget
           anchors.right: parent.right
           margin-left: 5
           margin-top: 1
-          color: #C0C0C0
+          color: $textColor
       UIScrollArea
         id: list
         vertical-scrollbar: listScrollbar
@@ -1338,7 +1338,7 @@ UIWidget
         margin: 1
         margin-right: 15
         margin-top: 16
-        background-color: #404040
+        background-color: $panelFillRaised
         layout:
           type: verticalBox
           spacing: 0
@@ -1364,7 +1364,7 @@ UIWidget
         id: inventory
         width: 85
         text: Inventory
-        color: #C0C0C0
+        color: $textColor
         text-offset: 15 0
         anchors.top: parent.top
         anchors.left: parent.left
@@ -1375,7 +1375,7 @@ UIWidget
         id: depot
         width: 85
         text: Depot
-        color: #C0C0C0
+        color: $textColor
         text-offset: 15 0
         anchors.top: inventory.top
         anchors.left: inventory.right
@@ -1385,7 +1385,7 @@ UIWidget
         id: stash
         width: 100
         text: Supply Stash
-        color: #C0C0C0
+        color: $textColor
         text-offset: 15 0
         anchors.top: depot.bottom
         anchors.left: depot.left
@@ -1395,7 +1395,7 @@ UIWidget
         id: inbox
         width: 100
         text: Inbox
-        color: #C0C0C0
+        color: $textColor
         text-offset: 15 0
         anchors.top: depot.top
         anchors.left: depot.right
@@ -1405,7 +1405,7 @@ UIWidget
         id: store
         width: 100
         text: Store Inbox
-        color: #C0C0C0
+        color: $textColor
         text-offset: 15 0
         anchors.top: inbox.bottom
         anchors.left: inbox.left
@@ -1436,7 +1436,7 @@ UIWidget
         id: list
         width: 85
         text: show as list
-        color: #C0C0C0
+        color: $textColor
         text-offset: 15 0
         anchors.centerIn: parent
         margin-right: 70
@@ -1445,7 +1445,7 @@ UIWidget
         id: grid
         width: 100
         text: show as grid
-        color: #C0C0C0
+        color: $textColor
         text-offset: 15 0
         anchors.verticalCenter: parent.verticalCenter
         anchors.left: list.right
@@ -1471,7 +1471,7 @@ UIWidget
         id: outfits
         width: 85
         text: Outfits
-        color: #C0C0C0
+        color: $textColor
         text-offset: 15 0
         anchors.verticalCenter: parent.verticalCenter
         anchors.left: parent.left
@@ -1481,7 +1481,7 @@ UIWidget
         id: mounts
         width: 85
         text: Mounts
-        color: #C0C0C0
+        color: $textColor
         text-offset: 15 0
         anchors.verticalCenter: parent.verticalCenter
         anchors.left: outfits.right
@@ -1490,7 +1490,7 @@ UIWidget
         id: familiars
         width: 85
         text: Familiars
-        color: #C0C0C0
+        color: $textColor
         text-offset: 15 0
         anchors.verticalCenter: parent.verticalCenter
         anchors.left: mounts.right
@@ -1552,7 +1552,7 @@ UIWidget
         margin: 1
 
         padding-right: 15
-        background-color: #404040
+        background-color: $panelFillRaised
         layout:
           type: verticalBox
           spacing: 3
@@ -1560,8 +1560,8 @@ UIWidget
         MiniPanel
           id:XPBoosts
           image-source: /images/ui/outfits/minipanel
-          image-border: 5
-          color: #C0C0C0
+          image-border: 3
+          color: $textColor
           height: 66
           padding-bottom: 5
           margin: 5
@@ -1571,7 +1571,7 @@ UIWidget
           Label
             id: RemainingStoreXPBoostTime
             text-auto-resize: true
-            color: #909090
+            color: $textDim
             anchors.top: parent.top
             anchors.left: parent.left
             margin-top: 2
@@ -1588,7 +1588,7 @@ UIWidget
           Label
             id: RemainingDailyRewardXPBoostTime
             text-auto-resize: true
-            color: #909090
+            color: $textDim
             anchors.top: RemainingStoreXPBoostTime.bottom
             anchors.left: RemainingStoreXPBoostTime.left
             margin-top: 2
@@ -1605,8 +1605,8 @@ UIWidget
         MiniPanel
           id:Blessings
           image-source: /images/ui/outfits/minipanel
-          image-border: 5
-          color: #C0C0C0
+          image-border: 3
+          color: $textColor
           padding-bottom: 5
           margin: 5
           margin-bottom: 1
@@ -1616,7 +1616,7 @@ UIWidget
           Label
             id: AvailableBlessings
             text-auto-resize: true
-            color: #909090
+            color: $textDim
             anchors.top: parent.top
             anchors.left: parent.left
             margin-top: 2
@@ -1637,8 +1637,8 @@ UIWidget
         MiniPanel
           id: preyPanel
           image-source: /images/ui/outfits/minipanel
-          image-border: 5
-          color: #C0C0C0
+          image-border: 3
+          color: $textColor
           height: 66
           padding-bottom: 5
           margin: 5
@@ -1648,7 +1648,7 @@ UIWidget
           Label
             id: PermanentPreySlots
             text-auto-resize: true
-            color: #909090
+            color: $textDim
             anchors.top: parent.top
             anchors.left: parent.left
             margin-top: 2
@@ -1665,7 +1665,7 @@ UIWidget
           Label
             id: PreyWildcards
             text-auto-resize: true
-            color: #909090
+            color: $textDim
             anchors.top: PermanentPreySlots.bottom
             anchors.left: parent.left
             margin-top: 2
@@ -1682,8 +1682,8 @@ UIWidget
         MiniPanel
           id: taskBoard
           image-source: /images/ui/outfits/minipanel
-          image-border: 5
-          color: #C0C0C0
+          image-border: 3
+          color: $textColor
           height: 66
           padding-bottom: 5
           margin: 5
@@ -1708,8 +1708,8 @@ UIWidget
         MiniPanel
           id: dailyReward
           image-source: /images/ui/outfits/minipanel
-          image-border: 5
-          color: #C0C0C0
+          image-border: 3
+          color: $textColor
           height: 66
           padding-bottom: 5
           margin: 5
@@ -1719,7 +1719,7 @@ UIWidget
           Label
             id: InstantRewardAccess
             text-auto-resize: true
-            color: #909090
+            color: $textDim
             anchors.top: parent.top
             anchors.left: parent.left
             margin-top: 2
@@ -1735,8 +1735,8 @@ UIWidget
         MiniPanel
           id: CharmPanel
           image-source: /images/ui/outfits/minipanel
-          image-border: 5
-          color: #C0C0C0
+          image-border: 3
+          color: $textColor
           height: 66
           padding-bottom: 5
           margin: 5
@@ -1746,7 +1746,7 @@ UIWidget
           Label
             id: CharmExpansion
             text-auto-resize: true
-            color: #909090
+            color: $textDim
             anchors.top: parent.top
             anchors.left: parent.left
             margin-top: 2
@@ -1762,8 +1762,8 @@ UIWidget
         MiniPanel
           id: hirelings
           image-source: /images/ui/outfits/minipanel
-          image-border: 5
-          color: #C0C0C0
+          image-border: 3
+          color: $textColor
 
           padding-bottom: 5
           margin: 5
@@ -1773,7 +1773,7 @@ UIWidget
           Label
             id: PurchasedHireLings
             text-auto-resize: true
-            color: #909090
+            color: $textDim
             anchors.top: parent.top
             anchors.left: parent.left
             margin-top: 2
@@ -1790,7 +1790,7 @@ UIWidget
           Label
             id: hirelingjobs
             text-auto-resize: true
-            color: #909090
+            color: $textDim
             anchors.top: PurchasedHireLings.bottom
             anchors.left: parent.left
             margin-top: 2
@@ -1799,7 +1799,7 @@ UIWidget
           Label
             id: hirelingOutfits
             text-auto-resize: true
-            color: #909090
+            color: $textDim
             anchors.top: prev.bottom
             anchors.left: parent.left
             margin-top: 2
@@ -1808,8 +1808,8 @@ UIWidget
         MiniPanel
           id: houseItems
           image-source: /images/ui/outfits/minipanel
-          image-border: 5
-          color: #C0C0C0
+          image-border: 3
+          color: $textColor
           height: 66
           padding-bottom: 5
           margin: 5
@@ -2022,7 +2022,7 @@ UIWidget
           Label
             id: activeConcoctions
             !text: tr("Active Concoctions:")
-            color: #C0C0C0
+            color: $textColor
             text-auto-resize: true 
           Panel
             id: concoctions
@@ -2038,7 +2038,7 @@ UIWidget
             id: consumables
             !text: tr("Active Foods:")
             margin-top: 10
-            color: #C0C0C0
+            color: $textColor
             text-auto-resize: true 
           Panel
             id: cooldowns

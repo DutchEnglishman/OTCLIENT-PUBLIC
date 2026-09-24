@@ -10,7 +10,7 @@ UIWidget
     margin-top: 10
     !text: tr('Categories') .. ':'
     text-auto-resize: true
-    color: #c0c0c0
+    color: $textColor
   TextList
     id: CategoryList
     vertical-scrollbar: CategoryScrollbar
@@ -18,7 +18,7 @@ UIWidget
     anchors.top: parent.top
     margin-top: 30
     size: 200 60
-    color: #c0c0c0
+    color: $textColor
     focusable: true
     padding: 1
 
@@ -47,7 +47,7 @@ UIWidget
     !text: tr("Level")
     font: cipsoftFont
     text-align: center
-    color: #dfdfdfff
+    color: $textBright
     image-color: #dfdfdf
     checkable: true
     @onCheckChange: modules.game_cyclopedia.Cyclopedia.levelFilter(self:isChecked())
@@ -69,7 +69,7 @@ UIWidget
     !text: tr("Voc.")
     font: cipsoftFont
     text-align: center
-    color: #dfdfdfff
+    color: $textBright
     image-color: #dfdfdf
     checkable: true
     @onCheckChange: modules.game_cyclopedia.Cyclopedia.vocationFilter(self:isChecked())
@@ -91,7 +91,7 @@ UIWidget
     !text: tr("1H")
     font: cipsoftFont
     text-align: center
-    color: #dfdfdfff
+    color: $textBright
     image-color: #dfdfdf
     checkable: true
     enabled: false
@@ -114,7 +114,7 @@ UIWidget
     !text: tr("2H")
     font: cipsoftFont
     text-align: center
-    color: #dfdfdfff
+    color: $textBright
     image-color: #dfdfdf
     checkable: true
     enabled: false
@@ -134,7 +134,7 @@ UIWidget
     margin-top: 4
     font: Verdana Bold-11px
     text-align: center
-    color: #c0c0c0
+    color: $textColor
     padding-left: 15
     padding-right: 3
     size: 77 20
@@ -146,7 +146,7 @@ UIWidget
     margin-top: 5
     !text: tr("Items") .. ':'
     text-auto-resize: true
-    color: #c0c0c0
+    color: $textColor
   Panel
     id: ItemListBase
     anchors.left: parent.left
@@ -237,7 +237,7 @@ UIWidget
       margin-left: 25
       !text: tr('Loot Value Source') .. ':'
       text-auto-resize: true
-      color: #c0c0c0
+      color: $textColor
     CheckBox
       id: NpcBuyCheck
       anchors.top: LootValueLabel.bottom
@@ -246,7 +246,7 @@ UIWidget
       size: 12 12
       text-align: left
       text-offset: 18 -2
-      color: #dfdfdf
+      color: $textBright
       image-color: #dfdfdfff
       image-rect: 0 0 12 12
       image-source: /modules/game_cyclopedia/images/checkbox
@@ -272,7 +272,7 @@ UIWidget
 
       $disabled:
         image-color: #dfdfdf88
-        color: #dfdfdf88
+        color: $textDisabled
         opacity: 0.8
         change-cursor-image: false
     CheckBox
@@ -283,7 +283,7 @@ UIWidget
       size: 12 12
       text-align: left
       text-offset: 18 -2
-      color: #dfdfdf
+      color: $textBright
       image-color: #dfdfdfff
       image-rect: 0 0 12 12
       image-source: /modules/game_cyclopedia/images/checkbox
@@ -308,7 +308,7 @@ UIWidget
 
       $disabled:
         image-color: #dfdfdf88
-        color: #dfdfdf88
+        color: $textDisabled
         opacity: 0.8
         change-cursor-image: false
   Label
@@ -318,7 +318,7 @@ UIWidget
     margin-top: 10
     margin-left: 10
     !text: tr('Please select an item from the list to see its details here.')
-    color: #C0C0C0
+    color: $textColor
     text-auto-resize: true
   UIWidget
     id: InfoBase
@@ -335,7 +335,7 @@ UIWidget
       margin-top: 15
       !text: tr('Basic Item Details') .. ':'
       text-auto-resize: true
-      color: #c0c0c0
+      color: $textColor
     Panel
       id: DetailsBase
       anchors.left: BasicDetailsLabel.left
@@ -406,7 +406,7 @@ UIWidget
       margin-bottom: 4
       !text: tr('Sell To') .. ':'
       text-auto-resize: true
-      color: #c0c0c0
+      color: $textColor
     Panel
       id: BuyBase
       anchors.left: parent.horizontalCenter
@@ -444,7 +444,7 @@ UIWidget
       margin-bottom: 4
       !text: tr('Buy From') .. ':'
       text-auto-resize: true
-      color: #c0c0c0
+      color: $textColor
     UIWidget
       id: MarketGoldPriceBase
       anchors.top: BuyBase.bottom
@@ -525,7 +525,7 @@ UIWidget
       text-align: left
       text-offset: 18 -2
       font: pVerdana Bold-11px
-      color: #c0c0c0
+      color: $textColor
       image-color: #dfdfdfff
       image-rect: 0 0 12 12
       image-source: /modules/game_cyclopedia/images/checkbox
@@ -557,7 +557,7 @@ UIWidget
 
       $disabled:
         image-color: #dfdfdf88
-        color: #dfdfdf88
+        color: $textDisabled
         opacity: 0.8
         change-cursor-image: false
     CheckBox
@@ -570,7 +570,7 @@ UIWidget
       text-offset: 18 -2
       image-color: #dfdfdfff
       font: pVerdana Bold-11px
-      color: #c0c0c0
+      color: $textColor
       image-rect: 0 0 12 12
       image-source: /modules/game_cyclopedia/images/checkbox
       !text: tr('Skip when Quick Selling')
@@ -601,7 +601,7 @@ UIWidget
 
       $disabled:
         image-color: #dfdfdf88
-        color: #dfdfdf88
+        color: $textDisabled
         opacity: 0.8
         change-cursor-image: false
     CheckBox
@@ -613,7 +613,7 @@ UIWidget
       text-align: left
       text-offset: 18 -2
       font: pVerdana Bold-11px
-      color: #c0c0c0
+      color: $textColor
       image-color: #dfdfdfff
       image-rect: 0 0 12 12
       image-source: /modules/game_cyclopedia/images/checkbox
@@ -642,7 +642,7 @@ UIWidget
 
       $disabled:
         image-color: #dfdfdf88
-        color: #dfdfdf88
+        color: $textDisabled
         opacity: 0.8
         change-cursor-image: false
 

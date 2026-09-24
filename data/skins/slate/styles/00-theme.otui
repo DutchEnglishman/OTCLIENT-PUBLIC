@@ -1,0 +1,34 @@
+// The slate palette. Shadows data/styles/00-theme.otui while the skin is mounted (SKIN
+// in init.lua); same roles, same rule -- chrome only, a colour with meaning never lives
+// here. The fills follow the tone ladder in tools/skin-generators/make_slate.ps1
+// ($Look.Tone) so a Lua-painted panel matches a generated one. Everything is neutral grey
+// on the cold side; text is bone rather than parchment and the accent is pewter, so
+// nothing in the chrome catches a warm light the way `carved` does.
+
+&textColor: #c6cad0
+&textBright: #eef2f6
+&textDim: #8a8e95
+&textDisabled: #c6cad055
+&textMuted: #64686f
+
+&panelFill: #18191b
+&panelFillDark: #101113
+&panelFillDeep: #090a0b
+&panelFillRaised: #212225
+&panelFillLight: #2a2b2f
+
+&borderColor: #3a3c41
+&borderLight: #5a5d63
+&separatorColor: #0e0f11
+
+&selectionFill: #3a4149
+&selectionText: #eef2f6
+&hoverOverlay: #8a93a022
+
+// The three lines the stock mini-window style paints under a container's header: a 1-px
+// highlight, a 1-px shadow and a 1-px border. All off here -- a top bar in this skin is
+// one plain plate of stone with the title on it, and the header image draws no line of
+// its own either (make_slate.ps1, $Look.HeaderRing).
+&headerBevelLight: #00000000
+&headerBevelShadow: #00000000
+&headerBorderColor: #00000000

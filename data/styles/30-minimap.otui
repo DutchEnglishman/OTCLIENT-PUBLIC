@@ -12,7 +12,7 @@ MinimapCross < UIWidget
 
 MinimapFloorUpButton < Button
   size: 20 20
-  margin-right: 28
+  margin-right: 4
   margin-bottom: 28
   anchors.right: parent.right
   anchors.bottom: parent.bottom
@@ -25,7 +25,7 @@ MinimapFloorUpButton < Button
 
 MinimapFloorDownButton < Button
   size: 20 20
-  margin-right: 28
+  margin-right: 4
   margin-bottom: 4
   anchors.right: parent.right
   anchors.bottom: parent.bottom
@@ -39,7 +39,7 @@ MinimapFloorDownButton < Button
 MinimapZoomInButton < Button
   text: +
   size: 20 20
-  margin-right: 4
+  margin-right: 28
   margin-bottom: 28
   anchors.right: parent.right
   anchors.bottom: parent.bottom
@@ -48,7 +48,7 @@ MinimapZoomInButton < Button
 MinimapZoomOutButton < Button
   text: -
   size: 20 20
-  margin-right: 4
+  margin-right: 28
   margin-bottom: 4
   anchors.right: parent.right
   anchors.bottom: parent.bottom

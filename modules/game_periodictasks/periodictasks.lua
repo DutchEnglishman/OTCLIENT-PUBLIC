@@ -71,7 +71,7 @@ local function buildColumn(parent, entry, difficulties, previous)
         column:addAnchor(AnchorLeft, 'parent', AnchorLeft)
     end
 
-    column:getChildById('title'):setText(entry.label)
+    column:getChildById('title'):setText(entry.label or entry.key)
 
     local bossSlot = column:getChildById('bossSlot')
     local hasBoss = (entry.bossRequired or 0) > 0
@@ -123,14 +123,14 @@ local function buildColumn(parent, entry, difficulties, previous)
 
     if entry.assigned then
         monsterSlot:getChildById('creature'):setOutfit(entry.outfit)
-        nameLabel:setText(capitalize(entry.monster))
-        progressLabel:setText(string.format('%d / %d', entry.progress, entry.required))
+        nameLabel:setText(capitalize(entry.monster or ''))
+        progressLabel:setText(string.format('%d / %d', entry.progress or 0, entry.required or 0))
         expiryLabel:setText(formatRemaining(entry.secondsLeft))
 
         if hasBoss and entry.boss then
             bossSlot:getChildById('creature'):setOutfit(entry.bossOutfit)
             bossLineLabel:setText(string.format('%s  %d / %d',
-                capitalize(entry.boss), entry.bossProgress or 0, entry.bossRequired))
+                capitalize(entry.boss), entry.bossProgress or 0, entry.bossRequired or 0))
         else
             bossLineLabel:setText('')
         end
@@ -149,8 +149,8 @@ local function buildColumn(parent, entry, difficulties, previous)
         end
 
         nameLabel:setText('')
-        progressLabel:setText(string.format('%d kills', entry.required))
-        bossLineLabel:setText(hasBoss and string.format('+ %d boss kills', entry.bossRequired) or '')
+        progressLabel:setText(string.format('%d kills', entry.required or 0))
+        bossLineLabel:setText(hasBoss and string.format('+ %d boss kills', entry.bossRequired or 0) or '')
         expiryLabel:setText('')
 
         reroll:setVisible(false)
@@ -160,26 +160,31 @@ local function buildColumn(parent, entry, difficulties, previous)
         -- level hints stay owned by the server config.
         local previousButton = nil
         for _, difficulty in ipairs(difficulties) do
-            local button = g_ui.createWidget('PeriodicTaskDifficultyButton', buttons)
-            button:setText(string.format('%s (%s)', difficulty.label, difficulty.hint))
-            button:addAnchor(AnchorLeft, 'parent', AnchorLeft)
-            button:addAnchor(AnchorRight, 'parent', AnchorRight)
+            -- The key ends up in the button's widget id and in the assign
+            -- request, so a difficulty without one has nothing to send.
+            if type(difficulty) == 'table' and type(difficulty.key) == 'string' then
+                local button = g_ui.createWidget('PeriodicTaskDifficultyButton', buttons)
+                button:setText(string.format('%s (%s)', difficulty.label or difficulty.key,
+                    difficulty.hint or ''))
+                button:addAnchor(AnchorLeft, 'parent', AnchorLeft)
+                button:addAnchor(AnchorRight, 'parent', AnchorRight)
 
-            if previousButton then
-                button:addAnchor(AnchorTop, previousButton:getId(), AnchorBottom)
-                button:setMarginTop(3)
-            else
-                button:addAnchor(AnchorTop, 'parent', AnchorTop)
+                if previousButton then
+                    button:addAnchor(AnchorTop, previousButton:getId(), AnchorBottom)
+                    button:setMarginTop(3)
+                else
+                    button:addAnchor(AnchorTop, 'parent', AnchorTop)
+                end
+
+                button:setId(entry.key .. '_' .. difficulty.key)
+                button.slotKey = entry.key
+                button.difficultyKey = difficulty.key
+                button.onClick = function(self)
+                    send({action = 'assign', slot = self.slotKey, difficulty = self.difficultyKey})
+                end
+
+                previousButton = button
             end
-
-            button:setId(entry.key .. '_' .. difficulty.key)
-            button.slotKey = entry.key
-            button.difficultyKey = difficulty.key
-            button.onClick = function(self)
-                send({action = 'assign', slot = self.slotKey, difficulty = self.difficultyKey})
-            end
-
-            previousButton = button
         end
     end
 
@@ -194,9 +199,14 @@ local function rebuild(payload)
     local container = window:getChildById('columns')
     container:destroyChildren()
 
+    local difficulties = type(payload.difficulties) == 'table' and payload.difficulties or {}
     local previous = nil
-    for _, entry in ipairs(payload.slots or {}) do
-        previous = buildColumn(container, entry, payload.difficulties or {}, previous)
+    for _, entry in ipairs(type(payload.slots) == 'table' and payload.slots or {}) do
+        -- The key becomes the column's widget id and the anchor the next column
+        -- hooks to, so a slot without one cannot be drawn at all.
+        if type(entry) == 'table' and type(entry.key) == 'string' then
+            previous = buildColumn(container, entry, difficulties, previous)
+        end
     end
 end
 

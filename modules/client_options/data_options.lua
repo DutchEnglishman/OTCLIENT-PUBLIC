@@ -352,14 +352,11 @@ return {
     crosshair                         = {
         value = 'default',
         action = function(value, options, controller, panels, extraWidgets)
-            local crossPath = '/images/game/crosshair/'
-            local newValue = value
-            if newValue == 'disabled' then
-                newValue = nil
-            end
+            local texture = value ~= 'disabled' and options.mouseSelectionGraphics.value and
+                '/images/game/crosshair/' .. value
 
-            panels.gameMapPanel:setCrosshairTexture(newValue and crossPath .. newValue or nil)
-            panels.interface:recursiveGetChildById('crosshair'):setCurrentOptionByData(newValue, true)
+            panels.gameMapPanel:setCrosshairTexture(texture or nil)
+            panels.interface:recursiveGetChildById('crosshair'):setCurrentOptionByData(value, true)
         end
     },
     nativeCursor = {
@@ -392,7 +389,23 @@ return {
     enableHighlightMouseTarget        = {
         value = true,
         action = function(value, options, controller, panels, extraWidgets)
-            panels.gameMapPanel:setDrawHighlightTarget(value)
+            panels.gameMapPanel:setDrawHighlightTarget(value and options.mouseSelectionGraphics.value)
+        end
+    },
+    -- Master switch over both mouse-over decorations: the crosshair square the
+    -- map draws on the tile under the cursor and the yellow pulse on the thing
+    -- it holds. Off wins over the two Interface-panel controls, which read this
+    -- option back, so it commits its own value before delegating -- setOption
+    -- only writes option.value after the action returns. setup() applies the
+    -- options in an undefined order, which is why all three re-apply the
+    -- others' current state rather than only their own.
+    mouseSelectionGraphics            = {
+        value = true,
+        action = function(value, options, controller, panels, extraWidgets)
+            options.mouseSelectionGraphics.value = value
+            options.crosshair.action(options.crosshair.value, options, controller, panels, extraWidgets)
+            options.enableHighlightMouseTarget.action(options.enableHighlightMouseTarget.value, options, controller,
+                panels, extraWidgets)
         end
     },
     showAnimatedCursor = {

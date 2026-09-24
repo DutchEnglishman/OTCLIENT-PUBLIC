@@ -1,0 +1,28 @@
+// The Shattered Realms palette. Shadows data/styles/00-theme.otui while the skin is
+// mounted (SKIN in init.lua); same fifteen roles, same rule -- chrome only, a colour with
+// meaning never lives here. The fills follow the tone ladder in make_shattered.ps1
+// ($Look.Tone) so a Lua-painted panel matches a generated one; text is light neutral;
+// the one green is the accent line's, used for selection and hover.
+
+&textColor: #d4dad5
+&textBright: #f4f7f4
+&textDim: #8f9992
+&textDisabled: #d4dad555
+&textMuted: #6a746d
+
+&panelFill: #1a201c
+&panelFillDark: #121714
+&panelFillDeep: #0a0d0b
+&panelFillRaised: #232a25
+&panelFillLight: #2b342e
+
+&borderColor: #465349
+&borderLight: #5a6a5e
+&separatorColor: #2e3831
+
+&selectionFill: #2f6e42
+&selectionText: #f4f8f5
+&hoverOverlay: #8fe0a622
+&headerBevelLight: #66666640
+&headerBevelShadow: #31313160
+&headerBorderColor: #2e3831

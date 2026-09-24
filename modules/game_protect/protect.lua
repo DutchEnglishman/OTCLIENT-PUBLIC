@@ -100,6 +100,15 @@ local function locate(thing)
     return nil
 end
 
+-- What the server will even consider. Item::setProtected refuses everything the
+-- map owns -- the floor, a wall, the furniture a script pinned down -- so the
+-- menu row is absent on those rather than offering a click that comes back as a
+-- refusal. This reads the dat flags while the server reads items.otb; the two
+-- can drift, which is why the server still decides and still says why.
+function canProtect(thing)
+    return thing ~= nil and thing:isItem() and not thing:isGround() and not thing:isNotMoveable()
+end
+
 function toggle(thing)
     if not thing or not thing:isItem() then
         return
@@ -149,8 +158,10 @@ local function onOpcode(proto, code, buffer)
     end
 
     local slots = {}
-    for _, slot in ipairs(payload.s or {}) do
-        slots[slot] = true
+    if type(payload.s) == 'table' then
+        for _, slot in ipairs(payload.s) do
+            slots[slot] = true
+        end
     end
     protectedSlots[payload.c] = slots
 

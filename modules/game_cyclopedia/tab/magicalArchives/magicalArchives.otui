@@ -3,13 +3,13 @@ ArchiveSpellLabel < UIWidget
   height: 20
   text-align: left
   text-offset: 5 3
-  color: #C0C0C0
+  color: $textColor
   background-color: alpha
   focusable: true
   phantom: false
 
   $focus:
-    background-color: #ffffff22
+    background-color: $hoverOverlay
     color: #F6F6F6
 
   $hover !focus:
@@ -24,7 +24,7 @@ ArchiveDetailRow < Panel
     anchors.top: parent.top
     width: 110
     font: verdana-11px-antialised
-    color: #909090
+    color: $textDim
 
   Label
     id: value
@@ -32,7 +32,7 @@ ArchiveDetailRow < Panel
     anchors.right: parent.right
     anchors.top: parent.top
     font: verdana-11px-antialised
-    color: #C0C0C0
+    color: $textColor
 
 UIWidget
   id: Cat5
@@ -110,7 +110,7 @@ UIWidget
         margin-left: 10
         margin-top: 3
         font: verdana-11px-antialised
-        color: #C0C0C0
+        color: $textColor
 
       Panel
         id: DetailRows

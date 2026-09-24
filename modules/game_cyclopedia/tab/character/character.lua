@@ -465,7 +465,7 @@ function Cyclopedia.loadCharacterRecentKills(data)
     UI.RecentKills.ListBase.List:destroyChildren()
 
     if not table.empty(data) then
-        local color = "#484848"
+        local color = g_ui.getVariable('panelFillLight')
 
         for i = 1, #data do
             local entry = data[i]
@@ -520,7 +520,7 @@ function Cyclopedia.loadCharacterRecentDeaths(data)
     UI.RecentDeaths.ListBase.List:destroyChildren()
 
     if not table.empty(data) then
-        local color = "#484848"
+        local color = g_ui.getVariable('panelFillLight')
 
         for i = 1, #data do
             local entry = data[i]
@@ -664,7 +664,7 @@ function Cyclopedia.loadCharacterCombatStats(data, mitigation, additionalSkillsA
     if skill > 0 then
         UI.CombatStats.criticalChance.value:setColor("#44AD25")
     else
-        UI.CombatStats.criticalChance.value:setColor("#C0C0C0")
+        UI.CombatStats.criticalChance.value:setColor(g_ui.getVariable('textColor'))
     end
 
     -- Critical Damage
@@ -674,7 +674,7 @@ function Cyclopedia.loadCharacterCombatStats(data, mitigation, additionalSkillsA
     if skill > 0 then
         UI.CombatStats.criticalDamage.value:setColor("#44AD25")
     else
-        UI.CombatStats.criticalDamage.value:setColor("#C0C0C0")
+        UI.CombatStats.criticalDamage.value:setColor(g_ui.getVariable('textColor'))
     end
 
     -- Life Leech Amount
@@ -684,7 +684,7 @@ function Cyclopedia.loadCharacterCombatStats(data, mitigation, additionalSkillsA
         UI.CombatStats.lifeLeech.value:setColor("#44AD25")
         UI.CombatStats.lifeLeech.value:setText(string.format("%.2f%%", skill / 100))
     else
-        UI.CombatStats.lifeLeech.value:setColor("#C0C0C0")
+        UI.CombatStats.lifeLeech.value:setColor(g_ui.getVariable('textColor'))
         UI.CombatStats.lifeLeech.value:setText(string.format("%d%%", skill))
     end
 
@@ -695,7 +695,7 @@ function Cyclopedia.loadCharacterCombatStats(data, mitigation, additionalSkillsA
         UI.CombatStats.manaLeech.value:setColor("#44AD25")
         UI.CombatStats.manaLeech.value:setText(string.format("%.2f%%", skill / 100))
     else
-        UI.CombatStats.manaLeech.value:setColor("#C0C0C0")
+        UI.CombatStats.manaLeech.value:setColor(g_ui.getVariable('textColor'))
         UI.CombatStats.manaLeech.value:setText(string.format("%d%%", skill))
     end
 
@@ -740,13 +740,13 @@ function Cyclopedia.loadCharacterCombatStats(data, mitigation, additionalSkillsA
 
             local name = g_ui.createWidget("SkillNameLabel", widget)
             name:setText(specialName[skillId])
-            name:setColor("#C0C0C0")
+            name:setColor(g_ui.getVariable('textColor'))
 
             local value = g_ui.createWidget("SkillValueLabel", widget)
             value:setText(string.format("%.2f%%", percent / 100))
-            value:setColor("#C0C0C0")
+            value:setColor(g_ui.getVariable('textColor'))
             value:setMarginRight(2)
-            value:setColor("#C0C0C0")
+            value:setColor(g_ui.getVariable('textColor'))
             firstSpecial = firstSpecial and false
         end
     end
@@ -810,7 +810,7 @@ function Cyclopedia.loadCharacterGeneralStats(data, skills)
     if data.speed > 0 then
         UI.CharacterStats.speed.value:setColor("#44AD25")
     else
-        UI.CharacterStats.speed.value:setColor("#C0C0C0")
+        UI.CharacterStats.speed.value:setColor(g_ui.getVariable('textColor'))
     end
 
     Cyclopedia.setCharacterSkillValue("speed", comma_value(math.floor(data.speed)))
@@ -1189,7 +1189,7 @@ function Cyclopedia.createCharacterDescription()
         local widget = g_ui.createWidget("UIWidget", UI.InfoBase.DetailsBase.List)
         for key, value in pairs(description) do
             widget:setText(key .. ": " .. value)
-            widget:setColor("#C0C0C0")
+            widget:setColor(g_ui.getVariable('textColor'))
         end
         widget:setTextWrap(true)
     end

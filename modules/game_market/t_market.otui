@@ -1,6 +1,6 @@
 DatailsLabel < UILabel
   width: 520
-  color: #c0c0c0
+  color: $textColor
   font: Verdana Bold-11px
   margin-left: 6
   margin-top: 1
@@ -13,7 +13,7 @@ CategoryItemListLabel < Label
   background-color: alpha
   text-offset: 1 -1
   focusable: true
-  color: #c0c0c0
+  color: $textColor
 
 StatisticWidget < UIWidget
   size: 300 65
@@ -23,7 +23,7 @@ StatisticWidget < UIWidget
     id: header
     anchors.top: parent.top
     anchors.left: parent.left
-    color: #c0c0c0
+    color: $textColor
     font: Verdana Bold-11px
     text-auto-resize: true
     margin-left: 3
@@ -34,7 +34,7 @@ StatisticWidget < UIWidget
     anchors.top: prev.bottom
     anchors.left: parent.left
     margin-left: 11
-    color: #c0c0c0
+    color: $textColor
     font: Verdana Bold-11px
     text-auto-resize: true
     margin-top: -1
@@ -45,7 +45,7 @@ StatisticWidget < UIWidget
     anchors.top: prev.bottom
     anchors.left: parent.left
     margin-left: 11
-    color: #c0c0c0
+    color: $textColor
     font: Verdana Bold-11px
     text-auto-resize: true
     margin-top: -1
@@ -56,7 +56,7 @@ StatisticWidget < UIWidget
     anchors.top: prev.bottom
     anchors.left: parent.left
     margin-left: 11
-    color: #c0c0c0
+    color: $textColor
     font: Verdana Bold-11px
     text-auto-resize: true
     margin-top: -1
@@ -67,7 +67,7 @@ StatisticWidget < UIWidget
     anchors.top: prev.bottom
     anchors.left: parent.left
     margin-left: 11
-    color: #c0c0c0
+    color: $textColor
     font: Verdana Bold-11px
     text-auto-resize: true
     margin-top: -1
@@ -82,7 +82,7 @@ MarketHistoryWidget < UIWidget
     anchors.left: parent.left
     text-align: left
     text-offset: 1 -1
-    color: #c0c0c0
+    color: $textColor
     font: Verdana Bold-11px
 
   UIWidget
@@ -96,7 +96,7 @@ MarketHistoryWidget < UIWidget
     id: amount
     size: 54 16
     text-align: right
-    color: #c0c0c0
+    color: $textColor
     font: Verdana Bold-11px
     anchors.top: parent.top
     anchors.left: prev.right
@@ -118,7 +118,7 @@ MarketHistoryWidget < UIWidget
     id: piecePrice
     size: 78 16
     text-align: right
-    color: #c0c0c0
+    color: $textColor
     font: Verdana Bold-11px
     anchors.top: parent.top
     anchors.left: prev.right
@@ -140,7 +140,7 @@ MarketHistoryWidget < UIWidget
     id: totalPrice
     size: 78 16
     text-align: right
-    color: #c0c0c0
+    color: $textColor
     font: Verdana Bold-11px
     anchors.top: parent.top
     anchors.left: prev.right
@@ -164,7 +164,7 @@ MarketHistoryWidget < UIWidget
     anchors.left: prev.right
     text-align: left
     text-offset: 2 -1
-    color: #c0c0c0
+    color: $textColor
     font: Verdana Bold-11px
 
   UIWidget
@@ -181,7 +181,7 @@ MarketHistoryWidget < UIWidget
     anchors.left: prev.right
     text-align: left
     text-offset: 2 -1
-    color: #c0c0c0
+    color: $textColor
     font: Verdana Bold-11px
 
 MarketCurrentWidget < UIWidget
@@ -194,7 +194,7 @@ MarketCurrentWidget < UIWidget
     anchors.left: parent.left
     text-align: left
     text-offset: 1 -1
-    color: #c0c0c0
+    color: $textColor
     font: Verdana Bold-11px
 
   UIWidget
@@ -208,7 +208,7 @@ MarketCurrentWidget < UIWidget
     id: amount
     size: 54 16
     text-align: right
-    color: #c0c0c0
+    color: $textColor
     font: Verdana Bold-11px
     anchors.top: parent.top
     anchors.left: prev.right
@@ -230,7 +230,7 @@ MarketCurrentWidget < UIWidget
     id: piecePrice
     size: 78 16
     text-align: right
-    color: #c0c0c0
+    color: $textColor
     font: Verdana Bold-11px
     anchors.top: parent.top
     anchors.left: prev.right
@@ -252,7 +252,7 @@ MarketCurrentWidget < UIWidget
     id: totalPrice
     size: 78 16
     text-align: right
-    color: #c0c0c0
+    color: $textColor
     font: Verdana Bold-11px
     anchors.top: parent.top
     anchors.left: prev.right
@@ -276,7 +276,7 @@ MarketCurrentWidget < UIWidget
     anchors.left: prev.right
     text-align: left
     text-offset: 2 -1
-    color: #c0c0c0
+    color: $textColor
     font: Verdana Bold-11px
 
 MarketOfferWidget < UIWidget
@@ -288,7 +288,7 @@ MarketOfferWidget < UIWidget
     anchors.left: parent.left
     text-align: left
     text-offset: 1 -1
-    color: #c0c0c0
+    color: $textColor
     font: Verdana Bold-11px
 
   UIWidget
@@ -302,7 +302,7 @@ MarketOfferWidget < UIWidget
     id: amount
     size: 122 16
     text-align: right
-    color: #c0c0c0
+    color: $textColor
     font: Verdana Bold-11px
     anchors.top: parent.top
     anchors.left: prev.right
@@ -324,7 +324,7 @@ MarketOfferWidget < UIWidget
     id: piecePrice
     size: 122 16
     text-align: right
-    color: #c0c0c0
+    color: $textColor
     font: Verdana Bold-11px
     anchors.top: parent.top
     anchors.left: prev.right
@@ -346,7 +346,7 @@ MarketOfferWidget < UIWidget
     id: totalPrice
     size: 122 16
     text-align: right
-    color: #c0c0c0
+    color: $textColor
     font: Verdana Bold-11px
     anchors.top: parent.top
     anchors.left: prev.right
@@ -370,7 +370,7 @@ MarketOfferWidget < UIWidget
     anchors.left: prev.right
     text-align: left
     text-offset: 2 -1
-    color: #c0c0c0
+    color: $textColor
     font: Verdana Bold-11px
 
 MarketItemList < UIWidget
@@ -418,7 +418,7 @@ MarketItemList < UIWidget
     size: 108 32
     !text: tr("Unknow")
     font: Verdana Bold-11px
-    color: #c0c0c0
+    color: $textColor
     anchors.top: parent.top
     anchors.left: prev.right
     text-wrap: true
@@ -430,7 +430,7 @@ MarketItemList < UIWidget
   UIWidget
     id: grayHover
     size: 146 36
-    background-color: #363636
+    background-color: $panelFill
     opacity: 0.5
     anchors.left: parent.left
     phantom: true
@@ -449,7 +449,7 @@ MarketMainWindow < Panel
     anchors.top: parent.top
     anchors.left: parent.left
     vertical-scrollbar: categoryScroll
-    background-color: #404040
+    background-color: $panelFillRaised
     border-width: 1
     border-color-top: #141414
     border-color-left: #141414
@@ -479,7 +479,7 @@ MarketMainWindow < Panel
     margin-top: 30
     !text: tr('Level')
     font: cipsoftFont
-    color: #dfdfdfff
+    color: $textBright
     @onClick: modules.game_market.onSortMarketFields(self, self:isChecked())
 
   Button
@@ -490,7 +490,7 @@ MarketMainWindow < Panel
     margin-left: 5
     !text: tr('Voc.')
     font: cipsoftFont
-    color: #dfdfdfff
+    color: $textBright
     @onClick: modules.game_market.onSortMarketFields(self, self:isChecked())
 
   Button
@@ -501,7 +501,7 @@ MarketMainWindow < Panel
     margin-left: 5
     !text: tr('1H')
     font: cipsoftFont
-    color: #dfdfdfff
+    color: $textBright
     enabled: false
     @onClick: modules.game_market.onSortMarketFields(self, self:isChecked())
 
@@ -513,7 +513,7 @@ MarketMainWindow < Panel
     margin-left: 5
     !text: tr('2H')
     font: cipsoftFont
-    color: #dfdfdfff
+    color: $textBright
     enabled: false
     @onClick: modules.game_market.onSortMarketFields(self, self:isChecked())
 
@@ -541,7 +541,7 @@ MarketMainWindow < Panel
     !text: tr('Show Locker only')
     font: Verdana Bold-11px
     text-auto-resize: true
-    color: #C0C0C0
+    color: $textColor
     text-offset: 14 -2
     anchors.left: parent.left
     anchors.top: prev.bottom
@@ -551,7 +551,7 @@ MarketMainWindow < Panel
     change-cursor-image: false
 
     $hover !disabled:
-      color: #c0c0c0
+      color: $textColor
 
   Label
     anchors.top: prev.bottom
@@ -560,7 +560,7 @@ MarketMainWindow < Panel
     !text: tr('Items:')
     text-auto-resize: true
     font: Verdana Bold-11px
-    color: #C0C0C0
+    color: $textColor
 
   TextList
     id: itemList
@@ -570,7 +570,7 @@ MarketMainWindow < Panel
     margin-top: 3
     text-wrap: true
     vertical-scrollbar: itemListScroll
-    background-color: #404040
+    background-color: $panelFillRaised
     border-width: 1
     border-color-top: #141414
     border-color-left: #141414
@@ -620,7 +620,7 @@ MarketMainWindow < Panel
     !text: tr('Search:')
     text-auto-resize: true
     font: Verdana Bold-11px
-    color: #C0C0C0
+    color: $textColor
 
   TextEdit
     id: searchText
@@ -664,7 +664,7 @@ MarketMainWindow < Panel
       !text: tr('Details:')
       text-auto-resize: true
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
 
     TextList
       id: detailsList
@@ -673,7 +673,7 @@ MarketMainWindow < Panel
       anchors.left: parent.left
       margin-top: 12
       vertical-scrollbar: detailsListScroll
-      background-color: #404040
+      background-color: $panelFillRaised
       border-width: 1
       border-color-top: #141414
       border-color-left: #141414
@@ -700,7 +700,7 @@ MarketMainWindow < Panel
       !text: tr('Statistics:')
       text-auto-resize: true
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
 
     TextList
       id: statisticsList
@@ -709,7 +709,7 @@ MarketMainWindow < Panel
       anchors.left: parent.left
       margin-top: 12
       vertical-scrollbar: statisticsListScroll
-      background-color: #404040
+      background-color: $panelFillRaised
       border-width: 1
       border-color-top: #141414
       border-color-left: #141414
@@ -746,7 +746,7 @@ MarketMainWindow < Panel
       !text: tr('Sell Offers:')
       text-auto-resize: true
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
 
     Label
       id: amountLabel
@@ -756,7 +756,7 @@ MarketMainWindow < Panel
       !text: tr('Amount:')
       text-auto-resize: true
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
 
     Label
       id: amountSell
@@ -767,7 +767,7 @@ MarketMainWindow < Panel
       !text: tr('0')
       text-auto-resize: true
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
       text-align: right
       text-auto-resize: true
 
@@ -792,7 +792,7 @@ MarketMainWindow < Panel
       !text: tr('Total:')
       text-auto-resize: true
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
 
     Label
       id: totalValue
@@ -803,7 +803,7 @@ MarketMainWindow < Panel
       !text: tr('0')
       text-auto-resize: true
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
 
     Button
       id: sellAcceptButton
@@ -812,7 +812,7 @@ MarketMainWindow < Panel
       anchors.right: parent.right
       !text: tr('Accept')
       font: cipsoftFont
-      color: #dfdfdfff
+      color: $textBright
       enabled: false
       @onClick: modules.game_market.onAcceptSellOffer()
 
@@ -834,7 +834,7 @@ MarketMainWindow < Panel
       vertical-scrollbar: sellOffersListScroll
       text-wrap: true
       keep-scroll-range: true
-      background-color: #404040
+      background-color: $panelFillRaised
       border-width: 1
       border-color-top: #141414
       border-color-left: #141414
@@ -857,7 +857,7 @@ MarketMainWindow < Panel
       id: nameButton
       size: 243 15
       text: Name
-      color: #C0C0C0
+      color: $textColor
       font: Verdana Bold-11px
       text-offset: 1 -1
       text-align: leftCenter
@@ -867,10 +867,10 @@ MarketMainWindow < Panel
       margin-left: 1
       border-width-bottom: 1
       border-color-bottom: #292a29
-      background-color: #363636
+      background-color: $panelFill
       opacity: 1.0
       $pressed:
-        color: #dfdfdf88
+        color: $textDisabled
         opacity: 0.8
 
     UIWidget
@@ -885,7 +885,7 @@ MarketMainWindow < Panel
       size: 128 15
       text: Amount
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
       text-offset: 34 -1
       anchors.top: sellOffersList.top
       anchors.left: prev.right
@@ -893,10 +893,10 @@ MarketMainWindow < Panel
       margin-left: 2
       border-width-bottom: 1
       border-color-bottom: #292a29
-      background-color: #363636
+      background-color: $panelFill
       opacity: 1.0
       $pressed:
-        color: #dfdfdf88
+        color: $textDisabled
         opacity: 0.8
 
     UIWidget
@@ -911,7 +911,7 @@ MarketMainWindow < Panel
       size: 128 15
       text: Piece Price
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
       text-offset: 23 -1
       anchors.top: sellOffersList.top
       anchors.left: prev.right
@@ -919,10 +919,10 @@ MarketMainWindow < Panel
       margin-left: 2
       border-width-bottom: 1
       border-color-bottom: #292a29
-      background-color: #363636
+      background-color: $panelFill
       opacity: 1.0
       $pressed:
-        color: #dfdfdf88
+        color: $textDisabled
         opacity: 0.8
 
     UIWidget
@@ -937,7 +937,7 @@ MarketMainWindow < Panel
       size: 128 15
       text: Total Price
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
       text-offset: 24 -1
       anchors.top: sellOffersList.top
       anchors.left: prev.right
@@ -945,10 +945,10 @@ MarketMainWindow < Panel
       margin-left: 2
       border-width-bottom: 1
       border-color-bottom: #292a29
-      background-color: #363636
+      background-color: $panelFill
       opacity: 1.0
       $pressed:
-        color: #dfdfdf88
+        color: $textDisabled
         opacity: 0.8
 
     UIWidget
@@ -963,7 +963,7 @@ MarketMainWindow < Panel
       size: 150 15
       text: Ends At
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
       text-offset: 1 -1
       text-align: leftCenter
       anchors.top: sellOffersList.top
@@ -972,10 +972,10 @@ MarketMainWindow < Panel
       margin-left: 2
       border-width-bottom: 1
       border-color-bottom: #292a29
-      background-color: #363636
+      background-color: $panelFill
       opacity: 1.0
       $pressed:
-        color: #dfdfdf88
+        color: $textDisabled
         opacity: 0.8
     // HEADER
     VerticalScrollBar
@@ -998,7 +998,7 @@ MarketMainWindow < Panel
       !text: tr('Buy Offers:')
       text-auto-resize: true
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
 
     Label
       id: amountBuyLabel
@@ -1008,7 +1008,7 @@ MarketMainWindow < Panel
       !text: tr('Amount:')
       text-auto-resize: true
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
 
     Label
       id: amountBuy
@@ -1020,7 +1020,7 @@ MarketMainWindow < Panel
       text-align: right
       text-auto-resize: true
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
 
     HorizontalScrollBar
       id: amountBuyScrollBar
@@ -1043,7 +1043,7 @@ MarketMainWindow < Panel
       !text: tr('Total:')
       text-auto-resize: true
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
 
     Label
       id: totalSellValue
@@ -1054,7 +1054,7 @@ MarketMainWindow < Panel
       !text: tr('0')
       text-auto-resize: true
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
 
     Button
       id: buyAcceptButton
@@ -1064,7 +1064,7 @@ MarketMainWindow < Panel
       margin-top: 12
       !text: tr('Accept')
       font: cipsoftFont
-      color: #dfdfdfff
+      color: $textBright
       enabled: false
       @onClick: modules.game_market.onAcceptBuyOffer()
 
@@ -1086,7 +1086,7 @@ MarketMainWindow < Panel
       vertical-scrollbar: buyOffersListScroll
       keep-scroll-range: true
       text-wrap: true
-      background-color: #404040
+      background-color: $panelFillRaised
       border-width: 1
       border-color-top: #141414
       border-color-left: #141414
@@ -1109,7 +1109,7 @@ MarketMainWindow < Panel
       id: nameButton
       size: 243 15
       text: Name
-      color: #C0C0C0
+      color: $textColor
       font: Verdana Bold-11px
       text-offset: 1 -1
       text-align: leftCenter
@@ -1119,10 +1119,10 @@ MarketMainWindow < Panel
       margin-left: 1
       border-width-bottom: 1
       border-color-bottom: #292a29
-      background-color: #363636
+      background-color: $panelFill
       opacity: 1.0
       $pressed:
-        color: #dfdfdf88
+        color: $textDisabled
         opacity: 0.8
 
     UIWidget
@@ -1137,7 +1137,7 @@ MarketMainWindow < Panel
       size: 128 15
       text: Amount
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
       text-offset: 34 -1
       anchors.top: buyOffersList.top
       anchors.left: prev.right
@@ -1145,10 +1145,10 @@ MarketMainWindow < Panel
       margin-left: 2
       border-width-bottom: 1
       border-color-bottom: #292a29
-      background-color: #363636
+      background-color: $panelFill
       opacity: 1.0
       $pressed:
-        color: #dfdfdf88
+        color: $textDisabled
         opacity: 0.8
 
     UIWidget
@@ -1163,7 +1163,7 @@ MarketMainWindow < Panel
       size: 128 15
       text: Piece Price
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
       text-offset: 23 -1
       anchors.top: buyOffersList.top
       anchors.left: prev.right
@@ -1171,10 +1171,10 @@ MarketMainWindow < Panel
       margin-left: 2
       border-width-bottom: 1
       border-color-bottom: #292a29
-      background-color: #363636
+      background-color: $panelFill
       opacity: 1.0
       $pressed:
-        color: #dfdfdf88
+        color: $textDisabled
         opacity: 0.8
 
     UIWidget
@@ -1189,7 +1189,7 @@ MarketMainWindow < Panel
       size: 128 15
       text: Total Price
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
       text-offset: 24 -1
       anchors.top: buyOffersList.top
       anchors.left: prev.right
@@ -1197,10 +1197,10 @@ MarketMainWindow < Panel
       margin-left: 2
       border-width-bottom: 1
       border-color-bottom: #292a29
-      background-color: #363636
+      background-color: $panelFill
       opacity: 1.0
       $pressed:
-        color: #dfdfdf88
+        color: $textDisabled
         opacity: 0.8
 
     UIWidget
@@ -1215,7 +1215,7 @@ MarketMainWindow < Panel
       size: 150 15
       text: Ends At
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
       text-offset: 1 -1
       text-align: leftCenter
       anchors.top: buyOffersList.top
@@ -1224,10 +1224,10 @@ MarketMainWindow < Panel
       margin-left: 2
       border-width-bottom: 1
       border-color-bottom: #292a29
-      background-color: #363636
+      background-color: $panelFill
       opacity: 1.0
       $pressed:
-        color: #dfdfdf88
+        color: $textDisabled
         opacity: 0.8
 
     VerticalScrollBar
@@ -1248,7 +1248,7 @@ MarketMainWindow < Panel
       !text: tr('Create Offer:')
       text-auto-resize: true
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
 
     CheckBox
       id: createOfferSell
@@ -1256,7 +1256,7 @@ MarketMainWindow < Panel
       !text: tr('Sell')
       font: Verdana Bold-11px
       text-auto-resize: true
-      color: #C0C0C0
+      color: $textColor
       text-offset: 16 -2
       anchors.left: parent.left
       anchors.top: prev.bottom
@@ -1267,7 +1267,7 @@ MarketMainWindow < Panel
       @onClick: modules.game_market.changeOfferType(self, true)
 
       $hover !disabled:
-        color: #c0c0c0
+        color: $textColor
 
     CheckBox
       id: createOfferBuy
@@ -1275,7 +1275,7 @@ MarketMainWindow < Panel
       !text: tr('Buy')
       font: Verdana Bold-11px
       text-auto-resize: true
-      color: #C0C0C0
+      color: $textColor
       text-offset: 16 -2
       anchors.left: parent.left
       anchors.top: prev.bottom
@@ -1286,7 +1286,7 @@ MarketMainWindow < Panel
       @onClick: modules.game_market.changeOfferType(self, false)
 
       $hover !disabled:
-        color: #c0c0c0
+        color: $textColor
 
     Label
       id: createOfferAmount
@@ -1296,7 +1296,7 @@ MarketMainWindow < Panel
       !text: tr('Amount: 0')
       text-auto-resize: true
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
 
     HorizontalScrollBar
       id: amountCreateScrollBar
@@ -1320,7 +1320,7 @@ MarketMainWindow < Panel
       !text: tr('Piece Price:')
       text-auto-resize: true
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
 
     TextEdit
       id: piecePriceCreate
@@ -1346,7 +1346,7 @@ MarketMainWindow < Panel
       !text: tr('Gross Profit:')
       text-auto-resize: true
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
 
     Label
       id: grossAmount
@@ -1356,7 +1356,7 @@ MarketMainWindow < Panel
       !text: tr('0')
       text-auto-resize: true
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
 
     Panel
       id: grossCoin
@@ -1373,7 +1373,7 @@ MarketMainWindow < Panel
       !text: tr('Fee:')
       text-auto-resize: true
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
 
     Label
       id: feeAmount
@@ -1383,7 +1383,7 @@ MarketMainWindow < Panel
       !text: tr('0')
       text-auto-resize: true
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
 
     Panel
       id: feeCoin
@@ -1409,7 +1409,7 @@ MarketMainWindow < Panel
       !text: tr('Total Profit:')
       text-auto-resize: true
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
 
     Label
       id: profitAmount
@@ -1419,7 +1419,7 @@ MarketMainWindow < Panel
       !text: tr('0')
       text-auto-resize: true
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
 
     Panel
       id: profitCoin
@@ -1434,7 +1434,7 @@ MarketMainWindow < Panel
       !text: tr('Anonymous')
       font: Verdana Bold-11px
       text-auto-resize: true
-      color: #C0C0C0
+      color: $textColor
       text-offset: 14 -2
       anchors.left: profitLabel.right
       anchors.top: profitLabel.bottom
@@ -1445,7 +1445,7 @@ MarketMainWindow < Panel
       change-cursor-image: false
 
       $hover !disabled:
-        color: #c0c0c0
+        color: $textColor
 
     Button
       id: createButton
@@ -1455,7 +1455,7 @@ MarketMainWindow < Panel
       enabled: false
       !text: tr('Create')
       font: cipsoftFont
-      color: #dfdfdfff
+      color: $textBright
       @onClick: modules.game_market.createMarketOffer()
 
     Button
@@ -1500,7 +1500,7 @@ MarketMainWindow < Panel
       margin-right: 5
       margin-top: 3
       text-auto-resize: true
-      color: #c0c0c0
+      color: $textColor
       font: Verdana Bold-11px
       tooltip-font: Verdana Bold-11px-wheel
 
@@ -1526,7 +1526,7 @@ MarketMainWindow < Panel
       margin-right: 5
       margin-top: 3
       text-auto-resize: true
-      color: #c0c0c0
+      color: $textColor
       font: Verdana Bold-11px
       tooltip-font: Verdana Bold-11px-wheel
 
@@ -1560,7 +1560,7 @@ MarketMainWindow < Panel
     visible: true
     !text: tr('Close')
     font: cipsoftFont
-    color: #dfdfdfff
+    color: $textBright
     size: 75 20
     @onClick: closeMarket()
 
@@ -1570,7 +1570,7 @@ MarketMainWindow < Panel
     anchors.right: prev.left
     !text: tr('My Offers')
     font: cipsoftFont
-    color: #dfdfdfff
+    color: $textBright
     size: 75 20
     margin-right: 5
     @onClick: myOffersButton(self)
@@ -1581,7 +1581,7 @@ MarketMainWindow < Panel
     anchors.right: prev.left
     !text: tr('Details')
     font: cipsoftFont
-    color: #dfdfdfff
+    color: $textBright
     size: 75 20
     margin-right: 5
     @onClick: detailsButton()
@@ -1592,7 +1592,7 @@ MarketMainWindow < Panel
     anchors.right: prev.left
     !text: tr('Offers')
     font: cipsoftFont
-    color: #dfdfdfff
+    color: $textBright
     size: 75 20
     margin-right: 5
     @onClick: offersButton()
@@ -1627,7 +1627,7 @@ MarketHistory < Panel
       !text: tr('Sell Offers (0):')
       font: Verdana Bold-11px
       text-auto-resize: true
-      color: #C0C0C0
+      color: $textColor
 
     // começo
     TextList
@@ -1640,7 +1640,7 @@ MarketHistory < Panel
       vertical-scrollbar: sellOffersListScroll
       text-wrap: true
       keep-scroll-range: true
-      background-color: #404040
+      background-color: $panelFillRaised
       border-width: 1
       border-color-top: #141414
       border-color-left: #141414
@@ -1660,7 +1660,7 @@ MarketHistory < Panel
       id: itemButton
       size: 502 15
       text: Item
-      color: #C0C0C0
+      color: $textColor
       font: Verdana Bold-11px
       text-offset: 1 -1
       text-align: leftCenter
@@ -1670,10 +1670,10 @@ MarketHistory < Panel
       margin-left: 1
       border-width-bottom: 1
       border-color-bottom: #292a29
-      background-color: #363636
+      background-color: $panelFill
       opacity: 1.0
       $pressed:
-        color: #dfdfdf88
+        color: $textDisabled
         opacity: 0.8
 
     UIWidget
@@ -1688,7 +1688,7 @@ MarketHistory < Panel
       size: 59 15
       text: Amount
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
       text-offset: 4 -1
       text-align: leftCenter
       anchors.top: sellOffersList.top
@@ -1697,10 +1697,10 @@ MarketHistory < Panel
       margin-left: 2
       border-width-bottom: 1
       border-color-bottom: #292a29
-      background-color: #363636
+      background-color: $panelFill
       opacity: 1.0
       $pressed:
-        color: #dfdfdf88
+        color: $textDisabled
         opacity: 0.8
 
     UIWidget
@@ -1715,7 +1715,7 @@ MarketHistory < Panel
       size: 84 15
       text: Piece Price
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
       text-offset: 7 -1
       text-align: leftCenter
       anchors.top: sellOffersList.top
@@ -1724,10 +1724,10 @@ MarketHistory < Panel
       margin-left: 2
       border-width-bottom: 1
       border-color-bottom: #292a29
-      background-color: #363636
+      background-color: $panelFill
       opacity: 1.0
       $pressed:
-        color: #dfdfdf88
+        color: $textDisabled
         opacity: 0.8
 
     UIWidget
@@ -1742,7 +1742,7 @@ MarketHistory < Panel
       size: 84 15
       text: Total Price
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
       text-offset: 7 -1
       text-align: leftCenter
       anchors.top: sellOffersList.top
@@ -1751,10 +1751,10 @@ MarketHistory < Panel
       margin-left: 2
       border-width-bottom: 1
       border-color-bottom: #292a29
-      background-color: #363636
+      background-color: $panelFill
       opacity: 1.0
       $pressed:
-        color: #dfdfdf88
+        color: $textDisabled
         opacity: 0.8
 
     UIWidget
@@ -1770,7 +1770,7 @@ MarketHistory < Panel
       //220 tela 1 - 149 tela 2
       text: Ended At
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
       text-offset: 1 -1
       text-align: leftCenter
       anchors.top: sellOffersList.top
@@ -1779,10 +1779,10 @@ MarketHistory < Panel
       margin-left: 2
       border-width-bottom: 1
       border-color-bottom: #292a29
-      background-color: #363636
+      background-color: $panelFill
       opacity: 1.0
       $pressed:
-        color: #dfdfdf88
+        color: $textDisabled
         opacity: 0.8
 
     UIWidget
@@ -1800,7 +1800,7 @@ MarketHistory < Panel
       size: 70 15
       text: Status
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
       text-offset: 1 -1
       text-align: leftCenter
       anchors.top: sellOffersList.top
@@ -1809,11 +1809,11 @@ MarketHistory < Panel
       margin-left: 152
       border-width-bottom: 1
       border-color-bottom: #292a29
-      background-color: #363636
+      background-color: $panelFill
       opacity: 1.0
       visible: false
       $pressed:
-        color: #dfdfdf88
+        color: $textDisabled
         opacity: 0.8
 
     VerticalScrollBar
@@ -1836,7 +1836,7 @@ MarketHistory < Panel
       !text: tr('Buy Offers (0):')
       text-auto-resize: true
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
 
     Button
       id: buyCancelOffer
@@ -1857,7 +1857,7 @@ MarketHistory < Panel
       vertical-scrollbar: buyOffersListScroll
       text-wrap: true
       keep-scroll-range: true
-      background-color: #404040
+      background-color: $panelFillRaised
       border-width: 1
       border-color-top: #141414
       border-color-left: #141414
@@ -1876,7 +1876,7 @@ MarketHistory < Panel
       id: itemButton
       size: 502 15
       text: Item
-      color: #C0C0C0
+      color: $textColor
       font: Verdana Bold-11px
       text-offset: 1 -1
       text-align: leftCenter
@@ -1886,10 +1886,10 @@ MarketHistory < Panel
       margin-left: 1
       border-width-bottom: 1
       border-color-bottom: #292a29
-      background-color: #363636
+      background-color: $panelFill
       opacity: 1.0
       $pressed:
-        color: #dfdfdf88
+        color: $textDisabled
         opacity: 0.8
 
     UIWidget
@@ -1904,7 +1904,7 @@ MarketHistory < Panel
       size: 59 15
       text: Amount
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
       text-offset: 4 -1
       text-align: leftCenter
       anchors.top: buyOffersList.top
@@ -1913,10 +1913,10 @@ MarketHistory < Panel
       margin-left: 2
       border-width-bottom: 1
       border-color-bottom: #292a29
-      background-color: #363636
+      background-color: $panelFill
       opacity: 1.0
       $pressed:
-        color: #dfdfdf88
+        color: $textDisabled
         opacity: 0.8
 
     UIWidget
@@ -1931,7 +1931,7 @@ MarketHistory < Panel
       size: 84 15
       text: Piece Price
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
       text-offset: 7 -1
       text-align: leftCenter
       anchors.top: buyOffersList.top
@@ -1940,10 +1940,10 @@ MarketHistory < Panel
       margin-left: 2
       border-width-bottom: 1
       border-color-bottom: #292a29
-      background-color: #363636
+      background-color: $panelFill
       opacity: 1.0
       $pressed:
-        color: #dfdfdf88
+        color: $textDisabled
         opacity: 0.8
 
     UIWidget
@@ -1958,7 +1958,7 @@ MarketHistory < Panel
       size: 84 15
       text: Total Price
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
       text-offset: 7 -1
       text-align: leftCenter
       anchors.top: buyOffersList.top
@@ -1967,10 +1967,10 @@ MarketHistory < Panel
       margin-left: 2
       border-width-bottom: 1
       border-color-bottom: #292a29
-      background-color: #363636
+      background-color: $panelFill
       opacity: 1.0
       $pressed:
-        color: #dfdfdf88
+        color: $textDisabled
         opacity: 0.8
 
     UIWidget
@@ -1985,7 +1985,7 @@ MarketHistory < Panel
       size: 220 15
       text: Ended At
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
       text-offset: 1 -1
       text-align: leftCenter
       anchors.top: buyOffersList.top
@@ -1994,10 +1994,10 @@ MarketHistory < Panel
       margin-left: 2
       border-width-bottom: 1
       border-color-bottom: #292a29
-      background-color: #363636
+      background-color: $panelFill
       opacity: 1.0
       $pressed:
-        color: #dfdfdf88
+        color: $textDisabled
         opacity: 0.8
 
     UIWidget
@@ -2015,7 +2015,7 @@ MarketHistory < Panel
       size: 70 15
       text: Status
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
       text-offset: 1 -1
       text-align: leftCenter
       anchors.top: buyOffersList.top
@@ -2024,11 +2024,11 @@ MarketHistory < Panel
       margin-left: 152
       border-width-bottom: 1
       border-color-bottom: #292a29
-      background-color: #363636
+      background-color: $panelFill
       opacity: 1.0
       visible: false
       $pressed:
-        color: #dfdfdf88
+        color: $textDisabled
         opacity: 0.8
 
     VerticalScrollBar
@@ -2070,7 +2070,7 @@ MarketHistory < Panel
         margin-right: 5
         margin-top: 3
         text-auto-resize: true
-        color: #c0c0c0
+        color: $textColor
         font: Verdana Bold-11px
 
     Panel
@@ -2095,7 +2095,7 @@ MarketHistory < Panel
         margin-right: 5
         margin-top: 3
         text-auto-resize: true
-        color: #c0c0c0
+        color: $textColor
         font: Verdana Bold-11px
 
     Button
@@ -2156,7 +2156,7 @@ MarketHistory < Panel
       !text: tr('Sell Offers (0):')
       font: Verdana Bold-11px
       text-auto-resize: true
-      color: #C0C0C0
+      color: $textColor
 
     TextList
       id: sellOffersList
@@ -2168,7 +2168,7 @@ MarketHistory < Panel
       vertical-scrollbar: sellOffersListScroll
       text-wrap: true
       keep-scroll-range: true
-      background-color: #404040
+      background-color: $panelFillRaised
       border-width: 1
       border-color-top: #141414
       border-color-left: #141414
@@ -2188,7 +2188,7 @@ MarketHistory < Panel
       id: itemButton
       size: 502 15
       text: Item
-      color: #C0C0C0
+      color: $textColor
       font: Verdana Bold-11px
       text-offset: 1 -1
       text-align: leftCenter
@@ -2198,7 +2198,7 @@ MarketHistory < Panel
       margin-left: 1
       border-width-bottom: 1
       border-color-bottom: #292a29
-      background-color: #363636
+      background-color: $panelFill
 
     UIWidget
       height: 14
@@ -2212,7 +2212,7 @@ MarketHistory < Panel
       size: 59 15
       text: Amount
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
       text-offset: 4 -1
       text-align: leftCenter
       anchors.top: sellOffersList.top
@@ -2221,7 +2221,7 @@ MarketHistory < Panel
       margin-left: 2
       border-width-bottom: 1
       border-color-bottom: #292a29
-      background-color: #363636
+      background-color: $panelFill
 
     UIWidget
       height: 14
@@ -2235,7 +2235,7 @@ MarketHistory < Panel
       size: 84 15
       text: Piece Price
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
       text-offset: 7 -1
       text-align: leftCenter
       anchors.top: sellOffersList.top
@@ -2244,7 +2244,7 @@ MarketHistory < Panel
       margin-left: 2
       border-width-bottom: 1
       border-color-bottom: #292a29
-      background-color: #363636
+      background-color: $panelFill
 
     UIWidget
       height: 14
@@ -2258,7 +2258,7 @@ MarketHistory < Panel
       size: 84 15
       text: Total Price
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
       text-offset: 7 -1
       text-align: leftCenter
       anchors.top: sellOffersList.top
@@ -2267,7 +2267,7 @@ MarketHistory < Panel
       margin-left: 2
       border-width-bottom: 1
       border-color-bottom: #292a29
-      background-color: #363636
+      background-color: $panelFill
 
     UIWidget
       height: 14
@@ -2281,7 +2281,7 @@ MarketHistory < Panel
       size: 149 15
       text: Ended At
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
       text-offset: 1 -1
       text-align: leftCenter
       anchors.top: sellOffersList.top
@@ -2290,7 +2290,7 @@ MarketHistory < Panel
       margin-left: 2
       border-width-bottom: 1
       border-color-bottom: #292a29
-      background-color: #363636
+      background-color: $panelFill
 
     UIWidget
       height: 14
@@ -2304,7 +2304,7 @@ MarketHistory < Panel
       size: 70 15
       text: Status
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
       text-offset: 1 -1
       text-align: leftCenter
       anchors.top: sellOffersList.top
@@ -2313,7 +2313,7 @@ MarketHistory < Panel
       margin-left: 2
       border-width-bottom: 1
       border-color-bottom: #292a29
-      background-color: #363636
+      background-color: $panelFill
 
     VerticalScrollBar
       id: sellOffersListScroll
@@ -2335,7 +2335,7 @@ MarketHistory < Panel
       !text: tr('Buy Offers (0):')
       text-auto-resize: true
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
 
     TextList
       id: buyOffersList
@@ -2347,7 +2347,7 @@ MarketHistory < Panel
       vertical-scrollbar: buyOffersListScroll
       text-wrap: true
       keep-scroll-range: true
-      background-color: #404040
+      background-color: $panelFillRaised
       border-width: 1
       border-color-top: #141414
       border-color-left: #141414
@@ -2367,7 +2367,7 @@ MarketHistory < Panel
       id: itemButton
       size: 502 15
       text: Item
-      color: #C0C0C0
+      color: $textColor
       font: Verdana Bold-11px
       text-offset: 1 -1
       text-align: leftCenter
@@ -2377,7 +2377,7 @@ MarketHistory < Panel
       margin-left: 1
       border-width-bottom: 1
       border-color-bottom: #292a29
-      background-color: #363636
+      background-color: $panelFill
 
     UIWidget
       height: 14
@@ -2391,7 +2391,7 @@ MarketHistory < Panel
       size: 59 15
       text: Amount
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
       text-offset: 4 -1
       text-align: leftCenter
       anchors.top: buyOffersList.top
@@ -2400,7 +2400,7 @@ MarketHistory < Panel
       margin-left: 2
       border-width-bottom: 1
       border-color-bottom: #292a29
-      background-color: #363636
+      background-color: $panelFill
 
     UIWidget
       height: 14
@@ -2414,7 +2414,7 @@ MarketHistory < Panel
       size: 84 15
       text: Piece Price
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
       text-offset: 7 -1
       text-align: leftCenter
       anchors.top: buyOffersList.top
@@ -2423,7 +2423,7 @@ MarketHistory < Panel
       margin-left: 2
       border-width-bottom: 1
       border-color-bottom: #292a29
-      background-color: #363636
+      background-color: $panelFill
 
     UIWidget
       height: 14
@@ -2437,7 +2437,7 @@ MarketHistory < Panel
       size: 84 15
       text: Total Price
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
       text-offset: 7 -1
       text-align: leftCenter
       anchors.top: buyOffersList.top
@@ -2446,7 +2446,7 @@ MarketHistory < Panel
       margin-left: 2
       border-width-bottom: 1
       border-color-bottom: #292a29
-      background-color: #363636
+      background-color: $panelFill
 
     UIWidget
       height: 14
@@ -2460,7 +2460,7 @@ MarketHistory < Panel
       size: 149 15
       text: Ended At
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
       text-offset: 1 -1
       text-align: leftCenter
       anchors.top: buyOffersList.top
@@ -2469,7 +2469,7 @@ MarketHistory < Panel
       margin-left: 2
       border-width-bottom: 1
       border-color-bottom: #292a29
-      background-color: #363636
+      background-color: $panelFill
 
     UIWidget
       height: 14
@@ -2483,7 +2483,7 @@ MarketHistory < Panel
       size: 70 15
       text: Status
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
       text-offset: 1 -1
       text-align: leftCenter
       anchors.top: buyOffersList.top
@@ -2492,7 +2492,7 @@ MarketHistory < Panel
       margin-left: 2
       border-width-bottom: 1
       border-color-bottom: #292a29
-      background-color: #363636
+      background-color: $panelFill
 
     VerticalScrollBar
       id: buyOffersListScroll
@@ -2533,7 +2533,7 @@ MarketHistory < Panel
         margin-right: 5
         margin-top: 3
         text-auto-resize: true
-        color: #c0c0c0
+        color: $textColor
         font: Verdana Bold-11px
 
     Panel
@@ -2558,7 +2558,7 @@ MarketHistory < Panel
         margin-right: 5
         margin-top: 3
         text-auto-resize: true
-        color: #c0c0c0
+        color: $textColor
         font: Verdana Bold-11px
 
     Button
@@ -2605,10 +2605,10 @@ NewMainWindow
   id: marketWindow
   !text: tr('Market')
   font: Verdana Bold-11-px-lowspace
-  color: #909090
-  text-offset: 0 2
+  color: $textDim
+  text-offset: 0 11
   anchors.horizontalCenter: parent.horizontalCenter
-  size: 1000 645
+  size: 1008 659
   @onEscape: modules.game_market.hide()
 
   MarketMainWindow

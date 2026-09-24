@@ -1,0 +1,32 @@
+// The stock palette. Every colour here is chrome -- text, fills, borders, selection --
+// and is what the style files and modules read as $name. Colours that carry meaning
+// (chat channel yellow, warning red, rarity, health) are NOT here on purpose; they stay
+// literal in the files that own them so every skin shows them the same.
+//
+// Loaded first because data/styles is imported in sorted name order
+// (ResourceManager::listDirectoryFiles). A skin ships its own copy of this file at
+// data/skins/<name>/styles/00-theme.otui, which shadows this one when the skin is
+// mounted in init.lua. Lua reads the same values with g_ui.getVariable('textColor').
+
+&textColor: #c0c0c0
+&textBright: #dfdfdf
+&textDim: #909090
+&textDisabled: #dfdfdf88
+&textMuted: #707070
+
+&panelFill: #363636
+&panelFillDark: #292a29
+&panelFillDeep: #141414
+&panelFillRaised: #404040
+&panelFillLight: #484848
+
+&borderColor: #747474
+&borderLight: #747575
+&separatorColor: #2a2a2a
+
+&selectionFill: #808080
+&selectionText: #f4f4f4
+&hoverOverlay: #ffffff22
+&headerBevelLight: #66666640
+&headerBevelShadow: #31313160
+&headerBorderColor: #2a2a2a

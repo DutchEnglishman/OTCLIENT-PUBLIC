@@ -33,6 +33,7 @@ function UIPopupMenu:display(pos)
     end
 
     rootWidget:addChild(self)
+    self.displayPos = pos
     self:setPosition(pos)
     self:grabMouse()
     self:focus()
@@ -45,20 +46,23 @@ function UIPopupMenu:onGeometryChange(newRect, oldRect)
     if not parent then
         return
     end
-    local ymax = parent:getY() + parent:getHeight()
-    local xmax = parent:getX() + parent:getWidth()
-    if ymax < newRect.y + newRect.height then
-        local newy = ymax - newRect.height
-        if newy > 0 and ymax > newy + newRect.height then
-            self:setY(newy)
+
+    -- A menu is positioned before its real size is known: the vertical layout only
+    -- fits it to its options a frame later, so until then it still carries the size
+    -- of its border image (256px tall on the slate skin). Re-apply the position it
+    -- was opened at on every geometry change, so it is pulled back on screen against
+    -- the size it actually has rather than against that placeholder.
+    local pos = self.displayPos
+    if pos then
+        local rect = self:getRect()
+        local x = math.max(parent:getX(), math.min(pos.x, parent:getX() + parent:getWidth() - rect.width))
+        local y = math.max(parent:getY(), math.min(pos.y, parent:getY() + parent:getHeight() - rect.height))
+        if x ~= rect.x or y ~= rect.y then
+            self:setPosition({ x = x, y = y })
+            return
         end
     end
-    if xmax < newRect.x + newRect.width then
-        local newx = xmax - newRect.width
-        if newx > 0 and xmax > newx + newRect.width then
-            self:setX(newx)
-        end
-    end
+
     self:bindRectToParent()
 end
 

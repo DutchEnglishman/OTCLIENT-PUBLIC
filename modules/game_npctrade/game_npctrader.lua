@@ -18,6 +18,19 @@ end
 -- purse next to costs denominated in task points or hourly tokens.
 local SHOP_CURRENCY_OPCODE = 203
 
+-- The bank half of the player's gold, sent straight after the goods packet on
+-- every refresh (SHOP_BANK_BALANCE_OPCODE, src/const.h). An NPC pays out of the
+-- purse first and the bank for the rest, so the goods packet's one money field
+-- is only half of what the shop will take.
+local SHOP_BANK_BALANCE_OPCODE = 204
+
+local function onShopBankBalance(protocol, code, buffer)
+    if controllerNpcTrader:isLegacyMode() and setShopBankBalance then
+        setShopBankBalance(tonumber(buffer))
+    end
+    return true
+end
+
 local function onShopCurrency(protocol, code, buffer)
     local label, balance = string.match(buffer, "^(.-)|(.*)$")
     if not label then
@@ -34,6 +47,7 @@ end
 
 function controllerNpcTrader:onInit()
     ProtocolGame.registerExtendedOpcode(SHOP_CURRENCY_OPCODE, onShopCurrency)
+    ProtocolGame.registerExtendedOpcode(SHOP_BANK_BALANCE_OPCODE, onShopBankBalance)
 end
 
 function controllerNpcTrader:onGameStart()

@@ -16,7 +16,7 @@ HistoryEntry < UIWidget
   margin-right: 8
   margin-top: 24
   size: 535 15
-  background-color: #484848
+  background-color: $panelFillLight
 
   Label
     id: historyDate
@@ -95,7 +95,7 @@ MenuCategoryStore < UIWidget
 StoreWindow
   size: 780 537
   !text: tr('Store')
-  color: #909090
+  color: $textDim
   visible: false
   @onEscape: modules.game_store.toggle()
 
@@ -393,7 +393,7 @@ StoreWindow
       anchors.right: parent.right
       anchors.bottom: parent.bottom
       margin-bottom: 22
-      background-color: #363636
+      background-color: $panelFill
       border: 1 black
       layout:
         type: verticalBox

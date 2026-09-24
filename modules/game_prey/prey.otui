@@ -600,7 +600,7 @@ PreyCreatureListItem < UICheckBox
   focusable: false
   text-align: left
   font: verdana-11px-rounded
-  color: #c0c0c0
+  color: $textColor
   border-width: 1
   border-color: alpha
   background-color: alpha
@@ -619,8 +619,11 @@ PreyCreatureListItem < UICheckBox
 
 SlotPanel < Panel
   size: 210 320
-  image-source: /images/ui/window
-  image-border: 25
+  // Was window.png at border 25 -- a window image sliced as a panel, which left the title
+  // band's accent line inside the tiled middle and repeated it down the slot as a green
+  // rule. panel_window is the same surface with no band, sliced at what it was built for.
+  image-source: /images/ui/panel_window
+  image-border: 4
   padding-top: 2
   padding-bottom: 6
   padding-left: 8

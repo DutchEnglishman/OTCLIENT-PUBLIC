@@ -42,7 +42,7 @@ MiniWindow < UIMiniWindow
       anchors.left: parent.left
       anchors.right: parent.right
       height: 1
-      background-color: #66666640
+      background-color: $headerBevelLight
       phantom: true
 
     UIWidget
@@ -51,7 +51,7 @@ MiniWindow < UIMiniWindow
       anchors.left: parent.left
       anchors.right: parent.right
       height: 1
-      background-color: #31313160
+      background-color: $headerBevelShadow
       phantom: true
 
   UIWidget
@@ -62,7 +62,7 @@ MiniWindow < UIMiniWindow
     height: 1
     margin-left: 3
     margin-right: 3
-    background-color: #2a2a2a
+    background-color: $headerBorderColor
     phantom: true
 
   UIWidget
@@ -97,7 +97,7 @@ MiniWindow < UIMiniWindow
     id: minimizeButton
     anchors.top: closeButton.top
     anchors.right: closeButton.left
-    margin-right: 1
+    margin-right: 2
     size: 12 12
     image-size: 14 14
     image-source: /images/ui/miniwindow_buttons
@@ -122,7 +122,7 @@ MiniWindow < UIMiniWindow
     id: toggleFilterButton
     anchors.top: minimizeButton.top
     anchors.right: minimizeButton.left
-    margin-right: 7
+    margin-right: 2
     margin-top: 0
     size: 12 12
     image-size: 14 14
@@ -357,7 +357,7 @@ FloatingInputWindow < UIWindow
   font: verdana-11px-antialised
   size: 200 200
   opacity: 1
-  color: #dfdfdf
+  color: $textBright
   text-offset: 0 6
   text-align: top
   image-source:   /images/ui/window_new
@@ -370,7 +370,7 @@ FloatingInputWindow < UIWindow
   visible: false
 
   $disabled:
-    color: #dfdfdf88
+    color: $textDisabled
 
   $dragging:
     opacity: 0.8

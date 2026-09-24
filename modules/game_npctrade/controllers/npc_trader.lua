@@ -182,7 +182,7 @@ function controllerNpcTrader:onTradeListRendered()
             local item = self:getRowItem(child)
             if item then
                 local canTrade = self:canTradeItem(item)
-                local color = canTrade and '#c0c0c0' or '#707070'
+                local color = canTrade and g_ui.getVariable('textColor') or g_ui.getVariable('textMuted')
                 local infoBlock = child:getChildByIndex(2)
                 if infoBlock then
                     local nameLabel = infoBlock:getChildById("nameLabel")

@@ -37,7 +37,7 @@ StoreWindow
   TextEdit
     id: transferPointsText
     size: 150 16
-    color: #c0c0c0
+    color: $textColor
     anchors.verticalCenter: recipient.verticalCenter
     anchors.right: parent.right
     margin: 7
@@ -59,7 +59,7 @@ StoreWindow
     anchors.top: prev.top
     anchors.left: prev.right
     margin-left: 7
-    color: #c0c0c0
+    color: $textColor
     font: verdana-11px-monochrome
     text-auto-resize: true
 
@@ -73,7 +73,7 @@ StoreWindow
     anchors.top: prev.bottom
     anchors.left: parent.left
     margin-top: 10
-    color: #c0c0c0
+    color: $textColor
     font: verdana-11px-monochrome
     text: Amount to gift:
     margin-left: 10
@@ -82,7 +82,7 @@ StoreWindow
     anchors.top: prev.top
     anchors.left: prev.right
     margin-left: 7
-    color: #c0c0c0
+    color: $textColor
     font: verdana-11px-monochrome
     text-auto-resize: true
 

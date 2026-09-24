@@ -32,7 +32,7 @@ UIWidget
         anchors.left: parent.left
         margin-top: 5
         margin-left: 10
-        color: #C0C0C0
+        color: $textColor
 
       TextList
         id: displayedButtonsList
@@ -44,7 +44,7 @@ UIWidget
         margin-left: 10
         margin-right: 35
         vertical-scrollbar: displayedButtonsScrollBar
-        background-color: #404040
+        background-color: $panelFillRaised
       VerticalQtScrollBar
         id: displayedButtonsScrollBar
         anchors.top: displayedButtonsList.top
@@ -113,7 +113,7 @@ UIWidget
         anchors.left: parent.left
         margin-top: 5
         margin-left: 10
-        color: #C0C0C0
+        color: $textColor
 
       TextList
         id: displayedAvailableButtonsList
@@ -125,7 +125,7 @@ UIWidget
         margin-left: 10
         margin-right: 35
         vertical-scrollbar: displayedButtonsScrollBar
-        background-color: #404040
+        background-color: $panelFillRaised
       VerticalQtScrollBar
         id: displayedButtonsScrollBar
         anchors.top: prev.top

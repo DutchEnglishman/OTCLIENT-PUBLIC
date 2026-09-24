@@ -59,6 +59,42 @@ local TRACKER_OPCODE = 59
 local tierStages = {}
 local recentKills = {}
 
+-- The creature detail screen's loot table: which items a monster drops, at
+-- what odds, and which of them this player has unlocked. Its own channel
+-- rather than the native monster-data packet's loot block, which has no field
+-- for a percentage or an unlocked flag -- see OTSERV's
+-- data/creaturescripts/scripts/others/bestiary_loot_opcode.lua for the wire
+-- format, which is also the authority on what a locked row looks like: the
+-- server sends itemId 0 and no name for one, so there is nothing here to leak.
+local BESTIARY_LOOT_OPCODE = 60
+local lootByMonster = {}
+
+function Cyclopedia.getBestiaryLoot(monsterName)
+    return monsterName and lootByMonster[monsterName:lower()] or nil
+end
+
+local function sendBestiaryLootRequest(message)
+    local protocolGame = g_game.getProtocolGame()
+    if protocolGame then
+        protocolGame:sendExtendedOpcode(BESTIARY_LOOT_OPCODE, message)
+    end
+end
+
+function Cyclopedia.requestBestiaryLoot(monsterName)
+    if monsterName and monsterName ~= "" then
+        sendBestiaryLootRequest("LOOT|" .. monsterName:lower())
+    end
+end
+
+-- mode is "stage" (open the next locked gate) or "all" (open every remaining
+-- one). The server validates the balance and re-sends the loot table on
+-- success, so there is no optimistic update to unwind on a refusal.
+function Cyclopedia.buyBestiaryLoot(monsterName, mode)
+    if monsterName and monsterName ~= "" then
+        sendBestiaryLootRequest("BUY|" .. monsterName:lower() .. "|" .. mode)
+    end
+end
+
 -- Keyed by the tier's display name, which is what the native monster-data
 -- packet carries as bestClass. Falls back to the regular-monster values if
 -- the push hasn't arrived yet.
@@ -244,6 +280,78 @@ local function onRecentKills(_protocol, opcode, buffer)
     end
 end
 
+-- LOOT|<monsterName>|<kills>|<open>|<total>|<g1,g2,g3>|<stageCost>|<allCost>|<normal>|<tainted>|<corrupted>
+-- Each row is "itemId,chance,gate,unlocked,name", name last so a comma in one
+-- could never shift the numeric fields. chance is out of 100000, which is the
+-- server's MAX_LOOTCHANCE, so a percentage is chance / 1000.
+--
+-- The three groups are the full table for each kind of kill (the server folds
+-- the variant's loot multiplier and its bonus rows in), so the same item can
+-- appear in more than one group at different odds. One gate counter covers all
+-- three: a stage reveals its rows on every page at once.
+local function parseLootRows(rowList)
+    local rows = {}
+    for record in (rowList or ""):gmatch('[^;]+') do
+        local itemId, chance, gate, unlocked, name =
+            record:match('^(%d+),(%d+),(%d+),(%d+),(.*)$')
+        if itemId then
+            rows[#rows + 1] = {
+                itemId = tonumber(itemId),
+                chance = tonumber(chance),
+                gate = tonumber(gate),
+                unlocked = unlocked == "1",
+                name = name
+            }
+        end
+    end
+    return rows
+end
+
+local function onBestiaryLoot(_protocol, opcode, buffer)
+    if opcode ~= BESTIARY_LOOT_OPCODE then
+        return
+    end
+
+    local command, monsterName, kills, open, total, gateList, stageCost, allCost,
+          normalList, taintedList, corruptedList =
+        buffer:match('^([^|]+)|([^|]*)|([^|]*)|([^|]*)|([^|]*)|([^|]*)|([^|]*)|([^|]*)|([^|]*)|([^|]*)|?(.*)$')
+    if command ~= "LOOT" or not monsterName or monsterName == "" then
+        return
+    end
+
+    local gates = {}
+    for value in gateList:gmatch('[^,]+') do
+        gates[#gates + 1] = tonumber(value)
+    end
+
+    local rows = parseLootRows(normalList)
+
+    lootByMonster[monsterName:lower()] = {
+        monsterName = monsterName:lower(),
+        killCount = tonumber(kills) or 0,
+        gatesOpen = tonumber(open) or 0,
+        gatesTotal = tonumber(total) or #gates,
+        gates = gates,
+        stageCost = tonumber(stageCost) or 0,
+        allCost = tonumber(allCost) or 0,
+        rows = rows,
+        -- Drawn as labelled sections under the normal one. Keyed by the label
+        -- the header shows, so adding a fourth variant is a row here and a row
+        -- in Cyclopedia.CreateCreatureItems' SECTIONS list.
+        sections = {
+            {title = "Normal", rows = rows},
+            {title = "Tainted", rows = parseLootRows(taintedList)},
+            {title = "Corrupted", rows = parseLootRows(corruptedList)}
+        }
+    }
+
+    -- A purchase answers on this same channel, so the open detail screen has
+    -- to redraw off the arrival rather than off the click that caused it.
+    if Cyclopedia.refreshBestiaryLoot then
+        Cyclopedia.refreshBestiaryLoot(monsterName:lower())
+    end
+end
+
 local function onTaskPoints(_protocol, opcode, buffer)
     if opcode ~= TASK_POINTS_OPCODE then
         return
@@ -313,6 +421,7 @@ function controllerCyclopedia:onInit()
     ProtocolGame.registerExtendedOpcode(TASK_POINTS_OPCODE, onTaskPoints)
     ProtocolGame.registerExtendedOpcode(TIER_STAGES_OPCODE, onTierStages)
     ProtocolGame.registerExtendedOpcode(TRACKER_OPCODE, onRecentKills)
+    ProtocolGame.registerExtendedOpcode(BESTIARY_LOOT_OPCODE, onBestiaryLoot)
 end
 
 function controllerCyclopedia:onGameStart()
@@ -587,6 +696,7 @@ function controllerCyclopedia:onTerminate()
     ProtocolGame.unregisterExtendedOpcode(TASK_POINTS_OPCODE)
     ProtocolGame.unregisterExtendedOpcode(TIER_STAGES_OPCODE)
     ProtocolGame.unregisterExtendedOpcode(TRACKER_OPCODE)
+    ProtocolGame.unregisterExtendedOpcode(BESTIARY_LOOT_OPCODE)
 
     if trackerButton then
         trackerButton:destroy()

@@ -537,8 +537,45 @@ local function applyToBoostedSlot(raceId, outfitWidget, imageWidget, fileName, t
     outfitWidget:setTooltip(tr(tooltipText, raceData.name or "Unknown"))
 end
 
+-- The Shattered Realms' login.php sends the day's pick as database rows, outfit included
+-- (OTSERV website/patch_myaac.php): an 8.60 client has no race data to look a creature up by.
+local BOOSTED_BONUSES = {
+    creature = {{'loot_bonus', 'loot'}, {'variant_bonus', 'Tainted & Corrupted chance'}},
+    boss = {{'exp_bonus', 'experience'}, {'loot_bonus', 'loot'}},
+}
+
+local function applyBoostedRow(kind, row, outfitWidget, imageWidget)
+    if type(row) ~= 'table' or (tonumber(row.looktype) or 0) == 0 then
+        return
+    end
+
+    outfitWidget:setOutfit({
+        type = tonumber(row.looktype),
+        head = tonumber(row.lookhead) or 0,
+        body = tonumber(row.lookbody) or 0,
+        legs = tonumber(row.looklegs) or 0,
+        feet = tonumber(row.lookfeet) or 0,
+        addons = tonumber(row.lookaddons) or 0,
+    })
+    outfitWidget:getCreature():setStaticWalking(1000)
+    outfitWidget:setVisible(true)
+    imageWidget:setVisible(false)
+
+    local lines = {string.format("Today's boosted %s: %s", kind, row.name or 'Unknown'), ''}
+    for _, bonus in ipairs(BOOSTED_BONUSES[kind]) do
+        lines[#lines + 1] = string.format('+%d%% %s', tonumber(row[bonus[1]]) or 0, bonus[2])
+    end
+    outfitWidget:setTooltip(table.concat(lines, '\n'))
+end
+
 function setBoostedCreatureAndBoss(data)
     if not modules.game_things.isLoaded() then
+        return
+    end
+
+    if data.creature ~= nil or data.boss ~= nil then
+        applyBoostedRow('creature', data.creature, monsterOutfit, monsterImage)
+        applyBoostedRow('boss', data.boss, bossOutfit, bossImage)
         return
     end
 

@@ -6,7 +6,7 @@ UIWidget
     !text: 'Antialiasing Mode:'
     anchors.left: parent.left
     margin-left: 18
-    color: #c0c0c0ff
+    color: $textColor
     anchors.top: parent.top
 
   QtComboBox
@@ -34,8 +34,8 @@ UIWidget
     anchors.right: parent.right
     anchors.top: prev.bottom
     margin-top: 5
-    height:55
-    
+    height:69
+
     OptionCheckBoxMarked
       id: vsync
       !text: tr('V-Sync')
@@ -46,6 +46,12 @@ UIWidget
       id: showFps
       !tooltip: tr('Show frame rate')
       !text: tr('Show frame rate')
+      anchors.top: prev.bottom
+
+    OptionCheckBoxMarked
+      id: showPing
+      !text: tr('Show ping')
+      !tooltip: tr('Display connection speed to the server (milliseconds)')
       anchors.top: prev.bottom
 
     OptionScaleScroll
@@ -123,3 +129,15 @@ UIWidget
       id: showMounts
       !text: tr('Show mounts')
       !tooltip: tr('Draw players and creatures on their mounts. Turn this off to see everyone on foot.')
+
+  SmallReversedQtPanel
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    margin-top: 7
+    height: 22
+
+    OptionCheckBox
+      id: mouseSelectionGraphics
+      !text: tr('Mouse selection graphics')
+      !tooltip: tr('Draw the crosshair square on the tile under the cursor and the yellow pulse on the thing it holds. Off hides both, whatever the Interface options say.')

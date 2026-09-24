@@ -1,0 +1,386 @@
+DungeonListLabel < UILabel
+  font: verdana-11px-monochrome
+  background-color: alpha
+  text-offset: 3 0
+  height: 20
+  focusable: true
+  phantom: false
+
+  $focus:
+    background-color: $hoverOverlay
+
+DungeonTierButton < UIButton
+  font: cipsoftFont
+  color: $textBright
+  size: 92 32
+  text-offset: 0 2
+  image-source: /images/ui/buttons
+  image-clip: 0 0 43 20
+  image-border: 1
+  padding: 4
+  focusable: false
+
+  $hover:
+    image-clip: 0 20 43 20
+
+  // The selected tier stays lit. UIButton's own $pressed only lasts while the
+  // mouse is held down, so selection is carried as a separate state the module
+  // sets with setOn().
+  $on:
+    image-clip: 0 40 43 20
+    color: #ffe680
+
+DungeonRankRow < UIWidget
+  height: 16
+  background-color: alpha
+  focusable: false
+
+  Label
+    id: rank
+    font: verdana-11px-monochrome
+    width: 22
+    anchors.left: parent.left
+    anchors.verticalCenter: parent.verticalCenter
+
+  Label
+    id: time
+    font: verdana-11px-monochrome
+    width: 52
+    text-align: right
+    anchors.right: parent.right
+    anchors.verticalCenter: parent.verticalCenter
+
+  Label
+    id: name
+    font: verdana-11px-monochrome
+    anchors.left: rank.right
+    anchors.right: time.left
+    anchors.verticalCenter: parent.verticalCenter
+
+DungeonPanelTitle < UILabel
+  font: verdana-11px-monochrome
+  color: #c0c0c0
+  height: 14
+  text-align: left
+
+MainWindow
+  id: dungeonsWindow
+  !text: tr('Dungeons')
+  size: 740 560
+  @onEscape: modules.game_dungeons.toggle()
+
+  // The dungeon's own art, drawn from the client's own data tree -- the server
+  // only ever names the dungeon. The image stays hidden for a dungeon whose
+  // banner has not been drawn yet, leaving the titled panel underneath.
+  //
+  // 104 = 82 of art + the 22 title band below it. The image is anchored to that
+  // 82 rather than filling the panel because a widget's image is stretched to
+  // its rect with no regard for aspect ratio, so anything but an exact 708x82
+  // is resampled.
+  FlatPanel
+    id: bannerPanel
+    height: 104
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: parent.top
+
+    UIWidget
+      id: bannerImage
+      height: 82
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.top: parent.top
+      phantom: true
+      visible: false
+
+    UIWidget
+      id: bannerShade
+      height: 22
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.bottom: parent.bottom
+      background-color: #00000099
+      phantom: true
+
+    Label
+      id: bannerName
+      font: verdana-11px-antialised
+      text-align: center
+      phantom: true
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.verticalCenter: bannerShade.verticalCenter
+
+  Button
+    id: closeButton
+    !text: tr('Close')
+    width: 64
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    @onClick: modules.game_dungeons.toggle()
+
+  VerticalScrollBar
+    id: dungeonsScrollBar
+    anchors.left: parent.left
+    anchors.top: bannerPanel.bottom
+    anchors.bottom: closeButton.top
+    margin-left: 150
+    margin-top: 6
+    margin-bottom: 6
+    step: 20
+    pixels-scroll: true
+
+  TextList
+    id: dungeonList
+    vertical-scrollbar: dungeonsScrollBar
+    anchors.left: parent.left
+    anchors.right: dungeonsScrollBar.left
+    anchors.top: bannerPanel.bottom
+    anchors.bottom: closeButton.top
+    margin-top: 6
+    margin-bottom: 6
+    focusable: false
+
+  // The difficulty strip. Picking a tier swaps every panel below it, so the
+  // whole detail area is re-filled from one server reply.
+  HorizontalList
+    id: tierList
+    horizontal-scrollbar: tierScrollBar
+    height: 36
+    anchors.left: dungeonsScrollBar.right
+    anchors.right: parent.right
+    anchors.top: bannerPanel.bottom
+    margin-left: 8
+    margin-top: 6
+    focusable: false
+    layout:
+      type: horizontalBox
+      spacing: 4
+
+  HorizontalScrollBar
+    id: tierScrollBar
+    anchors.left: tierList.left
+    anchors.right: tierList.right
+    anchors.top: tierList.bottom
+    step: 92
+    pixels-scroll: true
+
+  FlatPanel
+    id: reqPanel
+    width: 164
+    height: 178
+    anchors.left: tierList.left
+    anchors.top: tierScrollBar.bottom
+    margin-top: 6
+    padding: 6
+
+    DungeonPanelTitle
+      id: reqTitle
+      !text: tr('Requirements')
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.top: parent.top
+
+    Label
+      id: levelReqLabel
+      font: verdana-11px-monochrome
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.top: reqTitle.bottom
+      margin-top: 8
+
+    Label
+      id: itemReqLabel
+      font: verdana-11px-monochrome
+      color: #c0c0c0
+      !text: tr('Items to enter')
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.top: levelReqLabel.bottom
+      margin-top: 14
+
+    Item
+      id: reqItem1
+      virtual: true
+      anchors.left: parent.left
+      anchors.top: itemReqLabel.bottom
+      margin-top: 4
+
+    Item
+      id: reqItem2
+      virtual: true
+      anchors.left: reqItem1.right
+      anchors.top: reqItem1.top
+      margin-left: 6
+
+    Item
+      id: reqItem3
+      virtual: true
+      anchors.left: reqItem2.right
+      anchors.top: reqItem1.top
+      margin-left: 6
+
+    Label
+      id: reqNoteLabel
+      font: verdana-11px-monochrome
+      color: #909090
+      text-wrap: true
+      text-auto-resize: true
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.top: reqItem1.bottom
+      margin-top: 6
+
+  FlatPanel
+    id: soloPanel
+    height: 178
+    anchors.left: reqPanel.right
+    anchors.right: groupPanel.left
+    anchors.top: reqPanel.top
+    margin-left: 6
+    margin-right: 6
+    padding: 6
+
+    DungeonPanelTitle
+      id: title
+      !text: tr('Solo top runners')
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.top: parent.top
+
+    ScrollablePanel
+      id: rows
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.top: title.bottom
+      anchors.bottom: parent.bottom
+      margin-top: 4
+      focusable: false
+      layout:
+        type: verticalBox
+        spacing: 1
+
+  FlatPanel
+    id: groupPanel
+    width: 188
+    height: 178
+    anchors.right: parent.right
+    anchors.top: reqPanel.top
+    padding: 6
+
+    DungeonPanelTitle
+      id: title
+      !text: tr('Group top runners')
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.top: parent.top
+
+    ScrollablePanel
+      id: rows
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.top: title.bottom
+      anchors.bottom: parent.bottom
+      margin-top: 4
+      focusable: false
+      layout:
+        type: verticalBox
+        spacing: 1
+
+  FlatPanel
+    id: queuePanel
+    width: 164
+    anchors.left: reqPanel.left
+    anchors.top: reqPanel.bottom
+    anchors.bottom: closeButton.top
+    margin-top: 6
+    margin-bottom: 6
+    padding: 6
+
+    DungeonPanelTitle
+      id: title
+      !text: tr('Queue time')
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.top: parent.top
+
+    Label
+      id: queueLabel
+      font: verdana-11px-monochrome
+      text: --
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.top: title.bottom
+      margin-top: 6
+
+    Label
+      id: blockedLabel
+      font: verdana-11px-monochrome
+      color: #d05050
+      text-wrap: true
+      text-auto-resize: true
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.top: queueLabel.bottom
+      margin-top: 6
+
+    Button
+      id: joinButton
+      !text: tr('Join')
+      height: 24
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.bottom: parent.bottom
+      @onClick: modules.game_dungeons.join()
+
+  FlatPanel
+    id: rewardsPanel
+    anchors.left: queuePanel.right
+    anchors.right: parent.right
+    anchors.top: queuePanel.top
+    anchors.bottom: queuePanel.bottom
+    margin-left: 6
+    padding: 6
+
+    DungeonPanelTitle
+      id: bossTitle
+      !text: tr('Possible boss rewards')
+      anchors.left: parent.left
+      anchors.right: parent.horizontalCenter
+      anchors.top: parent.top
+
+    ScrollablePanel
+      id: bossRewards
+      anchors.left: parent.left
+      anchors.right: parent.horizontalCenter
+      anchors.top: bossTitle.bottom
+      anchors.bottom: parent.bottom
+      margin-top: 4
+      margin-right: 8
+      focusable: false
+      layout:
+        type: grid
+        cell-size: 34 34
+        cell-spacing: 4
+        flow: true
+
+    DungeonPanelTitle
+      id: lootTitle
+      !text: tr('Loot table')
+      anchors.left: parent.horizontalCenter
+      anchors.right: parent.right
+      anchors.top: parent.top
+
+    ScrollablePanel
+      id: loot
+      anchors.left: parent.horizontalCenter
+      anchors.right: parent.right
+      anchors.top: lootTitle.bottom
+      anchors.bottom: parent.bottom
+      margin-top: 4
+      focusable: false
+      layout:
+        type: grid
+        cell-size: 34 34
+        cell-spacing: 4
+        flow: true

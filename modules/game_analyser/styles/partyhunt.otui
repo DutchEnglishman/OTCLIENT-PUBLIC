@@ -77,7 +77,7 @@ LeaderInfo < UIWidget
     margin-top: -2
     margin-right: 2
     text-auto-resize: true
-    color: #c0c0c0
+    color: $textColor
     font: Verdana Bold-11px
   Label
     id: healing
@@ -87,7 +87,7 @@ LeaderInfo < UIWidget
     margin-top: -2
     margin-right: 2
     text-auto-resize: true
-    color: #c0c0c0
+    color: $textColor
     font: Verdana Bold-11px
 
 Info < UIWidget
@@ -99,7 +99,7 @@ Info < UIWidget
     anchors.top: parent.top
     anchors.left: parent.left
     text-auto-resize: true
-    color: #c0c0c0
+    color: $textColor
     font: Verdana Bold-11px
   UIWidget
     id: balanceIcon
@@ -160,7 +160,7 @@ Info < UIWidget
     margin-top: -2
     margin-right: 2
     text-auto-resize: true
-    color: #c0c0c0
+    color: $textColor
     font: Verdana Bold-11px
   Label
     id: healing
@@ -170,7 +170,7 @@ Info < UIWidget
     margin-top: -2
     margin-right: 2
     text-auto-resize: true
-    color: #c0c0c0
+    color: $textColor
     font: Verdana Bold-11px
 
 MiniWindow
@@ -217,7 +217,7 @@ MiniWindow
       anchors.top: parent.top
       anchors.left: parent.left
       text-auto-resize: true
-      color: #c0c0c0
+      color: $textColor
       font: Verdana Bold-11px
 
     Label
@@ -226,7 +226,7 @@ MiniWindow
       anchors.top: parent.top
       anchors.right: parent.right
       text-auto-resize: true
-      color: #c0c0c0
+      color: $textColor
       font: Verdana Bold-11px
 
     Label
@@ -236,7 +236,7 @@ MiniWindow
       anchors.left: parent.left
       margin-top: 5
       text-auto-resize: true
-      color: #c0c0c0
+      color: $textColor
       font: Verdana Bold-11px
       visible: true
 
@@ -247,7 +247,7 @@ MiniWindow
       anchors.right: parent.right
       margin-top: 5
       text-auto-resize: true
-      color: #c0c0c0
+      color: $textColor
       font: Verdana Bold-11px
       visible: true
 
@@ -258,7 +258,7 @@ MiniWindow
       anchors.left: parent.left
       margin-top: 5
       text-auto-resize: true
-      color: #c0c0c0
+      color: $textColor
       font: Verdana Bold-11px
 
     UIWidget
@@ -277,7 +277,7 @@ MiniWindow
       margin-top: 5
       margin-right: 4
       text-auto-resize: true
-      color: #c0c0c0
+      color: $textColor
       font: Verdana Bold-11px
 
     Label
@@ -287,7 +287,7 @@ MiniWindow
       anchors.left: parent.left
       margin-top: 5
       text-auto-resize: true
-      color: #c0c0c0
+      color: $textColor
       font: Verdana Bold-11px
 
     UIWidget
@@ -306,7 +306,7 @@ MiniWindow
       margin-top: 5
       margin-right: 4
       text-auto-resize: true
-      color: #c0c0c0
+      color: $textColor
       font: Verdana Bold-11px
 
     Label
@@ -316,7 +316,7 @@ MiniWindow
       anchors.left: parent.left
       margin-top: 5
       text-auto-resize: true
-      color: #c0c0c0
+      color: $textColor
       font: Verdana Bold-11px
 
     UIWidget

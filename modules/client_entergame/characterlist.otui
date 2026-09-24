@@ -10,9 +10,9 @@ CharacterWidget < UIWidget
       end
       if self.rowColor then
         if focused then
-          self:setBackgroundColor("#696767")
+          self:setBackgroundColor(g_ui.getVariable("selectionFill"))
           self:setBorderWidth(1)
-          self:setBorderColor("#696767")
+          self:setBorderColor(g_ui.getVariable("borderLight"))
         else
           self:setBackgroundColor(self.rowColor)
           self:setBorderWidth(0)
@@ -206,15 +206,15 @@ MainWindow
 
   TextList
     id: characters
-    background-color: #404040
+    background-color: $panelFillRaised
     border-width-top: 1
     border-color-top: black
     border-width-left: 1
     border-color-left: black
     border-width-bottom: 1
-    border-color-bottom: #747474
+    border-color-bottom: $borderColor
     border-width-right: 1
-    border-color-right: #747474
+    border-color-right: $borderColor
     padding: 1 1 1 1
     anchors.top: parent.top
     anchors.left: parent.left
@@ -227,10 +227,10 @@ MainWindow
     auto-focus: first
     @onSetup: |
       if g_game.getFeature(GameEnterGameShowAppearance) then
-        self:setBackgroundColor("#404040")
+        self:setBackgroundColor(g_ui.getVariable("panelFillDark"))
         self:setPaddingTop(20)
       else
-        self:setBackgroundColor("#565656")
+        self:setBackgroundColor(g_ui.getVariable("panelFillDark"))
       end
 
   UIWidget
@@ -244,7 +244,7 @@ MainWindow
     border-color-left: #1B1B1A
     border-color-right: #6b6b6b
     border-color-bottom: #6b6b6b
-    background-color: #363636
+    background-color: $panelFill
     @onSetup: |
       if not(g_game.getFeature(GameEnterGameShowAppearance)) then
         self:hide()
@@ -259,7 +259,7 @@ MainWindow
       !text: tr('Character')
       text-offset: -30 0
       font: verdana-11px-monochrome
-      color: #c0c0c0
+      color: $textColor
       image-source: /images/game/entergame/sort-button
       image-clip: 0 0 7 4
       image-size: 7 4
@@ -285,7 +285,7 @@ MainWindow
       !text: tr('Status')
       text-offset: -20 0
       font: verdana-11px-monochrome
-      color: #c0c0c0
+      color: $textColor
       image-source: /images/game/entergame/sort-button
       image-clip: 0 0 7 4
       image-size: 7 4
@@ -311,7 +311,7 @@ MainWindow
       !text: tr('Level')
       text-offset: -8 0
       font: verdana-11px-monochrome
-      color: #c0c0c0
+      color: $textColor
       image-source: /images/game/entergame/sort-button
       image-clip: 0 0 7 4
       image-size: 7 4
@@ -337,7 +337,7 @@ MainWindow
       !text: tr('Vocation')
       text-offset: -10 0
       font: verdana-11px-monochrome
-      color: #c0c0c0
+      color: $textColor
       image-source: /images/game/entergame/sort-button
       image-clip: 0 0 7 4
       image-size: 7 4
@@ -363,7 +363,7 @@ MainWindow
       !text: tr('World')
       text-offset: -85 0
       font: verdana-11px-monochrome
-      color: #c0c0c0
+      color: $textColor
       image-source: /images/game/entergame/sort-button
       image-clip: 0 0 7 4
       image-size: 7 4
@@ -659,7 +659,7 @@ MainWindow
       checked: true
       !text: tr('Show Hidden Characters')
       text-auto-resize: true
-      color: #c0c0c0
+      color: $textColor
       @onCheckChange: onShowHiddenCharacters(self, self:isChecked())
 
 
@@ -692,7 +692,7 @@ MainWindow
       margin-left: 6      
       !text: tr('Show Outfit')
       text-auto-resize: true
-      color: #c0c0c0
+      color: $textColor
       @onCheckChange: onShowOutfits(self, self:isChecked())
 
   Button

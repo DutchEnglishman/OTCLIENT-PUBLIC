@@ -18,7 +18,7 @@ TextListQuestLog < Panel
     padding: 1
     width: 10
     focusable: true
-    background-color: #404040
+    background-color: $panelFillRaised
     auto-focus: first
 
   VerticalQtScrollBar
@@ -50,7 +50,7 @@ MultiLineQuestLog < Panel
     width: 10
     focusable: false
     text-wrap: true
-    background-color: #404040
+    background-color: $panelFillRaised
 
 
   VerticalQtScrollBar
@@ -90,7 +90,7 @@ TextEditQuestLog < Panel
       image-color: gray
 
 QuestLogLabel < UIWidget
-  color: #C0C0C0
+  color: $textColor
   text-align: left
   text-offset: 15 0
   focusable: true
@@ -148,7 +148,8 @@ QuestLogTracker < MiniWindow
 
   UIButton
     id: menuButton
-    size: 14 14
+    size: 12 12
+    image-size: 14 14
     image-source: /images/ui/miniwindow_buttons
     image-clip: 112 0 14 14
 
@@ -215,7 +216,7 @@ ButtonTrackerMenuOption < UIButton
     background-color: #ffffff1a
 
   $disabled:
-    color: #c0c0c0ff
+    color: $textColor
 
 QuestTrackerLabel < Panel
   height: 20

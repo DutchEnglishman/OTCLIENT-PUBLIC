@@ -189,7 +189,18 @@ StatsBarUp < UIStatsBar
     visible: false
     !text: '9999999999/9999999999'
 
+// The bevel below is pinned to the two 27px side-panel button spacers, so its
+// lower corners sit at y=54 and y=56 -- it was drawn for a bar at least that
+// tall. Every height statsbar.lua actually offers is shorter (Large 52,
+// Default 52, Parallel 55, Compact 20), so the two verticals beside the corner
+// buttons and the little returns under them hung below the bar and over the
+// map: a 2px black line 2-4px long down each side, 34px in Compact. Clipping
+// cuts them at the bar's own edge, which keeps the frame right at any height
+// rather than re-deriving its geometry per dimension. Only the frame lives in
+// here -- the health and mana bars are siblings, not children.
 StatsBarTopWithShrink < UIWidget
+  clipping: true
+
   UIWidget
     anchors.fill: parent
     image-source: /images/ui/background
@@ -295,7 +306,7 @@ TopStatsSkillElement < UIWidget
   Label
     id: level
     !text: '99999'
-    color: #c0c0c0ff
+    color: $textColor
     text-align: right
     anchors.left: parent.left
     anchors.verticalCenter: parent.verticalCenter
@@ -1019,7 +1030,7 @@ BottomStatsSkillElement < UIWidget
   Label
     id: levelBottom
     !text: '99999'
-    color: #c0c0c0ff
+    color: $textColor
     text-align: right
     anchors.left: parent.left
     anchors.verticalCenter: parent.verticalCenter

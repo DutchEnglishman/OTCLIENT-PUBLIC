@@ -31,11 +31,32 @@ function init()
         onSizeChange = onContainerChangeSize,
         onUpdateItem = onContainerUpdateItem
     })
-    connect(Game, {
-        onGameEnd = clean()
+    -- `Game` is not a global -- no bound class goes by that name -- and clean()
+    -- was being CALLED here rather than passed, so connect() received nil twice
+    -- over and returned at its own first line (`if not object then return end`,
+    -- util.lua:44). Nothing has ever run at game end in this module. g_game is
+    -- the table the engine actually fires these on: Game::processGameEnd ->
+    -- callGlobalField("g_game", "onGameEnd").
+    connect(g_game, {
+        onGameStart = onGameStart,
+        onGameEnd = onGameEnd
     })
 
+    ContainerRestore.install()
+
     reloadContainers()
+end
+
+function onGameStart()
+    ContainerRestore.restore()
+end
+
+function onGameEnd()
+    -- Save first. It reads g_game.getContainers(), and Game::processGameEnd
+    -- only calls resetGameStates() -- which empties that -- after this signal
+    -- has returned. getCharacterName() is still set here for the same reason.
+    ContainerRestore.onGameEnd()
+    clean()
 end
 
 function terminate()
@@ -45,9 +66,12 @@ function terminate()
         onSizeChange = onContainerChangeSize,
         onUpdateItem = onContainerUpdateItem
     })
-    disconnect(Game, {
-        onGameEnd = clean()
+    disconnect(g_game, {
+        onGameStart = onGameStart,
+        onGameEnd = onGameEnd
     })
+
+    ContainerRestore.uninstall()
 end
 
 function reloadContainers()
@@ -790,10 +814,6 @@ function toggleContainerPages(containerWindow, pages)
     local pagePanel = containerWindow:getChildById('pagePanel')
     local separator = containerWindow:getChildById('separator')
     local contentsPanel = containerWindow:getChildById('contentsPanel')
-    local upButton = containerWindow:getChildById('upButton')
-    local lockButton = containerWindow:recursiveGetChildById('lockButton')
-    local minimizeButton = containerWindow:recursiveGetChildById('minimizeButton')
-    
     if pages then
         -- When pages are visible, anchor scrollbar to close button bottom and separator top
         scrollbar:breakAnchors()
@@ -815,21 +835,6 @@ function toggleContainerPages(containerWindow, pages)
         contentsPanel:setMarginTop(-2)
         contentsPanel:setMarginRight(1)
         
-        -- When pages are active, move upButton to toggleFilterButton position if it's visible
-        if upButton and upButton:isVisible() and lockButton and minimizeButton then
-            upButton:breakAnchors()
-            upButton:addAnchor(AnchorTop, minimizeButton:getId(), AnchorTop)
-            upButton:addAnchor(AnchorRight, minimizeButton:getId(), AnchorLeft)
-            upButton:setMarginRight(7)
-            upButton:setMarginTop(0)
-
-            -- lockButton sits where the sort button used to, left of upButton.
-            lockButton:breakAnchors()
-            lockButton:addAnchor(AnchorTop, upButton:getId(), AnchorTop)
-            lockButton:addAnchor(AnchorRight, upButton:getId(), AnchorLeft)
-            lockButton:setMarginRight(2)
-            lockButton:setMarginTop(0)
-        end
     else
         -- When pages are hidden, use normal bottom anchor
         scrollbar:breakAnchors()
@@ -851,31 +856,15 @@ function toggleContainerPages(containerWindow, pages)
         contentsPanel:setMarginTop(-2)
         contentsPanel:setMarginRight(1)
         
-        -- When pages are not active, reset button positions based on upButton visibility
-        if upButton and lockButton and minimizeButton then
-            if upButton:isVisible() then
-                upButton:breakAnchors()
-                upButton:addAnchor(AnchorTop, minimizeButton:getId(), AnchorTop)
-                upButton:addAnchor(AnchorRight, minimizeButton:getId(), AnchorLeft)
-                upButton:setMarginRight(3)
-                upButton:setMarginTop(0)
-
-                lockButton:breakAnchors()
-                lockButton:addAnchor(AnchorTop, upButton:getId(), AnchorTop)
-                lockButton:addAnchor(AnchorRight, upButton:getId(), AnchorLeft)
-                lockButton:setMarginRight(2)
-            else
-                lockButton:breakAnchors()
-                lockButton:addAnchor(AnchorTop, minimizeButton:getId(), AnchorTop)
-                lockButton:addAnchor(AnchorRight, minimizeButton:getId(), AnchorLeft)
-                lockButton:setMarginRight(7)
-            end
-            lockButton:setMarginTop(0)
-        end
     end
-    
+
     pagePanel:setVisible(pages)
     separator:setVisible(pages)
+
+    -- The header row is the same row whether or not the pages bar is showing; the buttons
+    -- a container keeps are spaced by UIMiniWindow:layoutHeaderButtons like every other
+    -- miniwindow's, rather than by a copy of that arithmetic per branch.
+    containerWindow:layoutHeaderButtons()
 end
 
 function refreshContainerPages(container)
@@ -930,7 +919,11 @@ function onContainerOpen(container, previousContainer)
     else
         containerWindow = g_ui.createWidget('ContainerWindow')
     end
-    containerWindow:setId('container' .. container:getId())
+    -- Keyed on the route to the bag, not on container:getId(). That id is
+    -- whichever container slot happened to be free when this opened, so it
+    -- names a different bag every session and a saved size would land on the
+    -- wrong window. See ContainerRestore.windowId.
+    containerWindow:setId(ContainerRestore.windowId(container))
     local containerPanel = containerWindow:getChildById('contentsPanel')
 
     -- Reclaim the scrollbar's reserved strip for the item grid.
@@ -1030,34 +1023,14 @@ function onContainerOpen(container, previousContainer)
         newWindowButton:setVisible(false)
     end
     
-    local contextMenuButton = containerWindow:recursiveGetChildById('contextMenuButton')
-    local lockButton = containerWindow:recursiveGetChildById('lockButton')
-    local minimizeButton = containerWindow:recursiveGetChildById('minimizeButton')
-
     -- The sort menu is off by request. Hidden rather than deleted from
     -- 30-miniwindow.otui, which every miniwindow shares -- other windows still
     -- use this button for menus that have nothing to do with sorting.
-    --
-    -- lockButton then has to take the slot it vacated: UIAnchorLayout resolves
-    -- an anchor against the hooked widget's rect without checking visibility
-    -- (uianchorlayout.cpp:48), so chaining off the hidden button would leave a
-    -- hole in the header rather than closing it up.
+    -- UIMiniWindow:layoutHeaderButtons closes the slot it leaves behind, along
+    -- with the two above and the up button when the container has no parent.
+    local contextMenuButton = containerWindow:recursiveGetChildById('contextMenuButton')
     if contextMenuButton then
         contextMenuButton:setVisible(false)
-    end
-
-    if lockButton and minimizeButton then
-        lockButton:breakAnchors()
-        if container:hasParent() then
-            lockButton:addAnchor(AnchorTop, upButton:getId(), AnchorTop)
-            lockButton:addAnchor(AnchorRight, upButton:getId(), AnchorLeft)
-            lockButton:setMarginRight(2)
-        else
-            lockButton:addAnchor(AnchorTop, minimizeButton:getId(), AnchorTop)
-            lockButton:addAnchor(AnchorRight, minimizeButton:getId(), AnchorLeft)
-            lockButton:setMarginRight(7)
-        end
-        lockButton:setMarginTop(0)
     end
 
     local name = container:getName()
@@ -1139,10 +1112,19 @@ function onContainerOpen(container, previousContainer)
                         mousePos.x <= winX + winW - TOLERANCE_HORIZONTAL and
                         mousePos.y >= winY + TOLERANCE_VERTICAL and 
                         mousePos.y <= winY + winH - TOLERANCE_VERTICAL
-        containerWindow:setDraggable(inBounds and containerWindow:getChildByPos(mousePos) ~= containerPanel)
+        -- Not while locked. This pair used to run unconditionally, handing the
+        -- drag straight back on the next press after lock() took it away --
+        -- UIManager reads isDraggable when the drag starts (uimanager.cpp:158),
+        -- which is after this handler, so a locked container still moved.
+        if not containerWindow.locked then
+            containerWindow:setDraggable(inBounds and containerWindow:getChildByPos(mousePos) ~= containerPanel)
+        end
         return inBounds
     end
     containerWindow.onMouseRelease = function(widget, mousePos, mouseButton)
+        if containerWindow.locked then
+            return false
+        end
         containerWindow:setDraggable(true)
     end
     containerWindow.onDrop = function(container, widget, mousePos)
@@ -1180,9 +1162,15 @@ function onContainerOpen(container, previousContainer)
     if currentSortMode and currentSortMode ~= 'none' and not isManualSortEnabled then
         sortContainerItems(container, currentSortMode)
     end
+
+    ContainerRestore.applyWindowSettings(containerWindow)
+    -- Last: during a restore this is what drives the next hop, and that hop
+    -- reads this window's container.
+    ContainerRestore.onContainerOpen(container)
 end
 
 function onContainerClose(container)
+    ContainerRestore.onContainerClose(container)
     destroy(container)
 end
 

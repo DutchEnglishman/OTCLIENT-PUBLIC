@@ -485,7 +485,7 @@ PhantomMiniWindow
         anchors.left: parent.left
         anchors.right: taskPointsIcon.left
         anchors.top: parent.top
-        color: #c0c0c0ff
+        color: $textColor
         margin-top: 5
 
     UIWidget
@@ -505,7 +505,7 @@ PhantomMiniWindow
         font: cipsoftFont
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.top
-        color: #c0c0c0ff
+        color: $textColor
         margin-top: 1
 
       Label
@@ -515,7 +515,7 @@ PhantomMiniWindow
         text-align: center
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
-        color: #c0c0c0ff
+        color: $textColor
 
   UIWidget
     id: offPanel
@@ -553,7 +553,7 @@ PhantomMiniWindow
         font: cipsoftFont
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.top
-        color: #c0c0c0ff
+        color: $textColor
         margin-top: 1
         height: 10
 
@@ -565,7 +565,7 @@ PhantomMiniWindow
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.top
         margin-top: 8
-        color: #c0c0c0ff
+        color: $textColor
 
       // Same number-then-icon pairing as taskPointsPanel above, in a box 4px
       // narrower, so the number has correspondingly less room here.
@@ -593,7 +593,7 @@ PhantomMiniWindow
         anchors.left: parent.left
         anchors.right: taskPointsIcon.left
         anchors.bottom: parent.bottom
-        color: #c0c0c0ff
+        color: $textColor
         margin-bottom: 8
         height: 10
 

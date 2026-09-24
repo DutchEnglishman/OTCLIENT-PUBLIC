@@ -3,7 +3,7 @@ ChannelListLabel < Label
   background-color: alpha
   focusable: true
   height: 16
-  color: #c0c0c0
+  color: $textColor
 
 MainWindow
   id: channelsWindow
@@ -11,7 +11,7 @@ MainWindow
   size: 250 285
   focus-child: openPrivateChannelWith
   @onEscape: self:destroy()
-  color: #c0c0c0
+  color: $textColor
 
   Label
     anchors.top: parent.top
@@ -27,7 +27,7 @@ MainWindow
     margin-top: 5
     focusable: false
     vertical-scrollbar: channelsScrollBar
-    background-color: #404040
+    background-color: $panelFillRaised
 
   VerticalScrollBar
     id: channelsScrollBar

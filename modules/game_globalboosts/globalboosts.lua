@@ -60,33 +60,37 @@ local function rebuild(boosts)
     local previousId = nil
 
     for _, boost in ipairs(boosts) do
-        local icon = g_ui.createWidget("BoostIcon", boostsBar)
-        -- Id before the anchor: the next badge anchors to this one by id.
-        local id = "boost" .. count
-        icon:setId(id)
-        icon:setImageSource("/game_globalboosts/images/hud_" .. boost.icon)
-        icon:setTooltip(boost.name .. "\n" .. (boost.description or ""))
+        -- A badge with no key, icon or name is not drawable, and the key is a
+        -- table index: a nil one would throw rather than skip the badge.
+        if type(boost) == "table" and boost.key ~= nil and boost.icon ~= nil and boost.name ~= nil then
+            local icon = g_ui.createWidget("BoostIcon", boostsBar)
+            -- Id before the anchor: the next badge anchors to this one by id.
+            local id = "boost" .. count
+            icon:setId(id)
+            icon:setImageSource("/game_globalboosts/images/hud_" .. boost.icon)
+            icon:setTooltip(boost.name .. "\n" .. (boost.description or ""))
 
-        -- Anchored one after another rather than laid out by a horizontalBox,
-        -- which resizes its children to the container and left these stretched
-        -- and squeezed together.
-        icon:addAnchor(AnchorTop, 'parent', AnchorTop)
-        if previousId then
-            icon:addAnchor(AnchorLeft, previousId, AnchorRight)
-            icon:setMarginLeft(ICON_SPACING)
-        else
-            icon:addAnchor(AnchorLeft, 'parent', AnchorLeft)
+            -- Anchored one after another rather than laid out by a horizontalBox,
+            -- which resizes its children to the container and left these stretched
+            -- and squeezed together.
+            icon:addAnchor(AnchorTop, 'parent', AnchorTop)
+            if previousId then
+                icon:addAnchor(AnchorLeft, previousId, AnchorRight)
+                icon:setMarginLeft(ICON_SPACING)
+            else
+                icon:addAnchor(AnchorLeft, 'parent', AnchorLeft)
+            end
+
+            entries[boost.key] = {
+                icon = icon,
+                -- The label lives inside the dark strip, so it is a grandchild.
+                timer = icon:recursiveGetChildById("timer"),
+                expiresAt = now + (tonumber(boost.remaining) or 0),
+            }
+
+            previousId = id
+            count = count + 1
         end
-
-        entries[boost.key] = {
-            icon = icon,
-            -- The label lives inside the dark strip, so it is a grandchild.
-            timer = icon:recursiveGetChildById("timer"),
-            expiresAt = now + (tonumber(boost.remaining) or 0),
-        }
-
-        previousId = id
-        count = count + 1
     end
 
     boostsBar:setWidth(math.max(1, count * ICON_SIZE + math.max(0, count - 1) * ICON_SPACING))

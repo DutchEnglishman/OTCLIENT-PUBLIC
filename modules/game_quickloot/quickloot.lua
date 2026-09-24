@@ -249,31 +249,31 @@ function QuickLoot.Define()
         quickLootController.ui.fallbackPanel.checkbox:setChecked(fallback)
         -- LuaFormatter off
 		local slotBags = {
-			{ color = "#484848", name = "Unassigned", type = 31 },
+			{ color = g_ui.getVariable('panelFillLight'), name = "Unassigned", type = 31 },
 			{ color = "#414141", name = "Gold", type = 30 },
-			{ color = "#484848", name = "Armors", type = 1 },
+			{ color = g_ui.getVariable('panelFillLight'), name = "Armors", type = 1 },
 			{ color = "#414141", name = "Amulets", type = 2  },
-			{ color = "#484848", name = "Boots", type = 3 },
+			{ color = g_ui.getVariable('panelFillLight'), name = "Boots", type = 3 },
 			{ color = "#414141", name = "Containers", type = 4 },
-			{ color = "#484848", name = "Creature\nProducts", type = 24 },
+			{ color = g_ui.getVariable('panelFillLight'), name = "Creature\nProducts", type = 24 },
 			{ color = "#414141", name = "Decoration", type = 5 },
-			{ color = "#484848", name = "Food", type = 6 },
+			{ color = g_ui.getVariable('panelFillLight'), name = "Food", type = 6 },
 			{ color = "#414141", name = "Helmets\nand Hats", type =7 },
-			{ color = "#484848", name = "Legs", type = 8 },
+			{ color = g_ui.getVariable('panelFillLight'), name = "Legs", type = 8 },
 			{ color = "#414141", name = "Others", type = 9 },
 
 			{ color = "#414141", name = "Potions", type = 10 },
-			{ color = "#484848", name = "Rings", type = 11 },
+			{ color = g_ui.getVariable('panelFillLight'), name = "Rings", type = 11 },
 			{ color = "#414141", name = "Runes", type = 12 },
-			{ color = "#484848", name = "Shields", type = 13 },
+			{ color = g_ui.getVariable('panelFillLight'), name = "Shields", type = 13 },
 			{ color = "#414141", name = "Tools", type = 14 },
-			{ color = "#484848", name = "Valuables", type = 15 },
+			{ color = g_ui.getVariable('panelFillLight'), name = "Valuables", type = 15 },
 			{ color = "#414141", name = "Weapons:\nAmmo", type = 16 },
-			{ color = "#484848", name = "Weapons:\nAxes", type = 17 },
+			{ color = g_ui.getVariable('panelFillLight'), name = "Weapons:\nAxes", type = 17 },
 			{ color = "#414141", name = "Weapons:\nClubs", type = 18 },
-			{ color = "#484848", name = "Weapons:\nDistance", type = 19 },
+			{ color = g_ui.getVariable('panelFillLight'), name = "Weapons:\nDistance", type = 19 },
 			{ color = "#414141", name = "Weapons:\nSwords", type = 20 },
-			{ color = "#484848", name = "Weapons:\nWands", type = 21 },
+			{ color = g_ui.getVariable('panelFillLight'), name = "Weapons:\nWands", type = 21 },
 			--{ color = "#414141", name = "Quivers" , type = 25 },
 
 		}
@@ -305,7 +305,7 @@ function QuickLoot.Define()
     function QuickLoot.loadFilterItems()
         quickLootController.ui.ignoreList:destroyChildren()
 
-        local color = "#484848"
+        local color = g_ui.getVariable('panelFillLight')
 
         for _, itemId in ipairs(QuickLoot.data.loots[QuickLoot.data.filter]) do
             local name = g_things.getThingType(itemId, ThingCategoryItem):getName()

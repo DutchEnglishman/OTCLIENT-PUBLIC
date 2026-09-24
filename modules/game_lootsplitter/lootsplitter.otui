@@ -23,7 +23,7 @@ NewHeadlessWindow
       !text: tr('Hunt Session Log')
       text-wrap: true
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
       text-auto-resize: true
       visible: false
     TextEdit
@@ -73,7 +73,7 @@ NewHeadlessWindow
       !text: tr('Hunt Session Result')
       text-wrap: true
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
       text-auto-resize: true
     MultilineTextEdit
       id: resultLogContent

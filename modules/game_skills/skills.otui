@@ -13,7 +13,7 @@ SkillNameLabel < GameLabel
   anchors.left: parent.left
   anchors.top: parent.top
   anchors.bottom: parent.bottom
-  color: #C0C0C0
+  color: $textColor
 
 SkillValueLabel < GameLabel
   id: value
@@ -23,7 +23,7 @@ SkillValueLabel < GameLabel
   anchors.top: parent.top
   anchors.bottom: parent.bottom
   anchors.left: prev.left
-  color: #C0C0C0
+  color: $textColor
 
 ImageSkill < UIWidget
   id: icon
@@ -742,7 +742,7 @@ SkillsSubMenuOption < ThickCheckBox
     background-color: #ffffff1a
 
   $disabled:
-    color: #c0c0c0ff
+    color: $textColor
 
 SkillsListOption < UIButton
   text-align: left
@@ -756,7 +756,7 @@ SkillsListOption < UIButton
     background-color: #ffffff1a
 
   $disabled:
-    color: #c0c0c0ff
+    color: $textColor
 
 SkillsListSubMenu < PopupMenu
   id: skillsListSubMenu

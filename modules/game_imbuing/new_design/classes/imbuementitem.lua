@@ -230,7 +230,7 @@ function itemApi.onSelectSlotClear(imbuement)
     local costPanel = self.window:recursiveGetChildById("costPanel")
     if costPanel then
         costPanel.cost:setText(context.commaValue(imbuement[3]))
-        costPanel.cost:setColor(balance < imbuement[3] and "#C04040" or "#C0C0C0")
+        costPanel.cost:setColor(balance < imbuement[3] and "#C04040" or g_ui.getVariable('textColor'))
     end
 end
 
@@ -343,7 +343,7 @@ function itemApi.selectImbuementWidget(widget, imbuement)
                     local itemCount = self.needItems[source.item:getId()] or 0
                     itemWidget.count:setText(itemCount .."/" .. source.item:getCount())
                     if itemCount >= source.item:getCount() then
-                        itemWidget.count:setColor("#C0C0C0")
+                        itemWidget.count:setColor(g_ui.getVariable('textColor'))
                     else
                         hasRequiredItems = false
                         itemWidget.count:setColor("#C04040")
@@ -381,7 +381,7 @@ function itemApi.selectImbuementWidget(widget, imbuement)
             hasRequiredItems = false
         end
 
-        costPanel.cost:setColor(balance < cost and "#C04040" or "#C0C0C0")
+        costPanel.cost:setColor(balance < cost and "#C04040" or g_ui.getVariable('textColor'))
     end
 
     local imbueApply = self.window:recursiveGetChildById("imbueApply")

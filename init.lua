@@ -25,7 +25,9 @@ Services = {
             "data/sounds/**", "mods/**", "downloads/**"
         }
     }, -- ./updater
-    --status = "http://localhost/login.php", --./client_entergame | ./client_topmenu
+    -- The website's MyAAC login.php. Only feeds the login screen's side panels (online
+    -- count, event calendar, boosted creature and boss); logging in stays on the game protocol.
+    status = "https://shatteredrealms.net/login.php", --./client_entergame | ./client_topmenu
     --websites = "http://localhost/?subtopic=accountmanagement", --./client_entergame "Forgot password and/or email"
     --createAccount = "http://localhost/clientcreateaccount.php", --./client_entergame -- createAccount.lua
     --getCoinsUrl = "http://localhost/?subtopic=shop&step=terms", --./game_market
@@ -117,7 +119,7 @@ if ENABLE_SERVERS then
     }
 end
 
-g_app.setName("OTClient - Shattered Realms");
+g_app.setName("The Shattered Realms");
 g_app.setCompactName("otclient");
 g_app.setOrganizationName("otcr");
 
@@ -176,6 +178,21 @@ g_resources.searchAndAddPackages('/', '.otpkg', true)
 
 -- load settings
 g_configs.loadSettings('/config.otml')
+
+-- UI skin: a folder under data/skins/<name>/ that mirrors the virtual root
+-- (images/ui/..., game_store/images/..., styles/00-theme.otui), mounted IN FRONT
+-- of data/ and modules/ so any file it carries shadows the stock one and nothing
+-- stock is edited. nil = the stock look. A change needs a restart: images resolve
+-- lazily, but styles are parsed once when client_styles loads.
+-- 'slate' is the cold grey matte look (tools/skin-generators/make_slate.ps1); 'carved' the
+-- warmer basalt-and-gold one it was cut from (make_carved.ps1); 'shattered' the flat
+-- green-black one before that (make_shattered.ps1). Swap back by naming it here.
+local SKIN = 'slate'
+if SKIN then
+    if not g_resources.addSearchPath(g_resources.getWorkDir() .. 'data/skins/' .. SKIN, true) then
+        g_logger.error('Skin "' .. SKIN .. '" not found under data/skins/ -- using the stock look.')
+    end
+end
 
 g_modules.discoverModules()
 

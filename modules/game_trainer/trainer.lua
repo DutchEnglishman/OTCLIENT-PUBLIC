@@ -226,17 +226,24 @@ local function manaPercent()
     return player:getMana() / maxMana * 100
 end
 
--- The floor reading of the % field: cast while mana is ABOVE the threshold and
--- stop there, leaving that much in reserve. The rejected alternative was to
--- wait until the threshold then drain to empty.
-local function aboveThreshold(percentWidget)
-    local threshold = tonumber(percentWidget:getText())
-    if not threshold then
-        return false
+-- One trainer, ready to cast: toggle on, a spell to say, and a readable
+-- threshold. nil for any trainer that is missing one of the three.
+--
+-- The % is a FLOOR: cast while mana is ABOVE it and stop there, leaving that
+-- much in reserve. The rejected alternative was to wait until the threshold
+-- then drain to empty.
+local function activeTrainer(toggle, spellWidget, percentWidget, caster)
+    if not toggle:isChecked() then
+        return nil
     end
 
-    local current = manaPercent()
-    return current ~= nil and current > threshold
+    local spell = spellWidget:getText()
+    local threshold = tonumber(percentWidget:getText())
+    if spell == '' or not threshold then
+        return nil
+    end
+
+    return { spell = spell, threshold = threshold, caster = caster }
 end
 
 local function tryEat()
@@ -354,21 +361,36 @@ local function tick()
         tryEat()
     end
 
-    -- Runemaking outranks mana training unconditionally: while its toggle is on
-    -- the mana trainer never casts, even when runemaking is holding fire below
-    -- its own threshold. Letting mana training fill those gaps would drain the
-    -- mana that runemaking is waiting to reach.
-    if controls.runemaking:isChecked() then
-        local runeSpell = controls.runeSpell:getText()
-        if runeSpell ~= '' and aboveThreshold(controls.runePercent) then
-            castSpell(casters.rune, runeSpell)
-        end
+    -- Both trainers spend the same mana, so at most one casts per tick and the
+    -- LOWER percentage goes first: that is the trainer willing to spend mana the
+    -- other is still holding in reserve. Runemaking used to outrank mana
+    -- training unconditionally; the two thresholds carry that decision now, so
+    -- runemaking comes first by being given the lower number. Equal percentages
+    -- keep the old order.
+    --
+    -- The winner owns the tick even while its own cooldown is running: the two
+    -- spells share the server's exhaustion, so letting the loser fill the gap
+    -- only earns a refusal and ratchets its backoff. Nothing is lost by yielding
+    -- the whole tick either -- the loser always holds the HIGHER threshold, so
+    -- mana below the winner's floor is below the loser's too.
+    local rune = activeTrainer(controls.runemaking, controls.runeSpell, controls.runePercent, casters.rune)
+    local mana = activeTrainer(controls.manaTraining, controls.manaSpell, controls.manaPercent, casters.mana)
+
+    local first, second = rune, mana
+    if mana and (not rune or mana.threshold < rune.threshold) then
+        first, second = mana, rune
+    end
+
+    local current = manaPercent()
+    if not current then
         return
     end
 
-    local manaSpell = controls.manaSpell:getText()
-    if controls.manaTraining:isChecked() and manaSpell ~= '' and aboveThreshold(controls.manaPercent) then
-        castSpell(casters.mana, manaSpell)
+    for _, trainer in ipairs({ first, second }) do
+        if current > trainer.threshold then
+            castSpell(trainer.caster, trainer.spell)
+            return
+        end
     end
 end
 

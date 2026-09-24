@@ -15,14 +15,14 @@ KeybindsTableRow < UITableRow
     background-color: #585858
 
 KeybindsTableColumn < Label
-  color: #c0c0c0
+  color: $textColor
   text-align: left
   focusable: false
   text-offset: 2 0
   font: verdana-11px-monochrome
 
 EditableKeybindsTableColumn < Label
-  color: #c0c0c0
+  color: $textColor
   text-align: left
   focusable: false
   text-offset: 2 0
@@ -39,7 +39,7 @@ EditableKeybindsTableColumn < Label
     visible: false
 
 EditableHotkeysTableColumn < Label
-  color: #c0c0c0
+  color: $textColor
   text-align: left
   focusable: false
   text-offset: 18 0
@@ -72,8 +72,8 @@ KeybindsTableHeaderColumn < UITableHeaderColumn
   text-offset: 2 0
   text-align: left
   height: 14
-  color: #c0c0c0
-  background: #363636
+  color: $textColor
+  background: $panelFill
 
 UIWidget
   anchors.fill: parent
@@ -212,7 +212,7 @@ UIWidget
     margin-top: 5
     image-source: /images/ui/1pixel_down_frame
     image-border: 1
-    background: #404040
+    background: $panelFillRaised
 
     Table
       id: keybinds

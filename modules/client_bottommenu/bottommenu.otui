@@ -20,7 +20,7 @@ ShowOffWidget < UIWidget
     anchors.top: parent.top
     anchors.bottom: parent.bottom
     margin-left: 2
-    color: #c0c0c0ff
+    color: $textColor
     multiline: true
     text-wrap: true
     text-auto-resize: true
@@ -29,8 +29,8 @@ ShowOffWidget < UIWidget
     focusable: false
     cursor-visible: false
     change-cursor-image: false
-    selection-color: #f4f4f4ff
-    selection-background-color: #808080ff
+    selection-color: $selectionText
+    selection-background-color: $selectionFill
 
 Panel
   id: bottomMenu
@@ -45,7 +45,7 @@ Panel
     anchors.horizontalCenter: parent.horizontalCenter
     text-align: center
     text-auto-resize: true
-    color: #c0c0c0ff
+    color: $textColor
     margin-bottom: 110
     text: OTClient Shattered Realms
     ttf-font: martel

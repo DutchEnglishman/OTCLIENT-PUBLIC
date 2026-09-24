@@ -412,7 +412,7 @@ Panel
       anchors.horizontalCenter: parent.horizontalCenter
       anchors.top: parent.top
       !text: tr('Vessels')
-      color: #909090
+      color: $textDim
       margin-top: 2
     Panel
       id: vesselsContent
@@ -646,7 +646,7 @@ Panel
       anchors.horizontalCenter: parent.horizontalCenter
       anchors.top: parent.top
       !text: tr('Gem Revelation')
-      color: #909090
+      color: $textDim
       margin-top: 2
 
     UIWidget
@@ -692,7 +692,7 @@ Panel
         text-wrap: true
         text-align: center
         font: Verdana Bold-11px
-        color: #c0c0c0
+        color: $textColor
 
       UIButton
         id: revealButton0
@@ -738,7 +738,7 @@ Panel
           margin-top: 2
           text-auto-resize: true
           font: Verdana Bold-11px
-          color: #c0c0c0
+          color: $textColor
 
     Panel
       id: gemRevel1
@@ -773,7 +773,7 @@ Panel
         text-wrap: true
         text-align: center
         font: Verdana Bold-11px
-        color: #c0c0c0
+        color: $textColor
 
       UIButton
         id: revealButton1
@@ -819,7 +819,7 @@ Panel
           margin-top: 2
           text-auto-resize: true
           font: Verdana Bold-11px
-          color: #c0c0c0
+          color: $textColor
 
     Panel
       id: gemRevel2
@@ -854,7 +854,7 @@ Panel
         text-wrap: true
         text-align: center
         font: Verdana Bold-11px
-        color: #c0c0c0
+        color: $textColor
 
       UIButton
         id: revealButton2
@@ -900,7 +900,7 @@ Panel
           margin-top: 2
           text-auto-resize: true
           font: Verdana Bold-11px
-          color: #c0c0c0
+          color: $textColor
 
   Panel
     id: clickedPanel
@@ -913,7 +913,7 @@ Panel
       anchors.horizontalCenter: parent.horizontalCenter
       anchors.top: parent.top
       !text: tr('Click on a gem to see its mods')
-      color: #909090
+      color: $textDim
       margin-top: 2
 
     Panel
@@ -934,7 +934,7 @@ Panel
         !text: tr('There is no gem available.')
         text-auto-resize: true
         font: Verdana Bold-11px
-        color: #c0c0c0
+        color: $textColor
 
     Panel
       id: clickedContent
@@ -964,7 +964,7 @@ Panel
           !text: tr('Lesser Guardian Gem')
           text-auto-resize: true
           font: Verdana Bold-11px
-          color: #c0c0c0
+          color: $textColor
         UIWidget
           id: gemDetailItem
           size: 64 64
@@ -981,7 +981,7 @@ Panel
           !text: tr('Domain Affinity')
           text-auto-resize: true
           font: Verdana Bold-11px
-          color: #c0c0c0
+          color: $textColor
           anchors.bottom: parent.bottom
           anchors.left: parent.left
           margin-bottom: 17
@@ -1067,7 +1067,7 @@ Panel
           anchors.top: parent.top
           anchors.right: prev.left
           font: Verdana Bold-11px
-          color: #c0c0c0
+          color: $textColor
           margin-right: 4
           margin-top: 2
           text-auto-resize: true
@@ -1124,7 +1124,7 @@ Panel
       anchors.top: prev.top
       anchors.left: prev.right
       margin-left: 5
-      color: #c0c0c0
+      color: $textColor
       @onSetup: |
         self:addOption("All Affinities")
         self:addOption("Top Left")
@@ -1139,7 +1139,7 @@ Panel
       anchors.top: prev.top
       anchors.left: prev.right
       margin-left: 5
-      color: #c0c0c0
+      color: $textColor
       @onSetup: |
         self:addOption("All Qualities")
         self:addOption("Lesser")
@@ -1153,7 +1153,7 @@ Panel
       !text: tr('Locked only')
       font: Verdana Bold-11px
       text-auto-resize: true
-      color: #c0c0c0
+      color: $textColor
       anchors.left: prev.right
       anchors.top: parent.top
       image-source: /images/ui/checkbox
@@ -1164,7 +1164,7 @@ Panel
       @onCheckChange: modules.game_wheel.GemAtelier.showLockedOnly(self)
 
       $hover !disabled:
-        color: #c0c0c0
+        color: $textColor
 
     Panel
       id: pagesPanel
@@ -1196,7 +1196,7 @@ Panel
         !text: tr('Page 0 / 0 (0 Gems)')
         text-auto-resize: true
         font: Verdana Bold-11px
-        color: #c0c0c0
+        color: $textColor
       UIButton
         id: leftArrow
         size: 20 20

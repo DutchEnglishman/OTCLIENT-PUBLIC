@@ -12,7 +12,7 @@ PopupMenuButton < UIButton
     image-clip: 0 40 20 20
 
   $disabled:
-    color: #c0c0c0ff
+    color: $textColor
 
 PopupMenuShortcutLabel < Label
   font: verdana-11px-antialised
@@ -86,4 +86,4 @@ PopupMenuCheckBox < ThickCheckBox
     background-color: #ffffff1a
 
   $disabled:
-    color: #c0c0c0ff
+    color: $textColor

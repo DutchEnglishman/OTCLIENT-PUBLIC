@@ -1423,7 +1423,7 @@ refreshRaceList = function(slot)
     local currentSelectionId = selectedRaceEntryBySlot[slot] and selectedRaceEntryBySlot[slot].raceId or nil
     local selectionRestored = false
 
-    local backgroundA = '#484848'
+    local backgroundA = g_ui.getVariable('panelFillLight')
     local backgroundB = '#414141'
     local useAlternate = false
 
@@ -1443,7 +1443,7 @@ refreshRaceList = function(slot)
             item.preySlot = slot
             item.baseBackground = useAlternate and backgroundB or backgroundA
             item.checkedBackground = '#585858'
-            item.baseTextColor = '#c0c0c0'
+            item.baseTextColor = g_ui.getVariable('textColor')
             item.checkedTextColor = '#ffffff'
             item:setBackgroundColor(item.baseBackground)
             item:setColor(item.baseTextColor)

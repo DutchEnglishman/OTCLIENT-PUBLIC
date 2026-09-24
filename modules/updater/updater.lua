@@ -24,6 +24,9 @@ local DEFAULT_CONFIG = {
   overallTimeout = 60000,
   retries = 3,
   retryDelay = 1500,
+  -- Most entries are a few KB, so a download is bound by round trips, not bandwidth:
+  -- every file pays its own TCP + TLS handshake. Running several at once hides that.
+  parallelDownloads = 6,
   strictManifestSha256 = true,
   allowExecutableUpdate = true,
   allowDeletions = true,
@@ -43,6 +46,8 @@ local loadModulesFunction
 local scheduledEvent
 local watchdogEvent
 local httpOperationId
+-- The file downloads run concurrently, so they cannot share httpOperationId.
+local downloadOperations = {}
 local finished = false
 local lastProgressAt = 0
 
@@ -208,7 +213,8 @@ local function setDownloadStatus(text, percent, speed)
   end
   updaterWindow.downloadProgress:setPercent(math.floor(percent or 0))
   if speed then
-    updaterWindow.downloadProgress:setText(speed .. ' kbps')
+    -- The backend reports bytes per second.
+    updaterWindow.downloadProgress:setText(humanBytes(speed) .. '/s')
   end
 end
 
@@ -364,115 +370,184 @@ local function verifyStaged(entries, index, binaryKey)
   end, 0)
 end
 
--- One 55 MB sprite sheet among two hundred small Lua files makes file-count progress a
--- lie: the bar would jump to 99% and then sit there for minutes. Weight by bytes, and
--- fold in how far the file currently downloading has got.
-local function setDownloadedFraction(entries, index, entry, percent)
-  percent = percent or 0
-  if totalDownloadBytes > 0 then
-    local bytes = doneDownloadBytes + (entry.size or 0) * percent / 100
-    setMainProgress(100 * math.min(bytes, totalDownloadBytes) / totalDownloadBytes)
-  else
-    -- A manifest without sizes, so fall back to counting files.
-    setMainProgress(100 * (index - 1 + percent / 100) / #entries)
+local function cancelDownloads()
+  for operationId in pairs(downloadOperations) do
+    HTTP.cancel(operationId)
   end
+  downloadOperations = {}
 end
 
-local function downloadEntries(entries, index, attempt, onDone)
-  if not updaterWindow then return end
+-- Fetches every entry into staging, up to config.parallelDownloads at a time, and calls
+-- onDone once all of them have landed. The first entry to exhaust its retries fails the
+-- whole update; fail() -> abort() then cancels whatever is still in flight.
+local function downloadEntries(entries, onDone)
+  -- Largest first, so the sprite sheet streams in the background while the small files
+  -- are fetched alongside it, instead of starting last and running on its own.
+  local queue = {}
+  for _, entry in ipairs(entries) do
+    table.insert(queue, entry)
+  end
+  table.sort(queue, function(a, b) return (a.size or 0) > (b.size or 0) end)
 
-  local entry = entries[index]
-  if not entry then
+  local workers = math.max(1, tonumber(config.parallelDownloads) or 1)
+  local nextIndex = 1
+  local active = 0
+  local completed = 0
+  local inflight = {} -- entry -> { percent = 0..100, speed = bytes/s }
+
+  -- One 55 MB sprite sheet among two hundred small Lua files makes file-count progress a
+  -- lie: the bar would jump to 99% and then sit there for minutes. Weight by bytes, and
+  -- fold in how far each file currently downloading has got.
+  local function refresh(label)
+    local bytes = doneDownloadBytes
+    local partialFiles = 0
+    local speed = 0
+    for entry, state in pairs(inflight) do
+      bytes = bytes + (entry.size or 0) * state.percent / 100
+      partialFiles = partialFiles + state.percent / 100
+      speed = speed + state.speed
+    end
+
+    if totalDownloadBytes > 0 then
+      setMainProgress(100 * math.min(bytes, totalDownloadBytes) / totalDownloadBytes)
+    else
+      -- A manifest without sizes, so fall back to counting files.
+      setMainProgress(100 * (completed + partialFiles) / #queue)
+    end
+    setDownloadStatus(label, 100 * completed / #queue, speed)
+  end
+
+  local startNext
+
+  local function fetch(entry, attempt)
+    if finished or not updaterWindow then return end
+
+    -- Files small enough to live in the mirror repo are fetched per-path from
+    -- raw.githubusercontent. Anything too big for git -- sprite sheets, above all -- is
+    -- published as a Release asset instead, and the manifest names that asset here.
+    local url = entry.asset and (manifest.assetBaseUrl .. entry.asset)
+        or (manifest.rawBaseUrl .. entry.path)
+    local key = stagingRoot .. '/' .. entry.path
+    local label = string.format('%s (%s)', entry.path, humanBytes(entry.size))
+
+    inflight[entry] = { percent = 0, speed = 0 }
+    if attempt > 0 then
+      refresh(tr('Downloading (retry %i):\n%s', attempt, label))
+    else
+      refresh(tr('Downloading %i of %i:\n%s', nextIndex - 1, #queue, label))
+    end
+
+    local operationId
+
+    local function retryOrFail(reason)
+      downloadOperations[operationId or 0] = nil
+      inflight[entry] = nil
+      if attempt >= config.retries then
+        clearStaging()
+        return fail(string.format('Could not download %s: %s', entry.path, reason))
+      end
+      -- Not tracked in scheduledEvent, which several workers would overwrite; fetch()
+      -- itself bails out if the update ended in the meantime.
+      scheduleEvent(function()
+        fetch(entry, attempt + 1)
+      end, config.retryDelay)
+    end
+
+    local function onProgress(progress, speed)
+      if finished then return end
+      noteProgress()
+      local state = inflight[entry]
+      if state then
+        state.percent = progress or 0
+        state.speed = speed or 0
+      end
+      refresh(nil)
+    end
+
+    local function advance()
+      downloadOperations[operationId or 0] = nil
+      inflight[entry] = nil
+      doneDownloadBytes = doneDownloadBytes + (entry.size or 0)
+      completed = completed + 1
+      active = active - 1
+      noteProgress()
+      refresh(nil)
+      if completed == #queue then
+        return onDone()
+      end
+      startNext()
+    end
+
+    -- Preferred path: stream the body straight into the staging file. stagingPathFor()
+    -- yields the same string as `key`, so the bytes land exactly where verifyStaged() will
+    -- hash them, with no in-memory copy and no separate write step. A failed attempt leaves
+    -- the partial file in place and the retry resumes from it with a Range request, which
+    -- matters most for the one entry big enough to be worth resuming -- the sprite sheet.
+    operationId = withHttpTimeout(function()
+      return HTTP.downloadToWorkDir(url, key, function(_, _, err)
+        if finished then return end
+        if err then
+          return retryOrFail(err)
+        end
+        advance()
+      end, onProgress)
+    end)
+
+    if operationId then
+      if operationId < 0 then
+        return retryOrFail('HTTP is unavailable')
+      end
+      downloadOperations[operationId] = true
+      return
+    end
+
+    -- Fallback for backends with no streaming download (web): buffer through the download
+    -- cache, then write staging out of it.
+    operationId = withHttpTimeout(function()
+      return HTTP.download(url, key, function(path, checksum, err)
+        if finished then return end
+        if err then
+          return retryOrFail(err)
+        end
+
+        -- Write the downloaded bytes into staging. Nothing reaches the live tree yet.
+        if not g_resources.writeDownloadedFileToWorkDir(key, stagingPathFor(entry.path), false) then
+          return retryOrFail('unable to write to the staging directory')
+        end
+
+        -- The bytes are on disk in staging now, so drop the in-RAM copy. Without this the
+        -- cache holds every file downloaded so far until commit, which was harmless when
+        -- the manifest was all small text files and is not once a 55 MB sprite sheet is in
+        -- it. Safe with parallel workers too: the cache only gains an entry when a download
+        -- completes, and every completion is written out right here before anything else
+        -- runs. The binary is fetched after every entry, into its own key.
+        if g_http and g_http.clearDownloads then
+          g_http.clearDownloads()
+        end
+
+        advance()
+      end, onProgress)
+    end)
+
+    if not operationId or operationId < 0 then
+      return retryOrFail('HTTP is unavailable')
+    end
+    downloadOperations[operationId] = true
+  end
+
+  startNext = function()
+    while active < workers and nextIndex <= #queue and not finished do
+      local entry = queue[nextIndex]
+      nextIndex = nextIndex + 1
+      active = active + 1
+      fetch(entry, 0)
+    end
+  end
+
+  if #queue == 0 then
     return onDone()
   end
-
-  -- Files small enough to live in the mirror repo are fetched per-path from
-  -- raw.githubusercontent. Anything too big for git -- sprite sheets, above all -- is
-  -- published as a Release asset instead, and the manifest names that asset here.
-  local url = entry.asset and (manifest.assetBaseUrl .. entry.asset)
-      or (manifest.rawBaseUrl .. entry.path)
-  local key = stagingRoot .. '/' .. entry.path
-  local label = string.format('%s (%s)', entry.path, humanBytes(entry.size))
-
-  if attempt > 0 then
-    setDownloadStatus(tr('Downloading (retry %i):\n%s', attempt, label), 0)
-  else
-    setDownloadStatus(tr('Downloading:\n%s', label), 0)
-  end
-  setDownloadedFraction(entries, index, entry, 0)
-
-  local function retryOrFail(reason)
-    if attempt >= config.retries then
-      clearStaging()
-      return fail(string.format('Could not download %s: %s', entry.path, reason))
-    end
-    scheduledEvent = scheduleEvent(function()
-      downloadEntries(entries, index, attempt + 1, onDone)
-    end, config.retryDelay)
-  end
-
-  local function onProgress(progress, speed)
-    noteProgress()
-    setDownloadStatus(nil, progress, speed)
-    setDownloadedFraction(entries, index, entry, progress)
-  end
-
-  local function advance()
-    doneDownloadBytes = doneDownloadBytes + (entry.size or 0)
-    downloadEntries(entries, index + 1, 0, onDone)
-  end
-
-  -- Preferred path: stream the body straight into the staging file. stagingPathFor()
-  -- yields the same string as `key`, so the bytes land exactly where verifyStaged() will
-  -- hash them, with no in-memory copy and no separate write step. A failed attempt leaves
-  -- the partial file in place and the retry resumes from it with a Range request, which
-  -- matters most for the one entry big enough to be worth resuming -- the sprite sheet.
-  httpOperationId = withHttpTimeout(function()
-    return HTTP.downloadToWorkDir(url, key, function(_, _, err)
-      if finished then return end
-      if err then
-        return retryOrFail(err)
-      end
-      advance()
-    end, onProgress)
-  end)
-
-  if httpOperationId then
-    if httpOperationId < 0 then
-      retryOrFail('HTTP is unavailable')
-    end
-    return
-  end
-
-  -- Fallback for backends with no streaming download (web): buffer through the download
-  -- cache, then write staging out of it.
-  httpOperationId = withHttpTimeout(function()
-    return HTTP.download(url, key, function(path, checksum, err)
-      if finished then return end
-      if err then
-        return retryOrFail(err)
-      end
-
-      -- Write the downloaded bytes into staging. Nothing reaches the live tree yet.
-      if not g_resources.writeDownloadedFileToWorkDir(key, stagingPathFor(entry.path), false) then
-        return retryOrFail('unable to write to the staging directory')
-      end
-
-      -- The bytes are on disk in staging now, so drop the in-RAM copy. Without this the
-      -- cache holds every file downloaded so far until commit, which was harmless when
-      -- the manifest was all small text files and is not once a 55 MB sprite sheet is in
-      -- it. Safe here because the binary is fetched after every entry, into its own key.
-      if g_http and g_http.clearDownloads then
-        g_http.clearDownloads()
-      end
-
-      advance()
-    end, onProgress)
-  end)
-
-  if not httpOperationId or httpOperationId < 0 then
-    retryOrFail('HTTP is unavailable')
-  end
+  startNext()
 end
 
 local function downloadBinary(entries, binaryEntry)
@@ -536,7 +611,7 @@ local function diffFiles(files, index, changed, binaryEntry)
     logInfo(string.format('%i file(s) to update, %s to download.', #changed, humanBytes(totalDownloadBytes)))
     setStatus(tr('Downloading %i files', #changed))
     showDownloadRow(true)
-    return downloadEntries(changed, 1, 0, function()
+    return downloadEntries(changed, function()
       downloadBinary(changed, binaryEntry)
     end)
   end
@@ -858,6 +933,7 @@ function Updater.abort(terminate)
     HTTP.cancel(httpOperationId)
     httpOperationId = nil
   end
+  cancelDownloads()
   removeEvent(scheduledEvent)
   scheduledEvent = nil
   removeEvent(watchdogEvent)

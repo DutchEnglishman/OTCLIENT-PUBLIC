@@ -8,7 +8,7 @@ MainWindow
   Label
     id: info
     font: verdana-11px-monochrome
-    color: #c0c0c0
+    color: $textColor
     text: Enter a name for the new preset:
   
   TextEdit
@@ -17,7 +17,7 @@ MainWindow
     height: 16
     padding: 1 4
     font: verdana-11px-monochrome
-    color: #c0c0c0
+    color: $textColor
 
   HorizontalSeparator
     margin-top: 10

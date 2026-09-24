@@ -14,7 +14,7 @@ UIWidget
     ComboBox
       id: StatesOption
       size: 214 20
-      color: #C0C0C0
+      color: $textColor
       anchors.horizontalCenter: parent.horizontalCenter
       anchors.top: parent.top
       margin-top: 7
@@ -22,7 +22,7 @@ UIWidget
     ComboBox
       id: CityOption
       size: 215 20
-      color: #C0C0C0
+      color: $textColor
       anchors.right: StatesOption.left
       anchors.top: StatesOption.top
       margin-right: 5
@@ -30,7 +30,7 @@ UIWidget
     ComboBox
       id: SortOption
       size: 215 20
-      color: #C0C0C0
+      color: $textColor
       anchors.left: StatesOption.right
       anchors.top: StatesOption.top
       margin-left: 5
@@ -46,7 +46,7 @@ UIWidget
       !text: tr('Guildhalls')
       size: 12 12
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
       text-auto-resize: true
       @onClick: modules.game_cyclopedia.Cyclopedia.houseFilter(self)
     CheckBoxCircle
@@ -59,7 +59,7 @@ UIWidget
       !text: tr('Houses and Flats')
       size: 12 12
       font: Verdana Bold-11px
-      color: #C0C0C0
+      color: $textColor
       text-auto-resize: true
       @onClick: modules.game_cyclopedia.Cyclopedia.houseFilter(self)
   UIWidget
@@ -136,7 +136,7 @@ UIWidget
         background-color: black
         Label
           !text: tr('No house selected')
-          color: #C0C0C0
+          color: $textColor
           text-auto-resize: true
           anchors.centerIn: parent
       UIWidget
@@ -182,7 +182,7 @@ UIWidget
       text-auto-resize: true
     Label
       id: AuctionText
-      color: #C0C0C0
+      color: $textColor
       anchors.left: MapViewbase.left
       anchors.top: AuctionLabel.bottom
       margin-top: 3
@@ -199,7 +199,7 @@ UIWidget
       visible: false
     Label
       id: subAuctionText
-      color: #C0C0C0
+      color: $textColor
       anchors.left: MapViewbase.left
       anchors.top: subAuctionLabel.bottom
       margin-top: 3
@@ -209,7 +209,7 @@ UIWidget
       id: highestBid
       size: 100 15
       text-align: right
-      color: #C0C0C0
+      color: $textColor
       anchors.right: parent.right
       anchors.bottom: AuctionText.bottom
       margin-right: 57
@@ -225,7 +225,7 @@ UIWidget
     Label
       id: yourLimitLabel
       !text: tr('Your Limit:')
-      color: #909090
+      color: $textDim
       anchors.left: AuctionText.left
       anchors.top: AuctionText.bottom
       margin-left: 15
@@ -234,7 +234,7 @@ UIWidget
       id: yourLimitBid
       size: 100 15
       text-align: right
-      color: #C0C0C0
+      color: $textColor
       anchors.right: highestBid.right
       anchors.top: highestBid.bottom
       visible: false
@@ -248,7 +248,7 @@ UIWidget
     Label
       id: transferLabel
       !text: tr('Price:')
-      color: #909090
+      color: $textDim
       anchors.left: subAuctionText.left
       anchors.top: subAuctionText.bottom
       margin-left: 64
@@ -256,7 +256,7 @@ UIWidget
     Label
       id: transferValue
       text-auto-resize: true
-      color: #C0C0C0
+      color: $textColor
       anchors.left: transferLabel.right
       anchors.top: transferLabel.top
       visible: false
@@ -291,12 +291,12 @@ UIWidget
     !text: tr('Place Your Bid')
     text-align: top
     text-offset: 0 1
-    color: #909090
+    color: $textDim
     size: 413 358
     anchors.top: LateralBase.top
     anchors.left: LateralBase.right
     //image-source: /images/ui/widget-borderimage
-    image-border: 15
+    image-border: 5
     margin-left: 5
     visible: false
     padding: 15
@@ -304,7 +304,7 @@ UIWidget
       id: cancel
       size: 43 20
       !text: tr('Cancel')
-      color: #C0C0C0
+      color: $textColor
       anchors.bottom: parent.bottom
       anchors.right: parent.right
       //font: verdana-bold-8px-antialiased
@@ -314,7 +314,7 @@ UIWidget
       id: bid
       size: 64 20
       !text: tr('Bid')
-      color: #C0C0C0
+      color: $textColor
       anchors.top: cancel.top
       anchors.right: cancel.left
       margin-right: 7
@@ -329,7 +329,7 @@ UIWidget
       color: #F7F7F7
     Label
       !text: tr('Name:')
-      color: #909090
+      color: $textDim
       text-align: right
       size: 90 15
       anchors.top: prev.bottom
@@ -337,14 +337,14 @@ UIWidget
       margin-top: 2
     Label
       id: name
-      color: #C0C0C0
+      color: $textColor
       text-auto-resize: true
       anchors.top: prev.top
       anchors.left: prev.right
       margin-left: 8
     Label
       !text: tr('Size:')
-      color: #909090
+      color: $textDim
       text-align: right
       size: 90 15
       anchors.top: name.bottom
@@ -352,14 +352,14 @@ UIWidget
       margin-top: 2
     Label
       id: size
-      color: #C0C0C0
+      color: $textColor
       text-auto-resize: true
       anchors.top: prev.top
       anchors.left: prev.right
       margin-left: 8
     Label
       !text: tr('Max. Beds:')
-      color: #909090
+      color: $textDim
       text-align: right
       size: 90 15
       anchors.top: size.bottom
@@ -367,14 +367,14 @@ UIWidget
       margin-top: 2
     Label
       id: beds
-      color: #C0C0C0
+      color: $textColor
       text-auto-resize: true
       anchors.top: prev.top
       anchors.left: prev.right
       margin-left: 8
     Label
       !text: tr('Rent:')
-      color: #909090
+      color: $textDim
       text-align: right
       size: 90 15
       anchors.top: beds.bottom
@@ -382,7 +382,7 @@ UIWidget
       margin-top: 2
     Label
       id: rent
-      color: #C0C0C0
+      color: $textColor
       text-auto-resize: true
       anchors.top: prev.top
       anchors.left: prev.right
@@ -403,12 +403,12 @@ UIWidget
     !text: tr('Select Move Date')
     text-align: top
     text-offset: 0 1
-    color: #909090
+    color: $textDim
     size: 413 358
     anchors.top: LateralBase.top
     anchors.left: LateralBase.right
     image-source: /images/ui/widget-borderimage
-    image-border: 15
+    image-border: 5
     margin-left: 5
     visible: false
     padding: 15
@@ -416,7 +416,7 @@ UIWidget
       id: cancel
       size: 43 20
       !text: tr('Cancel')
-      color: #C0C0C0
+      color: $textColor
       anchors.bottom: parent.bottom
       anchors.right: parent.right
       //font: verdana-bold-8px-antialiased
@@ -426,7 +426,7 @@ UIWidget
       id: move
       size: 64 20
       !text: tr('Move Out')
-      color: #C0C0C0
+      color: $textColor
       anchors.top: cancel.top
       anchors.right: cancel.left
       margin-right: 7
@@ -441,7 +441,7 @@ UIWidget
       color: #F7F7F7
     Label
       !text: tr('Name:')
-      color: #909090
+      color: $textDim
       text-align: right
       size: 90 15
       anchors.top: prev.bottom
@@ -449,14 +449,14 @@ UIWidget
       margin-top: 2
     Label
       id: name
-      color: #C0C0C0
+      color: $textColor
       text-auto-resize: true
       anchors.top: prev.top
       anchors.left: prev.right
       margin-left: 8
     Label
       !text: tr('Size:')
-      color: #909090
+      color: $textDim
       text-align: right
       size: 90 15
       anchors.top: name.bottom
@@ -464,14 +464,14 @@ UIWidget
       margin-top: 2
     Label
       id: size
-      color: #C0C0C0
+      color: $textColor
       text-auto-resize: true
       anchors.top: prev.top
       anchors.left: prev.right
       margin-left: 8
     Label
       !text: tr('Max. Beds:')
-      color: #909090
+      color: $textDim
       text-align: right
       size: 90 15
       anchors.top: size.bottom
@@ -479,14 +479,14 @@ UIWidget
       margin-top: 2
     Label
       id: beds
-      color: #C0C0C0
+      color: $textColor
       text-auto-resize: true
       anchors.top: prev.top
       anchors.left: prev.right
       margin-left: 8
     Label
       !text: tr('Rent:')
-      color: #909090
+      color: $textDim
       text-align: right
       size: 90 15
       anchors.top: beds.bottom
@@ -494,7 +494,7 @@ UIWidget
       margin-top: 2
     Label
       id: rent
-      color: #C0C0C0
+      color: $textColor
       text-auto-resize: true
       anchors.top: prev.top
       anchors.left: prev.right
@@ -512,7 +512,7 @@ UIWidget
       color: #F7F7F7
     Label
       !text: tr('Paid until:')
-      color: #909090
+      color: $textDim
       text-align: right
       size: 90 15
       anchors.top: prev.bottom
@@ -520,14 +520,14 @@ UIWidget
       margin-top: 2
     Label
       id: paid
-      color: #C0C0C0
+      color: $textColor
       text-auto-resize: true
       anchors.top: prev.top
       anchors.left: prev.right
       margin-left: 8
     Label
       !text: tr('Move Date:')
-      color: #909090
+      color: $textDim
       text-align: right
       size: 90 15
       anchors.top: paid.bottom
@@ -536,7 +536,7 @@ UIWidget
     ComboBox
       id: year
       size: 70 20
-      color: #C0C0C0
+      color: $textColor
       anchors.left: prev.right
       anchors.top: prev.top
       margin-left: 5
@@ -544,7 +544,7 @@ UIWidget
       margin-top: -3
     Label
       !text: tr('-')
-      color: #C0C0C0
+      color: $textColor
       anchors.top: prev.top
       anchors.left: prev.right
       margin-left: 3
@@ -552,14 +552,14 @@ UIWidget
     ComboBox
       id: month
       size: 51 20
-      color: #C0C0C0
+      color: $textColor
       text-offset: 20 1
       anchors.left: prev.right
       anchors.top: year.top
       margin-left: 5
     Label
       !text: tr('-')
-      color: #C0C0C0
+      color: $textColor
       anchors.top: prev.top
       anchors.left: prev.right
       margin-left: 3
@@ -567,7 +567,7 @@ UIWidget
     ComboBox
       id: day
       size: 50 20
-      color: #C0C0C0
+      color: $textColor
       text-offset: 15 1
       anchors.left: prev.right
       anchors.top: year.top
@@ -591,18 +591,18 @@ UIWidget
       anchors.top: prev.bottom
       anchors.left: parent.left
       margin-top: 10
-      color: #C0C0C0
+      color: $textColor
   UIWidget
     id: transferArea
     !text: tr('Configure House Transfer')
     text-align: top
     text-offset: 0 1
-    color: #909090
+    color: $textDim
     size: 413 358
     anchors.top: LateralBase.top
     anchors.left: LateralBase.right
     image-source: /images/ui/widget-borderimage
-    image-border: 15
+    image-border: 5
     margin-left: 5
     visible: false
     padding: 15
@@ -610,7 +610,7 @@ UIWidget
       id: cancel
       size: 43 20
       !text: tr('Cancel')
-      color: #C0C0C0
+      color: $textColor
       anchors.bottom: parent.bottom
       anchors.right: parent.right
       //font: verdana-bold-8px-antialiased
@@ -620,7 +620,7 @@ UIWidget
       id: transfer
       size: 64 20
       !text: tr('Transfer')
-      color: #C0C0C0
+      color: $textColor
       anchors.top: cancel.top
       anchors.right: cancel.left
       margin-right: 7
@@ -635,7 +635,7 @@ UIWidget
       color: #F7F7F7
     Label
       !text: tr('Name:')
-      color: #909090
+      color: $textDim
       text-align: right
       size: 90 15
       anchors.top: prev.bottom
@@ -643,14 +643,14 @@ UIWidget
       margin-top: 2
     Label
       id: name
-      color: #C0C0C0
+      color: $textColor
       text-auto-resize: true
       anchors.top: prev.top
       anchors.left: prev.right
       margin-left: 8
     Label
       !text: tr('Size:')
-      color: #909090
+      color: $textDim
       text-align: right
       size: 90 15
       anchors.top: name.bottom
@@ -658,14 +658,14 @@ UIWidget
       margin-top: 2
     Label
       id: size
-      color: #C0C0C0
+      color: $textColor
       text-auto-resize: true
       anchors.top: prev.top
       anchors.left: prev.right
       margin-left: 8
     Label
       !text: tr('Max. Beds:')
-      color: #909090
+      color: $textDim
       text-align: right
       size: 90 15
       anchors.top: size.bottom
@@ -673,14 +673,14 @@ UIWidget
       margin-top: 2
     Label
       id: beds
-      color: #C0C0C0
+      color: $textColor
       text-auto-resize: true
       anchors.top: prev.top
       anchors.left: prev.right
       margin-left: 8
     Label
       !text: tr('Rent:')
-      color: #909090
+      color: $textDim
       text-align: right
       size: 90 15
       anchors.top: beds.bottom
@@ -688,7 +688,7 @@ UIWidget
       margin-top: 2
     Label
       id: rent
-      color: #C0C0C0
+      color: $textColor
       text-auto-resize: true
       anchors.top: prev.top
       anchors.left: prev.right
@@ -706,7 +706,7 @@ UIWidget
       color: #F7F7F7
     Label
       !text: tr('Paid until:')
-      color: #909090
+      color: $textDim
       text-align: right
       size: 90 15
       anchors.top: prev.bottom
@@ -714,14 +714,14 @@ UIWidget
       margin-top: 2
     Label
       id: paid
-      color: #C0C0C0
+      color: $textColor
       text-auto-resize: true
       anchors.top: prev.top
       anchors.left: prev.right
       margin-left: 8
     Label
       !text: tr('Transfer Date:')
-      color: #909090
+      color: $textDim
       text-align: right
       size: 90 15
       anchors.top: paid.bottom
@@ -730,7 +730,7 @@ UIWidget
     ComboBox
       id: year
       size: 70 20
-      color: #C0C0C0
+      color: $textColor
       anchors.left: prev.right
       anchors.top: prev.top
       margin-left: 5
@@ -738,7 +738,7 @@ UIWidget
       margin-top: -3
     Label
       !text: tr('-')
-      color: #C0C0C0
+      color: $textColor
       anchors.top: prev.top
       anchors.left: prev.right
       margin-left: 3
@@ -746,14 +746,14 @@ UIWidget
     ComboBox
       id: month
       size: 51 20
-      color: #C0C0C0
+      color: $textColor
       text-offset: 20 1
       anchors.left: prev.right
       anchors.top: year.top
       margin-left: 5
     Label
       !text: tr('-')
-      color: #C0C0C0
+      color: $textColor
       anchors.top: prev.top
       anchors.left: prev.right
       margin-left: 3
@@ -761,7 +761,7 @@ UIWidget
     ComboBox
       id: day
       size: 50 20
-      color: #C0C0C0
+      color: $textColor
       text-offset: 15 1
       anchors.left: prev.right
       anchors.top: year.top
@@ -781,7 +781,7 @@ UIWidget
       image-source: /images/icons/show_gui_help_grey
     Label
       !text: tr('New Owner:')
-      color: #909090
+      color: $textDim
       text-align: right
       size: 90 15
       anchors.top: year.bottom
@@ -811,7 +811,7 @@ UIWidget
       image-source: /images/icons/show_gui_help_grey
     Label
       !text: tr('Transfer Price:')
-      color: #909090
+      color: $textDim
       text-align: right
       size: 90 15
       anchors.top: owner.bottom
@@ -837,18 +837,18 @@ UIWidget
       anchors.top: prev.bottom
       anchors.left: parent.left
       margin-top: 10
-      color: #C0C0C0
+      color: $textColor
   UIWidget
     id: cancelHouseTransferArea
     !text: tr('Cancel House Transfer')
     text-align: top
     text-offset: 0 1
-    color: #909090
+    color: $textDim
     size: 413 358
     anchors.top: LateralBase.top
     anchors.left: LateralBase.right
     image-source: /images/ui/widget-borderimage
-    image-border: 15
+    image-border: 5
     margin-left: 5
     visible: false
     padding: 15
@@ -856,7 +856,7 @@ UIWidget
       id: cancel
       size: 43 20
       !text: tr('Cancel')
-      color: #C0C0C0
+      color: $textColor
       anchors.bottom: parent.bottom
       anchors.right: parent.right
       //font: verdana-bold-8px-antialiased
@@ -866,7 +866,7 @@ UIWidget
       id: transfer
       size: 86 20
       !text: tr('Cancel Transfer')
-      color: #C0C0C0
+      color: $textColor
       anchors.top: cancel.top
       anchors.right: cancel.left
       margin-right: 7
@@ -881,7 +881,7 @@ UIWidget
       color: #F7F7F7
     Label
       !text: tr('Name:')
-      color: #909090
+      color: $textDim
       text-align: right
       size: 90 15
       anchors.top: prev.bottom
@@ -889,14 +889,14 @@ UIWidget
       margin-top: 2
     Label
       id: name
-      color: #C0C0C0
+      color: $textColor
       text-auto-resize: true
       anchors.top: prev.top
       anchors.left: prev.right
       margin-left: 8
     Label
       !text: tr('Size:')
-      color: #909090
+      color: $textDim
       text-align: right
       size: 90 15
       anchors.top: name.bottom
@@ -904,14 +904,14 @@ UIWidget
       margin-top: 2
     Label
       id: size
-      color: #C0C0C0
+      color: $textColor
       text-auto-resize: true
       anchors.top: prev.top
       anchors.left: prev.right
       margin-left: 8
     Label
       !text: tr('Max. Beds:')
-      color: #909090
+      color: $textDim
       text-align: right
       size: 90 15
       anchors.top: size.bottom
@@ -919,14 +919,14 @@ UIWidget
       margin-top: 2
     Label
       id: beds
-      color: #C0C0C0
+      color: $textColor
       text-auto-resize: true
       anchors.top: prev.top
       anchors.left: prev.right
       margin-left: 8
     Label
       !text: tr('Rent:')
-      color: #909090
+      color: $textDim
       text-align: right
       size: 90 15
       anchors.top: beds.bottom
@@ -934,7 +934,7 @@ UIWidget
       margin-top: 2
     Label
       id: rent
-      color: #C0C0C0
+      color: $textColor
       text-auto-resize: true
       anchors.top: prev.top
       anchors.left: prev.right
@@ -952,7 +952,7 @@ UIWidget
       color: #F7F7F7
     Label
       !text: tr('Paid until:')
-      color: #909090
+      color: $textDim
       text-align: right
       size: 90 15
       anchors.top: prev.bottom
@@ -960,14 +960,14 @@ UIWidget
       margin-top: 2
     Label
       id: paid
-      color: #C0C0C0
+      color: $textColor
       text-auto-resize: true
       anchors.top: prev.top
       anchors.left: prev.right
       margin-left: 8
     Label
       !text: tr('New Owner:')
-      color: #909090
+      color: $textDim
       text-align: right
       size: 90 15
       anchors.top: prev.bottom
@@ -975,14 +975,14 @@ UIWidget
       margin-top: 2
     Label
       id: owner
-      color: #C0C0C0
+      color: $textColor
       text-auto-resize: true
       anchors.top: prev.top
       anchors.left: prev.right
       margin-left: 8
     Label
       !text: tr('Transfer Date:')
-      color: #909090
+      color: $textDim
       text-align: right
       size: 90 15
       anchors.top: prev.bottom
@@ -990,14 +990,14 @@ UIWidget
       margin-top: 2
     Label
       id: transferDate
-      color: #C0C0C0
+      color: $textColor
       text-auto-resize: true
       anchors.top: prev.top
       anchors.left: prev.right
       margin-left: 8
     Label
       !text: tr('Price:')
-      color: #909090
+      color: $textDim
       text-align: right
       size: 90 15
       anchors.top: prev.bottom
@@ -1005,7 +1005,7 @@ UIWidget
       margin-top: 2
     Label
       id: transferPrice
-      color: #C0C0C0
+      color: $textColor
       text-auto-resize: true
       anchors.top: prev.top
       anchors.left: prev.right
@@ -1022,18 +1022,18 @@ UIWidget
       anchors.top: prev.bottom
       anchors.left: parent.left
       margin-top: 10
-      color: #C0C0C0
+      color: $textColor
   UIWidget
     id: acceptTransferHouse
     !text: tr('Accept House Transfer')
     text-align: top
     text-offset: 0 1
-    color: #909090
+    color: $textDim
     size: 413 358
     anchors.top: LateralBase.top
     anchors.left: LateralBase.right
     image-source: /images/ui/widget-borderimage
-    image-border: 15
+    image-border: 5
     margin-left: 5
     visible: false
     padding: 15
@@ -1041,7 +1041,7 @@ UIWidget
       id: cancel
       size: 43 20
       !text: tr('Cancel')
-      color: #C0C0C0
+      color: $textColor
       anchors.bottom: parent.bottom
       anchors.right: parent.right
       //font: verdana-bold-8px-antialiased
@@ -1051,7 +1051,7 @@ UIWidget
       id: transfer
       size: 86 20
       !text: tr('Accept Transfer')
-      color: #C0C0C0
+      color: $textColor
       anchors.top: cancel.top
       anchors.right: cancel.left
       margin-right: 7
@@ -1066,7 +1066,7 @@ UIWidget
       color: #F7F7F7
     Label
       !text: tr('Name:')
-      color: #909090
+      color: $textDim
       text-align: right
       size: 90 15
       anchors.top: prev.bottom
@@ -1074,14 +1074,14 @@ UIWidget
       margin-top: 2
     Label
       id: name
-      color: #C0C0C0
+      color: $textColor
       text-auto-resize: true
       anchors.top: prev.top
       anchors.left: prev.right
       margin-left: 8
     Label
       !text: tr('Size:')
-      color: #909090
+      color: $textDim
       text-align: right
       size: 90 15
       anchors.top: name.bottom
@@ -1089,14 +1089,14 @@ UIWidget
       margin-top: 2
     Label
       id: size
-      color: #C0C0C0
+      color: $textColor
       text-auto-resize: true
       anchors.top: prev.top
       anchors.left: prev.right
       margin-left: 8
     Label
       !text: tr('Max. Beds:')
-      color: #909090
+      color: $textDim
       text-align: right
       size: 90 15
       anchors.top: size.bottom
@@ -1104,14 +1104,14 @@ UIWidget
       margin-top: 2
     Label
       id: beds
-      color: #C0C0C0
+      color: $textColor
       text-auto-resize: true
       anchors.top: prev.top
       anchors.left: prev.right
       margin-left: 8
     Label
       !text: tr('Rent:')
-      color: #909090
+      color: $textDim
       text-align: right
       size: 90 15
       anchors.top: beds.bottom
@@ -1119,7 +1119,7 @@ UIWidget
       margin-top: 2
     Label
       id: rent
-      color: #C0C0C0
+      color: $textColor
       text-auto-resize: true
       anchors.top: prev.top
       anchors.left: prev.right
@@ -1137,7 +1137,7 @@ UIWidget
       color: #F7F7F7
     Label
       !text: tr('Paid until:')
-      color: #909090
+      color: $textDim
       text-align: right
       size: 90 15
       anchors.top: prev.bottom
@@ -1145,14 +1145,14 @@ UIWidget
       margin-top: 2
     Label
       id: paid
-      color: #C0C0C0
+      color: $textColor
       text-auto-resize: true
       anchors.top: prev.top
       anchors.left: prev.right
       margin-left: 8
     Label
       !text: tr('New Owner:')
-      color: #909090
+      color: $textDim
       text-align: right
       size: 90 15
       anchors.top: prev.bottom
@@ -1160,14 +1160,14 @@ UIWidget
       margin-top: 2
     Label
       id: owner
-      color: #C0C0C0
+      color: $textColor
       text-auto-resize: true
       anchors.top: prev.top
       anchors.left: prev.right
       margin-left: 8
     Label
       !text: tr('Transfer Date:')
-      color: #909090
+      color: $textDim
       text-align: right
       size: 90 15
       anchors.top: prev.bottom
@@ -1175,14 +1175,14 @@ UIWidget
       margin-top: 2
     Label
       id: transferDate
-      color: #C0C0C0
+      color: $textColor
       text-auto-resize: true
       anchors.top: prev.top
       anchors.left: prev.right
       margin-left: 8
     Label
       !text: tr('Price:')
-      color: #909090
+      color: $textDim
       text-align: right
       size: 90 15
       anchors.top: prev.bottom
@@ -1190,7 +1190,7 @@ UIWidget
       margin-top: 2
     Label
       id: transferPrice
-      color: #C0C0C0
+      color: $textColor
       text-auto-resize: true
       anchors.top: prev.top
       anchors.left: prev.right
@@ -1207,18 +1207,18 @@ UIWidget
       anchors.top: prev.bottom
       anchors.left: parent.left
       margin-top: 10
-      color: #C0C0C0
+      color: $textColor
   UIWidget
     id: rejectTransferHouse
     !text: tr('Reject House Transfer')
     text-align: top
     text-offset: 0 1
-    color: #909090
+    color: $textDim
     size: 413 358
     anchors.top: LateralBase.top
     anchors.left: LateralBase.right
     image-source: /images/ui/widget-borderimage
-    image-border: 15
+    image-border: 5
     margin-left: 5
     visible: false
     padding: 15
@@ -1226,7 +1226,7 @@ UIWidget
       id: cancel
       size: 43 20
       !text: tr('Cancel')
-      color: #C0C0C0
+      color: $textColor
       anchors.bottom: parent.bottom
       anchors.right: parent.right
       //font: verdana-bold-8px-antialiased
@@ -1236,7 +1236,7 @@ UIWidget
       id: transfer
       size: 86 20
       !text: tr('Reject Transfer')
-      color: #C0C0C0
+      color: $textColor
       anchors.top: cancel.top
       anchors.right: cancel.left
       margin-right: 7
@@ -1251,7 +1251,7 @@ UIWidget
       color: #F7F7F7
     Label
       !text: tr('Name:')
-      color: #909090
+      color: $textDim
       text-align: right
       size: 90 15
       anchors.top: prev.bottom
@@ -1259,14 +1259,14 @@ UIWidget
       margin-top: 2
     Label
       id: name
-      color: #C0C0C0
+      color: $textColor
       text-auto-resize: true
       anchors.top: prev.top
       anchors.left: prev.right
       margin-left: 8
     Label
       !text: tr('Size:')
-      color: #909090
+      color: $textDim
       text-align: right
       size: 90 15
       anchors.top: name.bottom
@@ -1274,14 +1274,14 @@ UIWidget
       margin-top: 2
     Label
       id: size
-      color: #C0C0C0
+      color: $textColor
       text-auto-resize: true
       anchors.top: prev.top
       anchors.left: prev.right
       margin-left: 8
     Label
       !text: tr('Max. Beds:')
-      color: #909090
+      color: $textDim
       text-align: right
       size: 90 15
       anchors.top: size.bottom
@@ -1289,14 +1289,14 @@ UIWidget
       margin-top: 2
     Label
       id: beds
-      color: #C0C0C0
+      color: $textColor
       text-auto-resize: true
       anchors.top: prev.top
       anchors.left: prev.right
       margin-left: 8
     Label
       !text: tr('Rent:')
-      color: #909090
+      color: $textDim
       text-align: right
       size: 90 15
       anchors.top: beds.bottom
@@ -1304,7 +1304,7 @@ UIWidget
       margin-top: 2
     Label
       id: rent
-      color: #C0C0C0
+      color: $textColor
       text-auto-resize: true
       anchors.top: prev.top
       anchors.left: prev.right
@@ -1322,7 +1322,7 @@ UIWidget
       color: #F7F7F7
     Label
       !text: tr('Paid until:')
-      color: #909090
+      color: $textDim
       text-align: right
       size: 90 15
       anchors.top: prev.bottom
@@ -1330,14 +1330,14 @@ UIWidget
       margin-top: 2
     Label
       id: paid
-      color: #C0C0C0
+      color: $textColor
       text-auto-resize: true
       anchors.top: prev.top
       anchors.left: prev.right
       margin-left: 8
     Label
       !text: tr('New Owner:')
-      color: #909090
+      color: $textDim
       text-align: right
       size: 90 15
       anchors.top: prev.bottom
@@ -1345,14 +1345,14 @@ UIWidget
       margin-top: 2
     Label
       id: owner
-      color: #C0C0C0
+      color: $textColor
       text-auto-resize: true
       anchors.top: prev.top
       anchors.left: prev.right
       margin-left: 8
     Label
       !text: tr('Transfer Date:')
-      color: #909090
+      color: $textDim
       text-align: right
       size: 90 15
       anchors.top: prev.bottom
@@ -1360,14 +1360,14 @@ UIWidget
       margin-top: 2
     Label
       id: transferDate
-      color: #C0C0C0
+      color: $textColor
       text-auto-resize: true
       anchors.top: prev.top
       anchors.left: prev.right
       margin-left: 8
     Label
       !text: tr('Price:')
-      color: #909090
+      color: $textDim
       text-align: right
       size: 90 15
       anchors.top: prev.bottom
@@ -1375,7 +1375,7 @@ UIWidget
       margin-top: 2
     Label
       id: transferPrice
-      color: #C0C0C0
+      color: $textColor
       text-auto-resize: true
       anchors.top: prev.top
       anchors.left: prev.right
@@ -1392,7 +1392,7 @@ UIWidget
       anchors.top: prev.bottom
       anchors.left: parent.left
       margin-top: 10
-      color: #C0C0C0
+      color: $textColor
   UIWidget
     id: ListBase
     size: 413 358

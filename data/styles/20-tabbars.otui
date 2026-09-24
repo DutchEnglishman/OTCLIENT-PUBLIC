@@ -15,7 +15,7 @@ MoveableTabBarButton < UIButton
 
   $checked:
     image-clip: 0 36 96 22
-    color: #dfdfdf
+    color: $textBright
 
   $on !checked:
     color: #F75F5F
@@ -33,7 +33,7 @@ TabBarButton < UIButton
   image-clip: 0 0 98 18
   image-border: 3
   icon-color: #dfdfdf
-  color: #dfdfdf
+  color: $textBright
   anchors.top: parent.top
   padding: 5
 
@@ -46,7 +46,7 @@ TabBarButton < UIButton
 
   $hover !checked:
     image-clip: 0 18 98 18
-    color: #dfdfdf
+    color: $textBright
 
   $disabled:
     image-color: #dfdfdf88
@@ -54,7 +54,7 @@ TabBarButton < UIButton
 
   $checked:
     image-clip: 0 36 98 18
-    color: #dfdfdf
+    color: $textBright
 
   $on !checked:
     color: #de6f6f

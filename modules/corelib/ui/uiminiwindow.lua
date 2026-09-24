@@ -4,6 +4,13 @@ UIMiniWindow = extends(UIWindow, 'UIMiniWindow')
 function UIMiniWindow.create()
     local miniwindow = UIMiniWindow.internalCreate()
     miniwindow.UIMiniWindowContainer = true
+    -- UIWindow.create sets this, but UIMiniWindow.create does not chain through
+    -- it and the MiniWindow style does not restate it, so every miniwindow used
+    -- to start non-draggable while reading as unlocked. lockButton decides which
+    -- way to toggle from isDraggable(), so its first click said "unlock" on a
+    -- window that already could not be moved.
+    miniwindow:setDraggable(true)
+    miniwindow.locked = false
     return miniwindow
 end
 
@@ -84,6 +91,45 @@ function UIMiniWindow:maximize(dontSave)
     signalcall(self.onMaximize, self)
 end
 
+-- The header button row, right to left. Every id is optional: a window that does not
+-- declare one, or hides one, simply does not get that slot.
+--
+-- This has to be laid out rather than anchored in the style, because UIAnchorLayout
+-- resolves an anchor against the hooked widget's rect without ever asking whether it is
+-- visible (uianchorlayout.cpp:48). Chaining each button off its neighbour therefore leaves
+-- a 12px hole wherever one is hidden -- and containers hide three of them, the analyser
+-- windows two, the cyclopedia three. The gaps the style shipped were uneven too (1, 7, 2,
+-- 2, 2 px), so nothing in the row lined up with anything else in it.
+local HEADER_BUTTONS = {
+    'closeButton', 'minimizeButton', 'upButton', 'toggleFilterButton',
+    'contextMenuButton', 'newWindowButton', 'lockButton'
+}
+local HEADER_BUTTON_GAP = 2     -- between two buttons
+local HEADER_BUTTON_RIGHT = 3   -- from the window's right edge to the first one
+local HEADER_BUTTON_TOP = 2     -- 12px button in a 15px header
+
+-- Re-anchors the visible header buttons into one evenly spaced row. Safe to call at any
+-- time; call it after changing whether one of them is visible.
+function UIMiniWindow:layoutHeaderButtons()
+    local previous
+    for _, id in ipairs(HEADER_BUTTONS) do
+        local button = self:getChildById(id)
+        if button and button:isExplicitlyVisible() then
+            button:breakAnchors()
+            button:addAnchor(AnchorTop, 'parent', AnchorTop)
+            button:setMarginTop(HEADER_BUTTON_TOP)
+            if previous then
+                button:addAnchor(AnchorRight, previous:getId(), AnchorLeft)
+                button:setMarginRight(HEADER_BUTTON_GAP)
+            else
+                button:addAnchor(AnchorRight, 'parent', AnchorRight)
+                button:setMarginRight(HEADER_BUTTON_RIGHT)
+            end
+            previous = button
+        end
+    end
+end
+
 function UIMiniWindow:setup()
     self:getChildById('closeButton').onClick = function()
         self:close()
@@ -115,6 +161,14 @@ function UIMiniWindow:setup()
             self:minimize()
         end
     end
+
+    -- Deferred, because a module hides its unwanted header buttons around this call and
+    -- not always before it: game_containers does it first, game_analyser right after.
+    addEvent(function()
+        if not self:isDestroyed() then
+            self:layoutHeaderButtons()
+        end
+    end)
 end
 
 function UIMiniWindow:setupOnStart()
@@ -168,6 +222,13 @@ function UIMiniWindow:setupOnStart()
                     height = true
                 })
             end
+        end
+
+        -- lock() and unlock() have always written this, and nothing has ever read
+        -- it back: a window locked before a relog came back movable, with the
+        -- open padlock still showing because setOn was never re-applied either.
+        if selfSettings.locked then
+            self:lock(true)
         end
 
         if selfSettings.closed then
@@ -552,13 +613,12 @@ function UIMiniWindow:isResizeable()
 end
 
 function UIMiniWindow:lock(dontSave)
+    self.locked = true
     local lockButton = self:getChildById('lockButton')
     if lockButton then
         lockButton:setOn(true)
     end
     self:setDraggable(false)
-    self:setBorderWidth(1)
-    self:setBorderColor('#d33c3c')
     if not dontSave then
         self:setSettings({
             locked = true
@@ -569,12 +629,12 @@ function UIMiniWindow:lock(dontSave)
 end
 
 function UIMiniWindow:unlock(dontSave)
+    self.locked = false
     local lockButton = self:getChildById('lockButton')
     if lockButton then
         lockButton:setOn(false)
     end
     self:setDraggable(true)
-    self:setBorderWidth(0)
     if not dontSave then
         self:setSettings({
             locked = false

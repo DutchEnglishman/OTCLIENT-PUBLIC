@@ -23541,23 +23541,23 @@
 	<attribute key="description" value="Upgrades a item to +1 or higher" />
 	</item>
 		
-	<item id="13481" article="a" name="Attack speed gem">
+	<item id="13481" article="a" name="Attack Speed jewel">
 	<attribute key="description" value="refines your weapon with increased attack speed" />
 	</item>
 
-	<item id="13479" article="a" name="Critical chance gem">
+	<item id="13479" article="a" name="Critical Chance jewel">
 	<attribute key="description" value="Refines your weapon with critical chance" />
 	</item>
 
-	<item id="13294" article="a" name="Critical amount gem">
+	<item id="13294" article="a" name="Critical Damage jewel">
 	<attribute key="description" value="Refines your weapon with critical amount" />
 	</item>
 
-	<item id="13295" article="a" name="Life leech amount gem">
+	<item id="13295" article="a" name="Life Steal jewel">
 	<attribute key="description" value="Refines your weapon with life leech amount" />
 	</item>
 
-	<item id="13485" article="a" name="Life leech chance gem">
+	<item id="13485" article="a" name="Life Steal Chance jewel">
 	<attribute key="description" value="Refines your weapon with life leech chance" />
 	</item>
 	

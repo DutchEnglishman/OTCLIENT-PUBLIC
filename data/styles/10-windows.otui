@@ -1,20 +1,40 @@
+// Every pop-up window in the client inherits this, so this is where the carved stone
+// frame goes on. The three numbers are one set and move together (they are generated,
+// see tools/skin-generators/make_shattered.ps1, entry `window_carved`):
+//   10  the moulding itself
+//  +2   the black and light edge lines, which must sit INSIDE image-border or they land
+//       in the tiled middle and repeat across the body as a grid of squares
+//  =12  image-border
+//  +27  the title band -> image-border-top 39
+// text-offset carries the caption down past the moulding into its band.
+//
+// The paddings are kept as tight as the chrome allows on purpose. The frame is 6px
+// thicker than the edge it replaced, and the smallest pop-ups here are 196x90 (the count
+// windows, game_stash) whose content box is only 38px tall -- giving the moulding the
+// breathing room it deserves would take a third of that. So the sides and bottom keep
+// their 16 and the moulding simply eats the margin that was empty anyway, and only
+// padding-top moves, by the 5px it must to clear the title band. Every window loses 5px
+// of content height and nothing horizontally.
+//
+// Mini-windows are a separate style and deliberately keep their plain edge -- side panels
+// do not get the frame.
 Window < UIWindow
   font: verdana-11px-antialised
   size: 200 200
   opacity: 1
-  color: #dfdfdf
-  text-offset: 0 6
+  color: $textBright
+  text-offset: 0 18
   text-align: top
-  image-source: /images/ui/window
-  image-border: 6
-  image-border-top: 27
-  padding-top: 36
+  image-source: /images/ui/window_carved
+  image-border: 12
+  image-border-top: 39
+  padding-top: 41
   padding-left: 16
   padding-right: 16
   padding-bottom: 16
 
   $disabled:
-    color: #dfdfdf88
+    color: $textDisabled
 
   $dragging:
     opacity: 0.8
@@ -36,28 +56,55 @@ StaticMainWindow < StaticWindow
 UpdaterMainWindow < StaticWindow
   size: 138 90
   image-source: /images/ui/3pixel-frame-borderimage
+  // It swaps the image but inherits Window's 9-slice numbers, which are now cut for the
+  // carved frame -- a 12px corner off a 3px frame. Pinned to its own image instead.
+  image-border: 3
+  image-border-top: 3
   padding-top: 3
   padding-left: 3
   padding-right: 3
   padding-bottom: 3
 
+// The second pop-up family -- the market, the wheel, imbuing, the analyser targets, the
+// console's two name prompts -- wears the SAME moulding cut at 6px instead of 10, because
+// the smallest of them is 360x121 and the full frame's 27-row title band alone would take
+// a seventh of that. The numbers are one set, exactly as Window's are:
+//    6  the moulding
+//   +2  the black and light edge lines, which must sit INSIDE image-border or they land
+//       in the tiled middle and repeat across the body as a grid of squares
+//   =8  image-border
+//  +17  the title band, which is the height this family's own art already had
+//   =25 image-border-top
+//
+// Unlike Window, this frame is NOT absorbed by an existing margin: the padding here was 4
+// and 17, with nothing spare. So every window under it grew by exactly what the moulding
+// takes -- 8 wide and 14 tall -- and its content box is the size it has always been. The
+// console's invite prompt is what forced that: its stack (label, field, separator, button
+// row) had 6px of slack in a 75px box, so it would have overlapped its own Ok button.
 NewWindow < UIWindow
   font: Verdana Bold-11px
   size: 200 200
-  color: #909090
-  text-offset: -2 1
-  image-source: /images/ui/popupwindow
-  image-border: 4
-  image-border-top: 17
-  padding-top: 17
-  padding-left: 4
-  padding-right: 4
-  padding-bottom: 4
+  color: $textDim
+  text-offset: 0 10
+  image-source: /images/ui/window_carved_slim
+  image-border: 8
+  image-border-top: 25
+  padding-top: 27
+  padding-left: 8
+  padding-right: 8
+  padding-bottom: 8
   display-sound: 2785
 
+// Bandless: it carries no caption, so the moulding closes over the top too. It cannot
+// simply borrow the 3px frame with wider numbers -- UpdaterMainWindow draws that same
+// image at border 3.
+//
+// Still no padding, as before. Both windows that use this (the loot splitter and the
+// tutorial's rules) fill it with a contentPanel whose own margin is 13 to 17, which
+// already clears an 8px moulding, so they keep the content box they have.
 NewHeadlessWindow < UIWindow
-  image-source: /images/ui/3pixel-frame-borderimage
-  image-border: 5
+  image-source: /images/ui/window_carved_headless
+  image-border: 8
   anchors.centerIn: parent
 
 NewMainWindow < NewWindow
@@ -72,7 +119,7 @@ NewStaticMainWindow < NewStaticWindow
 WindowCyclopedia < UIWindow
   font: Verdana Bold-11px
   size: 200 200
-  color: #909090
+  color: $textDim
   text-offset: -2 1
   image-source: /images/ui/popupwindow
   image-border: 4
@@ -85,7 +132,7 @@ WindowCyclopedia < UIWindow
 WindowPodium < UIWindow
   font: Verdana Bold-11px
   size: 200 200
-  color: #909090
+  color: $textDim
   text-offset: -2 1
   image-source: /images/ui/popupwindow
   image-border: 4
@@ -95,7 +142,7 @@ ActionAssignWindow < MainWindow
   id: assignWindow
   size: 400 215
   font: Verdana Bold-11px
-  color: #909090
+  color: $textDim
 
   Label
     id: chatMode
@@ -106,7 +153,7 @@ ActionAssignWindow < MainWindow
     text-auto-resize: true
     text: Mode: "Chat On"
     font: Verdana Bold-11px
-    color: #c0c0c0
+    color: $textColor
 
   FlatLabel
     id: display
@@ -117,7 +164,7 @@ ActionAssignWindow < MainWindow
     margin-top: 10
     text-align: center
     font: Verdana Bold-11px
-    color: #c0c0c0
+    color: $textColor
 
   Label
     id: desc
@@ -130,7 +177,7 @@ ActionAssignWindow < MainWindow
     text-wrap: true
     text: Click "Ok" to assign the hotkey. Click "Clear" to remove the hotkey from "
     font: Verdana Bold-11px
-    color: #c0c0c0
+    color: $textColor
 
   Label
     id: warning
@@ -178,14 +225,17 @@ ActionAssignWindow < MainWindow
     font: cipsoftFont
     text: Ok
 
+// Nothing derives from this today, but it named window.png at 4/17 against an image built
+// at 6/27 -- the same mistake the prey and cyclopedia panels carried, which put a title
+// band's accent line into the tiled body. Pointed at the panel surface so it is right if
+// anything ever does use it.
 WindowPanel < Panel
-  image-source: /images/ui/window
+  image-source: /images/ui/panel_window
   padding-top: 3
   padding-left: 7
   padding-bottom: 7
-  padding-right: 7  
+  padding-right: 7
   image-border: 4
-  image-border-top: 17
 
 TransparentWindow < UIWindow
   font: verdana-11px-antialised
@@ -219,7 +269,7 @@ RulesWindow < NewHeadlessWindow
       text-align: center
       padding: 1
       focusable: false
-      background-color: #484848
+      background-color: $panelFillLight
     
     HorizontalSeparator
       id: separator
@@ -251,5 +301,5 @@ RulesWindow < NewHeadlessWindow
       !tooltip: tr('I have read and I agree to the Extended Terms and Conditions.')
       margin-bottom: 5
       font: Verdana Bold-11px
-      color: #c0c0c0
+      color: $textColor
       text-auto-resize: true

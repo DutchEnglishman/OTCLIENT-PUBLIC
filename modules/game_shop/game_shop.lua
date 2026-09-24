@@ -61,7 +61,17 @@ function onExtendedOpcode(protocol, code, buffer)
         end
     )
     if not json_status then
-        g_logger.error("SHOP json error: " .. json_data)
+        g_logger.error("SHOP json error: " .. tostring(json_data))
+        return false
+    end
+
+    if type(json_data) ~= "table" then
+        return false
+    end
+
+    -- Every branch below draws into the shop window, which destroy() clears on
+    -- onGameEnd -- and a payload still in the socket buffer can land after it.
+    if not gameShopWindow then
         return false
     end
 
@@ -310,8 +320,10 @@ function addCategory(data)
 end
 
 function onGameShopUpdatePoints(data)
-    premiumPoints = tonumber(data.points)
-    premiumSecondPoints = tonumber(data.secondPoints)
+    -- comma_value runs string.match on what it is given, so a missing field
+    -- would throw there rather than draw a zero.
+    premiumPoints = tonumber(data.points) or 0
+    premiumSecondPoints = tonumber(data.secondPoints) or -1
     local pointsWidget = gameShopWindow:getChildById("balance"):getChildById("value")
     pointsWidget:setText(comma_value(premiumPoints))
 

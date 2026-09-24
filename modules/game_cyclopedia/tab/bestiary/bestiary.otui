@@ -12,7 +12,7 @@ UIWidget
     !text: tr('Search')
     font: small-9px
     text-offset: 0 -1
-    color: #C0C0C0
+    color: $textColor
     @onClick:  modules.game_cyclopedia.Cyclopedia.BestiarySearch(self:getText())
   TextEdit
     id: SearchEdit
@@ -23,7 +23,7 @@ UIWidget
     placeholder: Type to search
     placeholder-color: #6E706F
     font: verdana-11px-monochrome
-    color: #C0C0C0
+    color: $textColor
     padding-top: 1
     shader: Map - Party
     @onTextChange: modules.game_cyclopedia.Cyclopedia.BestiarySearchText(self:getText())
@@ -58,19 +58,21 @@ UIWidget
       icon-source: /game_cyclopedia/images/icon-left-arrow-disabled
     $disabled:
       icon-source: /game_cyclopedia/images/icon-left-arrow-disabled
-  UIWidget
+  // Matches the Search button beside it instead of the stock cyclopedia arrow
+  // art. It was a UIWidget, so its $pressed/$disabled states never fired --
+  // only UIButton tracks those -- and a disabled back button was
+  // indistinguishable from a live one. onClick is still assigned in
+  // Cyclopedia.onStageChange, which a Button honours unchanged.
+  Button
     id: BackPageButton
-    size: 20 20
+    size: 50 20
     anchors.right: PrevPageButton.left
     anchors.bottom: PageValue.bottom
     margin-right: 10
-
-
-    image-source: /game_cyclopedia/images/button_back
-    $pressed:
-      image-source: /game_cyclopedia/images/button_back_pressed
-    $disabled:
-      image-source: /game_cyclopedia/images/button_back_disabled
+    !text: tr('Back')
+    font: small-9px
+    text-offset: 0 -1
+    color: $textColor
   Panel
     id: ListBase
     anchors.bottom: SearchButton.top
@@ -104,7 +106,7 @@ UIWidget
       id: CreatureInfo
       anchors.fill: parent
       image-source: /images/ui/outfits/minipanel
-      image-border: 20
+      image-border: 3
       visible: false
       !text: tr('Creature Name')
       text-align: top
@@ -268,7 +270,7 @@ UIWidget
         margin-bottom: 2
         text-auto-resize: true
         !text: tr('Total: ?')
-        color: #909090
+        color: $textDim
       Label
         id: TaskRemaining
         anchors.bottom: UnlockHint.top
@@ -276,7 +278,7 @@ UIWidget
         margin-bottom: 4
         text-auto-resize: true
         !text: tr('Remaining: ?')
-        color: #909090
+        color: $textDim
       Label
         id: UnlockHint
         anchors.bottom: LeftBase.bottom
@@ -465,25 +467,72 @@ UIWidget
         margin-bottom: 5
         margin-left: 5
         margin-right: 5
-        image-source: /game_cyclopedia/images/panel_flat
-        image-border: 10
+        // The bestiary's own framed slate rather than the generic flat panel:
+        // this is a window of its own now, holding one tile per drop, not a
+        // strip of rarity rows.
+        // No title text: LootStatus occupies that line and says something
+        // useful ("3 of 11 drops hidden - next reveal at 1000 kills"), where a
+        // "Loot" caption would only have fought it for the space.
+        image-source: /game_cyclopedia/images/bestiary/window
+        image-border: 12
+        Button
+          id: UnlockAllButton
+          size: 104 20
+          anchors.top: parent.top
+          anchors.right: parent.right
+          margin-top: 4
+          margin-right: 10
+          !text: tr('Unlock All (10)')
+          font: small-9px
+          text-offset: 0 -1
+          color: $textColor
+          @onClick: modules.game_cyclopedia.Cyclopedia.onBestiaryUnlockClick('all')
+        Button
+          id: UnlockStageButton
+          size: 104 20
+          anchors.top: UnlockAllButton.top
+          anchors.right: UnlockAllButton.left
+          margin-right: 4
+          !text: tr('Unlock Next (5)')
+          font: small-9px
+          text-offset: 0 -1
+          color: $textColor
+          @onClick: modules.game_cyclopedia.Cyclopedia.onBestiaryUnlockClick('stage')
+        Label
+          id: LootStatus
+          anchors.left: parent.left
+          anchors.right: UnlockStageButton.left
+          anchors.verticalCenter: UnlockAllButton.verticalCenter
+          margin-left: 12
+          margin-right: 8
+          font: verdana-11px-monochrome
+          color: #909090
         UIScrollArea
           id: Itemlist
-          anchors.fill: parent
-          margin-bottom: 5
-          margin-left: 5
-          margin-right: 20
-          padding-top: 5
-          auto-focus: first
+          anchors.top: UnlockAllButton.bottom
+          anchors.left: parent.left
+          anchors.right: parent.right
+          anchors.bottom: parent.bottom
+          margin-top: 5
+          margin-bottom: 8
+          margin-left: 10
+          margin-right: 24
           vertical-scrollbar: ItemlistScrollBar
-          layout: verticalBox
+          // No fit-children here. This panel is anchored top AND bottom, so its height is
+          // already settled; fit-children defers a setHeight to the content height every
+          // update (uigridlayout.cpp:113, uiverticallayout.cpp), the anchors put it back,
+          // and the two never agree -- the dispatcher never drains and the client hangs
+          // with an empty log. The scroll range comes from the children's extent, which is
+          // how the other 38 UIScrollAreas in this client work. The inner BestiaryLootGrid
+          // keeps its fit-children: that one is not anchored bottom, so it settles.
+          layout:
+            type: verticalBox
         VerticalScrollBar
           id: ItemlistScrollBar
-          anchors.top: parent.top
+          anchors.top: Itemlist.top
           anchors.bottom: parent.bottom
           anchors.right: parent.right
-          margin-right: 2
-          margin-top: 2
-          margin-bottom: 2
-          step: 37
+          margin-right: 6
+          margin-bottom: 8
+          step: 42
           pixels-scroll: true

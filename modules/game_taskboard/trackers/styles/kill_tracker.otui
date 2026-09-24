@@ -40,7 +40,7 @@ TaskBoardPreyCreatureTrack < Panel
     margin-right: 10
     text: Inactive
     font: Verdana Bold-11px
-    color: #c0c0c0
+    color: $textColor
     text-align: left
     phantom: true
 
@@ -51,7 +51,7 @@ TaskBoardPreyCreatureTrack < Panel
     anchors.left: prev.left
     margin-top: 3
     background-color: #C28400
-    color: #c0c0c0
+    color: $textColor
     phantom: true
 
   UIWidget
@@ -104,7 +104,7 @@ TaskBoardBountyCreatureTrack < Panel
     margin-top: -1
     text: Inactive
     font: Verdana Bold-11px
-    color: #c0c0c0
+    color: $textColor
     text-align: left
     phantom: true
 
@@ -117,7 +117,7 @@ TaskBoardBountyCreatureTrack < Panel
     background-color: #C28400
     percent: 0
     phantom: false
-    color: #c0c0c0
+    color: $textColor
 
 TaskBoardWeeklyCreatureTrack < Panel
   size: 144 19
@@ -172,7 +172,7 @@ TaskBoardWeeklyCreatureTrack < Panel
     margin-top: -1
     text: Inactive
     font: Verdana Bold-11px
-    color: #c0c0c0
+    color: $textColor
     text-align: left
     phantom: true
 
@@ -185,7 +185,7 @@ TaskBoardWeeklyCreatureTrack < Panel
     background-color: #C28400
     percent: 0
     phantom: false
-    color: #c0c0c0
+    color: $textColor
 
 TaskBoardKillTracker < MiniWindow
   id: taskboardKillTracker
@@ -226,7 +226,7 @@ TaskBoardKillTracker < MiniWindow
     Label
       !text: tr('Prey Creatures')
       font: Verdana Bold-11px
-      color: #c0c0c0
+      color: $textColor
 
     HorizontalSeparator
       margin-top: 3
@@ -252,7 +252,7 @@ TaskBoardKillTracker < MiniWindow
     Label
       !text: tr('Bounty Task')
       font: Verdana Bold-11px
-      color: #c0c0c0
+      color: $textColor
       margin-top: 5
 
     HorizontalSeparator
@@ -267,7 +267,7 @@ TaskBoardKillTracker < MiniWindow
       id: weeklyTasksLabel
       !text: tr('Weekly Tasks')
       font: Verdana Bold-11px
-      color: #c0c0c0
+      color: $textColor
       margin-top: 5
       visible: false
 

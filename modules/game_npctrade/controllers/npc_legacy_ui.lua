@@ -11,6 +11,12 @@ local CURRENCY_DECIMAL = DEFAULT_CURRENCY_DECIMAL
 -- hourly tokens has to send its own balance or the window would show a
 -- number that has nothing to do with what it is about to spend.
 local shopBalance = nil
+
+-- What the player holds in the bank, sent beside the goods packet
+-- (SHOP_BANK_BALANCE_OPCODE). Shown as its own row, and only on a shop trading
+-- in gold: a shop charging task points or hourly tokens sets shopBalance, and
+-- the bank has nothing to do with what it spends.
+local bankBalance = 0
 local WEIGHT_UNIT = 'oz'
 local LAST_INVENTORY = 10
 
@@ -25,6 +31,9 @@ local quantityScroll = nil
 local nameLabel = nil
 local priceLabel = nil
 local moneyLabel = nil
+local bankDesc = nil
+local bankLabel = nil
+local bankRowHeight = nil
 local weightDesc = nil
 local weightLabel = nil
 local capacityDesc = nil
@@ -61,6 +70,22 @@ function controllerNpcTrader:legacy_init()
     nameLabel = setupPanel:getChildById('name')
     priceLabel = setupPanel:getChildById('price')
     moneyLabel = setupPanel:getChildById('money')
+    bankDesc = setupPanel:getChildById('bankDesc')
+    bankLabel = setupPanel:getChildById('bank')
+    -- Captured before the row is ever collapsed, so restoring it needs no
+    -- hardcoded figure. The fallback is the height of verdana-11px-antialised,
+    -- which is what a Label with no explicit size comes out as.
+    bankRowHeight = bankDesc:getHeight()
+    if bankRowHeight <= 0 then
+        bankRowHeight = 14
+    end
+    -- Both halves of the row own their height from here on. UIWidget::updateText
+    -- (src/framework/ui/uiwidgettext.cpp) re-sizes a label to its text whenever
+    -- text-auto-resize is on -- which it is on the value label -- and for ANY
+    -- label whose height is not positive, so a collapsed row would grow itself
+    -- back on the next setText. Width still follows the number.
+    bankDesc:setTextVerticalAutoResize(false)
+    bankLabel:setTextVerticalAutoResize(false)
     weightDesc = setupPanel:getChildById('weightDesc')
     weightLabel = setupPanel:getChildById('weight')
     capacityDesc = setupPanel:getChildById('capacityDesc')
@@ -250,6 +275,31 @@ function setShopCurrency(label, balance)
     refreshPlayerGoods()
 end
 
+-- Called from the bank-balance extended opcode, which arrives right behind the
+-- goods packet on every refresh -- so this is current after a purchase that was
+-- paid out of the bank, without the window asking for anything.
+function setShopBankBalance(balance)
+    bankBalance = tonumber(balance) or 0
+
+    if initialized then
+        refreshPlayerGoods()
+    end
+end
+
+-- The setup panel is one anchor chain, each row's top being the bottom of the
+-- row above it, so a row that is merely invisible still holds its place and
+-- leaves a gap above Weight. Collapsing its height and its top margin as well
+-- puts everything below back within a pixel of where it sits with no bank row.
+local function setBankRowVisible(state)
+    bankDesc:setVisible(state)
+    bankLabel:setVisible(state)
+    -- 1 rather than 0: a zero height leaves an invalid rect, which is the other
+    -- condition that puts updateText back in charge of the height.
+    bankDesc:setHeight(state and bankRowHeight or 1)
+    bankLabel:setHeight(state and bankRowHeight or 1)
+    bankDesc:setMarginTop(state and 5 or 0)
+end
+
 function setShowWeight(state)
     showWeight = state
     weightDesc:setVisible(state)
@@ -412,6 +462,11 @@ function refreshPlayerGoods()
     checkSellAllTooltip()
 
     moneyLabel:setText(formatCurrency(shopBalance or playerMoney))
+
+    -- Gold shops only. A shop trading in task points or hourly tokens has set
+    -- shopBalance, and its prices have nothing to do with the bank.
+    bankLabel:setText(formatCurrency(bankBalance))
+    setBankRowVisible(shopBalance == nil)
     capacityLabel:setText(string.format('%.2f', playerFreeCapacity) .. ' ' .. WEIGHT_UNIT)
 
     local currentTradeType = getCurrentTradeType()

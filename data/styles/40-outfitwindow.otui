@@ -13,7 +13,7 @@ MiniPanel < Panel
   text-align: top
   image-source: /images/ui/outfits/minipanel
   image-border: 3
-  image-border-top: 22
+  image-border-top: 3
   padding-left: 6
   padding-bottom: 6
   padding-top: 25
@@ -479,12 +479,12 @@ OutfitWindow < MainWindow
           text: Preset:
           text-offset: 15 0
           width: 84
-          color: #c0c0c0
+          color: $textColor
           image-source: /images/ui/checkboxcircle
           image-clip: 0 0 12 12
 
           $hover !disabled:
-            color: #C0C0C0
+            color: $textColor
         
         FlatPanel
           id: name
@@ -507,12 +507,12 @@ OutfitWindow < MainWindow
           size: 12 12
           font: Verdana Bold-11px
           width: 84
-          color: #c0c0c0
+          color: $textColor
           image-source: /images/ui/checkboxcircle
           image-clip: 0 0 12 12
 
           $hover !disabled:
-            color: #C0C0C0
+            color: $textColor
         
         FlatPanel
           id: name
@@ -534,12 +534,12 @@ OutfitWindow < MainWindow
           font: Verdana Bold-11px
           text: Mount:
           width: 84
-          color: #c0c0c0
+          color: $textColor
           image-source: /images/ui/checkboxcircle
           image-clip: 0 0 12 12
 
           $hover !disabled:
-            color: #C0C0C0
+            color: $textColor
         
         FlatPanel
           id: name
@@ -570,12 +570,12 @@ OutfitWindow < MainWindow
             if not g_game.getFeature(GamePlayerFamiliars) then
               self:hide()
             end
-          color: #c0c0c0
+          color: $textColor
           image-source: /images/ui/checkboxcircle
           image-clip: 0 0 12 12
 
           $hover !disabled:
-            color: #C0C0C0
+            color: $textColor
 
         FlatPanel
           id: name
@@ -601,12 +601,12 @@ OutfitWindow < MainWindow
           font: Verdana Bold-11px
           text: Wings:
           width: 84
-          color: #c0c0c0
+          color: $textColor
           image-source: /images/ui/checkboxcircle
           image-clip: 0 0 12 12
 
           $hover !disabled:
-            color: #C0C0C0
+            color: $textColor
         
         FlatPanel
           id: name
@@ -628,12 +628,12 @@ OutfitWindow < MainWindow
           font: Verdana Bold-11px
           text: Aura:
           width: 84
-          color: #c0c0c0
+          color: $textColor
           image-source: /images/ui/checkboxcircle
           image-clip: 0 0 12 12
 
           $hover !disabled:
-            color: #C0C0C0
+            color: $textColor
         
         FlatPanel
           id: name
@@ -655,12 +655,12 @@ OutfitWindow < MainWindow
           font: Verdana Bold-11px
           text: Shader:
           width: 84
-          color: #c0c0c0
+          color: $textColor
           image-source: /images/ui/checkboxcircle
           image-clip: 0 0 12 12
 
           $hover !disabled:
-            color: #C0C0C0
+            color: $textColor
         
         FlatPanel
           id: name
@@ -682,12 +682,12 @@ OutfitWindow < MainWindow
           font: Verdana Bold-11px
           text: Health Bar:
           width: 84
-          color: #c0c0c0
+          color: $textColor
           image-source: /images/ui/checkboxcircle
           image-clip: 0 0 12 12
 
           $hover !disabled:
-            color: #C0C0C0
+            color: $textColor
         
         FlatPanel
           id: name
@@ -709,12 +709,12 @@ OutfitWindow < MainWindow
           font: Verdana Bold-11px
           text: Effects:
           width: 84
-          color: #c0c0c0
+          color: $textColor
           image-source: /images/ui/checkboxcircle
           image-clip: 0 0 12 12
 
           $hover !disabled:
-            color: #C0C0C0
+            color: $textColor
         
         FlatPanel
           id: name
@@ -736,12 +736,12 @@ OutfitWindow < MainWindow
           font: Verdana Bold-11px
           text: title :
           width: 84
-          color: #c0c0c0
+          color: $textColor
           image-source: /images/ui/checkboxcircle
           image-clip: 0 0 12 12
 
           $hover !disabled:
-            color: #C0C0C0
+            color: $textColor
         
         FlatPanel
           id: name

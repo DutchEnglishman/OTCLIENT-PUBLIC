@@ -202,7 +202,7 @@ BonusSelectPanel < UIWidget
 BonusDetailPanel < UIWidget
   id: bonusDetailPanel
   size: 108 77
-  background-color: #404040
+  background-color: $panelFillRaised
   border-width: 1
   border-color: #606060
 
@@ -210,7 +210,7 @@ BonusDetailPanel < UIWidget
     id: bonusName
     anchors.fill: parent
     margin: 4 4 4 4
-    color: #c0c0c0
+    color: $textColor
     text-align: center
     text-wrap: true
     tooltip-delayed: true
@@ -238,7 +238,10 @@ MainWindow
         size: 202 149
         anchors.left: parent.left
         anchors.top: parent.top
-        image-source: /images/ui/window
+        // Was window.png at border 4, which starts the tiled middle INSIDE that image's
+        // title band -- so the whole panel came out band-coloured with the accent line
+        // repeating down it. This is the plain panel surface.
+        image-source: /images/ui/panel_window
         image-border: 4
 
         Label
@@ -247,7 +250,7 @@ MainWindow
           anchors.top: parent.top
           !text: tr('Unknown Item')
           text-auto-resize: true
-          color: #909090
+          color: $textDim
           margin-top: 2
 
         UIWidget
@@ -289,7 +292,7 @@ MainWindow
           anchors.right: parent.right
           margin-top: 5
           !text: tr('0 / 0')
-          color: #c0c0c0
+          color: $textColor
           text-auto-resize: true
           text-wrap: true
           text-align: center
@@ -301,7 +304,7 @@ MainWindow
           anchors.right: parent.right
           margin-top: 5
           !text: tr('0 XP for next level')
-          color: #c0c0c0
+          color: $textColor
           text-auto-resize: true
           text-wrap: true
           text-align: center
@@ -356,7 +359,7 @@ MainWindow
         !text: tr('Weapons: All')
         anchors.top: prev.bottom
         anchors.left: parent.left
-        color: #c0c0c0
+        color: $textColor
         margin-top: 4
         @onSetup: |
           self:addOption("Weapons: Axes", nil, true)
@@ -397,7 +400,7 @@ MainWindow
         anchors.left: parent.left
         vertical-scrollbar: itemListScroll
         margin-top: 5
-        color: #c0c0c0
+        color: $textColor
         keep-scroll-range: true
         padding-top: 4
         padding-left: 4
@@ -478,7 +481,7 @@ MainWindow
         anchors.top: bonusProgressBackground.bottom
         anchors.left: bonusProgressBackground.left
         margin-top: 3
-        background-color: #404040
+        background-color: $panelFillRaised
         border-width: 1
         border-color: #606060
         layout:

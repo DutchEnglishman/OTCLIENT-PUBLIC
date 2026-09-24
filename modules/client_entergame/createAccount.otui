@@ -306,7 +306,7 @@ MainWindow
         text-offset: 1 1
 
       $disabled:
-        color: #dfdfdf88
+        color: $textDisabled
         opacity: 0.8
       $!disabled:
         color: #ffffff
@@ -570,7 +570,7 @@ MainWindow
 
       TextList
         id: textListAllWorlds
-        background-color: #404040
+        background-color: $panelFillRaised
         anchors.top: prev.bottom
         anchors.left: parent.left
         anchors.bottom: parent.bottom
@@ -588,7 +588,7 @@ MainWindow
       MiniPanel
         id: worldInfo
         text: World Name
-        background-color: #404040
+        background-color: $panelFillRaised
         anchors.top: panelSelectworldAndPvp.bottom
         anchors.left: textListAllWorlds.right
         anchors.right: parent.right
@@ -604,13 +604,13 @@ MainWindow
 
           Label
             width: 110
-            color: #dfdfdf
+            color: $textBright
             text: Player Online:
 
           Label
             id: PlayersOnline
             text-auto-resize: true
-            color: #dfdfdf
+            color: $textBright
 
         Panel
           height: 14
@@ -619,13 +619,13 @@ MainWindow
 
           Label
             width: 110
-            color: #dfdfdf
+            color: $textBright
             text: PvP Type:
 
           Label
             id: PvPType
             text-auto-resize: true
-            color: #dfdfdf
+            color: $textBright
 
         Panel
           height: 14
@@ -634,13 +634,13 @@ MainWindow
 
           Label
             width: 110
-            color: #dfdfdf
+            color: $textBright
             text: World Locations:
 
           Label
             id: Region
             text-auto-resize: true
-            color: #dfdfdf
+            color: $textBright
 
         Panel
           height: 14
@@ -649,13 +649,13 @@ MainWindow
 
           Label
             width: 110
-            color: #dfdfdf
+            color: $textBright
             text: Creation Date
 
           Label
             id: CreationDate
             text-auto-resize: true
-            color: #dfdfdf
+            color: $textBright
 
         Panel
           height: 14
@@ -664,13 +664,13 @@ MainWindow
 
           Label
             width: 110
-            color: #dfdfdf
+            color: $textBright
             text: BattleEye Status:
 
           Label
             id: BattlEyeActivationTimestamp
             text-auto-resize: true
-            color: #dfdfdf
+            color: $textBright
 
         Panel
           height: 14
@@ -679,13 +679,13 @@ MainWindow
 
           Label
             width: 110
-            color: #dfdfdf
+            color: $textBright
             text: Premium Only:
 
           Label
             id: PremiumOnly
             text-auto-resize: true
-            color: #dfdfdf
+            color: $textBright
 
         Panel
           height: 14
@@ -694,13 +694,13 @@ MainWindow
 
           Label
             width: 110
-            color: #dfdfdf
+            color: $textBright
             text: Transfer Type:
 
           Label
             id: TransferType
             text-auto-resize: true
-            color: #dfdfdf
+            color: $textBright
 
     HorizontalSeparator
       id:separadorThee

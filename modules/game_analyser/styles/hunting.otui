@@ -41,7 +41,7 @@ MiniWindow
       anchors.top: parent.top
       anchors.left: parent.left
       text-auto-resize: true
-      color: #c0c0c0
+      color: $textColor
       font: Verdana Bold-11px
 
     Label
@@ -50,7 +50,7 @@ MiniWindow
       anchors.top: parent.top
       anchors.right: parent.right
       text-auto-resize: true
-      color: #c0c0c0
+      color: $textColor
       font: Verdana Bold-11px
 
     Label
@@ -60,7 +60,7 @@ MiniWindow
       anchors.left: parent.left
       margin-top: 5
       text-auto-resize: true
-      color: #c0c0c0
+      color: $textColor
       font: Verdana Bold-11px
       visible: false
 
@@ -70,7 +70,7 @@ MiniWindow
       anchors.top: prev.top
       anchors.right: parent.right
       text-auto-resize: true
-      color: #c0c0c0
+      color: $textColor
       font: Verdana Bold-11px
       visible: false
 
@@ -81,7 +81,7 @@ MiniWindow
       anchors.left: parent.left
       margin-top: 5
       text-auto-resize: true
-      color: #c0c0c0
+      color: $textColor
       font: Verdana Bold-11px
 
     Label
@@ -91,7 +91,7 @@ MiniWindow
       anchors.right: parent.right
       margin-top: 5
       text-auto-resize: true
-      color: #c0c0c0
+      color: $textColor
       font: Verdana Bold-11px
 
     Label
@@ -101,7 +101,7 @@ MiniWindow
       anchors.left: parent.left
       margin-top: 5
       text-auto-resize: true
-      color: #c0c0c0
+      color: $textColor
       font: Verdana Bold-11px
       visible: false
 
@@ -111,7 +111,7 @@ MiniWindow
       anchors.top: prev.top
       anchors.right: parent.right
       text-auto-resize: true
-      color: #c0c0c0
+      color: $textColor
       font: Verdana Bold-11px
       visible: false
 
@@ -122,7 +122,7 @@ MiniWindow
       anchors.left: parent.left
       margin-top: 5
       text-auto-resize: true
-      color: #c0c0c0
+      color: $textColor
       font: Verdana Bold-11px
 
     Label
@@ -132,7 +132,7 @@ MiniWindow
       anchors.top: prev.top
       anchors.right: parent.right
       text-auto-resize: true
-      color: #c0c0c0
+      color: $textColor
       font: Verdana Bold-11px
 
     Label
@@ -142,7 +142,7 @@ MiniWindow
       anchors.left: parent.left
       margin-top: 5
       text-auto-resize: true
-      color: #c0c0c0
+      color: $textColor
       font: Verdana Bold-11px
 
     UIWidget
@@ -161,7 +161,7 @@ MiniWindow
       margin-top: 5
       margin-right: 4
       text-auto-resize: true
-      color: #c0c0c0
+      color: $textColor
       font: Verdana Bold-11px
 
     Label
@@ -171,7 +171,7 @@ MiniWindow
       anchors.left: parent.left
       margin-top: 5
       text-auto-resize: true
-      color: #c0c0c0
+      color: $textColor
       font: Verdana Bold-11px
 
     UIWidget
@@ -190,7 +190,7 @@ MiniWindow
       margin-top: 5
       margin-right: 4
       text-auto-resize: true
-      color: #c0c0c0
+      color: $textColor
       font: Verdana Bold-11px
 
     Label
@@ -200,7 +200,7 @@ MiniWindow
       anchors.left: parent.left
       margin-top: 5
       text-auto-resize: true
-      color: #c0c0c0
+      color: $textColor
       font: Verdana Bold-11px
 
     UIWidget
@@ -229,7 +229,7 @@ MiniWindow
       anchors.left: parent.left
       margin-top: 5
       text-auto-resize: true
-      color: #c0c0c0
+      color: $textColor
       font: Verdana Bold-11px
 
     Label
@@ -239,7 +239,7 @@ MiniWindow
       anchors.right: parent.right
       margin-top: 5
       text-auto-resize: true
-      color: #c0c0c0
+      color: $textColor
       font: Verdana Bold-11px
 
     Label
@@ -249,7 +249,7 @@ MiniWindow
       anchors.left: parent.left
       margin-top: 5
       text-auto-resize: true
-      color: #c0c0c0
+      color: $textColor
       font: Verdana Bold-11px
 
     Label
@@ -259,7 +259,7 @@ MiniWindow
       anchors.right: parent.right
       margin-top: 5
       text-auto-resize: true
-      color: #c0c0c0
+      color: $textColor
       font: Verdana Bold-11px
 
     Label
@@ -269,7 +269,7 @@ MiniWindow
       anchors.left: parent.left
       margin-top: 5
       text-auto-resize: true
-      color: #c0c0c0
+      color: $textColor
       font: Verdana Bold-11px
 
     Label
@@ -279,7 +279,7 @@ MiniWindow
       anchors.right: parent.right
       margin-top: 5
       text-auto-resize: true
-      color: #c0c0c0
+      color: $textColor
       font: Verdana Bold-11px
 
     Label
@@ -289,7 +289,7 @@ MiniWindow
       anchors.left: parent.left
       margin-top: 5
       text-auto-resize: true
-      color: #c0c0c0
+      color: $textColor
       font: Verdana Bold-11px
 
     Label
@@ -299,7 +299,7 @@ MiniWindow
       anchors.right: parent.right
       margin-top: 5
       text-auto-resize: true
-      color: #c0c0c0
+      color: $textColor
       font: Verdana Bold-11px
 
     Label
@@ -309,7 +309,7 @@ MiniWindow
       anchors.left: parent.left
       margin-top: 5
       text-auto-resize: true
-      color: #c0c0c0
+      color: $textColor
       font: Verdana Bold-11px
 
     Panel
@@ -326,7 +326,7 @@ MiniWindow
         anchors.top: parent.top
         anchors.left: parent.left
         text-auto-resize: true
-        color: #c0c0c0
+        color: $textColor
         font: Verdana Bold-11px
 
     Label
@@ -336,7 +336,7 @@ MiniWindow
       anchors.left: parent.left
       margin-top: 5
       text-auto-resize: true
-      color: #c0c0c0
+      color: $textColor
       font: Verdana Bold-11px
 
     Panel
@@ -353,7 +353,7 @@ MiniWindow
         anchors.top: parent.top
         anchors.left: parent.left
         text-auto-resize: true
-        color: #c0c0c0
+        color: $textColor
         font: Verdana Bold-11px
 
   UIWidget

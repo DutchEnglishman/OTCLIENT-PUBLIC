@@ -13,11 +13,11 @@ RemoveBagButton < UIWidget
   $pressed:
     image-clip: 0 20 20 20
 QuicLootIgnoreItem < UIWidget
-  background-color: #484848
+  background-color: $panelFillLight
   Label
     id: label
     !text: tr('bag')
-    color: #C0C0C0
+    color: $textColor
     anchors.verticalCenter: parent.verticalCenter
     anchors.left: parent.left
     text-auto-resize: true
@@ -37,12 +37,12 @@ QuicLootIgnoreItem < UIWidget
     $pressed:
       opacity: 0.5
 QuicklootBagLabel < UIWidget
-  background-color: #484848
+  background-color: $panelFillLight
 
   Label
     id: label
     !text: tr('Unassigned Loot')
-    color: #C0C0C0
+    color: $textColor
     anchors.verticalCenter: parent.verticalCenter
     anchors.left: parent.left
     text-auto-resize: true
@@ -111,7 +111,7 @@ QuicklootBagLabel < UIWidget
 Window
   id: main
   !text: tr('Manage Containers')
-  color: #C0C0C0
+  color: $textColor
   size: 700 425
   anchors.centerIn: parent
   @onEscape: modules.game_quickloot.QuickLoot.toggle()
@@ -134,7 +134,7 @@ Window
   Label
 
     !text: tr('Loot')
-    color: #C0C0C0
+    color: $textColor
     anchors.top: fallbackPanel.bottom
     anchors.left: parent.left
     margin-left: 85
@@ -142,7 +142,7 @@ Window
   Label
 
     !text: tr('Obtain')
-    color: #C0C0C0
+    color: $textColor
     margin-right: 15
     anchors.top: fallbackPanel.bottom
     anchors.right: fallbackPanel.right
@@ -187,7 +187,7 @@ Window
     Label
       id: label
       !text: tr('Quick Loot Filter:')
-      color: #C0C0C0
+      color: $textColor
       anchors.top: parent.top
       anchors.left: parent.left
     CheckBoxCircle
@@ -197,7 +197,7 @@ Window
       anchors.top: label.bottom
       anchors.left: parent.left
       text: Skipped Loot
-      color: #C0C0C0
+      color: $textColor
       width: 84
       checked: true
       @onClick: QuickLoot.filter(self, self:isChecked())
@@ -208,14 +208,14 @@ Window
       anchors.top: skipped.bottom
       anchors.left: parent.left
       text: Accepted Loot
-      color: #C0C0C0
+      color: $textColor
       width: 84
       @onClick: QuickLoot.filter(self, self:isChecked())
     QtButton
       id: clear
       size: 128 20
       !text: tr('Clear Skipped Loot List')
-      color: #C0C0C0
+      color: $textColor
       font: small-9px
       anchors.top: accepted.bottom
       anchors.left: parent.left
@@ -225,7 +225,7 @@ Window
       id: add
       size: 128 20
       !text: tr('Add to Skipped Loot List')
-      color: #C0C0C0
+      color: $textColor
       font: small-9px
       anchors.bottom: parent.bottom
       anchors.left: parent.left
@@ -238,7 +238,7 @@ Window
     image-source: /images/ui/2pixel_up_frame_borderimage
     image-border: 5
     text-wrap: true
-    color: #C0C0C0
+    color: $textColor
     text-align: left
     text-offset: 5 -50
     !text: tr('Select containers for your loot!\n\nRefine your Quick Looting by setting objects on your skipped loot or accepted loot list!')
@@ -269,7 +269,7 @@ Window
         $!on:
           image-clip: 0 74 128 37
         $disabled:
-          color: #dfdfdf88
+          color: $textDisabled
           opacity: 0.8
       Label
         id: label
@@ -325,7 +325,7 @@ Window
   QtButton
     size: 43 20
     !text: tr('Close')
-    color: #C0C0C0
+    color: $textColor
     anchors.bottom: parent.bottom
     anchors.right: parent.right
     @onClick: QuickLoot.toggle()

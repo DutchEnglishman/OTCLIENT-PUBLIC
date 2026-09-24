@@ -12,7 +12,11 @@ EnterGameWindow
   &authenticatorHeight: 44
   &stayLoggedBoxEnabled: false
   &stayLoggedBoxHeight: 24
-  size: 280 245
+  // 245 before the carved frame, where the Login button already overflowed the content
+  // box by 8px and only cleared the old 6px edge. The frame is 12px and padding-top grew
+  // 5, so the button landed 9px into the moulding. 258 puts its bottom flush with the
+  // content box (bottom = height - padding-bottom) again.
+  size: 280 258
   @onEnter: EnterGame.doLogin()
 
   Label
