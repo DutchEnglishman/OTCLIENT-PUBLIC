@@ -1413,33 +1413,22 @@ function printHotkeyBlockingInfo()
     print("===========================")
 end
 
--- Even if hotkeys are enabled, only the hotkeys containing Ctrl or Alt or F1-F12 will be enabled when
--- chat is opened (no WASD mode). This is made to prevent executing hotkeys while typing...
+-- An assigned hotkey fires whether chat is on or off; a key that also types a character
+-- does both while the chat line is open.
 function canPerformKeyCombo(keyCombo)
-    if areHotkeysDisabled() then
+    return not areHotkeysDisabled()
+end
+
+-- Assigned in this window or on an action bar, as opposed to a built-in binding such as walking.
+function isAssignedHotkey(keyCombo)
+    if not canPerformKeyCombo(keyCombo) then
         return false
     end
-    -- Mouse buttons can't type into the chat box, so the WASD-mode
-    -- restriction below (which exists purely to stop keyboard hotkeys from
-    -- firing while you're typing) doesn't apply to them.
-    if isMouseCombo(keyCombo) then
+    if isHotkeyUsedByManager(keyCombo) then
         return true
     end
-    if not modules.game_console.isChatEnabled() then
-        return true
-    end
-    local platformType = g_window.getPlatformType() or ""
-    local isMacOS = platformType:find("MACOS") ~= nil
-    if isMacOS then
-        return  string.match(keyCombo, "Cmd%+") or
-                string.match(keyCombo, "Ctrl%+") or
-                string.match(keyCombo, "Alt%+") or
-                string.match(keyCombo, "Option%+") or
-                string.match(keyCombo, "F%d+")
-    end
-    return  string.match(keyCombo, "Ctrl%+") or
-            string.match(keyCombo, "Alt%+") or
-            string.match(keyCombo, "F%d+")
+    local actionbar = modules.game_actionbar
+    return actionbar ~= nil and actionbar.isActionBarHotkey ~= nil and actionbar.isActionBarHotkey(keyCombo)
 end
 
 -- Actionbar

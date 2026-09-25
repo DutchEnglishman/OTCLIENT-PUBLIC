@@ -1,0 +1,526 @@
+// One row of the item list: sprite, name, and how many offers stand on it.
+MarketItemRow < UIWidget
+  height: 36
+  phantom: false
+  focusable: true
+  background-color: alpha
+
+  $hover:
+    background-color: #ffffff12
+
+  $focus:
+    background-color: $hoverOverlay
+
+  UIItem
+    id: sprite
+    anchors.left: parent.left
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 2
+    size: 32 32
+    virtual: true
+    phantom: true
+
+  Label
+    id: name
+    phantom: true
+    anchors.left: sprite.right
+    anchors.right: parent.right
+    anchors.top: parent.top
+    margin-left: 6
+    margin-top: 3
+    color: $textBright
+
+  Label
+    id: counts
+    phantom: true
+    anchors.left: name.left
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    margin-bottom: 3
+    font: verdana-11px-antialised
+    color: $textDisabled
+
+// One offer in a table. Columns are laid out by the module so the header row
+// and every row share the same widths.
+MarketOfferRow < UIWidget
+  height: 18
+  phantom: false
+  focusable: true
+  background-color: alpha
+
+  $hover:
+    background-color: #ffffff12
+
+  $focus:
+    background-color: $hoverOverlay
+
+MarketCell < Label
+  phantom: true
+  anchors.left: parent.left
+  anchors.top: parent.top
+  anchors.bottom: parent.bottom
+  text-align: left
+  font: verdana-11px-antialised
+  color: $textBright
+
+MarketHeaderCell < MarketCell
+  color: $textDisabled
+
+MarketTabButton < UIButton
+  font: verdana-11px-antialised
+  color: $textBright
+  size: 96 22
+  image-source: /images/ui/button
+  image-color: #ababab
+  image-clip: 0 0 22 23
+  image-border: 3
+
+  $hover !disabled:
+    image-color: #dfdfdf
+
+  $on:
+    image-color: #ffffff
+
+MarketTable < ScrollablePanel
+  layout: verticalBox
+  image-source: /images/ui/miniwindow
+  image-border: 4
+  padding: 3
+  padding-right: 16
+
+MarketAcceptWindow < MainWindow
+  size: 260 150
+
+  UIItem
+    id: item
+    anchors.left: parent.left
+    anchors.top: parent.top
+    size: 32 32
+    virtual: true
+    focusable: false
+
+  Label
+    id: summary
+    anchors.left: item.right
+    anchors.right: parent.right
+    anchors.top: parent.top
+    margin-left: 8
+    text-wrap: true
+    text-auto-resize: true
+    color: $textBright
+
+  TextEdit
+    id: amountEdit
+    anchors.left: parent.left
+    anchors.top: item.bottom
+    margin-top: 10
+    width: 110
+
+  Button
+    id: maxButton
+    !text: tr('Max')
+    anchors.left: amountEdit.right
+    anchors.verticalCenter: amountEdit.verticalCenter
+    margin-left: 4
+    width: 40
+
+  Label
+    id: totalLabel
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: amountEdit.bottom
+    margin-top: 6
+    color: $textBright
+
+  Button
+    id: buttonOk
+    !text: tr('Ok')
+    width: 64
+    anchors.right: buttonCancel.left
+    anchors.bottom: parent.bottom
+    margin-right: 6
+
+  Button
+    id: buttonCancel
+    !text: tr('Cancel')
+    width: 64
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+
+MainWindow
+  id: stackMarketWindow
+  !text: tr('Market')
+  size: 860 580
+
+  Label
+    id: balance
+    anchors.top: parent.top
+    anchors.left: parent.left
+    margin-top: 4
+    text-auto-resize: true
+    color: $textBright
+
+  MarketTabButton
+    id: tabHistory
+    !text: tr('History')
+    anchors.top: parent.top
+    anchors.right: parent.right
+
+  MarketTabButton
+    id: tabMine
+    !text: tr('My Offers')
+    anchors.top: parent.top
+    anchors.right: tabHistory.left
+    margin-right: 4
+
+  MarketTabButton
+    id: tabBrowse
+    !text: tr('Browse')
+    anchors.top: parent.top
+    anchors.right: tabMine.left
+    margin-right: 4
+
+  // ---------------------------------------------------------------- Browse
+  Panel
+    id: browsePanel
+    anchors.top: tabBrowse.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: closeButton.top
+    margin-top: 8
+    margin-bottom: 8
+
+    TextEdit
+      id: searchEdit
+      anchors.top: parent.top
+      anchors.left: parent.left
+      width: 240
+      placeholder: Search items...
+
+    ComboBox
+      id: categoryBox
+      anchors.top: searchEdit.bottom
+      anchors.left: parent.left
+      width: 240
+      margin-top: 4
+
+    CheckBox
+      id: onlyOffers
+      !text: tr('Only items with offers')
+      anchors.top: categoryBox.bottom
+      anchors.left: parent.left
+      width: 240
+      margin-top: 6
+
+    ScrollablePanel
+      id: itemList
+      anchors.top: onlyOffers.bottom
+      anchors.left: parent.left
+      anchors.bottom: parent.bottom
+      width: 240
+      margin-top: 6
+      layout: verticalBox
+      image-source: /images/ui/miniwindow
+      image-border: 4
+      padding: 3
+      padding-right: 16
+      vertical-scrollbar: itemListScroll
+
+    VerticalScrollBar
+      id: itemListScroll
+      anchors.top: itemList.top
+      anchors.bottom: itemList.bottom
+      anchors.right: itemList.right
+      margin: 3
+      step: 36
+      pixels-scroll: true
+
+    // The item picked in the list, and what the player holds of it.
+    UIItem
+      id: selectedSprite
+      anchors.top: parent.top
+      anchors.left: itemList.right
+      margin-left: 12
+      size: 32 32
+      virtual: true
+
+    Label
+      id: selectedName
+      anchors.top: parent.top
+      anchors.left: selectedSprite.right
+      anchors.right: parent.right
+      margin-left: 8
+      margin-top: 2
+      color: $textBright
+      !text: tr('Pick an item on the left.')
+
+    Label
+      id: selectedHave
+      anchors.top: selectedName.bottom
+      anchors.left: selectedName.left
+      anchors.right: parent.right
+      margin-top: 2
+      font: verdana-11px-antialised
+      color: $textDisabled
+
+    Label
+      id: sellTitle
+      anchors.top: selectedSprite.bottom
+      anchors.left: selectedSprite.left
+      margin-top: 8
+      text-auto-resize: true
+      color: $textBright
+      !text: tr('Sell offers')
+
+    Button
+      id: buyButton
+      !text: tr('Buy')
+      anchors.right: parent.right
+      anchors.verticalCenter: sellTitle.verticalCenter
+      width: 64
+      height: 20
+
+    Panel
+      id: sellHeader
+      anchors.top: sellTitle.bottom
+      anchors.left: selectedSprite.left
+      anchors.right: parent.right
+      margin-top: 4
+      height: 16
+
+    MarketTable
+      id: sellList
+      anchors.top: sellHeader.bottom
+      anchors.left: selectedSprite.left
+      anchors.right: parent.right
+      height: 120
+      vertical-scrollbar: sellListScroll
+
+    VerticalScrollBar
+      id: sellListScroll
+      anchors.top: sellList.top
+      anchors.bottom: sellList.bottom
+      anchors.right: sellList.right
+      margin: 3
+      step: 18
+      pixels-scroll: true
+
+    Label
+      id: buyTitle
+      anchors.top: sellList.bottom
+      anchors.left: selectedSprite.left
+      margin-top: 8
+      text-auto-resize: true
+      color: $textBright
+      !text: tr('Buy orders')
+
+    Button
+      id: sellButton
+      !text: tr('Sell')
+      anchors.right: parent.right
+      anchors.verticalCenter: buyTitle.verticalCenter
+      width: 64
+      height: 20
+
+    Panel
+      id: buyHeader
+      anchors.top: buyTitle.bottom
+      anchors.left: selectedSprite.left
+      anchors.right: parent.right
+      margin-top: 4
+      height: 16
+
+    MarketTable
+      id: buyList
+      anchors.top: buyHeader.bottom
+      anchors.left: selectedSprite.left
+      anchors.right: parent.right
+      height: 120
+      vertical-scrollbar: buyListScroll
+
+    VerticalScrollBar
+      id: buyListScroll
+      anchors.top: buyList.top
+      anchors.bottom: buyList.bottom
+      anchors.right: buyList.right
+      margin: 3
+      step: 18
+      pixels-scroll: true
+
+    // Creating an offer for the selected item.
+    FlatPanel
+      id: createPanel
+      anchors.top: buyList.bottom
+      anchors.left: selectedSprite.left
+      anchors.right: parent.right
+      anchors.bottom: parent.bottom
+      margin-top: 10
+      padding: 8
+
+      MarketTabButton
+        id: kindSell
+        !text: tr('Sell offer')
+        anchors.top: parent.top
+        anchors.left: parent.left
+
+      MarketTabButton
+        id: kindBuy
+        !text: tr('Buy order')
+        anchors.top: parent.top
+        anchors.left: kindSell.right
+        margin-left: 4
+
+      MarketTabButton
+        id: currencyGold
+        !text: tr('Gold')
+        anchors.top: parent.top
+        anchors.right: currencyCoins.left
+        margin-right: 4
+
+      MarketTabButton
+        id: currencyCoins
+        !text: tr('Premium coins')
+        anchors.top: parent.top
+        anchors.right: parent.right
+
+      Label
+        id: amountLabel
+        !text: tr('Amount:')
+        anchors.top: kindSell.bottom
+        anchors.left: parent.left
+        margin-top: 12
+        width: 60
+        color: $textBright
+
+      TextEdit
+        id: amountEdit
+        anchors.verticalCenter: amountLabel.verticalCenter
+        anchors.left: amountLabel.right
+        width: 110
+
+      Label
+        id: priceLabel
+        !text: tr('Price each:')
+        anchors.verticalCenter: amountLabel.verticalCenter
+        anchors.left: amountEdit.right
+        margin-left: 16
+        width: 70
+        color: $textBright
+
+      TextEdit
+        id: priceEdit
+        anchors.verticalCenter: amountLabel.verticalCenter
+        anchors.left: priceLabel.right
+        width: 110
+
+      Label
+        id: createSummary
+        anchors.top: amountEdit.bottom
+        anchors.left: parent.left
+        anchors.right: createButton.left
+        margin-top: 10
+        margin-right: 8
+        text-wrap: true
+        text-auto-resize: true
+        color: $textDisabled
+
+      Button
+        id: createButton
+        !text: tr('Create')
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        width: 80
+
+  // ------------------------------------------------------------- My Offers
+  Panel
+    id: minePanel
+    anchors.top: tabBrowse.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: closeButton.top
+    margin-top: 8
+    margin-bottom: 8
+    visible: false
+
+    Panel
+      id: mineHeader
+      anchors.top: parent.top
+      anchors.left: parent.left
+      anchors.right: parent.right
+      height: 16
+
+    MarketTable
+      id: mineList
+      anchors.top: mineHeader.bottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.bottom: cancelButton.top
+      margin-bottom: 6
+      vertical-scrollbar: mineListScroll
+
+    VerticalScrollBar
+      id: mineListScroll
+      anchors.top: mineList.top
+      anchors.bottom: mineList.bottom
+      anchors.right: mineList.right
+      margin: 3
+      step: 18
+      pixels-scroll: true
+
+    Button
+      id: cancelButton
+      !text: tr('Cancel offer')
+      anchors.right: parent.right
+      anchors.bottom: parent.bottom
+      width: 100
+
+  // --------------------------------------------------------------- History
+  Panel
+    id: historyPanel
+    anchors.top: tabBrowse.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: closeButton.top
+    margin-top: 8
+    margin-bottom: 8
+    visible: false
+
+    Panel
+      id: historyHeader
+      anchors.top: parent.top
+      anchors.left: parent.left
+      anchors.right: parent.right
+      height: 16
+
+    MarketTable
+      id: historyList
+      anchors.top: historyHeader.bottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.bottom: parent.bottom
+      vertical-scrollbar: historyListScroll
+
+    VerticalScrollBar
+      id: historyListScroll
+      anchors.top: historyList.top
+      anchors.bottom: historyList.bottom
+      anchors.right: historyList.right
+      margin: 3
+      step: 18
+      pixels-scroll: true
+
+  Label
+    id: statusLabel
+    anchors.left: parent.left
+    anchors.right: closeButton.left
+    anchors.verticalCenter: closeButton.verticalCenter
+    margin-right: 8
+    color: $textBright
+
+  Button
+    id: closeButton
+    !text: tr('Close')
+    anchors.bottom: parent.bottom
+    anchors.right: parent.right
+    width: 64
+    height: 20

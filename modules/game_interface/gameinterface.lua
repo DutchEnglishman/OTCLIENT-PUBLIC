@@ -58,6 +58,33 @@ function getMinimumChatHeight()
     return math.max(90, math.floor((102 * math.max(density, 1)) + 0.5))
 end
 
+-- Right-clicking an NPC says "hi"; right-clicking the same NPC again while it
+-- is still talking to you says the word that opens its shop ("trade", or
+-- "spells" for the spell sellers). NPCs without a shop just get "hi" again.
+-- The server's npchandler reports each conversation on NPC_FOCUS_OPCODE:
+-- "focus|<npcId>|<word>" when it starts (word empty: no shop) and
+-- "release|<npcId>" when it ends.
+local NPC_FOCUS_OPCODE = 205
+local npcConversations = {} -- [npcId] = trade word ('' when the NPC has no shop)
+
+local function onNpcFocus(protocol, opcode, buffer)
+    local action, id, word = buffer:match('^(%a+)|(%d+)|?(.*)$')
+    id = tonumber(id)
+    if not id then
+        return
+    end
+    if action == 'focus' then
+        npcConversations[id] = word
+    elseif action == 'release' then
+        npcConversations[id] = nil
+    end
+end
+
+local function talkToNpc(npc)
+    local word = npcConversations[npc:getId()]
+    g_game.talk(word and word ~= '' and word or 'hi')
+end
+
 local function applyActionBarTransparency()
     gameLeftActionPanel:setImageColor(actionBarPanelTint)
     gameRightActionPanel:setImageColor(actionBarPanelTint)
@@ -115,6 +142,7 @@ function init()
         onGameEnd = onGameEnd,
         onLoginAdvice = onLoginAdvice
     }, true)
+    ProtocolGame.registerExtendedOpcode(NPC_FOCUS_OPCODE, onNpcFocus)
 
     -- Call load AFTER game window has been created and
     -- resized to a stable state, otherwise the saved
@@ -295,6 +323,7 @@ function terminate()
         onGameEnd = onGameEnd,
         onLoginAdvice = onLoginAdvice
     })
+    ProtocolGame.unregisterExtendedOpcode(NPC_FOCUS_OPCODE, onNpcFocus)
 
     for k, v in pairs(panelsList) do
         disconnect(v.checkbox, {
@@ -316,6 +345,7 @@ function onGameStart()
 end
 
 function onGameEnd()
+    npcConversations = {}
     hide()
 end
 
@@ -1251,7 +1281,7 @@ function processMouseAction(menuPosition, mouseButton, autoWalkPos, lookThing, u
                 if playerPos.z == npcPos.z then
                     local dist = math.max(math.abs(playerPos.x - npcPos.x), math.abs(playerPos.y - npcPos.y))
                     if dist <= 3 then
-                        g_game.talk("hi")
+                        talkToNpc(creatureThing)
                         return true
                     end
                 end

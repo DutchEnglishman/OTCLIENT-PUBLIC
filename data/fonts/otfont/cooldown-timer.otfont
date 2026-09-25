@@ -1,0 +1,6 @@
+Font
+  name: cooldown-timer
+  texture: terminus-14px-bold
+  height: 14
+  glyph-size: 16 16
+  fixed-glyph-width: 8

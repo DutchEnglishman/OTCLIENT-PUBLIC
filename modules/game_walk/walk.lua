@@ -380,11 +380,19 @@ function WalkController:onGameEnd()
     stopSmartWalk()
 end
 
+--- A walk key the player has bound as a hotkey is the hotkey's, not a step.
+local function isTakenByHotkey(key)
+    return modules.game_hotkeys ~= nil and modules.game_hotkeys.isAssignedHotkey(key)
+end
+
 --- Utility functions for binding and unbinding keys.
 function bindWalkKey(key, dir)
     local gameRootPanel = modules.game_interface.getRootPanel()
 
     g_keyboard.bindKeyDown(key, function()
+        if isTakenByHotkey(key) then
+            return
+        end
         g_keyboard.setKeyDelay(key, 1)
         changeWalkDir(dir)
     end, gameRootPanel, true)
@@ -394,7 +402,12 @@ function bindWalkKey(key, dir)
         changeWalkDir(dir, true)
     end, gameRootPanel, true)
 
-    g_keyboard.bindKeyPress(key, function() smartWalk(dir) end, gameRootPanel)
+    g_keyboard.bindKeyPress(key, function()
+        if isTakenByHotkey(key) then
+            return
+        end
+        smartWalk(dir)
+    end, gameRootPanel)
 end
 
 function bindTurnKey(key, dir)

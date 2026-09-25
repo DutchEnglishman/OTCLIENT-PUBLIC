@@ -143,13 +143,17 @@ MainWindow
     width: 180
     height: 20
 
-  Panel
+  // Scrolls because market deliveries may take a stash past its 120 tiles
+  // (StackableDepot.give on the server); at or under 120 the eight rows fit
+  // exactly and the bar has nothing to do.
+  ScrollablePanel
     id: grid
     anchors.top: parent.top
     anchors.horizontalCenter: parent.horizontalCenter
     margin-top: 24
     width: 718
     height: 382
+    vertical-scrollbar: gridScrollBar
 
     layout:
       type: grid
@@ -158,9 +162,18 @@ MainWindow
       num-columns: 15
       flow: true
 
+  VerticalScrollBar
+    id: gridScrollBar
+    anchors.top: grid.top
+    anchors.bottom: grid.bottom
+    anchors.left: grid.right
+    margin-left: 4
+    step: 48
+    pixels-scroll: true
+
   Panel
     id: filters
-    anchors.top: prev.bottom
+    anchors.top: grid.bottom
     anchors.horizontalCenter: parent.horizontalCenter
     margin-top: 10
     width: 718

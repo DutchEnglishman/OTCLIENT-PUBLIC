@@ -1,0 +1,11 @@
+Module
+  name: game_stackmarket
+  description: Market for stackable goods
+  author: Roel
+  website: None
+  sandboxed: true
+  autoload: true
+  dependencies: [ gamelib ]
+  scripts: [ stackmarket ]
+  @onLoad: init()
+  @onUnload: terminate()

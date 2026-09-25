@@ -4,7 +4,6 @@ local state = {
     actionBarMappings = {},
     clientOptions = {},
     chatOptions = {},
-    isChatOnEnabled = false,
     bootstrapComplete = false
 }
 
@@ -189,7 +188,6 @@ local function rebuildStateFromArray()
         options.profiles = nil
         options.currentHotkeySet = nil
         options.currentHotkeySetName = nil
-        options.isChatOnEnabled = false
         return false
     end
 
@@ -284,7 +282,6 @@ local function rebuildStateFromArray()
 
     options.chatOptions = array.chatOptions or {}
     array.chatOptions = options.chatOptions
-    options.isChatOnEnabled = options.chatOptions.chatModeOn and true or false
 
     sanitizeHotkeyAssignments()
     return true
@@ -317,14 +314,16 @@ local function validateHotkeySet()
     return options.currentHotkeySet
 end
 
-local function getCurrentHotkeyEntries(chatMode)
+-- One hotkey list whatever the chat mode: a hotkey works the same with chat on or off.
+-- It is the 'chatOff' list because that is where hotkeys assigned in WASD mode already live;
+-- the 'chatOn' list is left in the saved file and no longer read.
+local function getCurrentHotkeyEntries()
     local set = validateHotkeySet()
     if not set then
         return nil
     end
 
-    chatMode = chatMode or (ensureState().isChatOnEnabled and 'chatOn' or 'chatOff')
-    return set[chatMode]
+    return set.chatOff
 end
 
 local function ensureActionBars()
@@ -773,8 +772,7 @@ function ApiJson.removeHotkey(buttonId)
         return
     end
 
-    local chatMode = modules.game_console.isChatEnabled() and 'chatOn' or 'chatOff'
-    local entries = getCurrentHotkeyEntries(chatMode)
+    local entries = getCurrentHotkeyEntries()
     if not entries then
         return
     end
@@ -793,8 +791,7 @@ function ApiJson.clearHotkey(hotkey)
         return
     end
 
-    local chatMode = modules.game_console.isChatEnabled() and 'chatOn' or 'chatOff'
-    local entries = getCurrentHotkeyEntries(chatMode)
+    local entries = getCurrentHotkeyEntries()
     if not entries then
         return
     end
@@ -819,8 +816,7 @@ function ApiJson.updateActionBarHotkey(actionName, hotkey)
         return
     end
 
-    local chatMode = modules.game_console.isChatEnabled() and 'chatOn' or 'chatOff'
-    local entries = getCurrentHotkeyEntries(chatMode)
+    local entries = getCurrentHotkeyEntries()
     if not entries then
         return
     end
@@ -1116,8 +1112,8 @@ function ApiJson.hasCurrentHotkeySet()
     return validateHotkeySet() ~= nil
 end
 
-function ApiJson.getHotkeyEntries(chatMode)
-    local entries = getCurrentHotkeyEntries(chatMode)
+function ApiJson.getHotkeyEntries()
+    local entries = getCurrentHotkeyEntries()
     if not entries then
         return {}
     end

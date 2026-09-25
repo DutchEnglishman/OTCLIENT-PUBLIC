@@ -164,18 +164,15 @@ end
 
 local hotkeyCache = {}
 local hotkeyCacheValid = false
-local cachedChatMode = nil
 
 --- Updates the hotkey cache
 local function updateHotkeyCache()
     hotkeyCache = {}
-    local currentChatMode = modules.game_console.isChatEnabled() and 'chatOn' or 'chatOff'
-    cachedChatMode = currentChatMode
     hotkeyCacheValid = true
-    
+
     if not ApiJson.hasCurrentHotkeySet() then return end
-    
-    local entries = ApiJson.getHotkeyEntries(currentChatMode)
+
+    local entries = ApiJson.getHotkeyEntries()
     if not entries then return end
 
     for _, data in pairs(entries) do
@@ -193,7 +190,6 @@ end
 function clearHotkeyCache()
     hotkeyCache = {}
     hotkeyCacheValid = false
-    cachedChatMode = nil
 end
 
 --- Sets up hotkey for a button
@@ -202,11 +198,7 @@ local function setupHotkeyButton(button)
         return
     end
 
-    local currentChatMode = modules.game_console.isChatEnabled() and 'chatOn' or 'chatOff'
-
-    -- Invalidate/rebuild cache if needed (you might want a better invalidation strategy later)
-    -- For now, we rebuild if it's empty, or we could expose a function to clear it
-    if not hotkeyCacheValid or cachedChatMode ~= currentChatMode then 
+    if not hotkeyCacheValid then
         updateHotkeyCache()
     end
     

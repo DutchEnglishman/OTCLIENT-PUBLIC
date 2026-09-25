@@ -246,6 +246,29 @@ function consoleController:onInit()
     gameBottomPanel = modules.game_interface.getBottomPanel()
     consolePanel = g_ui.loadUI('console', gameBottomPanel)
     consoleTextEdit = consolePanel:getChildById('consoleTextEdit')
+    -- UITextEdit::onKeyPress eats its editing keys (Home, End, Delete, arrows, Backspace;
+    -- uitextedit.cpp) before the hotkey bindings further up the chain see them, so a key
+    -- assigned as a hotkey is handed to those bindings directly and the chat line leaves it
+    -- alone. Other bindings (walking on the arrows) must not be: the cursor keeps those.
+    consoleTextEdit.onKeyPress = function(self, keyCode, keyboardModifiers, autoRepeatTicks)
+        local keyCombo = determineKeyComboDesc(keyCode, keyboardModifiers)
+        if not modules.game_hotkeys.isAssignedHotkey(keyCombo) then
+            return false
+        end
+        local handled = false
+        local widget = self:getParent()
+        while widget do
+            local callbacks = widget.boundKeyPressCombos and widget.boundKeyPressCombos[keyCombo]
+            if callbacks then
+                handled = true
+                if signalcall(callbacks, widget, keyCode, autoRepeatTicks) then
+                    break
+                end
+            end
+            widget = widget:getParent()
+        end
+        return handled
+    end
     consoleContentPanel = consolePanel:getChildById('consoleContentPanel')
     consoleTabBar = consolePanel:getChildById('consoleTabBar')
     consoleTabBar:setContentWidget(consoleContentPanel)
@@ -2665,7 +2688,7 @@ function returnChat()
     local children = gameBottomPanel:getChildren()
     for _, child in pairs(children) do
         if child:getId() == "cooldownWindow" then
-            child:setVisible(modules.client_options.getOption('showSpellGroupCooldowns'))
+            child:setVisible(modules.client_options.getOption('showSpellCooldowns'))
         else
             child:setVisible(true)
         end

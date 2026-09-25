@@ -57,6 +57,7 @@ Module
     - game_itemtooltip
     - game_itemshare
     - game_stackabledepot
+    - game_stackmarket
     - game_trainer
     - game_widgets
     - game_creatureinformation

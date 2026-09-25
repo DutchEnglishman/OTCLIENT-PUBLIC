@@ -21,12 +21,12 @@ local function invalidateHotkeyButtonCache()
     end
 end
 
-local function isHotkeyUsedInternal(key, chatType, checkSecondary)
+local function isHotkeyUsed(key, checkSecondary)
     if not key or not ApiJson.hasCurrentHotkeySet() then
         return false
     end
 
-    for _, data in ipairs(ApiJson.getHotkeyEntries(chatType)) do
+    for _, data in ipairs(ApiJson.getHotkeyEntries()) do
         if data["actionsetting"] and data["keysequence"] then
             local keyMatch = data["keysequence"]:lower() == key:lower()
             if checkSecondary then
@@ -41,13 +41,8 @@ local function isHotkeyUsedInternal(key, chatType, checkSecondary)
     return false
 end
 
-local function isHotkeyUsed(key, secondary)
-    if not secondary then
-        secondary = false
-    end
-
-    local chatMode = modules.game_console.isChatEnabled() and 'chatOn' or 'chatOff'
-    return isHotkeyUsedInternal(key, chatMode, secondary)
+function isActionBarHotkey(keyCombo)
+    return isHotkeyUsed(keyCombo) or isHotkeyUsed(keyCombo, true)
 end
 
 local function manageKeyPress(window, keyCode, keyboardModifiers, keyText)
@@ -181,7 +176,6 @@ function assignHotkey(button)
     barDesc = barDesc .. " Action Bar: Action Button " .. button:getId()
     ui:setTitle('Edit Hotkey for "' .. barDesc .. '"')
 
-    local chatMode = ActionBarController:findWidget("#chatMode")
     local display = ActionBarController:findWidget("#display")
     local desc = ActionBarController:findWidget("#desc")
     local warning = ActionBarController:findWidget("#warning")
@@ -198,13 +192,6 @@ function assignHotkey(button)
         display:setText("")
     end
     display.combo = currentHotkey
-
-    local chatOn = modules.game_console.isChatEnabled()
-    if chatOn then
-        chatMode:setText('Mode: "Chat On"')
-    else
-        chatMode:setText('Mode: "Chat Off"')
-    end
 
     ui:grabKeyboard()
     ui.onKeyDown = function(window, keyCode, keyboardModifiers, keyText)

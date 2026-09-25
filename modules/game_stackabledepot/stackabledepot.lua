@@ -166,7 +166,13 @@ local function populate(data)
         g_ui.createWidget('DepotTile', grid)
     end
 
-    window:getChildById('usage'):setText('Tiles used: ' .. used .. ' / ' .. tileCount)
+    -- Only market deliveries can take a stash over; stowing is refused until
+    -- it is back under.
+    local usage = 'Tiles used: ' .. used .. ' / ' .. tileCount
+    if used > tileCount then
+        usage = usage .. ' (over the limit -- withdraw before stashing more)'
+    end
+    window:getChildById('usage'):setText(usage)
 end
 
 -- Redraws from the payload already in hand. Changing a filter or typing in
@@ -224,6 +230,11 @@ function onExtendedOpcode(protocol, code, buffer)
 
     local ok, data = pcall(json.decode, buffer)
     if not ok or type(data) ~= 'table' then
+        return
+    end
+
+    data = JsonChunks.receive(DEPOT_OPCODE, data, 'items')
+    if not data then
         return
     end
 
