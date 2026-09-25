@@ -219,17 +219,22 @@ end
 -- traditional Tibia hotkey slots keep working while a field has focus.
 --
 -- Ctrl/Alt/Meta exempt a combo, Shift does not: Shift+A still types an "A".
-local function blockedWhileTyping(keyCode, keyboardModifiers)
+--
+-- Global because anything that fires bound callbacks itself instead of through
+-- the handlers below (the chat line's onKeyPress in game_console) has to apply
+-- the same rule, or it reopens exactly this hole.
+function keyTypesText(keyCode, keyboardModifiers)
     if keyCode < KeySpace or keyCode > KeyTilde then
         return false
     end
-    if bit.band(keyboardModifiers, KeyboardCtrlModifier) ~= 0 or
-        bit.band(keyboardModifiers, KeyboardAltModifier) ~= 0 or
-        bit.band(keyboardModifiers, KeyboardMetaModifier) ~= 0 or
-        bit.band(keyboardModifiers, KeyboardPrimaryModifier) ~= 0 then
-        return false
-    end
-    return isTypingIntoTextField()
+    return bit.band(keyboardModifiers, KeyboardCtrlModifier) == 0 and
+        bit.band(keyboardModifiers, KeyboardAltModifier) == 0 and
+        bit.band(keyboardModifiers, KeyboardMetaModifier) == 0 and
+        bit.band(keyboardModifiers, KeyboardPrimaryModifier) == 0
+end
+
+local function blockedWhileTyping(keyCode, keyboardModifiers)
+    return keyTypesText(keyCode, keyboardModifiers) and isTypingIntoTextField()
 end
 
 local function onWidgetKeyDown(widget, keyCode, keyboardModifiers)

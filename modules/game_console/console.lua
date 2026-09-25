@@ -250,7 +250,11 @@ function consoleController:onInit()
     -- uitextedit.cpp) before the hotkey bindings further up the chain see them, so a key
     -- assigned as a hotkey is handed to those bindings directly and the chat line leaves it
     -- alone. Other bindings (walking on the arrows) must not be: the cursor keeps those.
+    -- A key that types a character is never handed over: it belongs to the message.
     consoleTextEdit.onKeyPress = function(self, keyCode, keyboardModifiers, autoRepeatTicks)
+        if keyTypesText(keyCode, keyboardModifiers) then
+            return false
+        end
         local keyCombo = determineKeyComboDesc(keyCode, keyboardModifiers)
         if not modules.game_hotkeys.isAssignedHotkey(keyCombo) then
             return false

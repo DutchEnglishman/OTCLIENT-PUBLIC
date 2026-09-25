@@ -387,6 +387,38 @@ function canTradeItemLegacy(item)
     end
 end
 
+-- What the player can spend at this shop. A shop charging task points or
+-- hourly tokens sends its own balance (shopBalance); a gold shop pays from
+-- carried gold first and the bank after, so both count.
+function getSpendableBalance()
+    if shopBalance ~= nil then
+        return shopBalance
+    end
+    return playerMoney + bankBalance
+end
+
+-- Largest quantity whose total cost (backpacks included) fits the balance.
+function getAffordableCount(item)
+    local balance = getSpendableBalance()
+    local price = tonumber(item.price) or 0
+    if price <= 0 then
+        return getMaxAmount()
+    end
+
+    local count = math.min(getMaxAmount(), math.floor(balance / price))
+    if buyWithBackpack:isChecked() then
+        local stackable = item.ptr:isStackable()
+        while count > 0 do
+            local backpacks = stackable and 20 or math.ceil(count / 20) * 20
+            if price * count + backpacks <= balance then
+                break
+            end
+            count = count - 1
+        end
+    end
+    return math.max(0, count)
+end
+
 function refreshItem(item)
     nameLabel:setText(item.name)
 
@@ -395,11 +427,11 @@ function refreshItem(item)
         if ignoreCapacity:isChecked() then
             capacityMaxCount = 65535
         end
-        -- Not clamped by gold, for the same reason canTradeItemLegacy does not
-        -- check it: the price may be in a currency the goods packet never
-        -- mentions. getMaxAmount() is the engine's own per-purchase ceiling
-        -- (100, matching the amount > 100 guard in Game::playerPurchaseItem).
-        local finalCount = math.max(0, math.min(getMaxAmount(), capacityMaxCount))
+        -- getMaxAmount() is the engine's own per-purchase ceiling (100,
+        -- matching the amount > 100 guard in Game::playerPurchaseItem). The
+        -- slider is further capped by what the player can afford, measured in
+        -- the shop's own currency (see getSpendableBalance).
+        local finalCount = math.max(0, math.min(getMaxAmount(), capacityMaxCount, getAffordableCount(item)))
         quantityScroll:setMinimum(1)
         quantityScroll:setMaximum(finalCount)
     else
