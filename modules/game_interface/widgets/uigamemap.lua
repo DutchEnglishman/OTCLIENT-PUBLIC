@@ -10,6 +10,39 @@ function UIGameMap.create()
     gameMap:setDrawLights(true)
     return gameMap
 end
+-- A creature push is sent on release, from wherever the creature stands by then, so a drag
+-- held open would push someone who left and came back minutes later. The drag is spent the
+-- moment the creature moves, or the player uses an item or casts (a potion, rune or spell)
+-- while holding it; pushing a stair-hopper means grabbing him again.
+function UIGameMap:watchDraggedCreature(creature)
+    self.onDraggedCreatureMove = function(moved)
+        if moved == creature then
+            self.dragPushSpent = true
+        end
+    end
+    self.onDragPlayerAction = function()
+        self.dragPushSpent = true
+    end
+    connect(Creature, { onPositionChange = self.onDraggedCreatureMove })
+    connect(g_game, {
+        onUseWith = self.onDragPlayerAction,
+        onSpellCooldown = self.onDragPlayerAction
+    })
+end
+
+function UIGameMap:unwatchDraggedCreature()
+    if self.onDraggedCreatureMove then
+        disconnect(Creature, { onPositionChange = self.onDraggedCreatureMove })
+        disconnect(g_game, {
+            onUseWith = self.onDragPlayerAction,
+            onSpellCooldown = self.onDragPlayerAction
+        })
+        self.onDraggedCreatureMove = nil
+        self.onDragPlayerAction = nil
+    end
+    self.dragPushSpent = nil
+end
+
 function UIGameMap:onDragEnter(mousePos)
     local tile = self:getTile(mousePos)
     if not tile then
@@ -23,6 +56,11 @@ function UIGameMap:onDragEnter(mousePos)
 
     if thing:isItem() and not thing:isNotMoveable() then
         UIDragIcon:display(thing)
+    end
+
+    self:unwatchDraggedCreature()
+    if thing:isCreature() then
+        self:watchDraggedCreature(thing)
     end
 
     self.currentDragThing = thing
@@ -42,6 +80,7 @@ end
 function UIGameMap:onDragLeave(droppedWidget, mousePos)
     self.currentDragThing = nil
     self.hoveredWho = nil
+    self:unwatchDraggedCreature()
     -- Restore cursor
     g_mouse.popCursor('target')
 
@@ -61,6 +100,10 @@ function UIGameMap:onDrop(widget, mousePos)
     end
 
     local thing = widget.currentDragThing
+    if widget.dragPushSpent then
+        return false
+    end
+
     local thingPos = thing:getPosition()
     if not thingPos then
         return false

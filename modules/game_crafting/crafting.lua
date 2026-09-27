@@ -641,6 +641,7 @@ function selectCategory(category)
     for i = 1, 6 do
       local materialWidget = craftPanel:getChildById("material" .. i)
       materialWidget:setItem(nil)
+      materialWidget:removeTooltip()
       craftPanel:getChildById("count" .. i):setText("")
     end
 
@@ -727,14 +728,20 @@ function renderCraftAmount()
   local amount = getCraftAmount()
 
   for i = 1, 6 do
-    craftPanel:getChildById("material" .. i):setItem(nil)
+    local materialWidget = craftPanel:getChildById("material" .. i)
+    materialWidget:setItem(nil)
+    materialWidget:removeTooltip()
     craftPanel:getChildById("count" .. i):setText("")
   end
 
   for i = 1, #craft.materials do
     local material = craft.materials[i]
     local needed = material.count * amount
-    craftPanel:getChildById("material" .. i):setItemId(material.id)
+    local materialWidget = craftPanel:getChildById("material" .. i)
+    materialWidget:setItemId(material.id)
+    if material.name and material.name ~= "" then
+      materialWidget:setTooltip((material.name:gsub("^%l", string.upper)))
+    end
 
     local count = craftPanel:getChildById("count" .. i)
     count:setText(material.player .. "\n" .. needed)
@@ -761,6 +768,7 @@ function selectItem(id)
   for i = 1, 6 do
     local materialWidget = craftPanel:getChildById("material" .. i)
     materialWidget:setItem(nil)
+    materialWidget:removeTooltip()
     craftPanel:getChildById("count" .. i):setText("")
   end
 

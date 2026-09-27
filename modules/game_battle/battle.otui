@@ -4,6 +4,14 @@ BattleIcon < UIButton
   image-clip: 0 0 20 20
   image-border: 3
   checkable: true
+  image-color: white
+  border-width: 0
+  border-color: #d04040
+  @onCheckChange: |
+    local icon = self:getChildById('iconWidget')
+    if icon then
+      icon:setOpacity(self:isChecked() and 0.3 or 1)
+    end
 
   $pressed:
     image-clip: 20 0 20 20
@@ -13,12 +21,17 @@ BattleIcon < UIButton
 
   $checked:
     image-clip: 20 0 20 20
+    image-color: #ff7070
+    border-width: 1
 
   $active:
     image-clip: 20 0 20 20
 
-  $hover !disabled:
+  $hover !disabled !checked:
     image-color: #ffffffcc
+
+  $hover checked:
+    image-color: #ff9090
 
   $disabled:
     image-color: #ffffff88

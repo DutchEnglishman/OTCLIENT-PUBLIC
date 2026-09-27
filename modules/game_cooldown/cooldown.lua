@@ -151,6 +151,7 @@ local function onSpellCooldowns(protocol, opcode, buffer)
     startGroup('healing', tonumber(heal))
     startSpell(tonumber(own), tonumber(rune), words, name)
     ensureTicking()
+    signalcall(g_game.onSpellCooldown)
 end
 
 local function clear()

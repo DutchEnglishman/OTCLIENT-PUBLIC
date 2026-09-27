@@ -25,9 +25,8 @@ MainWindow
   @onEnter: modules.game_hotkeys.ok()
   @onEscape: modules.game_hotkeys.cancel()
 
-  // Four hotkey presets, all usable from the start -- nothing to unlock,
-  // unlike the autoloot ones this mirrors. Each holds a complete,
-  // independent set of hotkeys for this character.
+  // Hotkey presets: four from the start, up to ten with the Add button. Each
+  // holds a complete, independent set of hotkeys for this character.
   //
   // A combo box rather than a row of radio buttons: it names the live preset
   // in place, so nothing has to be read off a tooltip or the title bar.
@@ -42,6 +41,15 @@ MainWindow
     anchors.right: parent.right
     anchors.top: parent.top
     @onClick: modules.game_hotkeys.renamePreset()
+
+  Button
+    id: addPresetButton
+    !text: tr('Add')
+    width: 48
+    anchors.right: prev.left
+    anchors.top: parent.top
+    margin-right: 4
+    @onClick: modules.game_hotkeys.addPreset()
 
   ComboBox
     id: presetCombo

@@ -80,7 +80,7 @@ MiniWindow < UIMiniWindow
     id: closeButton
     anchors.top: parent.top
     anchors.right: parent.right
-    margin-top: 2
+    margin-top: 3
     margin-right: 3
     size: 12 12
     image-size: 14 14

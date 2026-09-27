@@ -18,7 +18,9 @@ PhantomMiniWindow
     // gone, so the map takes the full width and the four remaining buttons
     // float over its bottom-right corner instead of sitting beside it.
     margin-right: 8
-    height: 111
+    // Follows the window's bottom rather than a fixed 111, so dragging the
+    // resize border below grows the map with the window.
+    anchors.bottom: parent.bottom
     // image-source removed: 1pixel_down_frame drew the inset dark frame around
     // the map. The widget is kept as the position reference the buttons anchor
     // to. margin drops to 0 so the map fills the space the frame used.
@@ -28,15 +30,55 @@ PhantomMiniWindow
       anchors.fill: parent
       margin: 0
 
-  // Zoom on the left, floor on the right, stacked into a 2x2 block inset into
-  // the map's bottom-right corner. Everything chains off floorDown, the corner
+  // Spans the map over both right columns and back, opening or closing the
+  // extra right panel with it (toggleWide in minimap.lua). Same 10x10 framed cells as
+  // the floor arrows, so the same UIButton-not-Button reasoning applies.
+  UIButton
+    id: wideToggle
+    !tooltip: tr('Wide minimap (opens or closes the extra right panel)')
+    image-source: /images/ui/minimap_widen
+    image-clip: 0 0 10 10
+    image-size: 10 10
+    image-offset: 5 5
+    image-smooth: false
+    anchors.left: minimapBorder.left
+    anchors.top: minimapBorder.top
+    margin-left: 4
+    margin-top: 4
+    size: 20 20
+    @onClick: toggleWide()
+
+    $hover !disabled:
+      image-clip: 0 10 10 10
+
+    $pressed !disabled:
+      image-clip: 0 20 10 10
+
+    $on:
+      image-clip: 0 20 10 10
+
+  // Declared by the MiniWindow style, not by PhantomMiniWindow, so this window
+  // has to carry its own. minimum is the panel's original height.
+  // minimap.lua keeps panelHeight in step with it, because game_mainpanel's
+  // reloadMainPanelSizes resets every phantom panel to its panelHeight.
+  ResizeBorder
+    id: bottomResizeBorder
+    anchors.bottom: parent.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    height: 3
+    minimum: 116
+    maximum: 400
+    margin-left: 3
+    margin-right: 3
+    background: #ffffff88
+
+  // Floor on the left, zoom on the right, stacked into a 2x2 block inset into
+  // the map's bottom-right corner -- the same order as MinimapFullscreenControls
+  // at the bottom of this file, so the docked panel and the full map put each
+  // button in the same place. Everything chains off zoomOut, the corner
   // button, so moving that one moves the block; it is declared first for that
   // reason, the other three anchor to it.
-  //
-  // MinimapFullscreenControls at the bottom of this file has the same four
-  // buttons the other way round, floor on the left. That is a deliberate
-  // difference between the docked panel and the full map, not drift, so
-  // changing the order here does NOT mean changing it there.
   //
   // The zoom pair keep the automap artwork (a 40x60 sheet: three 20x20 rows,
   // normal in the left column, pressed in the right). That sheet has no arrows,
@@ -62,6 +104,35 @@ PhantomMiniWindow
   // the widget: they set m_imageRect, which drawImage uses as the destination,
   // so the chevron is blitted 1:1 at its native size and centred in the 20x20
   // click target. No scaling anywhere in the path, so nothing can repeat.
+  Button
+    id: zoomOut
+    !tooltip: tr('Zoom out')
+    image-source: /images/automap/automap_buttons
+    image-clip: 0 20 20 20
+    anchors.right: minimapBorder.right
+    anchors.bottom: minimapBorder.bottom
+    margin-right: 4
+    margin-bottom: 4
+    size: 20 20
+    @onClick: zoomOut()
+
+    $pressed !disabled:
+      image-clip: 20 20 20 20
+
+  Button
+    id: zoomIn
+    !tooltip: tr('Zoom in')
+    image-source: /images/automap/automap_buttons
+    image-clip: 0 40 20 20
+    anchors.right: zoomOut.right
+    anchors.bottom: zoomOut.top
+    margin-bottom: 2
+    size: 20 20
+    @onClick: zoomIn()
+
+    $pressed !disabled:
+      image-clip: 20 40 20 20
+
   UIButton
     id: floorDown
     !tooltip: tr('Go down one floor')
@@ -70,10 +141,9 @@ PhantomMiniWindow
     image-size: 10 10
     image-offset: 5 5
     image-smooth: false
-    anchors.right: minimapBorder.right
-    anchors.bottom: minimapBorder.bottom
-    margin-right: 4
-    margin-bottom: 4
+    anchors.right: zoomOut.left
+    anchors.bottom: zoomOut.bottom
+    margin-right: 2
     size: 20 20
     @onClick: downLayer()
 
@@ -103,34 +173,6 @@ PhantomMiniWindow
     $pressed !disabled:
       image-clip: 0 20 10 10
 
-  Button
-    id: zoomOut
-    !tooltip: tr('Zoom out')
-    image-source: /images/automap/automap_buttons
-    image-clip: 0 20 20 20
-    anchors.right: floorDown.left
-    anchors.bottom: floorDown.bottom
-    margin-right: 2
-    size: 20 20
-    @onClick: zoomOut()
-
-    $pressed !disabled:
-      image-clip: 20 20 20 20
-
-  Button
-    id: zoomIn
-    !tooltip: tr('Zoom in')
-    image-source: /images/automap/automap_buttons
-    image-clip: 0 40 20 20
-    anchors.right: zoomOut.right
-    anchors.bottom: zoomOut.top
-    margin-bottom: 2
-    size: 20 20
-    @onClick: zoomIn()
-
-    $pressed !disabled:
-      image-clip: 20 40 20 20
-
 
 // Controls for the fullscreen map (Ctrl+Shift+M). The docked panel that
 // normally carries these is hidden while fullscreen, so this is a separate
@@ -139,8 +181,7 @@ PhantomMiniWindow
 // it used to be a vertical layer strip with a slider instead, which meant the
 // full map picked floors a different way from the minimap it was opened from.
 //
-// The two columns sit the other way round to the docked panel, deliberately:
-// floor on the LEFT here, zoom on the right. Everything chains off zoomOut,
+// Floor on the LEFT, zoom on the right, as on the docked panel. Everything chains off zoomOut,
 // the corner button, so it is declared first and the other three anchor to it.
 //
 // 42x42 is the block exactly: two 20px columns and two 20px rows with a 2px

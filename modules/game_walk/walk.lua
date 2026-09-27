@@ -6,6 +6,10 @@ local nextWalkDir = nil
 local lastWalkDir = nil
 local lastCancelWalkTime = 0
 
+local TELEPORT_WALK_LOCK_MS = 50
+-- Releasing a turn key a moment before its modifier must not step.
+local TURN_RELEASE_WALK_LOCK_MS = 50
+
 local NOCLIP_OPCODE = 66
 local noclip = false
 
@@ -274,7 +278,6 @@ local function turn(dir, repeated)
         g_game.turn(dir)
         changeWalkDir(dir)
         lastTurn = g_clock.millis()
-        player:lockWalk(g_settings.getNumber("walkTurnDelay"))
     end
 end
 
@@ -297,14 +300,15 @@ local function onTeleport(player, newPos, oldPos)
         return
     end
 
-    local offsetX, offsetY, offsetZ =
-        Position.offsetX(newPos, oldPos), Position.offsetY(newPos, oldPos), Position.offsetZ(newPos, oldPos)
+    local offsetX = math.abs(Position.offsetX(newPos, oldPos))
+    local offsetY = math.abs(Position.offsetY(newPos, oldPos))
+    local offsetZ = math.abs(Position.offsetZ(newPos, oldPos))
 
-    local TELEPORT_DELAY = g_settings.getNumber("walkTeleportDelay")
-    local STAIRS_DELAY = g_settings.getNumber("walkStairsDelay")
-
-    local delay = (offsetX >= 3 or offsetY >= 3 or offsetZ >= 2) and TELEPORT_DELAY or STAIRS_DELAY
-    player:lockWalk(delay)
+    -- A stair or ladder step gets no lock: the server's stairJumpExhaustion only
+    -- pacifies, so any walk lock here would be dead time.
+    if offsetX >= 3 or offsetY >= 3 or offsetZ >= 2 then
+        player:lockWalk(TELEPORT_WALK_LOCK_MS)
+    end
 end
 
 --- Handles the end of a walking event.
@@ -417,7 +421,7 @@ function bindTurnKey(key, dir)
     g_keyboard.bindKeyPress(key, function() turn(dir, true) end, gameRootPanel)
     g_keyboard.bindKeyUp(key, function()
         local player = g_game.getLocalPlayer()
-        if player then player:lockWalk(200) end
+        if player then player:lockWalk(TURN_RELEASE_WALK_LOCK_MS) end
     end, gameRootPanel)
 end
 
@@ -445,7 +449,7 @@ function bindWasdTurnKeys()
             if isWasdTurnModifierPressed() then
                 local player = g_game.getLocalPlayer()
                 if player then
-                    player:lockWalk(200)
+                    player:lockWalk(TURN_RELEASE_WALK_LOCK_MS)
                 end
             end
         end

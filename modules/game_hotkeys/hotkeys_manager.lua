@@ -77,6 +77,7 @@ local nextSourceId = 1
 -- silently swallowed the other on every cycle -- hold exori and a mana
 -- potion together and one of them simply stopped, depending on press phase.
 lastHotkeyTime = {}
+local HOTKEY_REPEAT_MS = 70
 local hotkeysWindowButton = nil
 local previousRootMouseRelease = nil
 
@@ -321,8 +322,8 @@ function cancel()
     hide()
 end
 
--- Four hotkey presets. Unlike autoloot's there is nothing to unlock -- all four
--- are usable from the first login.
+-- Hotkey presets. Every character starts with PRESET_START_COUNT and can add
+-- more with the Add button, up to MAX_PRESETS; how many it has is presetCount.
 --
 -- They live one level deeper inside the same 'game_hotkeys' settings node the
 -- hotkeys already used, so a preset is scoped per server and per character
@@ -331,6 +332,7 @@ end
 --   game_hotkeys[host][character] = {
 --       presets       = { ['1'] = { ['F1'] = {...} }, ['2'] = {}, ... },
 --       currentPreset = 2,
+--       presetCount   = 6,
 --       presetNames   = { ['1'] = 'Attack' },
 --   }
 --
@@ -339,15 +341,21 @@ end
 -- it back with a numeric key finds nothing, the preset looks empty, and the
 -- default F-keys overwrite it. presetKey() is the only way these are indexed,
 -- presetNames included: those round-trip through the same file.
-MAX_PRESETS = 4
+PRESET_START_COUNT = 4
+MAX_PRESETS = 10
+presetCount = PRESET_START_COUNT
 
 -- Only what a preset is called until someone renames it. The name carries no
 -- meaning beyond the label -- nothing checks a preset against the vocation the
--- character actually is.
+-- character actually is. Added presets past these four are "Preset N".
 PRESET_DEFAULT_NAMES = {'Knight', 'Paladin', 'Sorcerer', 'Druid'}
 
 local function presetKey(index)
     return tostring(index)
+end
+
+local function defaultPresetName(index)
+    return PRESET_DEFAULT_NAMES[index] or (tr('Preset') .. ' ' .. index)
 end
 
 -- Anything on the character node that is NOT one of these is a key combo. The
@@ -355,6 +363,7 @@ end
 local PRESET_RESERVED_KEYS = {
     presets = true,
     currentPreset = true,
+    presetCount = true,
     presetNames = true
 }
 
@@ -456,7 +465,7 @@ end
 function getPresetName(index)
     local name = presetNames[presetKey(index)]
     if not name or name == '' then
-        return PRESET_DEFAULT_NAMES[index] or (tr('Preset') .. ' ' .. index)
+        return defaultPresetName(index)
     end
     return name
 end
@@ -489,11 +498,17 @@ function refreshPresetCombo()
 
     presetComboUpdating = true
     presetCombo:clearOptions()
-    for i = 1, MAX_PRESETS do
+    for i = 1, presetCount do
         presetCombo:addOption(getPresetName(i), i)
     end
     presetCombo:setCurrentOptionByData(currentPreset, true)
     presetComboUpdating = false
+
+    local addButton = hotkeysWindow:recursiveGetChildById('addPresetButton')
+    if addButton then
+        addButton:setEnabled(presetCount < MAX_PRESETS)
+        addButton:setTooltip(tr('Add a preset') .. ' (' .. presetCount .. '/' .. MAX_PRESETS .. ')')
+    end
 
     -- Name the live preset in the title bar too. The hotkey list gives no hint
     -- that a swap happened, and the window is often read from the title first.
@@ -525,7 +540,7 @@ function renamePresetOk(window)
     -- the default in by hand. Compared against the DEFAULT, never against the
     -- current display name: confirming an unchanged custom name would then wipe
     -- the very name it was showing.
-    if name == '' or name == PRESET_DEFAULT_NAMES[index] then
+    if name == '' or name == defaultPresetName(index) then
         presetNames[presetKey(index)] = nil
     else
         presetNames[presetKey(index)] = name
@@ -541,7 +556,7 @@ end
 
 function selectPreset(index)
     index = tonumber(index)
-    if not index or index < 1 or index > MAX_PRESETS then
+    if not index or index < 1 or index > presetCount then
         return
     end
 
@@ -561,15 +576,37 @@ function selectPreset(index)
     refreshPresetCombo()
 end
 
+-- Appends an empty preset and switches to it, so it opens on the default
+-- F-keys ready to fill in. Persisted at once, like a rename or a switch.
+function addPreset()
+    if presetCount >= MAX_PRESETS then
+        return
+    end
+
+    -- selectPreset's save() writes the new count along with the preset left.
+    presetCount = presetCount + 1
+    selectPreset(presetCount)
+end
+
 function load(forceDefaults)
     hotkeysManagerLoaded = false
 
     local node = getHotkeysNode()
     local hotkeys = {}
 
+    -- A character with no saved count, or no node at all yet, has the four
+    -- presets it always had.
+    presetCount = PRESET_START_COUNT
+    currentPreset = 1
+
     if node then
+        presetCount = tonumber(node.presetCount) or PRESET_START_COUNT
+        if presetCount < PRESET_START_COUNT or presetCount > MAX_PRESETS then
+            presetCount = PRESET_START_COUNT
+        end
+
         currentPreset = tonumber(node.currentPreset) or 1
-        if currentPreset < 1 or currentPreset > MAX_PRESETS then
+        if currentPreset < 1 or currentPreset > presetCount then
             currentPreset = 1
         end
         presetNames = node.presetNames or {}
@@ -650,10 +687,11 @@ function save()
     updateHotkeysNode(function(node)
         local presets = getPresets(node, true)
 
-        -- Only the selected preset is rewritten; the other three keep
-        -- whatever they held.
+        -- Only the selected preset is rewritten; the others keep whatever
+        -- they held.
         presets[presetKey(currentPreset)] = hotkeys
         node.currentPreset = currentPreset
+        node.presetCount = presetCount
         node.presetNames = presetNames
     end)
 
@@ -945,7 +983,7 @@ function doKeyCombo(keyCombo)
         return
     end
 
-    if g_clock.millis() - (lastHotkeyTime[keyCombo] or 0) < modules.client_options.getOption('hotkeyDelay') then
+    if g_clock.millis() - (lastHotkeyTime[keyCombo] or 0) < HOTKEY_REPEAT_MS then
         return
     end
     lastHotkeyTime[keyCombo] = g_clock.millis()

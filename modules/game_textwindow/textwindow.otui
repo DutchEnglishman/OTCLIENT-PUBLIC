@@ -1,6 +1,6 @@
 TextWindow < MainWindow
   id: textWindow
-  size: 300 450
+  size: 260 330
 
   Item
     id: textItem

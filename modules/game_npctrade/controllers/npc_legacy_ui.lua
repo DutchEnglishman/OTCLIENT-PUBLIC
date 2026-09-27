@@ -48,6 +48,7 @@ local buyWithBackpack = nil
 local ignoreCapacity = nil
 local ignoreEquipped = nil
 local showAllItems = nil
+local SHOW_ALL_ITEMS_SETTING = 'npctrade-show-all-items'
 local sellAllButton = nil
 
 local playerFreeCapacity = 0
@@ -96,6 +97,7 @@ function controllerNpcTrader:legacy_init()
     ignoreCapacity = npcWindow:recursiveGetChildById('ignoreCapacity')
     ignoreEquipped = npcWindow:recursiveGetChildById('ignoreEquipped')
     showAllItems = npcWindow:recursiveGetChildById('showAllItems')
+    showAllItems:setChecked(g_settings.getBoolean(SHOW_ALL_ITEMS_SETTING, true))
     sellAllButton = npcWindow:recursiveGetChildById('sellAllButton')
 
     buyTab = npcWindow:getChildById('buyTab')
@@ -240,6 +242,7 @@ function onIgnoreEquippedChange()
 end
 
 function onShowAllItemsChange()
+    g_settings.set(SHOW_ALL_ITEMS_SETTING, showAllItems:isChecked())
     refreshPlayerGoods()
 end
 

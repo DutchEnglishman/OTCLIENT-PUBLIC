@@ -1092,10 +1092,10 @@ function addPrivateText(text, speaktype, name, isPrivateCommand, creatureName)
     addTabText(text, speaktype, privateTab, creatureName)
 end
 
-function addText(text, speaktype, tabName, creatureName)
+function addText(text, speaktype, tabName, creatureName, npcSpeech)
     local tab = getTab(tabName)
     if tab ~= nil then
-        addTabText(text, speaktype, tab, creatureName)
+        addTabText(text, speaktype, tab, creatureName, npcSpeech)
     end
 end
 
@@ -1376,9 +1376,13 @@ local function changeNewNessageColor(tab)
     end, 1000)
 end
 
+-- An NPC that answers in normal speech is talked to in Local Chat, so its
+-- keywords are said there rather than in an NPCs tab it never opened.
 function onConsoleTextClicked(widget, text)
     local npcTab = consoleTabBar:getTab("NPCs")
-    if npcTab then
+    if widget.npcSay or not npcTab then
+        sendMessage(text, defaultTab)
+    else
         sendMessage(text, npcTab)
     end
 end
@@ -1421,10 +1425,17 @@ function onConsoleTextHovered(widget, text, hovered)
     end
 end
 
-function addTabText(text, speaktype, tab, creatureName)
+-- npcSpeech: the line is an NPC talking in normal speech (onTalk), which
+-- carries {keywords} just like an NPC-channel line does.
+function addTabText(text, speaktype, tab, creatureName, npcSpeech)
     if not tab or tab.locked or not text or #text == 0 then
         return
     end
+
+    local characterName = g_game.getCharacterName()
+    local npcLine = (speaktype.npcChat or npcSpeech) and
+        (characterName ~= creatureName or characterName == 'Account Manager')
+    local npcSay = npcLine and not speaktype.npcChat
 
     if modules.client_options.getOption('showTimestampsInConsole') then
         text = os.date('%H:%M') .. ' ' .. text
@@ -1447,10 +1458,11 @@ function addTabText(text, speaktype, tab, creatureName)
         label.shareLinks = shareData.links
         label:setEventListener(EVENT_TEXT_HOVER)
         connect(label, { onTextHoverChange = modules.game_itemshare.onChatLinkHover })
-    elseif speaktype.npcChat and (g_game.getCharacterName() ~= creatureName or g_game.getCharacterName() == 'Account Manager') then
+    elseif npcLine then
         local highlightData = getHighlightedText(text, speaktype.color, "#1f9ffe")
         label:setColoredText(highlightData)
         label.coloredData = highlightData
+        label.npcSay = npcSay
         if not label:hasEventListener(EVENT_TEXT_CLICK) and not label:hasEventListener(EVENT_TEXT_HOVER) then
             label:setEventListener(EVENT_TEXT_CLICK)
             label:setEventListener(EVENT_TEXT_HOVER)
@@ -1477,9 +1489,10 @@ function addTabText(text, speaktype, tab, creatureName)
             readOnlyLabel.shareLinks = shareData.links
             readOnlyLabel:setEventListener(EVENT_TEXT_HOVER)
             connect(readOnlyLabel, { onTextHoverChange = modules.game_itemshare.onChatLinkHover })
-        elseif speaktype.npcChat and (g_game.getCharacterName() ~= creatureName or g_game.getCharacterName() == 'Account Manager') then
+        elseif npcLine then
             local highlightData = getHighlightedText(text, speaktype.color, "#1f9ffe")
             readOnlyLabel:setColoredText(highlightData)
+            readOnlyLabel.npcSay = npcSay
             readOnlyLabel:setEventListener(EVENT_TEXT_CLICK)
             readOnlyLabel:setEventListener(EVENT_TEXT_HOVER)
             connect(readOnlyLabel, {
@@ -1999,6 +2012,10 @@ function onTalk(name, level, mode, message, channelId, creaturePos)
     end
 
     local isNpcMode = (mode == MessageModes.NpcFromStartBlock or mode == MessageModes.NpcFrom)
+    -- The server answers as normal speech (the selfSay wrapper in its
+    -- data/npc/lib/npc.lua) and sends level 0 for every speaker that is not a
+    -- player (ProtocolGame::sendCreatureSay), so a level-0 Say is an NPC.
+    local npcSpeech = isNpcMode or (mode == MessageModes.Say and level == 0)
 
     if ignoreNpcMessages and isNpcMode then
         return
@@ -2032,7 +2049,7 @@ function onTalk(name, level, mode, message, channelId, creaturePos)
         MessageModes.BarkLow or mode == MessageModes.BarkLoud or mode == MessageModes.NpcFromStartBlock) and creaturePos then
         local staticText = StaticText.create()
         local staticMessage = plainForScreen(message)
-        if isNpcMode then
+        if npcSpeech then
             local highlightedText = getHighlightedText(staticMessage, speaktype.color, "#1f9ffe")
 
             local processedText = staticMessage
@@ -2086,7 +2103,7 @@ function onTalk(name, level, mode, message, channelId, creaturePos)
         end
 
         if channel then
-            addText(composedMessage, speaktype, channel, name)
+            addText(composedMessage, speaktype, channel, name, npcSpeech)
         else
             -- server sent a message on a channel that is not open
             pwarning('message in channel id ' .. channelId ..

@@ -5,6 +5,14 @@ local otmm = true
 local oldPos = nil
 local fullscreenWidget
 local fullscreenControls
+local HEIGHT_SETTING = 'minimapPanelHeight'
+local WIDE_SETTING = 'minimapWide'
+-- The player's choice; the map only actually spans while the extra right panel
+-- is open as well.
+local wideOn = false
+-- Where the map sat in its column before it went wide, so narrowing puts it
+-- back there. Non-nil exactly while the map is spanning.
+local narrowSlot = nil
 -- Which floor the map is showing. Nothing draws it any more -- both the docked
 -- panel and the full map pick floors with a pair of arrow buttons -- so this
 -- is purely the 0..15 clamp upLayer/downLayer stop at, kept in step with the
@@ -50,6 +58,105 @@ end
 mapController = Controller:new()
 mapController:setUI('minimap', modules.game_interface.getMainRightPanel())
 
+local function extraPanelOpen()
+    local extra = modules.game_interface.getRightExtraPanel()
+    return extra and extra:isOn() and extra:isExplicitlyVisible()
+end
+
+-- While spanning, the map is not in either column's stack, so both columns are
+-- padded down by its height and their windows start below it.
+local function updateColumnPadding()
+    local ui = mapController.ui
+    local pad = (narrowSlot and ui:isVisible()) and ui:getHeight() or 0
+    local columns = { modules.game_interface.getRightPanel(), modules.game_interface.getRightExtraPanel() }
+    for _, column in ipairs(columns) do
+        if column:getPaddingTop() ~= pad then
+            column:setPaddingTop(pad)
+            column:fitAll()
+        end
+    end
+end
+
+-- Both columns are children of the root panel, so the map anchors to them by id.
+local function goWide()
+    local ui = mapController.ui
+    local parent = ui:getParent()
+    narrowSlot = {
+        parent = parent,
+        index = parent and parent:getChildIndex(ui) or 1,
+        draggable = ui:isDraggable()
+    }
+
+    ui:setParent(modules.game_interface.getRootPanel(), true)
+    ui:breakAnchors()
+    ui:addAnchor(AnchorTop, 'gameRightPanel', AnchorTop)
+    ui:addAnchor(AnchorRight, 'gameRightPanel', AnchorRight)
+    ui:addAnchor(AnchorLeft, 'gameRightExtraPanel', AnchorLeft)
+    ui:setDraggable(false)
+    ui:raise()
+
+    if parent and parent.fitAll then
+        parent:fitAll()
+    end
+end
+
+local function goNarrow()
+    local ui = mapController.ui
+    local slot = narrowSlot
+    narrowSlot = nil
+
+    -- A map that went wide from the extra column cannot go back into it once
+    -- that column has closed.
+    local parent = slot.parent
+    local extra = modules.game_interface.getRightExtraPanel()
+    if not parent or parent:isDestroyed() or (parent == extra and not extraPanelOpen()) then
+        parent = modules.game_interface.getMainRightPanel()
+    end
+
+    ui:breakAnchors()
+    ui:setParent(parent, true)
+    parent:moveChildToIndex(ui, math.max(1, math.min(slot.index, parent:getChildCount())))
+    ui:setDraggable(slot.draggable)
+end
+
+-- Offline counts as narrow: at logout the map goes back into its column, so
+-- onGameStart finds it where it expects and re-spans it from there.
+local function refreshWide()
+    local ui = mapController.ui
+    local canSpan = extraPanelOpen()
+    local want = wideOn and canSpan and g_game.isOnline()
+
+    if want and not narrowSlot then
+        goWide()
+    elseif not want and narrowSlot then
+        goNarrow()
+    end
+
+    ui.wideToggle:setOn(narrowSlot ~= nil)
+    updateColumnPadding()
+end
+
+-- One button for both: spanning needs the extra column, so going wide opens it
+-- and going narrow closes it again. The side-panel arrows' own handlers do the
+-- opening and closing, so their enabled state and the action bars follow.
+-- Closing runs while still wide, so the map is not among the windows
+-- onDecreaseRightPanels moves out of the column (its movePanel close()s them).
+function toggleWide()
+    local gameInterface = modules.game_interface
+    wideOn = narrowSlot == nil
+    g_settings.set(WIDE_SETTING, wideOn)
+
+    if wideOn then
+        if not extraPanelOpen() then
+            gameInterface.onIncreaseRightPanels()
+        end
+    elseif extraPanelOpen() then
+        gameInterface.onDecreaseRightPanels()
+    end
+
+    refreshWide()
+end
+
 function onChangeWorldTime(hour, minute)
 --[[ 
 
@@ -89,6 +196,30 @@ function mapController:onInit()
 
     -- Same action as the fullscreen-map button next to the minimap.
     g_keyboard.bindKeyDown('Ctrl+Shift+M', openCyclopediaMap, modules.game_interface.getRootPanel())
+
+    -- The panel carries no `save` flag, so UIMiniWindow's per-character height
+    -- setting is a no-op here; the height is kept client-wide instead.
+    local resizeBorder = self.ui.bottomResizeBorder
+    -- Anything under the border's minimum is not a chosen size: reloadMainPanelSizes
+    -- collapses a hidden panel to 0, and recording that would restore it as 0.
+    function self.ui:onHeightChange(height)
+        UIMiniWindow.onHeightChange(self, height)
+        if height >= resizeBorder:getMinimum() then
+            self.panelHeight = height
+            g_settings.set(HEIGHT_SETTING, height)
+        end
+        updateColumnPadding()
+    end
+
+    local savedHeight = g_settings.getNumber(HEIGHT_SETTING)
+    if savedHeight > 0 then
+        self.ui:setHeight(math.min(math.max(savedHeight, resizeBorder:getMinimum()), resizeBorder:getMaximum()))
+    end
+
+    wideOn = g_settings.getBoolean(WIDE_SETTING)
+    -- The fullscreen map hides this window; the columns must not keep a gap.
+    connect(self.ui, { onVisibilityChange = updateColumnPadding })
+    connect(modules.game_interface.getRightExtraPanel(), { onVisibilityChange = refreshWide })
 
     -- Ctrl+Left-click GM teleport lives in UIMinimap:onMouseRelease, not here.
     -- Assigning onMouseRelease on this widget would shadow that class method --
@@ -132,6 +263,8 @@ function mapController:onGameStart()
         mainRightPanel:insertChild(1, mapController.ui)
         mapController.ui:show()
     end
+
+    refreshWide()
 end
 
 function mapController:onGameEnd()
@@ -143,6 +276,8 @@ function mapController:onGameEnd()
     end
 
     self.ui.minimapBorder.minimap:save()
+
+    refreshWide()
 end
 
 function mapController:onTerminate()
@@ -152,6 +287,11 @@ function mapController:onTerminate()
     end
 
     g_keyboard.unbindKeyDown('Ctrl+Shift+M', openCyclopediaMap, modules.game_interface.getRootPanel())
+    disconnect(modules.game_interface.getRightExtraPanel(), { onVisibilityChange = refreshWide })
+    if narrowSlot then
+        goNarrow()
+    end
+    updateColumnPadding()
 end
 
 function zoomIn()

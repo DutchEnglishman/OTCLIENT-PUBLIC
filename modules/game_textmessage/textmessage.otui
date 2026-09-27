@@ -56,6 +56,12 @@ Panel
     margin-bottom: 50
     width: 303
 
+  // Hotkey use ("Using one of 12 mana potions..."): moved under the character's
+  // feet by placeUnderCharacter in textmessage.lua every time it is shown.
+  TextMessageLabel
+    id: hotkeyLabel
+    width: 303
+
   TextMessageLabel
     id: privateLabel
     anchors.top: parent.top

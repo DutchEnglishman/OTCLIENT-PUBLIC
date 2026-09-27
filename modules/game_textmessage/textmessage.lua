@@ -37,11 +37,11 @@ MessageSettings = {
         screenTarget = 'highCenterLabel',
         consoleOption = 'showInfoMessagesInConsole'
     },
-    centerHKGreen = {
+    hotkeyUse = {
         color = TextColors.green,
         consoleTab = 'Server Log',
-        screenTarget = 'highCenterLabel',
-        consoleOption = 'showHotkeyMessagesInConsole'
+        screenTarget = 'hotkeyLabel',
+        consoleOption = 'showInfoMessagesInConsole'
     },
     centerWhite = {
         color = TextColors.white,
@@ -199,7 +199,7 @@ MessageTypes = {
     [MessageModes.BeyondLast] = MessageSettings.centerWhite,
     [MessageModes.Report] = MessageSettings.centerWhite,
     [MessageModes.GameHighlight] = MessageSettings.centerRed,
-    [MessageModes.HotkeyUse] = MessageSettings.centerGreen,
+    [MessageModes.HotkeyUse] = MessageSettings.hotkeyUse,
     [MessageModes.Attention] = MessageSettings.bottomWhite,
     [MessageModes.BoostedCreature] = MessageSettings.centerWhite,
     [MessageModes.OfflineTrainning] = MessageSettings.centerWhite,
@@ -210,6 +210,10 @@ MessageTypes = {
 }
 
 messagesPanel = nil
+
+-- Where the hotkey line starts, in tiles below the middle of the map: half a
+-- tile is the character's feet, the rest is the gap under them.
+HOTKEY_LABEL_TILES_BELOW_CENTER = 0.7
 
 function init()
     for messageMode, _ in pairs(MessageTypes) do
@@ -323,6 +327,12 @@ function displayMessage(mode, text)
     end
 
     local msgtype = MessageTypes[mode]
+    -- Same story as loot: 8.60 has no hotkey mode, the server sends these as
+    -- MESSAGE_INFO_DESCR (Actions::showUseHotkeyMessage), so only the text
+    -- tells them apart from "You see ...".
+    if text:find('^Using one of ') or text:find('^Using the last ') then
+        msgtype = MessageSettings.hotkeyUse
+    end
     if not msgtype then
         return
     end
@@ -359,12 +369,36 @@ function displayMessage(mode, text)
             label:setColor(msgtype.color)
         end
 
+        if msgtype == MessageSettings.hotkeyUse then
+            placeUnderCharacter(label)
+        end
+
         label:setVisible(true)
         removeEvent(label.hideEvent)
         label.hideEvent = scheduleEvent(function()
             label:setVisible(false)
         end, calculateVisibleTime(text))
     end
+end
+
+-- Placed from the map widget itself rather than anchored: the message panel
+-- ends at the chat, which in extended view is drawn over the map, so the
+-- panel's centre is not where the character stands. The character is on the
+-- map's centre tile; the tile size is the map's rect over the tiles it shows.
+function placeUnderCharacter(label)
+    local map = modules.game_interface.getMapPanel()
+    if not map then
+        return
+    end
+    local rect = map:getRect()
+    local dimension = map:getVisibleDimension()
+    local tile = math.min(rect.width / dimension.width, rect.height / dimension.height)
+    local centerX = rect.x + rect.width / 2
+    local centerY = rect.y + rect.height / 2
+    label:setPosition({
+        x = math.floor(centerX - label:getWidth() / 2),
+        y = math.floor(centerY + tile * HOTKEY_LABEL_TILES_BELOW_CENTER)
+    })
 end
 
 function displayPrivateMessage(text)

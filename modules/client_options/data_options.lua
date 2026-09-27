@@ -319,36 +319,6 @@ return {
             g_app.setDrawTexts(value)
         end
     },
-    walkTurnDelay                     = {
-        value = 100,
-        action = function(value, options, controller, panels, extraWidgets)
-            panels.generalPanel:recursiveGetChildById('walkTurnDelay'):setText(string.format(
-                'Walk delay after turn: %sms',
-                value))
-        end
-    },
-    walkTeleportDelay                 = {
-        value = 50,
-        action = function(value, options, controller, panels, extraWidgets)
-            panels.generalPanel:recursiveGetChildById('walkTeleportDelay'):setText(string.format(
-                'Walk delay after teleport: %sms',
-                value))
-        end
-    },
-    walkStairsDelay                   = {
-        value = 50,
-        action = function(value, options, controller, panels, extraWidgets)
-            panels.generalPanel:recursiveGetChildById('walkStairsDelay'):setText(string.format(
-                'Walk delay after floor change: %sms',
-                value))
-        end
-    },
-    hotkeyDelay                       = {
-        value = 70,
-        action = function(value, options, controller, panels, extraWidgets)
-            panels.generalPanel:recursiveGetChildById('hotkeyDelay'):setText(string.format('Hotkey delay: %sms', value))
-        end
-    },
     crosshair                         = {
         value = 'default',
         action = function(value, options, controller, panels, extraWidgets)
