@@ -6,6 +6,14 @@ TextMessageLabel < UILabel
   margin-bottom: 2
   visible: false
 
+// Hotkey use ("Using one of 12 mana potions..."): created on the map widget by
+// textmessage.lua and placed by placeUnderCharacter every time it is shown.
+// Phantom so a click on the map under it still reaches the map.
+HotkeyMessageLabel < TextMessageLabel
+  id: hotkeyLabel
+  width: 303
+  phantom: true
+
 // Bottom tracks the chat panel itself, NOT gameMapPanel and NOT bottomSplitter.
 //
 // gameMapPanel is wrong because extended view mode calls gameMapPanel:fill(
@@ -54,12 +62,6 @@ Panel
     anchors.bottom: centerTextMessagePanel.top
     anchors.horizontalCenter: parent.horizontalCenter
     margin-bottom: 50
-    width: 303
-
-  // Hotkey use ("Using one of 12 mana potions..."): moved under the character's
-  // feet by placeUnderCharacter in textmessage.lua every time it is shown.
-  TextMessageLabel
-    id: hotkeyLabel
     width: 303
 
   TextMessageLabel

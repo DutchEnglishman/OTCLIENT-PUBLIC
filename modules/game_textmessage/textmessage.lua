@@ -211,9 +211,16 @@ MessageTypes = {
 
 messagesPanel = nil
 
--- Where the hotkey line starts, in tiles below the middle of the map: half a
--- tile is the character's feet, the rest is the gap under them.
-HOTKEY_LABEL_TILES_BELOW_CENTER = 0.7
+-- Where the hotkey line starts, in tiles below the middle of the map (the
+-- middle of the character's tile).
+HOTKEY_LABEL_TILES_BELOW_CENTER = 0.05
+
+-- Parented to the map rather than to messagesPanel: that panel ends at the
+-- chat, and the engine clamps an unanchored child back inside its parent
+-- whenever the parent shrinks (UIWidget::onGeometryChange), so growing the
+-- chat shoved this line up. The map does not move with the chat and is drawn
+-- under it, so the chat simply covers the line.
+hotkeyLabel = nil
 
 function init()
     for messageMode, _ in pairs(MessageTypes) do
@@ -222,6 +229,7 @@ function init()
 
     connect(g_game, 'onGameEnd', clearMessages)
     messagesPanel = g_ui.loadUI('textmessage', modules.game_interface.getRootPanel())
+    hotkeyLabel = g_ui.createWidget('HotkeyMessageLabel', modules.game_interface.getMapPanel())
 end
 
 function terminate()
@@ -233,6 +241,8 @@ function terminate()
     clearMessages()
     messagesPanel:destroy()
     messagesPanel = nil
+    hotkeyLabel:destroy()
+    hotkeyLabel = nil
 end
 
 function calculateVisibleTime(text)
@@ -358,7 +368,8 @@ function displayMessage(mode, text)
     -- same test: hidden from the log but still shown on screen would not be
     -- hiding it at all.
     if msgtype.screenTarget and wantedInServerLog(msgtype, text) then
-        local label = messagesPanel:recursiveGetChildById(msgtype.screenTarget)
+        local label = msgtype == MessageSettings.hotkeyUse and hotkeyLabel
+            or messagesPanel:recursiveGetChildById(msgtype.screenTarget)
         if msgtype == MessageSettings.loot and not modules.client_options.getOption('showLootMessagesOnScreen') then
             return
         elseif msgtype == MessageSettings.loot or msgtype == MessageSettings.valuableLoot then
@@ -460,6 +471,10 @@ function clearMessages()
             child:hide()
             removeEvent(child.hideEvent)
         end
+    end
+    if hotkeyLabel then
+        hotkeyLabel:hide()
+        removeEvent(hotkeyLabel.hideEvent)
     end
 end
 

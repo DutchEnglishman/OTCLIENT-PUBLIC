@@ -13,8 +13,118 @@
 -- To add a food: look its server id up in the server's data/items/items.otb and
 -- put the CLIENT id here. There is no fixed offset to apply -- it happens to be
 -- +911 for meat and +883 for gold coin, so it must be looked up per item.
+--
+-- Every id the server registers to data/actions/scripts/other/food/food.lua,
+-- valued with that script's food figure: eating one adds figure * 24 seconds of
+-- regeneration (player:feed). Jean-Pierre's buff dishes are left out on purpose.
 local FOOD_IDS = {
-    [3577] = true, -- meat (server 2666)
+    [3606] = 6, -- egg (server 2695)
+    [3250] = 5, -- carrot (server 2362)
+    [3577] = 15, -- meat (server 2666)
+    [3578] = 12, -- fish (server 2667)
+    [3579] = 10, -- salmon (server 2668)
+    [3580] = 17, -- northern pike (server 2669)
+    [3581] = 4, -- shrimp (server 2670)
+    [3582] = 30, -- ham (server 2671)
+    [3583] = 60, -- dragon ham (server 2672)
+    [3584] = 5, -- pear (server 2673)
+    [3585] = 6, -- red apple (server 2674)
+    [3586] = 13, -- orange (server 2675)
+    [3587] = 8, -- banana (server 2676)
+    [3588] = 1, -- blueberry (server 2677)
+    [3589] = 18, -- coconut (server 2678)
+    [3590] = 1, -- cherry (server 2679)
+    [3591] = 2, -- strawberry (server 2680)
+    [3592] = 9, -- grapes (server 2681)
+    [3593] = 20, -- melon (server 2682)
+    [3594] = 17, -- pumpkin (server 2683)
+    [3595] = 5, -- carrot (server 2684)
+    [3596] = 6, -- tomato (server 2685)
+    [3597] = 9, -- corncob (server 2686)
+    [130] = 2, -- cookie (server 2687)
+    [3599] = 2, -- candy cane (server 2688)
+    [3600] = 10, -- bread (server 2689)
+    [8194] = 10, -- bread (server 9111)
+    [3601] = 3, -- roll (server 2690)
+    [3602] = 8, -- brown bread (server 2691)
+    [169] = 9, -- cheese (server 2696)
+    [3723] = 9, -- white mushroom (server 2787)
+    [3724] = 4, -- red mushroom (server 2788)
+    [3725] = 22, -- brown mushroom (server 2789)
+    [3726] = 30, -- orange mushroom (server 2790)
+    [3727] = 9, -- wood mushroom (server 2791)
+    [3728] = 6, -- dark mushroom (server 2792)
+    [3729] = 12, -- some mushrooms (server 2793)
+    [3730] = 3, -- some mushrooms (server 2794)
+    [3731] = 36, -- fire mushroom (server 2795)
+    [3732] = 5, -- green mushroom (server 2796)
+    [5096] = 4, -- mango (server 5097)
+    [6125] = 8, -- tortoise egg (server 6125)
+    [6277] = 10, -- cake (server 6278)
+    [6278] = 15, -- decorated cake (server 6279)
+    [6392] = 12, -- valentine's cake (server 6393)
+    [904] = 15, -- cream cake (server 6394)
+    [6500] = 20, -- gingerbread man (server 6501)
+    [6541] = 6, -- coloured egg (yellow) (server 6541)
+    [6542] = 6, -- coloured egg (red) (server 6542)
+    [6543] = 6, -- coloured egg (blue) (server 6543)
+    [6544] = 6, -- coloured egg (green) (server 6544)
+    [6545] = 6, -- coloured egg (purple) (server 6545)
+    [6569] = 1, -- candy (server 6569)
+    [6574] = 5, -- bar of chocolate (server 6574)
+    [7158] = 15, -- rainbow trout (server 7158)
+    [7159] = 13, -- green perch (server 7159)
+    [229] = 2, -- ice cream cone (crispy chocolate chips) (server 7372)
+    [7373] = 2, -- ice cream cone (velvet vanilla) (server 7373)
+    [7374] = 2, -- ice cream cone (sweet strawberry) (server 7374)
+    [7375] = 2, -- ice cream cone (chilly cherry) (server 7375)
+    [7376] = 2, -- ice cream cone (mellow melon) (server 7376)
+    [7377] = 2, -- ice cream cone (blue-barian) (server 7377)
+    [836] = 4, -- walnut (server 7909)
+    [841] = 4, -- peanut (server 7910)
+    [901] = 60, -- marlin (server 7963)
+    [3607] = 9, -- scarab cheese (server 8112)
+    [8010] = 10, -- potato (server 8838)
+    [8011] = 5, -- plum (server 8839)
+    [8012] = 1, -- raspberry (server 8840)
+    [8013] = 1, -- lemon (server 8841)
+    [8014] = 7, -- cucumber (server 8842)
+    [8015] = 5, -- onion (server 8843)
+    [8016] = 1, -- jalapeno pepper (server 8844)
+    [8017] = 5, -- beetroot (server 8845)
+    [8019] = 11, -- chocolate cake (server 8847)
+    [8177] = 7, -- yummy gummy worm (server 9005)
+    [8197] = 5, -- bulb of garlic (server 9114)
+    [10329] = 15, -- rice ball (server 11246)
+    [10453] = 3, -- terramite eggs (server 11370)
+    [10219] = 10, -- crocodile steak (server 11429)
+    [11459] = 20, -- pineapple (server 12415)
+    [11460] = 10, -- aubergine (server 12416)
+    [11461] = 8, -- broccoli (server 12417)
+    [11462] = 9, -- cauliflower (server 12418)
+    [11681] = 55, -- ectoplasmic sushi (server 12637)
+    [11682] = 18, -- dragonfruit (server 12638)
+    [11683] = 2, -- peas (server 12639)
+    [19217] = 15, -- jade carp (server 20192)
+    [19218] = 20, -- royal carp (server 20193)
+    [19219] = 15, -- frost carp (server 20194)
+    [19220] = 15, -- sunscale carp (server 20195)
+    [19221] = 12, -- pond koi (server 20196)
+    [19222] = 12, -- red koi (server 20197)
+    [19223] = 15, -- brook koi (server 20198)
+    [19224] = 15, -- golden koi (server 20199)
+    [19225] = 15, -- mire squid (server 20200)
+    [19226] = 12, -- crimson squid (server 20201)
+    [19227] = 15, -- abyssal squid (server 20202)
+    [19228] = 20, -- tangerine squid (server 20203)
+    [19229] = 30, -- grey reef shark (server 20204)
+    [19230] = 30, -- rust shark (server 20205)
+    [19231] = 30, -- glacier shark (server 20206)
+    [19232] = 30, -- sandfin shark (server 20207)
+    [19233] = 12, -- bog perch (server 20208)
+    [19234] = 10, -- tiger barb (server 20209)
+    [19235] = 12, -- blue mackerel (server 20210)
+    [19236] = 12, -- golden dorado (server 20211)
 }
 
 local EAT_INTERVAL = 60 * 1000
@@ -64,7 +174,7 @@ local trainerWindow = nil
 local trainerButton = nil
 local contentsPanel = nil
 local tickEvent = nil
-local lastEatTime = 0
+local nextEatAt = 0
 local lastAntiIdleTime = 0
 
 -- One cooldown model per trainer: they cast different spells with different
@@ -253,9 +363,12 @@ local function tryEat()
     for _, container in pairs(containers) do
         sawContainer = true
         for _, item in ipairs(container:getItems()) do
-            if FOOD_IDS[item:getId()] then
+            local food = FOOD_IDS[item:getId()]
+            if food then
                 g_game.use(item)
-                lastEatTime = g_clock.millis()
+                -- A cherry lasts 24 s, so a once-a-minute bite would let the
+                -- regeneration run out between bites.
+                nextEatAt = g_clock.millis() + math.min(EAT_INTERVAL, food * 24 * 1000)
                 setHint(nil)
                 return
             end
@@ -357,7 +470,7 @@ local function tick()
         keepAwake()
     end
 
-    if controls.autoEat:isChecked() and g_clock.millis() - lastEatTime >= EAT_INTERVAL then
+    if controls.autoEat:isChecked() and g_clock.millis() >= nextEatAt then
         tryEat()
     end
 
@@ -439,7 +552,7 @@ function online()
 
     loadSettings()
     setHint(nil)
-    lastEatTime = 0
+    nextEatAt = 0
     lastAntiIdleTime = g_clock.millis()
     resetCooldowns()
     startTicking()

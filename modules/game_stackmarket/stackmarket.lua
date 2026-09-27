@@ -18,7 +18,7 @@ local categories = {}
 -- {[serverId] = {so = sell offers, bo = buy orders}}
 local active = {}
 local balance = {gold = 0, coins = 0}
-local fees = {feePercent = 1, feeMin = 20, feeMax = 1000000, coinFee = 100}
+local fees = {feePercent = 1, feeMin = 20, feeMax = 1000000, coinFee = 100, maxAmount = 100000}
 
 local selectedItem
 local selectedOffer
@@ -27,7 +27,10 @@ local have = 0
 local offers = {}
 
 local searchText = ''
+-- nil is All categories; NO_CATEGORY picks the items no category took.
 local categoryFilter
+local NO_CATEGORY = '_none'
+local NO_CATEGORY_LABEL = 'No category'
 local onlyWithOffers = false
 
 local createKind = 'sell'
@@ -112,6 +115,55 @@ local function buildHeader(header, columns)
     fillRow(header, columns, titles, 'MarketHeaderCell')
 end
 
+-- Keeps an amount box and the slider under it on one figure. The slider's
+-- range is the cap, and a typed figure above it is pulled down to it; with a
+-- cap below 1 the slider sits empty and the box is left alone, so a figure
+-- typed before a price is entered is not wiped.
+local function linkAmountSlider(edit, slider, onChange)
+    local control = {syncing = false}
+
+    function control.amount()
+        return math.floor(tonumber(edit:getText()) or 0)
+    end
+
+    function control.setMaximum(maximum)
+        control.syncing = true
+        slider:setRange(maximum >= 1 and 1 or 0, math.max(0, maximum))
+        slider:setValue(control.amount())
+        control.syncing = false
+        if maximum >= 1 and control.amount() > maximum then
+            edit:setText(tostring(maximum))
+        end
+    end
+
+    slider.onValueChange = function(self, value)
+        if not control.syncing and slider:getMaximum() >= 1 then
+            control.syncing = true
+            edit:setText(tostring(value))
+            control.syncing = false
+        end
+    end
+
+    edit.onTextChange = function()
+        local maximum = slider:getMaximum()
+        if maximum >= 1 and control.amount() > maximum then
+            edit:setText(tostring(maximum))
+            return
+        end
+        if not control.syncing then
+            control.syncing = true
+            slider:setValue(control.amount())
+            control.syncing = false
+        end
+        onChange()
+    end
+
+    return control
+end
+
+local createAmount
+local drawCreate
+
 local function closeAcceptWindow()
     if acceptWindow then
         acceptWindow:destroy()
@@ -160,9 +212,6 @@ local function catalogEntry(serverId)
 end
 
 local function passes(entry)
-    if categoryFilter and entry.g ~= categoryFilter then
-        return false
-    end
     if onlyWithOffers and not active[entry.s] then
         return false
     end
@@ -187,6 +236,7 @@ local function selectItem(serverId)
     panel:getChildById('selectedHave'):setText('')
     panel:getChildById('sellList'):destroyChildren()
     panel:getChildById('buyList'):destroyChildren()
+    drawCreate()
     send({a = 'offers', s = serverId})
 end
 
@@ -197,8 +247,19 @@ local function drawItemList()
 
     local list = window:getChildById('browsePanel'):getChildById('itemList')
     list:destroyChildren()
+
+    -- Entries by category key, NO_CATEGORY for those the server tagged with none.
+    local groups = {}
     for _, entry in ipairs(catalog) do
         if passes(entry) then
+            local key = entry.g ~= nil and entry.g or NO_CATEGORY
+            groups[key] = groups[key] or {}
+            table.insert(groups[key], entry)
+        end
+    end
+
+    local function addRows(entries)
+        for _, entry in ipairs(entries) do
             local row = g_ui.createWidget('MarketItemRow', list)
             row:getChildById('sprite'):setItemId(entry.i)
             row:getChildById('name'):setText(entry.n)
@@ -213,6 +274,25 @@ local function drawItemList()
             end
         end
     end
+
+    if categoryFilter then
+        addRows(groups[categoryFilter] or {})
+        return
+    end
+
+    local sections = {}
+    for _, category in ipairs(categories) do
+        if type(category) == 'table' and category.key ~= nil then
+            table.insert(sections, {key = category.key, label = category.label or tostring(category.key)})
+        end
+    end
+    table.insert(sections, {key = NO_CATEGORY, label = NO_CATEGORY_LABEL})
+    for _, section in ipairs(sections) do
+        if groups[section.key] then
+            g_ui.createWidget('MarketCategoryTitle', list):setText(section.label)
+            addRows(groups[section.key])
+        end
+    end
 end
 
 local function buildCategoryBox()
@@ -225,6 +305,7 @@ local function buildCategoryBox()
             box:addOption(category.label or tostring(category.key), category.key)
         end
     end
+    box:addOption(NO_CATEGORY_LABEL, NO_CATEGORY)
     box.onOptionChange = function(self, text, data)
         categoryFilter = data
         drawItemList()
@@ -256,25 +337,24 @@ local function openAcceptWindow(offer)
 
     local edit = acceptWindow:getChildById('amountEdit')
     local total = acceptWindow:getChildById('totalLabel')
-    local function amount()
-        return math.floor(tonumber(edit:getText()) or 0)
-    end
+    local control
     local function update()
-        local n = amount()
+        local n = control.amount()
         if n < 1 or n > maximum then
             total:setText('Enter 1 to ' .. formatNumber(maximum) .. '.')
         else
             total:setText('Total: ' .. formatPrice(n * offer.p, offer.c))
         end
     end
-    edit.onTextChange = update
+    control = linkAmountSlider(edit, acceptWindow:getChildById('amountSlider'), update)
+    control.setMaximum(maximum)
     edit:setText(tostring(maximum))
     acceptWindow:getChildById('maxButton').onClick = function()
         edit:setText(tostring(maximum))
     end
 
     acceptWindow:getChildById('buttonOk').onClick = function()
-        local n = amount()
+        local n = control.amount()
         if n >= 1 and n <= maximum then
             send({a = 'accept', id = offer.id, n = n, s = offer.s})
             closeAcceptWindow()
@@ -315,6 +395,7 @@ local function drawOffers()
     drawOfferTable(panel:getChildById('sellList'), 1)
     drawOfferTable(panel:getChildById('buyList'), 0)
     panel:getChildById('selectedHave'):setText('In your stackable stash: ' .. formatNumber(have))
+    drawCreate()
 end
 
 local function acceptSelected(side)
@@ -345,12 +426,50 @@ local function createValues()
     return amount, price
 end
 
-local function drawCreate()
+-- The most the create form may ask for: what the stash holds for a sell offer,
+-- what the balance covers at the typed price for a buy order. A gold order
+-- holds its total and pays its fee out of the same bank balance, and the fee
+-- is not linear in the amount, so that one is searched for.
+local function createMaximum()
+    if not selectedItem then
+        return 0
+    end
+    if createKind == 'sell' then
+        return math.min(fees.maxAmount, have)
+    end
+
+    local _, price = createValues()
+    if price < 1 then
+        return 0
+    end
+    if createCurrency == COINS then
+        if balance.gold < fees.coinFee then
+            return 0
+        end
+        return math.min(fees.maxAmount, math.floor(balance.coins / price))
+    end
+
+    local low, high = 0, math.min(fees.maxAmount, math.floor(balance.gold / price))
+    while low < high do
+        local mid = math.ceil((low + high) / 2)
+        if mid * price + fee(mid * price) <= balance.gold then
+            low = mid
+        else
+            high = mid - 1
+        end
+    end
+    return low
+end
+
+function drawCreate()
     local panel = window:getChildById('browsePanel'):getChildById('createPanel')
     panel:getChildById('kindSell'):setOn(createKind == 'sell')
     panel:getChildById('kindBuy'):setOn(createKind == 'buy')
     panel:getChildById('currencyGold'):setOn(createCurrency == GOLD)
     panel:getChildById('currencyCoins'):setOn(createCurrency == COINS)
+
+    local maximum = createMaximum()
+    createAmount.setMaximum(maximum)
 
     local summary = panel:getChildById('createSummary')
     if not selectedItem then
@@ -359,6 +478,11 @@ local function drawCreate()
     end
 
     local amount, price = createValues()
+    if maximum < 1 and (createKind == 'sell' or price >= 1) then
+        summary:setText(createKind == 'sell' and 'You have none of these in your stackable stash.'
+            or 'You cannot afford any at this price.')
+        return
+    end
     if amount < 1 or price < 1 then
         summary:setText(createKind == 'sell'
             and 'Sells from your stackable stash. The fee is paid from your bank and not refunded.'
@@ -496,6 +620,7 @@ function onExtendedOpcode(protocol, code, buffer)
     elseif data.action == 'balance' then
         balance.gold, balance.coins = tonumber(data.gold) or 0, tonumber(data.coins) or 0
         drawBalance()
+        drawCreate()
     elseif data.action == 'catalog' then
         catalog = items
         categories = type(data.categories) == 'table' and data.categories or {}
@@ -557,7 +682,8 @@ function init()
     create:getChildById('kindBuy').onClick = function() createKind = 'buy'; drawCreate() end
     create:getChildById('currencyGold').onClick = function() createCurrency = GOLD; drawCreate() end
     create:getChildById('currencyCoins').onClick = function() createCurrency = COINS; drawCreate() end
-    create:getChildById('amountEdit').onTextChange = drawCreate
+    createAmount = linkAmountSlider(create:getChildById('amountEdit'), create:getChildById('amountSlider'),
+        drawCreate)
     create:getChildById('priceEdit').onTextChange = drawCreate
     create:getChildById('createButton').onClick = createOffer
 

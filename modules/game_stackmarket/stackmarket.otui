@@ -40,6 +40,16 @@ MarketItemRow < UIWidget
     font: verdana-11px-antialised
     color: $textDisabled
 
+// A category's title above its items when the list shows every category.
+MarketCategoryTitle < Label
+  height: 20
+  phantom: true
+  focusable: false
+  text-align: left
+  text-offset: 6 0
+  background-color: #ffffff10
+  color: $textDisabled
+
 // One offer in a table. Columns are laid out by the module so the header row
 // and every row share the same widths.
 MarketOfferRow < UIWidget
@@ -89,7 +99,7 @@ MarketTable < ScrollablePanel
   padding-right: 16
 
 MarketAcceptWindow < MainWindow
-  size: 260 150
+  size: 260 175
 
   UIItem
     id: item
@@ -124,11 +134,22 @@ MarketAcceptWindow < MainWindow
     margin-left: 4
     width: 40
 
+  HorizontalScrollBar
+    id: amountSlider
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: amountEdit.bottom
+    margin-top: 6
+    minimum: 1
+    maximum: 1
+    step: 1
+    focusable: false
+
   Label
     id: totalLabel
     anchors.left: parent.left
     anchors.right: parent.right
-    anchors.top: amountEdit.bottom
+    anchors.top: amountSlider.bottom
     margin-top: 6
     color: $textBright
 
@@ -150,7 +171,7 @@ MarketAcceptWindow < MainWindow
 MainWindow
   id: stackMarketWindow
   !text: tr('Market')
-  size: 860 580
+  size: 860 610
 
   Label
     id: balance
@@ -261,7 +282,7 @@ MainWindow
       anchors.right: parent.right
       margin-top: 2
       font: verdana-11px-antialised
-      color: $textDisabled
+      color: #b0b0b0
 
     Label
       id: sellTitle
@@ -413,9 +434,20 @@ MainWindow
         anchors.left: priceLabel.right
         width: 110
 
+      HorizontalScrollBar
+        id: amountSlider
+        anchors.top: amountEdit.bottom
+        anchors.left: parent.left
+        anchors.right: priceEdit.right
+        margin-top: 6
+        minimum: 0
+        maximum: 0
+        step: 1
+        focusable: false
+
       Label
         id: createSummary
-        anchors.top: amountEdit.bottom
+        anchors.top: amountSlider.bottom
         anchors.left: parent.left
         anchors.right: createButton.left
         margin-top: 10
