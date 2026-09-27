@@ -48,6 +48,16 @@ controller:registerEvents(g_game, {
         -- this client together.
         g_game.enableFeature(GamePlayerMounts)
 
+        -- Container pages, so a locker or mailbox holding more than its slots
+        -- (a sold house is emptied into the locker with no size limit) shows a
+        -- page bar instead of hiding everything past slot 30.
+        --
+        -- DEPLOY ORDER: LOCKSTEP, like mounts. It adds a page header to the
+        -- open-container packet and widens the add/update/remove slot to u16
+        -- (OTSERV ProtocolGame::sendContainer and friends); a mismatch in
+        -- either direction desyncs every container packet.
+        g_game.enableFeature(GameContainerPagination)
+
         -- Extended sprites. Without this the sprite count in the .spr header
         -- and every sprite id in the .dat are u16, which is the 65535 ceiling
         -- Object Builder reports; with it both are u32 (spritemanager.cpp:92,
