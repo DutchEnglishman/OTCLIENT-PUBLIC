@@ -52,3 +52,19 @@ SpriteMaskYellow = 4
 function Thing:isTile()
   return false
 end
+
+-- Client item ids treated as ForceUse even though Tibia.dat does not flag them, so a
+-- plain right-click uses them instead of walking to the tile. Client ids, not server ids.
+LuaForceUseItemIds = {
+  [7804] = true, -- water vortex (server 8632): whirlpool fishing marker
+}
+
+-- Kept across a gamelib reload so the override never wraps itself.
+Thing.cppIsForceUse = Thing.cppIsForceUse or Thing.isForceUse
+
+function Thing:isForceUse()
+  if self:isItem() and LuaForceUseItemIds[self:getId()] then
+    return true
+  end
+  return self:cppIsForceUse()
+end

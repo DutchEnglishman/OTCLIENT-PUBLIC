@@ -37,3 +37,16 @@ end
 function Tile:isContainer()
     return false
 end
+
+-- Tile::getTopUseThing reads the ForceUse flag in C++, so it never sees the Lua-only
+-- ids in LuaForceUseItemIds (gamelib/thing.lua); check those first, then defer to it.
+Tile.cppGetTopUseThing = Tile.cppGetTopUseThing or Tile.getTopUseThing
+
+function Tile:getTopUseThing()
+  for _, item in ipairs(self:getItems()) do
+    if LuaForceUseItemIds[item:getId()] then
+      return item
+    end
+  end
+  return self:cppGetTopUseThing()
+end
