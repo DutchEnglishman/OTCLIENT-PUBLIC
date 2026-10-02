@@ -1,0 +1,9 @@
+Module
+  name: game_bot
+  description: Advanced OTClientV8 Bot
+  author: otclient@otclient.ovh
+  sandboxed: true
+  dependencies: [ client_textedit, game_interface, game_mainpanel, game_cooldown, game_buttons ]
+  scripts: [ bot ]
+  @onLoad: init()
+  @onUnload: terminate()

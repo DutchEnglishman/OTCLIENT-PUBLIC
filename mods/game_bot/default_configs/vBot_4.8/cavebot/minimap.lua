@@ -8,6 +8,11 @@ minimap.onMouseRelease = function(widget,pos,button)
   if not mapPos then return end
 
   if button == 1 then
+    -- Mirrors UIMinimap:onMouseRelease, which this override replaces.
+    if g_keyboard.isCtrlPressed() then
+      g_game.sendGmTeleport(mapPos)
+      return true
+    end
     local player = g_game.getLocalPlayer()
     if minimap.autowalk then
       player:autoWalk(mapPos)

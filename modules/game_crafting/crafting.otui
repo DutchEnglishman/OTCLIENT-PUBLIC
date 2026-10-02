@@ -117,9 +117,11 @@ MainWindow
     height: 34
     layout: horizontalBox
 
+    // The widths across this panel add up to its 518, so a label that grows
+    // has to take the room off a neighbour.
     CategoryButton
       id: weaponsmithCat
-      width: 118
+      width: 86
       @onClick: modules.game_crafting.selectCategory("weaponsmith")
 
       // 3414 is server 2514, the mastermind shield.
@@ -127,11 +129,11 @@ MainWindow
         item-id: 3414
 
       CategoryLabel
-        text: Item refining
+        text: Refine
 
     CategoryButton
       id: armorsmithCat
-      width: 97
+      width: 94
       @onClick: modules.game_crafting.selectCategory("armorsmith")
 
       // Client id, not the server's: this client never calls g_things.loadOtb,
@@ -145,19 +147,31 @@ MainWindow
 
     CategoryButton
       id: alchemistCat
-      width: 88
+      width: 90
       @onClick: modules.game_crafting.selectCategory("alchemist")
+
+      // 2537 is server 1788, a lit oven.
+      CategoryItem
+        item-id: 2537
+
+      CategoryLabel
+        text: Furnace
+
+    CategoryButton
+      id: toolsCat
+      width: 80
+      @onClick: modules.game_crafting.selectCategory("tools")
 
       // 14042 is server 15017, the rune pickaxe.
       CategoryItem
         item-id: 14042
 
       CategoryLabel
-        text: Mining
+        text: Tools
 
     CategoryButton
       id: jewellerCat
-      width: 103
+      width: 88
       @onClick: modules.game_crafting.selectCategory("jeweller")
 
       CategoryItem
@@ -166,11 +180,9 @@ MainWindow
       CategoryLabel
         text: Sockets
 
-    // The widths across this panel add up to its 518, so a label that grows
-    // has to take the room off a neighbour -- this tab took 17 from Sockets.
     CategoryButton
       id: enchanterCat
-      width: 112
+      width: 80
       @onClick: modules.game_crafting.selectCategory("enchanter")
 
       // 11800 is server 12764, the falcon greaves.
@@ -178,7 +190,7 @@ MainWindow
         item-id: 11800
 
       CategoryLabel
-        text: Equipment
+        text: Craft
 
   HorizontalSeparator
     anchors.top: prev.bottom

@@ -78,7 +78,7 @@ end
 MINING_SKILL_OPCODE = 120
 
 -- Total resistance from worn gear. The 8.60 protocol has no field for this, so
--- the server pushes it over an extended opcode (src/const.h RESISTANCES_OPCODE)
+-- the server pushes it over an extended opcode (data/skills_window/skills_window.lua)
 -- on login and whenever an equipment slot changes.
 RESISTANCES_OPCODE = 63
 
@@ -87,9 +87,9 @@ RESISTANCES_OPCODE = 63
 -- on every meal, and the row counts down locally between pushes.
 FOOD_TIME_OPCODE = 64
 
--- Crit / life steal totals from the upgrade system plus the wielded weapon's attack
--- speed. Pushed by the server (Player::sendCombatStats) on login and whenever an
--- equipment slot changes, same as the resistances.
+-- Crit / life steal / recoup totals across refine, rarity, gems and implicits, plus
+-- attack speed. Pushed by the server (data/skills_window/skills_window.lua) on login
+-- and whenever an equipment slot changes, same as the resistances.
 COMBAT_STATS_OPCODE = 65
 
 local function setCombatRow(rowId, text, tooltip)
@@ -128,13 +128,13 @@ local function onCombatStats(protocol, opcode, buffer)
     local attackSpeed = stats.attackspeed or 0
 
     setCombatRow('combatCritChance', critChance .. '%',
-        tr('Chance a hit crits, from rarity bonuses and weapon refines together.'))
+        tr('Chance a hit crits, from refines, rarity, gems and implicits added together.'))
     setCombatRow('combatCritDamage', critDamage .. '%',
-        tr('Extra damage a critical hit deals, from weapon refines.'))
+        tr('Extra damage a critical hit deals, from refines, gems and implicits.'))
     setCombatRow('combatLifeStealChance', lifeStealChance .. '%',
-        tr('Chance a hit steals life, from weapon refines. Recoup is a separate stat.'))
+        tr('Chance a hit steals life, from weapon refines and implicits. Recoup is a separate stat.'))
     setCombatRow('combatLifeSteal', lifeStealAmount .. '%',
-        tr('Health stolen on a successful life steal, from weapon refines. Separate stats: Recoup %d%% of damage taken, healed over 10s, and mana steal %d%%.', stats.recoup or 0, manaLeech))
+        tr('Health stolen on a successful life steal, from weapon refines and implicits. Separate stats: Recoup %d%% of damage taken, healed over 10s, and mana steal %d%%.', stats.recoup or 0, manaLeech))
     setCombatRow('combatAttackSpeed',
         string.format('%.1fs', attackSpeed / 1000),
         tr('Seconds between attacks, including the weapon refine speed bonus.'))
@@ -450,6 +450,7 @@ local function toggleGroupVisibility(groupName)
     end
     skillSettings[char][groupName .. 'Stats_visible'] = shouldShow
     g_settings.setNode('skills-hide', skillSettings)
+    updateHeight()
 end
 
 local function hideOldClientStats()
@@ -643,6 +644,7 @@ function toggleSkillProgressBar(skillId)
             end
             skillSettings[char][skillId] = isVisible and 1 or 0  -- 1 = hidden, 0 = visible
             g_settings.setNode('skills-hide', skillSettings)
+            updateHeight()
         end
     end
 end
@@ -676,6 +678,7 @@ function toggleSkillVisibility(skillId)
             end
             skillSettings[char][skillId] = isVisible and 1 or 0  -- 1 = hidden, 0 = visible
             g_settings.setNode('skills-hide', skillSettings)
+            updateHeight()
         end
     end
 end
@@ -752,6 +755,7 @@ function toggleAllSkillBars()
     end
     
     g_settings.setNode('skills-hide', skillSettings)
+    updateHeight()
 end
 
 function expForLevel(level)
@@ -1090,6 +1094,7 @@ function loadSkillsVisibilitySettings()
             end
         end
     end
+    updateHeight()
 end
 
 function updateHeight()
@@ -1108,7 +1113,11 @@ function updateHeight()
         for _, skillButton in pairs(skillsButtons) do
             local percentBar = skillButton:getChildById('percent')
 
-            if skillButton:isVisible() then
+            -- The row's own flag, not isVisible(): that one also reads false
+            -- for every row while the window itself is closed or minimized,
+            -- which measured the content as empty and capped the window at
+            -- 13 px, below its own 85 px minimum.
+            if skillButton:isExplicitlyVisible() then
                 if percentBar then
                     showPercentBar(skillButton, skillSettings[char][skillButton:getId()] ~= 1)
                 end
@@ -1128,7 +1137,13 @@ function updateHeight()
 
     local contentsPanel = skillsWindow:getChildById('contentsPanel')
     skillsWindow:setContentMinimumHeight(math.max(minimumHeight, 44))
-    skillsWindow:setContentMaximumHeight(maximumHeight)
+    skillsWindow:setContentMaximumHeight(math.max(maximumHeight, minimumHeight))
+
+    -- A window left taller than the new cap would snap down to it the moment
+    -- its edge is grabbed.
+    if not skillsWindow:isOn() and skillsWindow:getHeight() > skillsWindow:getMaximumHeight() then
+        skillsWindow:setHeight(skillsWindow:getMaximumHeight())
+    end
 end
 
 local function resetTable(t)
@@ -1241,13 +1256,9 @@ function onSkillButtonClick(button)
         skillIcon:setVisible(skillIcon:isVisible())
 
         local char = g_game.getCharacterName()
-        if percentBar:isVisible() then
-            skillsWindow:modifyMaximumHeight(6)
-            skillSettings[char][button:getId()] = 0
-        else
-            skillsWindow:modifyMaximumHeight(-6)
-            skillSettings[char][button:getId()] = 1
-        end
+        skillSettings[char] = skillSettings[char] or {}
+        skillSettings[char][button:getId()] = percentBar:isVisible() and 0 or 1
+        updateHeight()
     end
 end
 

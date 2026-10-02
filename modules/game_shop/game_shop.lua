@@ -352,6 +352,7 @@ function onGameShopUpdatePoints(data)
 
     transferWindow.coinsBalance:setText(tr("Transferable Premium Coins: ") .. comma_value(premiumPoints))
     transferWindow.coinsAmountScrollbar:setMaximum(premiumPoints)
+    refreshQuantity(false)
 end
 
 function select(self, ignoreSearch)
@@ -527,6 +528,7 @@ function updateDescription(self)
     local globalPoints = self.data.isSecondPrice and premiumSecondPoints or premiumPoints
     priceWidget:setEnabled(self.data.price <= globalPoints)
     buyButton:setEnabled(self.data.price <= globalPoints)
+    refreshQuantity(true)
 
     if self.additionalPriceValue and self.additionalCountValue then
         buyButton:setText("Buy " .. self.data.count)
@@ -584,6 +586,54 @@ function updateDescription(self)
     end
 end
 
+local function balanceFor(data)
+    return data.isSecondPrice and premiumSecondPoints or premiumPoints
+end
+
+-- The slider runs from 1 to as many units as the balance pays for, capped by
+-- the offer's maxQuantity from the server. Offers with a second "Buy N" button
+-- keep their own fixed counts, so the slider stays at 1 for them.
+function refreshQuantity(reset)
+    if not gameShopWindow or not selectedOffer then
+        return
+    end
+
+    local data = selectedOffer.data
+    local scrollbar = gameShopWindow:getChildById("offers"):getChildById("offerDetails"):getChildById("quantityScrollbar")
+
+    local maximum = 1
+    if not selectedOffer.additionalPriceValue and data.price > 0 then
+        local affordable = math.floor(balanceFor(data) / data.price)
+        maximum = math.max(1, math.min(tonumber(data.maxQuantity) or 1, affordable))
+    end
+
+    if reset then
+        scrollbar:setValue(1)
+    end
+    scrollbar:setMaximum(maximum)
+    scrollbar:setEnabled(maximum > 1)
+    onQuantityChange(scrollbar:getValue())
+end
+
+function onQuantityChange(value)
+    if not gameShopWindow or not selectedOffer or selectedOffer.additionalPriceValue then
+        return
+    end
+
+    local data = selectedOffer.data
+    local offerDetails = gameShopWindow:getChildById("offers"):getChildById("offerDetails")
+    local total = data.price * value
+    local affordable = total <= balanceFor(data)
+
+    local priceWidget = offerDetails:getChildById("price")
+    priceWidget:setText(comma_value(total))
+    priceWidget:setEnabled(affordable)
+
+    local buyButton = offerDetails:getChildById("buyButton")
+    buyButton:setText(value > 1 and ("Buy " .. value) or "Buy")
+    buyButton:setEnabled(affordable)
+end
+
 function onGameShopFetchDescription(data)
     if not selectedOffer then
         return
@@ -618,15 +668,21 @@ function onOfferBuy(self)
     hide()
 
     local title = "Purchase Confirmation"
+    local quantity = 1
     local msg
     if self.count and self.count > 1 then
         msg =
             "Do you want to buy " ..
             self.count .. "x " .. selectedOffer.data.name .. " for " .. comma_value(self.price) .. " points?"
     else
+        if not selectedOffer.additionalPriceValue then
+            local scrollbar = self:getParent():getChildById("quantityScrollbar")
+            quantity = scrollbar and scrollbar:getValue() or 1
+        end
         msg =
             "Do you want to buy " ..
-            selectedOffer.data.name .. " for " .. comma_value(selectedOffer.data.price) .. " points?"
+            (quantity > 1 and (quantity .. "x ") or "") ..
+            selectedOffer.data.name .. " for " .. comma_value(selectedOffer.data.price * quantity) .. " points?"
     end
 
     if selectedOffer.data.name == "Name Change" then
@@ -664,6 +720,7 @@ function onOfferBuy(self)
         msgWindow.count = selectedOffer.data.count
         msgWindow.price = selectedOffer.data.price
     end
+    msgWindow.quantity = quantity
 end
 
 function buyConfirmed()
@@ -677,6 +734,7 @@ function buyConfirmed()
                     data = {
                         count = msgWindow.count,
                         price = msgWindow.price,
+                        quantity = msgWindow.quantity,
                         name = selectedOffer.data.name,
                         id = selectedOffer.data.id,
                         parent = selectedOffer.data.parent,

@@ -26,6 +26,7 @@ local SECTION_COLORS = {
     L = '#A2E2C2', -- item level
     S = '#FFBB22', -- item stats, read across (weapons)
     B = '#FFBB22', -- item stats, one pair per line (everything else)
+    I = '#D98CFF', -- implicits: rolled at the drop, no crystal changes them
     P = '#7FD4FF', -- what the sockets add up to
     F = '#5FD35F', -- refine rolls
     A = '#2266FF', -- attributes
@@ -47,6 +48,7 @@ local RARITY_COLORS = {
 local SECTION_GROUPS = {
     { 'R', 'L' },
     { 'S', 'B' },
+    { 'I' },
     { 'K' },
     { 'P' },
     { 'A' },
@@ -128,7 +130,7 @@ local SOCKET_ROW_GAP = 3
 -- colons and would be torn apart at the wrong one; it gets its own grid below.
 -- R and L are out because they sit with the name as the item's identity
 -- rather than as a table.
-local TWO_COLUMN_TAGS = { F = true, A = true, P = true, B = true }
+local TWO_COLUMN_TAGS = { F = true, A = true, P = true, B = true, I = true }
 
 -- The base stats are a grid, not a sentence. The server joins them with " | "
 -- (data/tooltip/tooltip_core.lua, extractStats); here they are split back into

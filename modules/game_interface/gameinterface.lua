@@ -1268,6 +1268,16 @@ function processMouseAction(menuPosition, mouseButton, autoWalkPos, lookThing, u
         return true
     end
 
+    -- Ahead of the control-mode branches, where Shift+Left is a look.
+    if useThing and (useThing:isContainer() or useThing:isLyingCorpse()) and mouseButton == MouseLeftButton and
+        keyboardModifiers == KeyboardShiftModifier then
+        local option = useThing:isPickupable() and 'shiftClickOpensNewWindow' or 'shiftClickOpensFixedContainers'
+        if modules.client_options.getOption(option) then
+            g_game.open(useThing)
+            return true
+        end
+    end
+
     -- Classic controls: right-click on NPC says "hi"
     if creatureThing and creatureThing:isNpc() and mouseButton == MouseRightButton and 
     keyboardModifiers == KeyboardNoModifier then

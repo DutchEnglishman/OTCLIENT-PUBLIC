@@ -41,6 +41,28 @@ UIWidget
     margin-top: 7
     height: 22
 
+    OptionCheckBox
+      id: shiftClickOpensNewWindow
+      !text: tr('Shift + left click opens a backpack in a new window')
+
+  SmallReversedQtPanel
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    margin-top: 7
+    height: 22
+
+    OptionCheckBox
+      id: shiftClickOpensFixedContainers
+      !text: tr('Shift + left click opens depots, chests and corpses in a new window')
+
+  SmallReversedQtPanel
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    margin-top: 7
+    height: 22
+
     $mobile:
       height: 0
       margin-top: 0

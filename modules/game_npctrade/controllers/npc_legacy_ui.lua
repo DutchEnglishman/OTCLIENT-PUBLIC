@@ -242,6 +242,12 @@ function onIgnoreEquippedChange()
 end
 
 function onShowAllItemsChange()
+    -- The otui's `checked: true` fires this while displayUI is still building
+    -- the window, and the setChecked in legacy_init fires it again with the
+    -- saved value; neither is a player's choice to store.
+    if not initialized then
+        return
+    end
     g_settings.set(SHOW_ALL_ITEMS_SETTING, showAllItems:isChecked())
     refreshPlayerGoods()
 end

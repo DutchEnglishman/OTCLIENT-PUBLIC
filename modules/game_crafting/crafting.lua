@@ -37,7 +37,7 @@ local craftAmountLabel = nil
 
 local selectedCategory = nil
 local selectedCraftId = nil
-local Crafts = {weaponsmith = {}, armorsmith = {}, alchemist = {}, enchanter = {}, jeweller = {}}
+local Crafts = {weaponsmith = {}, armorsmith = {}, alchemist = {}, tools = {}, enchanter = {}, jeweller = {}}
 local money = 0
 local craftingButton = nil
 
@@ -71,7 +71,7 @@ function requestRefresh()
       return
     end
 
-    -- The visible tab only. The other four are not on screen and each is its
+    -- The visible tab only. The others are not on screen and each is its
     -- own message; selectCategory asks again when the player switches.
     protocolGame:sendExtendedOpcode(CODE, json.encode({
       action = "refresh",
@@ -245,7 +245,7 @@ function destroy()
 
     selectedCategory = nil
     selectedCraftId = nil
-    Crafts = {weaponsmith = {}, armorsmith = {}, alchemist = {}, enchanter = {}, jeweller = {}}
+    Crafts = {weaponsmith = {}, armorsmith = {}, alchemist = {}, tools = {}, enchanter = {}, jeweller = {}}
 
     window:destroy()
     window = nil
@@ -333,7 +333,7 @@ function onExtendedOpcode(protocol, code, buffer)
     -- Redraw when the chunk actually covers the recipe on screen. This was
     -- keyed on from == 1, and the server pages at ten, so refreshed counts for
     -- anything past the tenth recipe reached the table and never the window --
-    -- the Mining tab has twenty-one recipes.
+    -- the Furnace tab had twenty-one recipes.
     --
     -- renderCraftAmount rather than selectItem: selectItem resets the batch
     -- slider to one, which a refresh arriving mid-craft would now do out from

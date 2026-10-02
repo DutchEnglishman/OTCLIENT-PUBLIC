@@ -405,6 +405,8 @@ return {
     showDragIcon        = {
         value = true,
     },
+    shiftClickOpensNewWindow          = true,
+    shiftClickOpensFixedContainers    = false,
     showPartyMembersOnMinimap = {
         value = true,
         action = function(value, options, controller, panels, extraWidgets)

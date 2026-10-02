@@ -6725,7 +6725,7 @@ AutoLoot.itemCatalog = {
     { serverId = 7281, clientId = 7281, name = 'memory crystal' },
     { serverId = 4852, clientId = 4841, name = 'memory stone' },
     { serverId = 7386, clientId = 7386, name = 'mercenary sword' },
-    { serverId = 17820, clientId = 16845, name = 'merchant\'s ledger' },
+    { serverId = 17820, clientId = 16845, name = 'loot seller' },
     { serverId = 5811, clientId = 5811, name = 'mermaid' },
     { serverId = 5802, clientId = 5802, name = 'message in a bottle' },
     { serverId = 5880, clientId = 5880, name = 'metal' },
