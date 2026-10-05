@@ -867,6 +867,21 @@ function toggleContainerPages(containerWindow, pages)
     containerWindow:layoutHeaderButtons()
 end
 
+-- Everything in the window's height that is not grid rows: header, the
+-- contents panel's margins and padding, and the pages bar when it shows.
+local function containerChromeHeight(containerWindow, contentsPanel, pages)
+    local topBar = containerWindow:getChildById('miniwindowTopBar')
+    local height = topBar:getMarginTop() + topBar:getHeight() + contentsPanel:getMarginTop() +
+        contentsPanel:getPaddingTop() + contentsPanel:getPaddingBottom() + contentsPanel:getMarginBottom()
+    if pages then
+        local separator = containerWindow:getChildById('separator')
+        local pagePanel = containerWindow:getChildById('pagePanel')
+        height = height + separator:getHeight() + separator:getMarginBottom() + pagePanel:getHeight() +
+            pagePanel:getMarginBottom()
+    end
+    return height
+end
+
 function refreshContainerPages(container)
     local currentPage = 1 + math.floor(container:getFirstIndex() / container:getCapacity())
     local pages = 1 + math.floor(math.max(0, (container:getSize() - 1)) / container:getCapacity())
@@ -1082,15 +1097,18 @@ function onContainerOpen(container, previousContainer)
 
     local layout = containerPanel:getLayout()
     local cellSize = layout:getCellSize()
-    local step = cellSize.height + layout:getCellSpacing()
+    local spacing = layout:getCellSpacing()
+    local step = cellSize.height + spacing
     -- Derived, not read from the layout. UIGridLayout only maintains numLines
     -- inside its flow branch (uigridlayout.cpp:78), and the grid is fixed at 5
     -- columns with flow off now, so getNumLines() is never updated and would
     -- read as a single row -- collapsing the window height.
     local numColumns = math.max(layout:getNumColumns(), 1)
     local numLines = math.max(math.ceil(container:getCapacity() / numColumns), 1)
-    local chromeHeight = container:hasPages() and 55 or 31
-    containerWindow:setContentMinimumHeight(cellSize.height)
+    -- Read off the widgets toggleContainerPages just anchored, not hardcoded:
+    -- the old 31/55 were 9 and 6 px over, so the smallest window still showed
+    -- the top of a second row and could never be cut down to one.
+    local chromeHeight = containerChromeHeight(containerWindow, containerPanel, container:hasPages()) - spacing
 
     local resizeBorder = containerWindow:getChildById('bottomResizeBorder')
     if resizeBorder then
