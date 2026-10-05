@@ -1,0 +1,8 @@
+Module
+  name: game_titles
+  description: A line of text above a creature's name, fed by the server
+  author: Roel
+  sandboxed: true
+  scripts: [ titles ]
+  @onLoad: init()
+  @onUnload: terminate()

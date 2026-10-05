@@ -647,8 +647,10 @@ function Player:isMounted()
 end
 
 function Player:toggleMount()
-    if g_game.getFeature(GamePlayerMounts) then
-        g_game.mount(not self:isMounted())
+    if self:isMounted() then
+        self:dismount()
+    else
+        self:mount()
     end
 end
 
@@ -658,8 +660,13 @@ function Player:mount()
     end
 end
 
+-- A dismount the player asks for turns auto mount off, or it would put them
+-- straight back on the moment the server reports the mount gone.
 function Player:dismount()
     if g_game.getFeature(GamePlayerMounts) then
+        if modules.game_inventory and modules.game_inventory.disableAutoMount then
+            modules.game_inventory.disableAutoMount()
+        end
         g_game.mount(false)
     end
 end

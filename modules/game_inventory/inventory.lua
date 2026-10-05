@@ -139,6 +139,17 @@ local function onPlayerOutfitChange(creature, outfit, oldOutfit)
     end
 end
 
+-- Leaves the mount alone: the caller is already sending the dismount.
+function disableAutoMount()
+    if not autoMount then
+        return
+    end
+
+    autoMount = false
+    g_settings.set('autoMount', autoMount)
+    refreshAutoMountButtons()
+end
+
 function onSetAutoMount(self, checked)
     if checked == autoMount then
         return

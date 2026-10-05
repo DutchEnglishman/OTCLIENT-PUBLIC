@@ -50,7 +50,109 @@ local lastSelectAura = "None"
 local lastSelectWings = "None"
 local lastSelectEffects = 0
 local lastSelectShader = "Outfit - Default"
-local lastSelectTitle = "None"
+
+-- Titles come from the server (modules/game_titles), not from the outfit packet:
+-- titleData is its last answer, titleChoice what this window has picked so far.
+local titleData = nil
+local titleChoice = nil
+local titleColorGroup = nil
+
+local function titleText(id)
+    for _, title in ipairs(titleData and titleData.titles or {}) do
+        if title.id == id then
+            return title.text
+        end
+    end
+    return nil
+end
+
+local function titleColor()
+    return titleData and titleChoice and titleData.palette[titleChoice.color] or "#ffffff"
+end
+
+local function updateTitlePreview()
+    local label = window.preview.panel.bars.title
+    local text, color = nil, nil
+    if titleData and titleData.staff then
+        text, color = "[STAFF]", "#ff0000"
+    elseif titleChoice and titleChoice.id > 0 then
+        text, color = titleText(titleChoice.id), titleColor()
+    elseif titleData and titleData.staffDefault then
+        text, color = "[STAFF]", "#ff0000"
+    end
+    label:setVisible(text ~= nil)
+    if text then
+        label:setText(text)
+        label:setColor(color)
+    end
+end
+
+local function updateTitleRowText()
+    local chosen = titleChoice and titleText(titleChoice.id)
+    if titleData and (titleData.staff or (titleData.staffDefault and not chosen)) then
+        updateAppearanceText("title", "[STAFF]")
+    else
+        updateAppearanceText("title", chosen or "None")
+    end
+end
+
+local function setTitleMode(enabled)
+    window.appearance.colorMode:setVisible(not enabled)
+    window.appearance.colorBoxPanel:setVisible(not enabled)
+    window.appearance.titleColors:setVisible(enabled)
+end
+
+local function onTitleColorChange(group, selectedWidget)
+    titleChoice.color = selectedWidget.colorIndex
+    updateTitlePreview()
+    for _, button in ipairs(window.selectionList:getChildren()) do
+        if button.titleId and button.titleId > 0 then
+            button.name:setColor(titleColor())
+        end
+    end
+end
+
+local function buildTitleColors()
+    local panel = window.appearance.titleColors.swatches
+    if titleColorGroup then
+        titleColorGroup:destroy()
+    end
+    panel:destroyChildren()
+    titleColorGroup = UIRadioGroup.create()
+
+    if titleData.staff then
+        window.appearance.titleColors.label:setText("Staff always wear [STAFF].")
+        return
+    end
+    window.appearance.titleColors.label:setText("Title colour:")
+    for index, hex in ipairs(titleData.palette) do
+        local box = g_ui.createWidget("ColorBox", panel)
+        box:setBackgroundColor(hex)
+        box.colorIndex = index
+        titleColorGroup:addWidget(box)
+        if index == titleChoice.color then
+            titleColorGroup:selectWidget(box)
+        end
+    end
+    titleColorGroup.onSelectionChange = onTitleColorChange
+end
+
+local function onTitlesOwned(data)
+    if not window then
+        return
+    end
+    data.titles = data.titles or {}
+    data.palette = data.palette or {}
+    titleData = data
+    titleChoice = { id = data.current or 0, color = data.color or 1 }
+
+    buildTitleColors()
+    updateTitleRowText()
+    updateTitlePreview()
+    if appearanceGroup and appearanceGroup:getSelectedWidget() == window.appearance.settings.title.check then
+        showTitle()
+    end
+end
 
 local function checkPresetsValidity(presets)
     for i, preset in ipairs(presets) do
@@ -515,6 +617,11 @@ function create(player, outfitList, creatureMount, mountList, familiarList, wing
             widget:setVisible(false)
         end
     end
+
+    window.appearance.settings.title:setVisible(true)
+    if modules.game_titles then
+        modules.game_titles.requestOwned(onTitlesOwned)
+    end
     previewCreature:getCreature():setDirection(2)
     window.listSearch.search.onKeyPress = onFilterSearch
     window.listSearch.onlyMine.onCheckChange = onFilterOnlyMine
@@ -550,6 +657,15 @@ function destroy()
         colorModeGroup = nil
         colorBoxGroup:destroy()
         colorBoxGroup = nil
+        if titleColorGroup then
+            titleColorGroup:destroy()
+            titleColorGroup = nil
+        end
+        titleData = nil
+        titleChoice = nil
+        if modules.game_titles then
+            modules.game_titles.stopOwned()
+        end
 
         ServerData = {
             currentOutfit = {},
@@ -633,7 +749,6 @@ function newPreset()
     lastSelectWings = "None"
     lastSelectEffects = 0
     lastSelectShader = "Outfit - Default"
-    lastSelectTitle = "None"
 end
 
 function deletePreset()
@@ -730,11 +845,6 @@ function savePreset()
             end
         end
     end
-
-    --[[     if lastSelectTitle ~= "None" then
-        window.presetsList[presetId].creature:getCreature():setTitle(lastSelectTitle, "verdana-11px-rounded", "#0000ff")
-    end ]]
-    -- @
 end
 
 function renamePreset()
@@ -779,6 +889,7 @@ end
 
 function onAppearanceChange(widget, selectedWidget)
     local id = selectedWidget:getParent():getId()
+    setTitleMode(id == "title")
     if id == "preset" then
         showPresets()
     elseif id == "outfit" then
@@ -1160,35 +1271,44 @@ function showTitle()
     window.selectionList.onChildFocusChange = nil
     window.selectionList:destroyChildren()
 
+    local staffDefault = titleData and titleData.staffDefault
+    local entries = { { id = 0, text = staffDefault and "[STAFF]" or "None" } }
+    for _, title in ipairs(titleData and titleData.titles or {}) do
+        entries[#entries + 1] = title
+    end
+
     local focused = nil
-    do
+    for _, entry in ipairs(entries) do
         local button = g_ui.createWidget("SelectionButton", window.selectionList)
-        button:setId("0")
-
-
-        button.name:setText("None")
-        if tempOutfit.tile == 0 then
-            focused = 0
+        button:setId("title" .. entry.id)
+        button.titleId = entry.id
+        button.outfit:hide()
+        button.name:fill("parent")
+        button.name:setTextAlign(AlignCenter)
+        button.name:setText(entry.text)
+        if entry.source then
+            button.name:setMarginBottom(14)
+            local source = g_ui.createWidget("Label", button)
+            source:addAnchor(AnchorHorizontalCenter, "parent", AnchorHorizontalCenter)
+            source:addAnchor(AnchorTop, "parent", AnchorVerticalCenter)
+            source:setMarginTop(1)
+            source:setPhantom(true)
+            source:setColor("#929292")
+            source:setText("(" .. entry.source .. ")")
+            source:resizeToText()
+        end
+        if entry.id > 0 then
+            button.name:setColor(titleColor())
+        elseif staffDefault then
+            button.name:setColor("#ff0000")
+        end
+        if titleChoice and titleChoice.id == entry.id then
+            focused = button
         end
     end
-    if ServerData.title and #ServerData.title > 0 then
-        for _, titleData in ipairs(ServerData.title) do
-            local button = g_ui.createWidget("SelectionButton", window.selectionList)
-            button:setId(tostring(titleData))
-
-            button.outfit:setOutfit(previewCreature:getCreature():getOutfit())
-            button.outfit:getCreature():getCreature():setTitle(titleData, "verdana-11px-rounded", "#0000ff")
-
-            button.name:setText(tostring(titleData))
-            if tempOutfit.tile == titleData then
-                focused = tostring(titleData)
-            end
-        end
-    end
-    if focused ~= nil then
-        local w = window.selectionList[focused]
-        w:focus()
-        window.selectionList:ensureChildVisible(w, {
+    if focused then
+        focused:focus()
+        window.selectionList:ensureChildVisible(focused, {
             x = 0,
             y = 196
         })
@@ -1197,7 +1317,7 @@ function showTitle()
     window.selectionList.onChildFocusChange = onTitleSelect
     window.selectionList:show()
     window.selectionScroll:show()
-    window.listSearch:show()
+    window.listSearch:hide()
 end
 
 function onPresetSelect(list, focusedChild, unfocusedChild, reason)
@@ -1475,24 +1595,10 @@ function onEffectBarSelect(list, focusedChild, unfocusedChild, reason)
 end
 
 function onTitleSelect(list, focusedChild, unfocusedChild, reason)
-    if window.appearance.settings["title"].name:getText() ~= "None" then
-        previewCreature:getCreature():clearTitle()
-    end
-
-    if focusedChild then
-        local titleType = tostring(focusedChild:getId())
-
-        if titleType ~= "None" then
-            previewCreature:getCreature():setTitle(titleType, "verdana-11px-rounded", "#0000ff")
-            lastSelectTitle = titleType
-        else
-            lastSelectTitle = "None"
-            previewCreature:getCreature():clearTitle()
-        end
-
-        updatePreview()
-        deselectPreset()
-        updateAppearanceText("title", focusedChild.name:getText())
+    if focusedChild and titleChoice and titleData and not titleData.staff then
+        titleChoice.id = focusedChild.titleId
+        updateTitleRowText()
+        updateTitlePreview()
     end
 end
 
@@ -1679,6 +1785,7 @@ function updatePreview()
 
         window.preview.panel.bars:show()
     end
+    updateTitlePreview()
 
     previewCreature:setOutfit(previewOutfit)
     previewCreature:getCreature():setDirection(direction)
@@ -1875,5 +1982,9 @@ function accept()
         end
     end
     g_game.changeOutfit(tempOutfit)
+    if titleData and not titleData.staff and titleChoice
+        and (titleChoice.id ~= titleData.current or titleChoice.color ~= titleData.color) then
+        modules.game_titles.choose(titleChoice.id, titleChoice.color)
+    end
     destroy()
 end

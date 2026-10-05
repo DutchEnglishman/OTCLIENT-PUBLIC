@@ -8,10 +8,23 @@ local MAXIMUM_CHOICES = 10
 local BASE_HEIGHT = 40
 local MAX_CHOICE_TEXT = 28
 
+-- 8.60 has no packet that closes a modal dialog, so the server sends the id of
+-- the one to close (TFS data/boss_rooms/boss_rooms.lua, CLOSE_MODAL_OPCODE).
+local CLOSE_MODAL_OPCODE = 80
+
+local openDialogId = nil
+
 local function destroyWindow()
+    openDialogId = nil
     local ui = controllerModal.ui
     if ui then
         controllerModal:unloadHtml()
+    end
+end
+
+local function onCloseModalOpcode(protocol, opcode, buffer)
+    if openDialogId and tonumber(buffer) == openDialogId then
+        destroyWindow()
     end
 end
 
@@ -19,9 +32,11 @@ function controllerModal:onInit()
     controllerModal:registerEvents(g_game, {
         onModalDialog = onModalDialog
     })
+    ProtocolGame.registerExtendedOpcode(CLOSE_MODAL_OPCODE, onCloseModalOpcode)
 end
 
 function controllerModal:onTerminate()
+    ProtocolGame.unregisterExtendedOpcode(CLOSE_MODAL_OPCODE)
 end
 
 function controllerModal:onGameEnd()
@@ -120,6 +135,7 @@ end
 
 function onModalDialog(id, title, message, buttons, enterButton, escapeButton, choices, priority)
     destroyWindow()
+    openDialogId = id
 
     -- C++ parse currently uses clientVersion for enter/escape byte order.
     local protocolVersion = g_game.getProtocolVersion()

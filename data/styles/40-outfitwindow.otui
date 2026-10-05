@@ -94,12 +94,17 @@ PresetButton < Panel
       text: Save
 
 SelectionButton < Panel
-  image-source:  /images/ui/button-grey-qt
-  image-clip: 0 0 98 40
+  image-source: /images/ui/button
+  image-color: #dfdfdf
+  image-clip: 0 0 22 23
   image-border: 3
   border: 1 alpha
   focusable: true
   phantom: false
+
+  $hover:
+    image-color: #ffffff
+
   $focus:
     border: 1 white
 
@@ -327,6 +332,15 @@ OutfitWindow < MainWindow
         margin-top: 47
         margin-right: 20
         size: 300 32
+
+        Label
+          id: title
+          anchors.bottom: name.top
+          anchors.left: name.left
+          anchors.right: name.right
+          font: verdana-11px-rounded
+          text-align: center
+          visible: false
 
         Label
           id: name
@@ -734,7 +748,7 @@ OutfitWindow < MainWindow
           text-offset: 15 0
           size: 12 12
           font: Verdana Bold-11px
-          text: title :
+          text: Title:
           width: 84
           color: $textColor
           image-source: /images/ui/checkboxcircle
@@ -797,6 +811,37 @@ OutfitWindow < MainWindow
         cell-spacing: 2
         num-columns: 19
         num-lines: 7
+
+    Panel
+      id: titleColors
+      anchors.top: settings.bottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.bottom: parent.bottom
+      margin-top: 8
+      visible: false
+
+      Label
+        id: label
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        font: Verdana Bold-11px
+        color: $textColor
+        text: Title colour:
+
+      Panel
+        id: swatches
+        anchors.top: prev.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        margin-top: 6
+        layout:
+          type: grid
+          cell-size: 20 20
+          cell-spacing: 4
+          num-columns: 12
 
   MiniPanel
     id: presetButtons

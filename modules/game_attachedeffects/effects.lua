@@ -742,9 +742,9 @@ end
 -- King Thorgrim Deepcrown (OTSERV data/scripts/boss_skills/deepcrown_skills.lua).
 -- Both are the game's own effects, looped, rather than drawn textures: his
 -- Hammerfall and keg blasts are stock magic effects sent per tile by the server.
--- 451: the lit fuse on a blasting keg, the yellow spark (dat effect 4), held on
+-- 452: the lit fuse on a blasting keg, the yellow spark (dat effect 4), held on
 -- the keg's tile while it burns.
-AttachedEffectManager.register(451, 'Keg fuse', 4, ThingCategoryEffect, {
+AttachedEffectManager.register(452, 'Keg fuse', 4, ThingCategoryEffect, {
     speed = 0.6,
     offset = { 0, 0, true }
 })

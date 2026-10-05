@@ -26,6 +26,7 @@ Module
     - game_itemtimer
     - game_viplist
     - game_battle
+    - game_titles
     - game_npctrade
     - game_textwindow
     - game_playertrade

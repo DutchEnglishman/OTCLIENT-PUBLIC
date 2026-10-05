@@ -81,6 +81,18 @@ UIWidget
       margin-top: 7
       height: 22
 
+      OptionCheckBox
+        id: disableRightClickWalk
+        !text: tr('Disable right-click walking')
+        !tooltip: tr('Right-clicking a tile with nothing to use, attack or loot no longer walks you there')
+
+    SmallReversedQtPanel
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.top: prev.bottom
+      margin-top: 7
+      height: 22
+
       OptionCheckBoxMarked
         id: returnDisablesChat
         !text: tr('Enter to disable chat')

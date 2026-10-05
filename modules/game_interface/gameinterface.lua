@@ -835,6 +835,10 @@ function removeMenuHook(category, name)
     end
 end
 
+-- The multi-tools (server ids 10511-10516) are containers on the server but not
+-- in Tibia.dat, so a click still starts "Use with ..."; Open is offered by id.
+local TOOL_CONTAINER_IDS = {[9594] = true, [9595] = true, [9596] = true, [9597] = true, [9598] = true, [9599] = true}
+
 function createThingMenu(menuPosition, lookThing, useThing, creatureThing)
     if not g_game.isOnline() then
         return
@@ -893,7 +897,7 @@ function createThingMenu(menuPosition, lookThing, useThing, creatureThing)
 
     -- Open sits directly under Look: opening is what a right-click on a bag is
     -- almost always for, so the item-management rows go below it.
-    if useThing and useThing:isContainer() then
+    if useThing and (useThing:isContainer() or (useThing:isItem() and TOOL_CONTAINER_IDS[useThing:getId()])) then
         if useThing:getParentContainer() then
             menu:addOption(tr('Open'), function()
                 g_game.open(useThing, useThing:getParentContainer())
@@ -1569,7 +1573,7 @@ function processMouseAction(menuPosition, mouseButton, autoWalkPos, lookThing, u
                 end
 
                 -- Nothing to talk to, attack, loot, or use: walk to the clicked tile.
-                if autoWalkPos then
+                if autoWalkPos and not modules.client_options.getOption('disableRightClickWalk') then
                     player:autoWalk(autoWalkPos)
                     if g_game.isAttacking() and g_game.getChaseMode() == ChaseOpponent then
                         g_game.setChaseMode(DontChase)
@@ -1643,7 +1647,7 @@ function processMouseAction(menuPosition, mouseButton, autoWalkPos, lookThing, u
                 end
 
                 -- Nothing to talk to, attack, or use: walk to the clicked tile.
-                if autoWalkPos then
+                if autoWalkPos and not modules.client_options.getOption('disableRightClickWalk') then
                     player:autoWalk(autoWalkPos)
                     if g_game.isAttacking() and g_game.getChaseMode() == ChaseOpponent then
                         g_game.setChaseMode(DontChase)

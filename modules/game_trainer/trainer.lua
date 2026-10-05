@@ -170,6 +170,15 @@ local BLAME_WINDOW = 1500
 -- should hold the keyboard, so a click anywhere else hands it back.
 local FIELD_IDS = { 'manaSpell', 'manaPercent', 'runeSpell', 'runePercent' }
 
+-- The words this character can cast, lowercased, from the server
+-- (OTSERV data/scripts/trainer_widget/trainer_spells.lua). Casting is by
+-- talking, so a field holding anything else would be said aloud on every tick.
+-- The client's own SpellInfo cannot stand in: it is stock Tibia and misses the
+-- server's custom spells. nil until the list arrives, and nothing is cast
+-- meanwhile.
+local TRAINER_SPELLS_OPCODE = 82
+local castableSpells = nil
+
 local trainerWindow = nil
 local trainerButton = nil
 local contentsPanel = nil
@@ -342,14 +351,61 @@ end
 -- The % is a FLOOR: cast while mana is ABOVE it and stop there, leaving that
 -- much in reserve. The rejected alternative was to wait until the threshold
 -- then drain to empty.
+local function normalizeSpell(text)
+    return text:match('^%s*(.-)%s*$'):lower()
+end
+
+local function isCastable(text)
+    return castableSpells ~= nil and castableSpells[normalizeSpell(text)] == true
+end
+
+local function requestCastableSpells()
+    local protocolGame = g_game.isOnline() and g_game.getProtocolGame()
+    if protocolGame then
+        protocolGame:sendExtendedOpcode(TRAINER_SPELLS_OPCODE, 'list')
+    end
+end
+
+-- Red with a tooltip while the field holds text that is not a spell, so a
+-- trainer that never fires does not read as a broken toggle.
+local function markSpellField(field)
+    local text = field:getText()
+    if not field.normalColor then
+        field.normalColor = field:getColor()
+    end
+
+    if text == '' or isCastable(text) then
+        field:setColor(field.normalColor)
+        field:removeTooltip()
+    else
+        field:setColor('#ff5555')
+        field:setTooltip(tr('Not a spell you can cast. The trainer will not say it.'))
+    end
+end
+
+local function markSpellFields()
+    markSpellField(controls.manaSpell)
+    markSpellField(controls.runeSpell)
+end
+
+local function onCastableSpells(_protocol, _opcode, buffer)
+    castableSpells = {}
+    for words in buffer:gmatch('[^|]+') do
+        castableSpells[words:lower()] = true
+    end
+    if controls.manaSpell then
+        markSpellFields()
+    end
+end
+
 local function activeTrainer(toggle, spellWidget, percentWidget, caster)
     if not toggle:isChecked() then
         return nil
     end
 
-    local spell = spellWidget:getText()
+    local spell = normalizeSpell(spellWidget:getText())
     local threshold = tonumber(percentWidget:getText())
-    if spell == '' or not threshold then
+    if not isCastable(spell) or not threshold then
         return nil
     end
 
@@ -551,6 +607,8 @@ function online()
     trainerWindow:applyMinimizedPreference(true)
 
     loadSettings()
+    markSpellFields()
+    requestCastableSpells()
     setHint(nil)
     nextEatAt = 0
     lastAntiIdleTime = g_clock.millis()
@@ -562,6 +620,7 @@ function offline()
     saveSettings()
     stopTicking()
     setHint(nil)
+    castableSpells = nil
 end
 
 function init()
@@ -650,12 +709,25 @@ function init()
         controls[id].onTextChange = onSettingChanged
     end
 
+    -- A spell learned since login is missing from the list until it is asked
+    -- for again, so typing something the list does not know asks.
+    for _, id in ipairs({ 'manaSpell', 'runeSpell' }) do
+        controls[id].onTextChange = function(widget, text)
+            onSettingChanged()
+            markSpellField(widget)
+            if castableSpells and text ~= '' and not isCastable(text) then
+                requestCastableSpells()
+            end
+        end
+    end
+
     trainerButton = modules.game_mainpanel.addToggleButton('trainerButton', tr('Trainer'),
         '/images/options/button_frags', toggle)
     trainerButton:setOn(trainerWindow:isVisible())
 
     connect(g_game, { onGameStart = online, onGameEnd = offline, onTextMessage = onTextMessage })
     connect(rootWidget, { onMousePress = onRootMousePress })
+    ProtocolGame.registerExtendedOpcode(TRAINER_SPELLS_OPCODE, onCastableSpells)
 
     if g_game.isOnline() then
         online()
@@ -665,6 +737,7 @@ end
 function terminate()
     disconnect(g_game, { onGameStart = online, onGameEnd = offline, onTextMessage = onTextMessage })
     disconnect(rootWidget, { onMousePress = onRootMousePress })
+    ProtocolGame.unregisterExtendedOpcode(TRAINER_SPELLS_OPCODE)
     stopTicking()
 
     if g_game.isOnline() then
