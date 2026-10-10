@@ -923,7 +923,7 @@ function createThingMenu(menuPosition, lookThing, useThing, creatureThing)
 
     -- Sends the bag to the server, which walks it -- including bags inside it --
     -- and moves every stackable into the stackable depot. Only offered on a
-    -- container, and the server still refuses it unless you are beside the box.
+    -- container you carry while standing at a locker; the server checks both.
     if lookThing and modules.game_stackabledepot and modules.game_stackabledepot.canStow(lookThing) then
         menu:addOption(tr("Stash Stackables"), function()
             modules.game_stackabledepot.stow(lookThing)

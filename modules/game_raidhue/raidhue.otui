@@ -1,0 +1,7 @@
+RaidHueDot < UIWidget
+  size: 5 5
+  phantom: true
+  focusable: false
+  image-source: /modules/game_raidhue/images/dot_5
+  // Clipped to the minimap: a dot near the edge can lie partly outside it.
+  clipping: true

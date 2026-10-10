@@ -1,0 +1,14 @@
+Module
+  name: game_passivetree
+  description: Passive skill tree (Ctrl+Shift+P)
+  author: Custom
+  sandboxed: true
+
+  dependencies:
+    - game_interface
+
+  scripts:
+    - passivetree
+
+  @onLoad: PassiveTreeUI.init()
+  @onUnload: PassiveTreeUI.terminate()

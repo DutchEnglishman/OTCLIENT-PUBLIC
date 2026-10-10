@@ -2,6 +2,7 @@ local iconTopMenu = nil
 -- @ Minimap
 local minimapWidget = nil -- bot fix
 local otmm = true
+local WORLD_MINIMAP_FILE = '/minimap/world.otmm'
 local oldPos = nil
 local fullscreenWidget
 local fullscreenControls
@@ -252,6 +253,13 @@ function mapController:onGameStart()
 
     if g_resources.fileExists(minimapFile) then
         loadFnc(minimapFile)
+    end
+
+    -- The world as it was when data/minimap/world.otmm was generated
+    -- (OTSERV tools/generate_revealed_minimap.ps1), laid under the player's own
+    -- map: a tile they have seen keeps their version.
+    if otmm and g_resources.fileExists(WORLD_MINIMAP_FILE) then
+        g_minimap.mergeOtmm(WORLD_MINIMAP_FILE)
     end
 
     self.ui.minimapBorder.minimap:load()

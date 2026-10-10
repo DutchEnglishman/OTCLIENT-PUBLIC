@@ -263,11 +263,56 @@ function onExtendedOpcode(protocol, code, buffer)
     end
 end
 
--- Whether the Stash Stackables row belongs on this thing's menu. Containers
--- only: the server walks whatever it is handed, and handing it a sword would
--- just be a wasted round trip.
+-- Depot locker client ids (server 2589-2592, the four facings).
+local LOCKER_CLIENT_IDS = {[3497] = true, [3498] = true, [3499] = true, [3500] = true}
+local VIRTUAL_POSITION_X = 65535
+local CONTAINER_POSITION_BASE = 64
+
+-- The server's isAtLocker in data/scripts/stackable_depot/registration.lua:
+-- a locker on one of the eight tiles around the player.
+local function isAtLocker()
+    local player = g_game.getLocalPlayer()
+    local position = player and player:getPosition()
+    if not position then
+        return false
+    end
+
+    for x = position.x - 1, position.x + 1 do
+        for y = position.y - 1, position.y + 1 do
+            local tile = g_map.getTile({x = x, y = y, z = position.z})
+            if tile then
+                for _, item in ipairs(tile:getItems()) do
+                    if LOCKER_CLIENT_IDS[item:getId()] then
+                        return true
+                    end
+                end
+            end
+        end
+    end
+    return false
+end
+
+-- Worn, or inside a window whose route game_containers recorded from an
+-- inventory slot. A window opened off the floor or out of the locker has no
+-- such route, and the container item itself carries no position to ask.
+local function isCarried(thing)
+    local position = thing:getPosition()
+    if not position or position.x ~= VIRTUAL_POSITION_X then
+        return false
+    end
+    if position.y < CONTAINER_POSITION_BASE then
+        return true
+    end
+
+    local restore = modules.game_containers and modules.game_containers.ContainerRestore
+    local container = g_game.getContainer(position.y - CONTAINER_POSITION_BASE)
+    return restore ~= nil and container ~= nil and restore.pathOf(container) ~= nil
+end
+
+-- Whether the Stash Stackables row belongs on this thing's menu: a container
+-- you carry, while you stand at a locker. The server checks both again.
 function canStow(thing)
-    return thing and thing:isItem() and thing:isContainer()
+    return thing and thing:isItem() and thing:isContainer() and isCarried(thing) and isAtLocker()
 end
 
 -- The same addressing game_protect uses: a container slot reaches the server as

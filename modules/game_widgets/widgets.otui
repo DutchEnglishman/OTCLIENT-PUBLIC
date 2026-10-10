@@ -4,6 +4,18 @@
 // session, because nothing calls widgetsWindow:setupOnStart() (widgets.lua
 // init() calls setup() only) so the settings it writes are never read back.
 // The close button is hidden in widgets.lua -- see init().
+// The store's mirror: its own banner is 108px wide, so this borrows the small
+// store artwork the equipment panel's store button uses (inventory.otui).
+MenuStoreButton < UIButton
+  size: 20 20
+  image-source: /images/game/prey/prey_smallstore
+  image-clip: 0 0 26 20
+  image-fixed-ratio: true
+
+  $pressed:
+    image-source: /images/game/prey/prey_smallstore_clicked
+    image-clip: -1 -1 27 21
+
 MiniWindow
   id: widgetsWindow
   // Placeholder only. widgets.lua sizes the window to its icon rows on every
@@ -61,6 +73,33 @@ MiniWindow
       anchors.top: parent.top
       anchors.left: parent.left
       anchors.right: parent.right
+      height: 20
+      phantom: true
+      layout:
+        type: grid
+        cell-size: 20 20
+        cell-spacing: 2
+        flow: true
+
+    // Temporary developer section; widgets.lua hides the label when the grid
+    // under it is empty and counts both into the window height.
+    Label
+      id: devLabel
+      anchors.top: iconGrid.bottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      margin-top: 6
+      height: 13
+      font: verdana-11px-monochrome
+      color: #9d9d9dff
+      !text: tr('Dev menu (temporary)')
+
+    UIWidget
+      id: devGrid
+      anchors.top: devLabel.bottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      margin-top: 3
       height: 20
       phantom: true
       layout:

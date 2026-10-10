@@ -1,0 +1,9 @@
+Module
+  name: game_raidhue
+  description: Shows where a raid's monsters are as a coloured patch on the minimap
+  author: Roel
+  sandboxed: true
+  autoload: true
+  scripts: [ raidhue ]
+  @onLoad: init()
+  @onUnload: terminate()

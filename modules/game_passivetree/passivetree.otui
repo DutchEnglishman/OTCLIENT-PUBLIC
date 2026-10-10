@@ -1,0 +1,99 @@
+MainWindow
+  id: passiveTreeWindow
+  !text: tr('Passive Tree')
+  size: 980 700
+  @onEscape: modules.game_passivetree.toggle()
+
+  Label
+    id: pointsLabel
+    font: verdana-11px-rounded
+    color: $textBright
+    anchors.left: parent.left
+    anchors.top: parent.top
+    text-auto-resize: true
+
+  Label
+    id: hintLabel
+    font: verdana-11px-monochrome
+    color: $textDim
+    anchors.left: pointsLabel.right
+    anchors.verticalCenter: pointsLabel.verticalCenter
+    margin-left: 16
+    text-auto-resize: true
+    !text: tr('Drag to move, wheel to zoom, click a lit node, then Confirm.')
+
+  TextEdit
+    id: searchEdit
+    width: 200
+    anchors.right: parent.right
+    anchors.verticalCenter: pointsLabel.verticalCenter
+    !placeholder: tr('Search nodes (e.g. fire, speed)')
+
+  Label
+    id: matchLabel
+    font: verdana-11px-monochrome
+    color: $textDim
+    anchors.right: searchEdit.left
+    anchors.verticalCenter: searchEdit.verticalCenter
+    margin-right: 8
+    text-auto-resize: true
+
+  UIWidget
+    id: canvas
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: pointsLabel.bottom
+    anchors.bottom: closeButton.top
+    margin-top: 6
+    margin-bottom: 6
+    background-color: #0b0c0e
+    border-width: 1
+    border-color: $borderColor
+    clipping: true
+    phantom: false
+    focusable: false
+    layout:
+      type: anchor
+
+  Label
+    id: disabledLabel
+    anchors.centerIn: canvas
+    font: verdana-11px-rounded
+    color: #d07070
+    text-auto-resize: true
+    visible: false
+    !text: tr('The passive tree is switched off on this server right now.')
+
+  Button
+    id: closeButton
+    !text: tr('Close')
+    width: 64
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    @onClick: modules.game_passivetree.toggle()
+
+  Button
+    id: confirmButton
+    !text: tr('Confirm')
+    width: 80
+    anchors.right: closeButton.left
+    anchors.bottom: parent.bottom
+    margin-right: 8
+    @onClick: modules.game_passivetree.confirm()
+
+  Button
+    id: cancelButton
+    !text: tr('Undo picks')
+    width: 80
+    anchors.right: confirmButton.left
+    anchors.bottom: parent.bottom
+    margin-right: 8
+    @onClick: modules.game_passivetree.undo()
+
+  Button
+    id: resetButton
+    !text: tr('Reset tree')
+    width: 80
+    anchors.left: parent.left
+    anchors.bottom: parent.bottom
+    @onClick: modules.game_passivetree.reset()

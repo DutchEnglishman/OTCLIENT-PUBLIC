@@ -9,10 +9,22 @@ local TITLES_OPCODE = 81
 -- and coming back can arrive as a fresh object wearing nothing.
 local titles = {}
 local ownedCallback = nil
+local showOthers = true
+
+-- Settings cannot hide it. Matched by text: Titles.list on the server never offers it.
+local STAFF_TEXT = '[STAFF]'
+
+local function visible(creature, entry)
+    if showOthers or entry.text == STAFF_TEXT then
+        return true
+    end
+    local player = g_game.getLocalPlayer()
+    return player ~= nil and player:getId() == creature:getId()
+end
 
 local function apply(creature)
     local entry = titles[creature:getId()]
-    if entry then
+    if entry and visible(creature, entry) then
         creature:setTitle(entry.text, entry.color)
     elseif creature:getTitle() ~= '' then
         creature:clearTitle()
@@ -79,12 +91,24 @@ function choose(titleId, colorIndex)
     send(string.format('choose|%d|%d', titleId, colorIndex))
 end
 
+-- client_options' showPlayerTitles. Off hides every other player's title but
+-- [STAFF]; the titles stay remembered, so turning it back on shows them at once.
+function setShowOthers(value)
+    showOthers = value ~= false
+    for id in pairs(titles) do
+        applyById(id)
+    end
+end
+
 local function onGameEnd()
     titles = {}
     ownedCallback = nil
 end
 
 function init()
+    if modules.client_options then
+        showOthers = modules.client_options.getOption('showPlayerTitles') ~= false
+    end
     ProtocolGame.registerExtendedOpcode(TITLES_OPCODE, onOpcode)
     connect(Creature, { onAppear = apply })
     connect(g_game, { onGameEnd = onGameEnd })

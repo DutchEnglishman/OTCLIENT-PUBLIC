@@ -5,11 +5,12 @@
 -- otherwise -- so both places keep working while this window is being judged.
 --
 -- A mirror carries no behaviour of its own. It reads a `widgetMirror` record
--- (tooltip, artwork, callback) that the two registration choke points leave on
+-- (tooltip, artwork, callback) that the registration choke points leave on
 -- every toggle they build: game_mainpanel's createButton and client_topmenu's
--- addButton. None of that is recoverable from the widget itself -- the callback
--- lives inside a closure, and UIWidget binds setIcon with no getter -- which is
--- why the record exists rather than this module reflecting over the button.
+-- addButton, plus the store banner's in game_mainpanel's onInit. None of that
+-- is recoverable from the widget itself -- the callback lives inside a closure,
+-- and UIWidget binds setIcon with no getter -- which is why the record exists
+-- rather than this module reflecting over the button.
 
 local CELL_SIZE = 20
 local CELL_SPACING = 2
@@ -18,48 +19,47 @@ local CELL_SPACING = 2
 -- it -- a module flips its own button's on state, never the mirror's.
 local SYNC_INTERVAL = 500
 
--- widgetsButton is this window's own toggle -- mirroring it inside the window
--- would give the player a button that closes the thing they clicked it in.
--- optionsMainButton is the main panel's copy of optionsButton under a second
--- id, so without it here Options would appear twice.
--- The dev tools stay top-bar-only.
---
--- The bottom group have their own buttons in the equipment panel's shortcut
--- grid (game_inventory's inventory.otui), so mirroring them here would show
--- each of them twice. Their source buttons are untouched and still live
--- wherever their own modules registered them. Analysers is deliberately NOT in
--- this group -- it is wanted in both places.
-local EXCLUDED_IDS = {
-    widgetsButton = true,
-    optionsMainButton = true,
-    debugInfoButton = true,
-    otuiEditorButton = true,
+-- The window shows exactly these, in this order, and nothing else: a button in
+-- neither list gets no mirror. Ids are the source buttons' own, as their
+-- modules register them; a listed button its module never registered (a
+-- feature-gated one) is skipped.
+local MENU_ORDER = {
+    'skillsButton',
+    'analyzerButton',
+    'battleButton',
+    'vipListButton',
+    'CyclopediaButton',
+    'trackerButton',
+    'questLogButton',
+    'Store shop',
+    'trainerButton',
+    'autoLootButton',
+    'miniMap',
+    'healthMana',
+    'inventory',
+}
 
-    optionsButton = true,
-    hotkeysWindowButton = true,
-    autoLootButton = true,
-    logoutButton = true,
+-- Temporary: the developer tools, in their own labelled grid under the rest.
+local DEV_ORDER = {
+    'terminalButton',
 }
 
 local widgetsWindow = nil
 local widgetsButton = nil
 local iconGrid = nil
+local devLabel = nil
+local devGrid = nil
 local syncEvent = nil
 
 -- source button id -> mirror widget
 local mirrors = {}
 local syncMirrors
 
--- Ordered as the icons appear today: top bar first, then whatever is still
--- sitting in the main panel. isExplicitlyVisible rather than isVisible so a
--- button hidden only because its container is hidden -- which is every main
--- panel button in extended view -- still gets a mirror, while one a module
--- deliberately hid does not. (Options > Control Buttons, which used to be the
--- other way a button got switched off, is no longer registered -- see
--- mainpanel.lua's onInit -- so its saved per-button visibility never applies.)
+-- isExplicitlyVisible rather than isVisible so a button hidden only because its
+-- container is hidden -- which is every main panel button in extended view --
+-- still gets a mirror, while one a module deliberately hid does not.
 local function collectSources()
-    local sources = {}
-    local seen = {}
+    local byId = {}
 
     local function sweep(panel)
         if not panel or panel:isDestroyed() then
@@ -67,10 +67,9 @@ local function collectSources()
         end
         for _, button in ipairs(panel:getChildren()) do
             local id = button:getId()
-            if id and button.widgetMirror and not EXCLUDED_IDS[id] and not seen[id]
+            if id and button.widgetMirror and not byId[id]
                 and not button:isDestroyed() and button:isExplicitlyVisible() then
-                seen[id] = true
-                table.insert(sources, button)
+                byId[id] = button
             end
         end
     end
@@ -81,14 +80,25 @@ local function collectSources()
     if modules.game_mainpanel then
         sweep(modules.game_mainpanel.getOptionsPanel())
         sweep(modules.game_mainpanel.getSpecialsPanel())
+        sweep(modules.game_mainpanel.getStorePanel())
     end
 
-    return sources
+    local function pick(order)
+        local list = {}
+        for _, id in ipairs(order) do
+            if byId[id] then
+                table.insert(list, byId[id])
+            end
+        end
+        return list
+    end
+
+    return pick(MENU_ORDER), pick(DEV_ORDER)
 end
 
-local function createMirror(id, source)
+local function createMirror(id, source, grid)
     local info = source.widgetMirror
-    local mirror = g_ui.createWidget('MainToggleButton', iconGrid)
+    local mirror = g_ui.createWidget(info.style or 'MainToggleButton', grid)
     mirror:setId('widgetMirror_' .. id)
     mirror:setSize('20 20')
     mirror:setTooltip(info.tooltip)
@@ -96,7 +106,7 @@ local function createMirror(id, source)
     -- The two registration paths dress their buttons differently: the main
     -- panel hands over a 20x20 sprite sheet (off state left, on state right)
     -- as the image source, the top menu hands over an icon drawn over the
-    -- style's own background.
+    -- style's own background. A record naming its own style brings its artwork.
     if info.image then
         mirror:setImageSource(info.image)
         mirror:setImageClip('0 0 20 20')
@@ -130,7 +140,19 @@ local function chromeHeight()
         contents:getPaddingTop() + contents:getPaddingBottom()
 end
 
-local function updateHeight(count)
+-- Sizes one grid to its rows and returns that height; 0 for an empty grid.
+local function sizeGrid(grid, count, perRow)
+    if count == 0 then
+        grid:setHeight(0)
+        return 0
+    end
+    local rows = math.ceil(count / perRow)
+    local height = rows * CELL_SIZE + (rows - 1) * CELL_SPACING
+    grid:setHeight(height)
+    return height
+end
+
+local function updateHeight(menuCount, devCount)
     local usable = iconGrid:getWidth()
     -- Zero until the window has been laid out once; the next poll picks it up.
     if usable < CELL_SIZE then
@@ -138,10 +160,14 @@ local function updateHeight(count)
     end
 
     local perRow = math.max(1, math.floor((usable + CELL_SPACING) / (CELL_SIZE + CELL_SPACING)))
-    local rows = math.max(1, math.ceil(count / perRow))
-    local gridHeight = rows * CELL_SIZE + (rows - 1) * CELL_SPACING
+    local contentHeight = sizeGrid(iconGrid, math.max(1, menuCount), perRow)
 
-    iconGrid:setHeight(gridHeight)
+    local devHeight = sizeGrid(devGrid, devCount, perRow)
+    devLabel:setVisible(devCount > 0)
+    if devCount > 0 then
+        contentHeight = contentHeight + devLabel:getMarginTop() + devLabel:getHeight() +
+            devGrid:getMarginTop() + devHeight
+    end
 
     -- An exact height, not a draggable range: every row is on screen and there
     -- is no scrollbar to reach the ones that aren't. Re-applied every poll
@@ -152,7 +178,7 @@ local function updateHeight(count)
     -- the height already matches -- UIMiniWindow:setHeight signals
     -- onHeightChange unconditionally and that writes to settings, which this
     -- would otherwise do twice a second forever.
-    local target = gridHeight + chromeHeight()
+    local target = contentHeight + chromeHeight()
     if not widgetsWindow:isOn() and widgetsWindow:getHeight() ~= target then
         widgetsWindow:setHeight(target)
     end
@@ -163,23 +189,20 @@ syncMirrors = function()
         return
     end
 
-    local ordered = {}
-    local seen = {}
+    local menuSources, devSources = collectSources()
 
-    for _, source in ipairs(collectSources()) do
-        local id = source:getId()
-        local mirror = mirrors[id]
-        if not mirror or mirror:isDestroyed() then
-            mirror = createMirror(id, source)
-            mirrors[id] = mirror
-        end
-        mirror:setOn(source:isOn())
-        seen[id] = true
-        table.insert(ordered, mirror)
+    local wanted = {}
+    for _, source in ipairs(menuSources) do
+        wanted[source:getId()] = true
+    end
+    for _, source in ipairs(devSources) do
+        wanted[source:getId()] = true
     end
 
+    -- Stale mirrors go before reordering, so reorderChildren only ever sees
+    -- each grid's live children.
     for id, mirror in pairs(mirrors) do
-        if not seen[id] then
+        if not wanted[id] then
             if not mirror:isDestroyed() then
                 mirror:destroy()
             end
@@ -187,8 +210,25 @@ syncMirrors = function()
         end
     end
 
-    iconGrid:reorderChildren(ordered)
-    updateHeight(#ordered)
+    local function place(sources, grid)
+        local ordered = {}
+        for _, source in ipairs(sources) do
+            local id = source:getId()
+            local mirror = mirrors[id]
+            if not mirror or mirror:isDestroyed() then
+                mirror = createMirror(id, source, grid)
+                mirrors[id] = mirror
+            end
+            mirror:setOn(source:isOn())
+            table.insert(ordered, mirror)
+        end
+        grid:reorderChildren(ordered)
+        return #ordered
+    end
+
+    local menuCount = place(menuSources, iconGrid)
+    local devCount = place(devSources, devGrid)
+    updateHeight(menuCount, devCount)
 end
 
 local function clearMirrors()
@@ -285,6 +325,8 @@ function init()
     widgetsWindow:disableResize()
 
     iconGrid = widgetsWindow:recursiveGetChildById('iconGrid')
+    devLabel = widgetsWindow:recursiveGetChildById('devLabel')
+    devGrid = widgetsWindow:recursiveGetChildById('devGrid')
 
     widgetsWindow:getChildById('miniwindowTitle'):setText(tr('Menus'))
     widgetsWindow:getChildById('miniwindowIcon'):setImageSource('/images/icons/icon-prey-widget')
@@ -321,4 +363,6 @@ function terminate()
     end
 
     iconGrid = nil
+    devLabel = nil
+    devGrid = nil
 end

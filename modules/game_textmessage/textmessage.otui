@@ -7,11 +7,23 @@ TextMessageLabel < UILabel
   visible: false
 
 // Hotkey use ("Using one of 12 mana potions..."): created on the map widget by
-// textmessage.lua and placed by placeUnderCharacter every time it is shown.
+// textmessage.lua and placed by placeMapLabel every time it is shown.
 // Phantom so a click on the map under it still reaches the map.
 HotkeyMessageLabel < TextMessageLabel
   id: hotkeyLabel
   width: 303
+  phantom: true
+
+// Raid announcements and private messages: on the map widget too, placed by
+// textmessage.lua's placeMapLabel, so resizing the chat never moves them.
+RaidMessageLabel < TextMessageLabel
+  id: raidLabel
+  width: 303
+  phantom: true
+
+PrivateMessageLabel < TextMessageLabel
+  id: privateLabel
+  width: 290
   phantom: true
 
 // Bottom tracks the chat panel itself, NOT gameMapPanel and NOT bottomSplitter.
@@ -50,27 +62,6 @@ Panel
       id: middleCenterLabel
     TextMessageLabel
       id: lowCenterLabel
-
-  // Raid announcements. Anchored above centerTextMessagePanel rather than
-  // inside it: that panel is centred on the map, so anything in it prints over
-  // the character. The panel collapses to nothing while no centre message is
-  // showing, so the margin is measured from the middle of the screen -- enough
-  // to clear the character sprite at any zoom, and it rides higher still if a
-  // centre message happens to be up at the same time.
-  TextMessageLabel
-    id: raidLabel
-    anchors.bottom: centerTextMessagePanel.top
-    anchors.horizontalCenter: parent.horizontalCenter
-    margin-bottom: 50
-    width: 303
-
-  TextMessageLabel
-    id: privateLabel
-    anchors.top: parent.top
-    anchors.bottom: centerTextMessagePanel.top
-    anchors.horizontalCenter: parent.horizontalCenter
-    text-auto-resize: false
-    width: 290
 
   TextMessageLabel
     id: statusLabel

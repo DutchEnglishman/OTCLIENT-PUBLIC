@@ -308,6 +308,16 @@ return {
             end
         end
     },
+    -- Off hides the title above every other player's name except [STAFF]; the
+    -- player's own stays. Applied in game_titles.
+    showPlayerTitles                  = {
+        value = true,
+        action = function(value, options, controller, panels, extraWidgets)
+            if modules.game_titles and modules.game_titles.setShowOthers then
+                modules.game_titles.setShowOthers(value)
+            end
+        end
+    },
     displayHarmony                     = {
         value = true,
         action = function(value, options, controller, panels, extraWidgets)

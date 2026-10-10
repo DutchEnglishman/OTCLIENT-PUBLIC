@@ -123,14 +123,15 @@ local SOCKET_ROW_GAP = 3
 -- centred block: names on its left edge, values on its right, so the numbers --
 -- and the % after them -- line up down the whole tooltip.
 --
--- B is the base stats of a non-weapon, one "Physical Prot: 5%" per line, and
--- shares this block so its values sit in the same column as the rolls under
--- them. S is deliberately absent: a weapon's base stats arrive as one
--- bar-joined summary line ("Atk: 47 | Ice: 13 | Def: 48"), which holds several
--- colons and would be torn apart at the wrong one; it gets its own grid below.
--- R and L are out because they sit with the name as the item's identity
--- rather than as a table.
-local TWO_COLUMN_TAGS = { F = true, A = true, P = true, B = true, I = true }
+-- B and I are absent: a non-weapon's base stats and the implicits are whole
+-- lines, each centred on its own ("Arm: 13"), because in a value column a short
+-- name sat a long run of blank space away from its number. The server sends the
+-- implicits shortest first, so they centre into a widening stack. S is absent too: a weapon's base stats
+-- arrive as one bar-joined summary line ("Atk: 47 | Ice: 13 | Def: 48"), which
+-- holds several colons and would be torn apart at the wrong one; it gets its
+-- own grid below. R and L are out because they sit with the name as the item's
+-- identity rather than as a table.
+local TWO_COLUMN_TAGS = { F = true, A = true, P = true }
 
 -- The base stats are a grid, not a sentence. The server joins them with " | "
 -- (data/tooltip/tooltip_core.lua, extractStats); here they are split back into

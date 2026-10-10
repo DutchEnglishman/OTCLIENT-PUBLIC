@@ -191,8 +191,15 @@ optionsController = Controller:new()
 optionsController:setUI('mainoptionspanel', modules.game_interface.getMainRightPanel())
 
 function optionsController:onInit()
-    createButton_large('Store shop', tr('Store shop'), '/images/options/store_large', toggleStore,
-    false, 8)
+    local storeButton = createButton_large('Store shop', tr('Store shop'), '/images/options/store_large',
+        toggleStore, false, 8)
+    -- The 108px banner cannot be a 20px cell, so the mirror names a style with
+    -- the small store artwork instead (MenuStoreButton, game_widgets).
+    storeButton.widgetMirror = {
+        tooltip = tr('Store shop'),
+        style = 'MenuStoreButton',
+        callback = toggleStore
+    }
 
     -- Options > Interface > Control Buttons is not registered any more. The
     -- editor itself (initControlButtons and the list functions below) is left
@@ -293,6 +300,10 @@ end
 
 function getSpecialsPanel()
     return optionsController.ui.onPanel.specials
+end
+
+function getStorePanel()
+    return optionsController.ui.onPanel.store
 end
 
 function toggleExtendedViewButtons(extended)

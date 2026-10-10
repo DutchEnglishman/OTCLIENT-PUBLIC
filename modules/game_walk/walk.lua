@@ -135,6 +135,15 @@ local function mayRetryBlockedStep(dir, player)
     return true
 end
 
+-- STAIRDBG: temporary timing log for the stair delay; remove after measuring.
+local stairDbgLast = nil
+local function stairDbg(msg)
+    if msg == stairDbgLast then return end
+    stairDbgLast = msg
+    g_logger.info(string.format('[STAIRDBG] %d %s', g_clock.millis(), msg))
+end
+local function stairDbgPos(p) return p and string.format('%d,%d,%d', p.x, p.y, p.z) or 'nil' end
+
 --- Makes the player walk in the given direction.
 local function walk(dir)
     local player = g_game.getLocalPlayer()
@@ -143,6 +152,7 @@ local function walk(dir)
     end
 
     if player:isWalkLocked() then
+        stairDbg('refused: walk locked')
         nextWalkDir = nil
         return
     end
@@ -157,11 +167,15 @@ local function walk(dir)
         if isAutoWalking then
             player:stopAutoWalk()
         end
+        stairDbg('refused: auto/server walking, locked ' .. (player:getStepDuration() + 50))
         player:lockWalk(player:getStepDuration() + 50)
         return
     end
 
     if not player:canWalk() then
+        stairDbg(string.format('refused: canWalk false walking=%s prewalking=%s pos=%s step=%d',
+            tostring(player:isWalking()), tostring(player:isPreWalking()),
+            stairDbgPos(player:getPosition()), player:getStepDuration()))
         if lastWalkDir ~= dir then
             nextWalkDir = dir
         end
@@ -197,10 +211,12 @@ local function walk(dir)
                 player:preWalk(dir)
             end
         elseif not canChangeFloor(toPos, 1) and not canChangeFloor(toPos, -1) then
+            stairDbg('refused: unwalkable ' .. stairDbgPos(toPos))
             return false
         end
     end
 
+    stairDbg(string.format('SENT dir=%d from=%s prewalk=%s', dir, stairDbgPos(player:getPosition()), tostring(player:isPreWalking())))
     modules.game_interface.lastManualWalk = g_clock.millis()
     g_game.walk(dir)
     return true
@@ -303,6 +319,7 @@ local function onTeleport(player, newPos, oldPos)
     local offsetX = math.abs(Position.offsetX(newPos, oldPos))
     local offsetY = math.abs(Position.offsetY(newPos, oldPos))
     local offsetZ = math.abs(Position.offsetZ(newPos, oldPos))
+    stairDbg(string.format('FLOOR CHANGE arrived %s -> %s ping=%d', stairDbgPos(oldPos), stairDbgPos(newPos), g_game.getPing()))
 
     -- A stair or ladder step gets no lock: the server's stairJumpExhaustion only
     -- pacifies, so any walk lock here would be dead time.
@@ -361,7 +378,10 @@ function WalkController:onGameStart()
     self:registerEvents(LocalPlayer, {
         onCancelWalk = onCancelWalk,
         onWalkFinish = onWalkFinish,
-        onAutoWalk = onAutoWalk
+        onAutoWalk = onAutoWalk,
+        onWalk = function(player, oldPos, newPos)
+            stairDbg(string.format('server confirmed %s -> %s', stairDbgPos(oldPos), stairDbgPos(newPos)))
+        end
     })
 
     modules.game_interface.getRootPanel().onFocusChange = stopSmartWalk

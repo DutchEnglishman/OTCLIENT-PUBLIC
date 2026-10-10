@@ -21,7 +21,19 @@ UIWidget
       OptionCheckBox
         id: displayNames
         !text: tr('Display creature names')
-  
+
+    SmallReversedQtPanel
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.top: prev.bottom
+      margin-top: 7
+      height: 22
+
+      OptionCheckBox
+        id: showPlayerTitles
+        !text: tr('Display player titles')
+        !tooltip: tr('Off hides the titles of other players. [STAFF] is always shown.')
+
     SmallReversedQtPanel
       anchors.left: parent.left
       anchors.right: parent.right
