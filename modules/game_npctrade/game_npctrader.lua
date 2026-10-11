@@ -24,6 +24,27 @@ local SHOP_CURRENCY_OPCODE = 203
 -- is only half of what the shop will take.
 local SHOP_BANK_BALANCE_OPCODE = 204
 
+-- What each item in the open shop does, shown when it is hovered. Sent after
+-- the shop list, one "<clientId>|<text>" line per item; the goods packet has
+-- no room for it.
+local SHOP_ITEM_INFO_OPCODE = 206
+
+local function onShopItemInfo(protocol, code, buffer)
+    if not (controllerNpcTrader:isLegacyMode() and setShopItemInfo) then
+        return true
+    end
+
+    local info = {}
+    for line in string.gmatch(buffer, '[^\n]+') do
+        local clientId, text = string.match(line, '^(%d+)|(.*)$')
+        if clientId then
+            info[tonumber(clientId)] = text
+        end
+    end
+    setShopItemInfo(info)
+    return true
+end
+
 local function onShopBankBalance(protocol, code, buffer)
     if controllerNpcTrader:isLegacyMode() and setShopBankBalance then
         setShopBankBalance(tonumber(buffer))
@@ -48,6 +69,7 @@ end
 function controllerNpcTrader:onInit()
     ProtocolGame.registerExtendedOpcode(SHOP_CURRENCY_OPCODE, onShopCurrency)
     ProtocolGame.registerExtendedOpcode(SHOP_BANK_BALANCE_OPCODE, onShopBankBalance)
+    ProtocolGame.registerExtendedOpcode(SHOP_ITEM_INFO_OPCODE, onShopItemInfo)
 end
 
 function controllerNpcTrader:onGameStart()
@@ -121,6 +143,8 @@ end
 
 function controllerNpcTrader:onTerminate()
     ProtocolGame.unregisterExtendedOpcode(SHOP_CURRENCY_OPCODE, onShopCurrency)
+    ProtocolGame.unregisterExtendedOpcode(SHOP_BANK_BALANCE_OPCODE, onShopBankBalance)
+    ProtocolGame.unregisterExtendedOpcode(SHOP_ITEM_INFO_OPCODE, onShopItemInfo)
     if self:isLegacyMode() then
         self:legacy_terminate()
     else

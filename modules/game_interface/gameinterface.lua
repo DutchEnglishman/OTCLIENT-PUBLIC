@@ -80,6 +80,22 @@ local function onNpcFocus(protocol, opcode, buffer)
     end
 end
 
+-- Ground tiles the server has a use script for ("x:y:z;..." at login), exempt
+-- from the bare-ground filter in processMouseAction so a right-click uses them.
+local USABLE_GROUNDS_OPCODE = 85
+local usableGrounds = {}
+
+local function groundKey(pos)
+    return pos.x .. ':' .. pos.y .. ':' .. pos.z
+end
+
+local function onUsableGrounds(protocol, opcode, buffer)
+    usableGrounds = {}
+    for key in buffer:gmatch('[^;]+') do
+        usableGrounds[key] = true
+    end
+end
+
 local function talkToNpc(npc)
     local word = npcConversations[npc:getId()]
     g_game.talk(word and word ~= '' and word or 'hi')
@@ -143,6 +159,7 @@ function init()
         onLoginAdvice = onLoginAdvice
     }, true)
     ProtocolGame.registerExtendedOpcode(NPC_FOCUS_OPCODE, onNpcFocus)
+    ProtocolGame.registerExtendedOpcode(USABLE_GROUNDS_OPCODE, onUsableGrounds)
 
     -- Call load AFTER game window has been created and
     -- resized to a stable state, otherwise the saved
@@ -324,6 +341,7 @@ function terminate()
         onLoginAdvice = onLoginAdvice
     })
     ProtocolGame.unregisterExtendedOpcode(NPC_FOCUS_OPCODE, onNpcFocus)
+    ProtocolGame.unregisterExtendedOpcode(USABLE_GROUNDS_OPCODE, onUsableGrounds)
 
     for k, v in pairs(panelsList) do
         disconnect(v.checkbox, {
@@ -1246,7 +1264,8 @@ function processMouseAction(menuPosition, mouseButton, autoWalkPos, lookThing, u
     -- walking/autowalk instead.
     if useThing and not useThing:isContainer() and not useThing:isLyingCorpse() and
         not useThing:isMultiUse() and not useThing:isForceUse() and
-        (useThing:isGround() or useThing:isGroundBorder()) then
+        (useThing:isGround() or useThing:isGroundBorder()) and
+        not usableGrounds[groundKey(useThing:getPosition())] then
         useThing = nil
     end
 
@@ -1272,10 +1291,13 @@ function processMouseAction(menuPosition, mouseButton, autoWalkPos, lookThing, u
         return true
     end
 
-    -- Ahead of the control-mode branches, where Shift+Left is a look.
+    -- Ahead of the control-mode branches, where Shift+Left is a look. A backpack
+    -- is a container the player carries: chests, boxes and corpses are
+    -- pickupable in the item data too, so isPickupable cannot tell them apart.
     if useThing and (useThing:isContainer() or useThing:isLyingCorpse()) and mouseButton == MouseLeftButton and
         keyboardModifiers == KeyboardShiftModifier then
-        local option = useThing:isPickupable() and 'shiftClickOpensNewWindow' or 'shiftClickOpensFixedContainers'
+        local carried = useThing:getPosition().x == 0xffff
+        local option = carried and 'shiftClickOpensNewWindow' or 'shiftClickOpensFixedContainers'
         if modules.client_options.getOption(option) then
             g_game.open(useThing)
             return true

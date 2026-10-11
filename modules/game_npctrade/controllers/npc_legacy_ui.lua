@@ -17,6 +17,10 @@ local shopBalance = nil
 -- in gold: a shop charging task points or hourly tokens sets shopBalance, and
 -- the bank has nothing to do with what it spends.
 local bankBalance = 0
+
+-- client id -> hover text, sent by a shop that explains its items
+-- (SHOP_ITEM_INFO_OPCODE). Cleared with every new shop list.
+local itemInfo = {}
 local WEIGHT_UNIT = 'oz'
 local LAST_INVENTORY = 10
 
@@ -295,6 +299,29 @@ function setShopBankBalance(balance)
     end
 end
 
+function applyItemInfo(itemBox)
+    local text = itemInfo[itemBox.item.ptr:getId()]
+    if text then
+        itemBox:setTooltip(text)
+    else
+        itemBox:removeTooltip()
+    end
+end
+
+-- Arrives after the shop list, so the tiles already exist and only need their
+-- tooltips; refreshTradeItems puts them back on whenever it rebuilds the tiles.
+function setShopItemInfo(info)
+    itemInfo = info or {}
+
+    if not initialized then
+        return
+    end
+
+    for _, itemBox in ipairs(itemsPanel:getChildren()) do
+        applyItemInfo(itemBox)
+    end
+end
+
 -- The setup panel is one anchor chain, each row's top being the bottom of the
 -- row above it, so a row that is merely invisible still holds its place and
 -- leaves a gap above Weight. Collapsing its height and its top margin as well
@@ -487,6 +514,7 @@ function refreshTradeItems()
         local itemWidget = itemBox:getChildById('item')
         itemWidget:setItem(item.ptr)
         itemWidget.onMouseRelease = itemPopup
+        applyItemInfo(itemBox)
 
         radioItems:addWidget(itemBox)
     end
@@ -551,6 +579,7 @@ function onOpenNpcTrade(items)
     CURRENCY = DEFAULT_CURRENCY
     CURRENCY_DECIMAL = DEFAULT_CURRENCY_DECIMAL
     shopBalance = nil
+    itemInfo = {}
 
     tradeItems[BUY] = {}
     tradeItems[SELL] = {}
