@@ -126,6 +126,14 @@ g_app.setOrganizationName("otcr");
 -- Evaluated once: the consumers below test this at both init() and terminate(), and a
 -- value that changed mid-session would leave a connect() without its disconnect().
 local UPDATER_ENABLED = (function()
+    -- A dev build (otclient_dev.exe, windows-dev) runs a working tree as it is. Letting it
+    -- self-update would overwrite work in progress with the last release and apply that
+    -- release's delete list to the source checkout. Exes from before script signing have no
+    -- g_scriptIntegrity and still update, so a player whose exe swap failed is not stranded.
+    if g_scriptIntegrity and not g_scriptIntegrity.isEnforced() then
+        return false
+    end
+
     local updater = Services and Services.updater
     if type(updater) == 'table' then
         return updater.enabled ~= false and (updater.manifestUrl ~= nil or updater.repository ~= nil)
