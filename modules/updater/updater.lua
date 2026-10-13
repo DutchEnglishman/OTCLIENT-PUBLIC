@@ -34,6 +34,11 @@ local DEFAULT_CONFIG = {
   protectedPaths = { 'config.otml', '*.log', 'data/sounds/**', 'downloads/**' }
 }
 
+-- The signed script list and its in-flight copy. The exe reads both names at startup
+-- (src/framework/core/scriptintegrity.cpp); keep them in sync.
+local INTEGRITY_LIST = 'integrity.txt'
+local PENDING_INTEGRITY_LIST = 'integrity.pending.txt'
+
 local HASH_CHUNK = 40 -- files hashed per frame, so the progress bar keeps animating
 -- ...but 40 sprite sheets in one frame would freeze the UI for seconds, because hashing
 -- reads the whole file into memory. Whichever limit is reached first ends the chunk.
@@ -166,6 +171,22 @@ local function isSha256(value)
   return type(value) == 'string' and value:len() == 64 and value:match('^%x+$') ~= nil
 end
 
+-- Signed files the exe found missing or modified at startup: a release build checks every
+-- script on integrity.txt before init.lua runs, and refuses to load a bad one. Any entry here
+-- sends the updater down the full hash-and-download path even when the version says it is
+-- current, so an edited or damaged install puts itself right. An exe from before script
+-- signing has no g_scriptIntegrity at all.
+local function damagedFiles()
+  if not g_scriptIntegrity or not g_scriptIntegrity.getFailures then
+    return {}
+  end
+  local ok, failures = pcall(g_scriptIntegrity.getFailures)
+  if ok and type(failures) == 'table' then
+    return failures
+  end
+  return {}
+end
+
 local function readLocalVersion()
   -- readFileContentsFromWorkDir throws a C++ exception when the file is missing, and
   -- that exception crosses the Lua binding boundary uncaught (luabinder.h's trampoline
@@ -287,17 +308,40 @@ local function commit(entries, binaryKey)
     return fail('Unable to write the update breadcrumb; refusing to commit.')
   end
 
+  -- A release client only runs scripts on its signed integrity.txt, so mid-commit the files
+  -- already moved match the new list and the rest still match the old one. The new list is
+  -- therefore written twice: first beside the old one as integrity.pending.txt, which the exe
+  -- also accepts, and into place only after every other file has moved. An update that dies
+  -- in between still boots, and the next launch finishes it.
+  local hasIntegrityList = false
+  for _, entry in ipairs(entries) do
+    if entry.path == INTEGRITY_LIST then hasIntegrityList = true end
+  end
+  if hasIntegrityList then
+    local ok, written = pcall(function()
+      return g_resources.writeFileContentsToWorkDir(PENDING_INTEGRITY_LIST,
+        g_resources.readFileContentsFromWorkDir(stagingPathFor(INTEGRITY_LIST)))
+    end)
+    if not ok or not written then
+      return fail('Unable to stage the new script list; refusing to commit.')
+    end
+  end
+
   -- Each move is an atomic same-volume rename, so a file is either fully old or fully
   -- new. version.txt goes last: if we die partway, the version still reads as the old
   -- one and the next launch redoes the update rather than trusting a half-written tree.
   for index, entry in ipairs(entries) do
-    if entry.path ~= 'version.txt' then
+    if entry.path ~= 'version.txt' and entry.path ~= INTEGRITY_LIST then
       if not g_resources.moveFileInWorkDir(stagingPathFor(entry.path), entry.path) then
         return fail(string.format('Unable to install %s. The client was left unchanged where possible.', entry.path))
       end
     end
     noteProgress()
     setMainProgress(80 * index / #entries)
+  end
+
+  if hasIntegrityList and not g_resources.moveFileInWorkDir(stagingPathFor(INTEGRITY_LIST), INTEGRITY_LIST) then
+    return fail('Unable to install the new script list; the update will be retried on next launch.')
   end
 
   if config.allowDeletions and type(manifest.deleteFiles) == 'table' then
@@ -326,6 +370,9 @@ local function commit(entries, binaryKey)
       end
     end
   end
+
+  -- Unconditionally: a pending list left by an earlier interrupted update is spent now too.
+  g_resources.deleteFileInWorkDir(PENDING_INTEGRITY_LIST)
 
   clearBreadcrumb()
   clearStaging()
@@ -703,6 +750,7 @@ local function applyManifest(data)
   manifest.assetBaseUrl = data.assetBaseUrl or ''
 
   local localCode, localVersion = readLocalVersion()
+  local damaged = damagedFiles()
 
   -- Fast path: nothing to do once the install is at or beyond the published version, and
   -- we skip hashing thousands of files entirely. This is the normal case on every launch.
@@ -711,16 +759,23 @@ local function applyManifest(data)
   -- release, and treating "different" as "stale" would quietly overwrite it with older
   -- files -- sprites included, now that data/things ships through here. Roll players back
   -- by publishing a HIGHER version carrying the old content, never by lowering a code.
-  if localCode > 0 and localCode >= manifest.versionCode then
+  --
+  -- Damaged signed files override it: they will not load, and raising version.txt by hand
+  -- must not be a way to keep them.
+  if #damaged > 0 then
+    logWarning(string.format('%i client file(s) are missing or modified, starting with %s. Repairing from %s.',
+      #damaged, tostring(damaged[1]), manifest.version))
+  elseif localCode > 0 and localCode >= manifest.versionCode then
     if localCode > manifest.versionCode then
       return finish(true, string.format(
         'Installed version %s is newer than the published %s; leaving it alone.',
         localVersion, manifest.version))
     end
     return finish(true, string.format('Client is up to date (%s).', localVersion))
+  else
+    logInfo(string.format('Update available: %s -> %s', localVersion, manifest.version))
   end
 
-  logInfo(string.format('Update available: %s -> %s', localVersion, manifest.version))
   clearStaging()
   diffFiles(parsed.files, 1, {}, parsed.binary)
 end
@@ -790,8 +845,9 @@ local function fetchVersionProbe()
   setMainProgress(5)
 
   local localCode, localVersion = readLocalVersion()
-  if localCode == 0 then
-    return fetchManifest() -- unknown install, so the file hashes have to decide
+  if localCode == 0 or #damagedFiles() > 0 then
+    -- unknown install, or a damaged one: either way the file hashes have to decide
+    return fetchManifest()
   end
 
   httpOperationId = withHttpTimeout(function()

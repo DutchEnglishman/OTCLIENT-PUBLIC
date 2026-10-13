@@ -22,7 +22,7 @@ Services = {
         -- because a manifest naming a protected path is rejected in full.
         protectedPaths = {
             "config.otml", "config.ini", "*.log",
-            "data/sounds/**", "mods/**", "downloads/**"
+            "data/sounds/**", "downloads/**"
         }
     }, -- ./updater
     -- The website's MyAAC login.php. Only feeds the login screen's side panels (online
@@ -147,9 +147,16 @@ g_logger.info(g_app.getName() .. ' ' .. g_app.getVersion() .. ' rev ' .. g_app.g
     g_app.getBuildArch())
 
 -- setup lua debugger
+-- pcall: a release build cannot find lldebugger at all (it only runs signed files), and an
+-- environment variable a player sets must not stop the client from starting.
 if os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then
-    require("lldebugger").start()
-    g_logger.debug("Started LUA debugger.")
+    local ok, debugger = pcall(require, "lldebugger")
+    if ok then
+        debugger.start()
+        g_logger.debug("Started LUA debugger.")
+    else
+        g_logger.warning("LUA debugger requested but unavailable: " .. tostring(debugger))
+    end
 else
     g_logger.debug("LUA debugger not started (not launched with VSCode local-lua).")
 end
@@ -167,14 +174,13 @@ end
 g_html.addGlobalStyle('/data/styles/html.css')
 g_html.addGlobalStyle('/data/styles/custom.css')
 
--- try to add mods path too
-g_resources.addSearchPath(g_resources.getWorkDir() .. 'mods', true)
+-- We define the modules, not players: there is deliberately no mods/ folder and no .otpkg
+-- package scan here. A release build also refuses any script that is not on its signed
+-- list (src/framework/core/scriptintegrity.h), so putting either back would not let a
+-- player's module run -- it would only make the client log refusals.
 
 -- setup directory for saving configurations
 g_resources.setupUserWriteDir(('%s/'):format(g_app.getCompactName()))
-
--- search all packages
-g_resources.searchAndAddPackages('/', '.otpkg', true)
 
 -- load settings
 g_configs.loadSettings('/config.otml')
@@ -211,19 +217,22 @@ local function loadModules()
     g_modules.autoLoadModules(499)
     g_modules.ensureModuleLoaded('client')
 
+    -- Dev tools: the Lua terminal (Ctrl+T) and the stats overlay. make_release.ps1 leaves
+    -- them out of every release (with dev_otui, which autoloads itself), so in a player's
+    -- client these find nothing.
+    for _, name in ipairs({ 'client_terminal', 'client_debug_info' }) do
+        local module = g_modules.getModule(name)
+        if module then
+            module:load()
+        end
+    end
+
     -- game modules 500-999
     g_modules.autoLoadModules(999)
     g_modules.ensureModuleLoaded('game_interface')
     g_modules.ensureModuleLoaded('game_autoloot')
-    -- mods 1000-9999
+    -- 1000-9999: our modules that set no autoload-priority land at 9999 (the default)
     g_modules.autoLoadModules(9999)
-    --g_modules.ensureModuleLoaded('client_mods')
-
-    local script = '/' .. g_app.getCompactName() .. 'rc.lua'
-
-    if g_resources.fileExists(script) then
-        dofile(script)
-    end
 
     -- uncomment the line below so that modules are reloaded when modified. (Note: Use only mod dev)
     -- g_modules.enableAutoReload()
