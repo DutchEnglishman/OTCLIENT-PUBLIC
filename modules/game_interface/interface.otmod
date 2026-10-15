@@ -60,6 +60,7 @@ Module
     - game_stackabledepot
     - game_stackmarket
     - game_trainer
+    - game_guild
     - game_widgets
     - game_creatureinformation
     - game_rewardwall

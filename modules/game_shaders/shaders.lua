@@ -84,10 +84,15 @@ local MAP_SHADERS = { {
     -- One of the atmospheres below.
     name = 'Map - Burn',
     frag = 'shaders/fragment/burn.frag'
+}, {
+    -- A club: the room dimmed, coloured spotlights sweeping it on the beat and a
+    -- mirror ball's specks drifting over everything. One of the atmospheres below.
+    name = 'Map - Disco',
+    frag = 'shaders/fragment/disco.frag'
 } }
 
--- Map atmospheres (OTSERV data/scripts/talkactions/atmosphere.lua, /wind and
--- /burn) arrive here as the key of the one to show, or 'off'. One channel for all
+-- Map atmospheres (OTSERV data/scripts/talkactions/atmosphere.lua, /wind, /burn
+-- and /disco) arrive here as the key of the one to show, or 'off'. One channel for all
 -- of them rather than an opcode each, because the map has ONE shader slot: showing
 -- an atmosphere is always replacing whatever was there, never stacking.
 --
@@ -116,7 +121,8 @@ local MAP_SHADERS = { {
 local ATMOSPHERE_OPCODE = 76
 local ATMOSPHERE_SHADERS = {
     wind = 'Map - Wind',
-    burn = 'Map - Burn'
+    burn = 'Map - Burn',
+    disco = 'Map - Disco'
 }
 local ATMOSPHERE_FADE_MS = 3000
 local ATMOSPHERE_STEP_MS = 40

@@ -1,9 +1,8 @@
 Module
   name: game_highscore
-  description: game_highscore
-  author: game_highscore
-  website: https://github.com/mehah/otclient
+  description: The website's highscores in game, fed by the server over extended opcode 86
+  author: Roel
   sandboxed: true
   scripts: [ game_highscore ]
-  @onLoad: highscoreController:init()
-  @onUnload: highscoreController:terminate()
+  @onLoad: init()
+  @onUnload: terminate()

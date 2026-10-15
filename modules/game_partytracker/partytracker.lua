@@ -106,6 +106,13 @@ local function redraw()
         return
     end
 
+    -- Nil until the minimap first centres on the player; the next position
+    -- change redraws.
+    local camera = minimapWidget:getCameraPosition()
+    if not camera then
+        return
+    end
+
     for index, member in ipairs(members) do
         local entry = widgets[index]
 
@@ -137,7 +144,7 @@ local function redraw()
         local pos = {
             x = member.x,
             y = member.y,
-            z = minimapWidget:getCameraPosition().z
+            z = camera.z
         }
 
         minimapWidget:centerInPosition(entry.dot, pos)

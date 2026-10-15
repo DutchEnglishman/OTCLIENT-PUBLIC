@@ -1,0 +1,961 @@
+// ------------------------------------------------------------------ Pieces
+
+GuildTabButton < UIButton
+  font: verdana-11px-rounded
+  color: $textDim
+  size: 112 24
+  image-source: /images/ui/button
+  image-color: #8f9399
+  image-clip: 0 0 22 23
+  image-border: 3
+
+  $hover !disabled:
+    image-color: #c4c8ce
+    color: $textBright
+
+  $on:
+    image-color: #ffffff
+    color: $textBright
+
+// A framed sunken card, the base of every block in the window.
+GuildCard < UIWidget
+  image-source: /images/ui/panel_flat
+  image-border: 1
+  padding: 8
+
+GuildRaisedCard < UIWidget
+  image-source: /images/ui/panel_lightflat
+  image-border: 1
+  padding: 8
+
+GuildCaption < Label
+  font: Verdana-8px-antialiased
+  color: $textDim
+  text-auto-resize: true
+
+GuildIcon < UIItem
+  size: 32 32
+  virtual: true
+  phantom: true
+
+GuildIconSlot < UIWidget
+  size: 38 38
+  image-source: /images/ui/item
+  image-border: 2
+  phantom: true
+
+  GuildIcon
+    id: icon
+    anchors.centerIn: parent
+
+// A figure with its caption above it and an item to the left.
+GuildStatCard < GuildRaisedCard
+  height: 56
+
+  GuildIconSlot
+    id: slot
+    anchors.left: parent.left
+    anchors.verticalCenter: parent.verticalCenter
+
+  GuildCaption
+    id: caption
+    anchors.left: slot.right
+    anchors.top: slot.top
+    margin-left: 10
+    margin-top: 3
+
+  Label
+    id: value
+    anchors.left: caption.left
+    anchors.right: parent.right
+    anchors.bottom: slot.bottom
+    margin-bottom: 2
+    font: Verdana Bold-11px
+    color: #e2c27a
+
+// One choice of a passive pair. `on` is the chosen one; a disabled card is a tier the guild
+// has not reached or a member who may not pick.
+GuildOptionCard < UIButton
+  height: 46
+  image-source: /images/ui/panel_lightflat
+  image-border: 1
+  image-color: #b9bcc2
+  border-width: 1
+  border-color: #00000000
+
+  $hover !disabled !on:
+    image-color: #ffffff
+    border-color: #6e737b
+
+  $on:
+    image-color: #ffffff
+    border-color: #a9b2bf
+
+  $disabled !on:
+    opacity: 0.45
+
+  GuildIconSlot
+    id: slot
+    anchors.left: parent.left
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 4
+
+  Label
+    id: label
+    anchors.left: slot.right
+    anchors.right: parent.right
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 8
+    margin-right: 6
+    text-wrap: true
+    text-auto-resize: false
+    height: 28
+    text-align: left
+    font: verdana-11px-rounded
+    color: $textColor
+    phantom: true
+
+  Label
+    id: active
+    !text: tr('ACTIVE')
+    anchors.top: parent.top
+    anchors.right: parent.right
+    margin-top: 3
+    margin-right: 5
+    font: Verdana-8px-antialiased
+    color: #a9d18e
+    text-auto-resize: true
+    phantom: true
+    visible: false
+
+GuildPassiveRow < GuildCard
+  height: 58
+  padding: 5
+
+  UIWidget
+    id: badge
+    anchors.left: parent.left
+    anchors.top: parent.top
+    anchors.bottom: parent.bottom
+    width: 50
+    image-source: /images/ui/panel_lightflat
+    image-border: 1
+    phantom: true
+
+    Label
+      id: badgeCaption
+      !text: tr('LEVEL')
+      anchors.top: parent.top
+      anchors.horizontalCenter: parent.horizontalCenter
+      margin-top: 6
+      font: Verdana-8px-antialiased
+      color: $textDim
+      text-auto-resize: true
+
+    Label
+      id: tier
+      anchors.bottom: parent.bottom
+      anchors.horizontalCenter: parent.horizontalCenter
+      margin-bottom: 5
+      font: Verdana Bold-13px
+      color: $textBright
+      text-auto-resize: true
+
+  GuildOptionCard
+    id: option1
+    anchors.left: badge.right
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 6
+    width: 232
+
+  Label
+    id: orLabel
+    !text: tr('or')
+    anchors.left: option1.right
+    anchors.verticalCenter: parent.verticalCenter
+    width: 24
+    text-align: center
+    font: Verdana-8px-antialiased
+    color: $textMuted
+
+  GuildOptionCard
+    id: option2
+    anchors.left: orLabel.right
+    anchors.verticalCenter: parent.verticalCenter
+    width: 232
+
+  Label
+    id: cost
+    anchors.left: option2.right
+    anchors.right: parent.right
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 6
+    text-wrap: true
+    text-auto-resize: false
+    height: 28
+    text-align: center
+    font: Verdana-8px-antialiased
+    color: $textDim
+
+GuildActivePassive < UIWidget
+  height: 40
+
+  GuildIconSlot
+    id: slot
+    anchors.left: parent.left
+    anchors.verticalCenter: parent.verticalCenter
+
+  Label
+    id: label
+    anchors.left: slot.right
+    anchors.right: parent.right
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 8
+    text-auto-resize: false
+    font: verdana-11px-rounded
+    color: $textColor
+
+GuildQuickButton < Button
+  height: 20
+  width: 52
+  font: Verdana-8px-antialiased
+
+// A spending category: what the guild pays for, how much of today's limit is used, and for
+// the leader the switch and the limit.
+GuildSpendCard < GuildCard
+  height: 112
+
+  GuildIconSlot
+    id: slot
+    anchors.left: parent.left
+    anchors.top: parent.top
+
+  Label
+    id: title
+    anchors.left: slot.right
+    anchors.top: slot.top
+    margin-left: 10
+    margin-top: 2
+    font: Verdana Bold-11px
+    color: $textBright
+    text-auto-resize: true
+
+  Label
+    id: status
+    anchors.left: title.left
+    anchors.top: title.bottom
+    margin-top: 4
+    font: verdana-11px-rounded
+    color: $textColor
+    text-auto-resize: true
+
+  UIWidget
+    id: track
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: slot.bottom
+    margin-top: 8
+    height: 14
+    image-source: /images/ui/panel_flat
+    image-border: 1
+    image-color: #6a6d72
+
+    UIWidget
+      id: fill
+      anchors.left: parent.left
+      anchors.top: parent.top
+      anchors.bottom: parent.bottom
+      margin: 2
+      width: 0
+      background-color: #8fa86d
+
+    Label
+      id: trackText
+      anchors.centerIn: parent
+      font: Verdana-8px-antialiased
+      color: $textBright
+      text-auto-resize: true
+
+  CheckBox
+    id: enabled
+    !text: tr('Guild pays')
+    anchors.left: parent.left
+    anchors.top: track.bottom
+    margin-top: 10
+    width: 90
+
+  Label
+    id: capCaption
+    !text: tr('daily limit per member:')
+    anchors.left: enabled.right
+    anchors.verticalCenter: enabled.verticalCenter
+    margin-left: 14
+    font: verdana-11px-rounded
+    color: $textDim
+    text-auto-resize: true
+
+  TextEdit
+    id: cap
+    anchors.left: capCaption.right
+    anchors.verticalCenter: enabled.verticalCenter
+    margin-left: 6
+    width: 110
+    height: 20
+
+GuildMemberRow < UIWidget
+  height: 26
+  background-color: #00000000
+
+  $hover:
+    background-color: $hoverOverlay
+
+  Label
+    id: name
+    anchors.left: parent.left
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 8
+    width: 200
+    font: verdana-11px-rounded
+    color: $textBright
+
+  Label
+    id: rank
+    anchors.left: name.right
+    anchors.verticalCenter: parent.verticalCenter
+    width: 90
+    font: verdana-11px-rounded
+    color: $textDim
+
+  Label
+    id: donated
+    anchors.left: rank.right
+    anchors.verticalCenter: parent.verticalCenter
+    width: 140
+    font: verdana-11px-rounded
+    color: #e2c27a
+
+  Button
+    id: waiverButton
+    !text: tr('Ask to leave')
+    anchors.right: parent.right
+    anchors.verticalCenter: parent.verticalCenter
+    margin-right: 6
+    width: 92
+    height: 20
+
+  Button
+    id: kickButton
+    !text: tr('Kick')
+    anchors.right: waiverButton.left
+    anchors.verticalCenter: parent.verticalCenter
+    margin-right: 4
+    width: 56
+    height: 20
+
+GuildLogRow < UIWidget
+  height: 22
+
+  Label
+    id: when
+    anchors.left: parent.left
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 6
+    width: 112
+    font: Verdana-8px-antialiased
+    color: $textMuted
+
+  Label
+    id: amount
+    anchors.right: parent.right
+    anchors.verticalCenter: parent.verticalCenter
+    margin-right: 8
+    font: verdana-11px-rounded
+    color: #e2c27a
+    text-auto-resize: true
+
+  Label
+    id: text
+    anchors.left: when.right
+    anchors.right: amount.left
+    anchors.verticalCenter: parent.verticalCenter
+    margin-right: 8
+    font: verdana-11px-rounded
+    color: $textColor
+
+GuildList < ScrollablePanel
+  layout:
+    type: verticalBox
+    spacing: 4
+  padding-right: 14
+
+// ------------------------------------------------------------------- Window
+
+MainWindow
+  id: guildWindow
+  !text: tr('Guild')
+  size: 760 640
+  @onEscape: modules.game_guild.close()
+
+  // ---------------------------------------------------------------- Header
+  UIWidget
+    id: header
+    anchors.top: parent.top
+    anchors.left: parent.left
+    anchors.right: parent.right
+    height: 92
+    image-source: /images/ui/panel_window
+    image-border: 4
+    padding: 12
+
+    UIWidget
+      id: crestSlot
+      anchors.left: parent.left
+      anchors.verticalCenter: parent.verticalCenter
+      size: 60 60
+      image-source: /images/ui/item
+      image-border: 2
+
+      GuildIcon
+        id: icon
+        anchors.centerIn: parent
+
+    UIWidget
+      id: levelBadge
+      anchors.right: parent.right
+      anchors.verticalCenter: parent.verticalCenter
+      size: 64 64
+      image-source: /images/ui/panel_lightflat
+      image-border: 1
+
+      Label
+        !text: tr('LEVEL')
+        anchors.top: parent.top
+        anchors.horizontalCenter: parent.horizontalCenter
+        margin-top: 8
+        font: Verdana-8px-antialiased
+        color: $textDim
+        text-auto-resize: true
+
+      Label
+        id: levelValue
+        anchors.bottom: parent.bottom
+        anchors.horizontalCenter: parent.horizontalCenter
+        margin-bottom: 9
+        font: Verdana Bold-13px
+        color: $textBright
+        text-auto-resize: true
+
+      Label
+        id: levelMax
+        anchors.bottom: parent.bottom
+        anchors.horizontalCenter: parent.horizontalCenter
+        margin-bottom: 2
+        font: Verdana-8px-antialiased
+        color: $textMuted
+        text-auto-resize: true
+
+    Label
+      id: guildName
+      anchors.left: crestSlot.right
+      anchors.top: crestSlot.top
+      margin-left: 14
+      font: Verdana Bold-13px
+      color: $textBright
+      text-auto-resize: true
+
+    Label
+      id: guildSub
+      anchors.left: guildName.right
+      anchors.bottom: guildName.bottom
+      margin-left: 10
+      font: verdana-11px-rounded
+      color: $textDim
+      text-auto-resize: true
+
+    Button
+      id: upgradeButton
+      anchors.right: levelBadge.left
+      anchors.bottom: crestSlot.bottom
+      margin-right: 12
+      width: 150
+      height: 24
+
+    UIWidget
+      id: progressTrack
+      anchors.left: guildName.left
+      anchors.right: upgradeButton.left
+      anchors.bottom: crestSlot.bottom
+      margin-right: 10
+      height: 24
+      image-source: /images/ui/panel_flat
+      image-border: 1
+      image-color: #5c5f64
+
+      UIWidget
+        id: progressFill
+        anchors.left: parent.left
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        margin: 3
+        width: 0
+        background-color: #b8994f
+
+      Label
+        id: progressText
+        anchors.centerIn: parent
+        font: verdana-11px-rounded
+        color: $textBright
+        text-auto-resize: true
+
+    GuildCaption
+      id: progressCaption
+      anchors.left: progressTrack.left
+      anchors.bottom: progressTrack.top
+      margin-bottom: 4
+
+  // ------------------------------------------------------------------ Tabs
+  GuildTabButton
+    id: tabOverview
+    !text: tr('Overview')
+    anchors.top: header.bottom
+    anchors.left: parent.left
+    margin-top: 8
+
+  GuildTabButton
+    id: tabPassives
+    !text: tr('Passives')
+    anchors.top: tabOverview.top
+    anchors.left: tabOverview.right
+    margin-left: 4
+
+  GuildTabButton
+    id: tabSpending
+    !text: tr('Spending')
+    anchors.top: tabOverview.top
+    anchors.left: tabPassives.right
+    margin-left: 4
+
+  GuildTabButton
+    id: tabMembers
+    !text: tr('Members')
+    anchors.top: tabOverview.top
+    anchors.left: tabSpending.right
+    margin-left: 4
+
+  GuildTabButton
+    id: tabLog
+    !text: tr('Log')
+    anchors.top: tabOverview.top
+    anchors.left: tabMembers.right
+    margin-left: 4
+
+  // A leader asked this player to leave without a refund.
+  UIWidget
+    id: waiverPanel
+    anchors.top: tabOverview.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 6
+    height: 0
+    image-source: /images/ui/panel_flat
+    image-border: 1
+    image-color: #c98a6a
+    visible: false
+
+    Label
+      id: waiverText
+      anchors.left: parent.left
+      anchors.right: waiverDecline.left
+      anchors.verticalCenter: parent.verticalCenter
+      margin-left: 10
+      font: verdana-11px-rounded
+      color: $textBright
+
+    Button
+      id: waiverAccept
+      !text: tr('Leave')
+      anchors.right: parent.right
+      anchors.verticalCenter: parent.verticalCenter
+      margin-right: 6
+      width: 64
+      height: 20
+
+    Button
+      id: waiverDecline
+      !text: tr('Stay')
+      anchors.right: waiverAccept.left
+      anchors.verticalCenter: parent.verticalCenter
+      margin-right: 4
+      width: 64
+      height: 20
+
+  // The pages sit in one framed body under the tabs.
+  UIWidget
+    id: body
+    anchors.top: waiverPanel.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: closeButton.top
+    margin-top: 6
+    margin-bottom: 8
+    image-source: /images/ui/panel_window
+    image-border: 4
+    padding: 10
+
+    Label
+      id: notInGuild
+      anchors.centerIn: parent
+      text-auto-resize: true
+      font: verdana-11px-rounded
+      color: $textDim
+      !text: tr('You are not in a guild. Join or found one on the website.')
+      visible: false
+
+    // ------------------------------------------------------------ Overview
+    UIWidget
+      id: overviewPage
+      anchors.fill: parent
+
+      GuildStatCard
+        id: bankCard
+        anchors.top: parent.top
+        anchors.left: parent.left
+        width: 226
+
+      GuildStatCard
+        id: nextCard
+        anchors.top: parent.top
+        anchors.left: bankCard.right
+        margin-left: 8
+        width: 226
+
+      GuildStatCard
+        id: donatedCard
+        anchors.top: parent.top
+        anchors.left: nextCard.right
+        anchors.right: parent.right
+        margin-left: 8
+
+      GuildCard
+        id: donateCard
+        anchors.top: bankCard.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        margin-top: 10
+        height: 78
+
+        Label
+          !text: tr('Donate to the guild')
+          anchors.left: parent.left
+          anchors.top: parent.top
+          font: Verdana Bold-11px
+          color: $textBright
+          text-auto-resize: true
+
+        Label
+          id: yourBank
+          anchors.right: parent.right
+          anchors.top: parent.top
+          font: verdana-11px-rounded
+          color: $textDim
+          text-auto-resize: true
+
+        TextEdit
+          id: donateEdit
+          anchors.left: parent.left
+          anchors.bottom: parent.bottom
+          width: 150
+          height: 22
+          placeholder: 100k
+
+        GuildQuickButton
+          id: quick100k
+          !text: tr('100k')
+          anchors.left: donateEdit.right
+          anchors.verticalCenter: donateEdit.verticalCenter
+          margin-left: 8
+
+        GuildQuickButton
+          id: quick1kk
+          !text: tr('1kk')
+          anchors.left: quick100k.right
+          anchors.verticalCenter: donateEdit.verticalCenter
+          margin-left: 4
+
+        GuildQuickButton
+          id: quick10kk
+          !text: tr('10kk')
+          anchors.left: quick1kk.right
+          anchors.verticalCenter: donateEdit.verticalCenter
+          margin-left: 4
+
+        Button
+          id: donateButton
+          !text: tr('Donate')
+          anchors.right: parent.right
+          anchors.verticalCenter: donateEdit.verticalCenter
+          width: 110
+          height: 24
+
+        GuildCaption
+          !text: tr('Donations come from your bank and are only paid back if you are kicked or the guild disbands.')
+          anchors.left: parent.left
+          anchors.bottom: donateEdit.top
+          margin-bottom: 6
+
+      GuildCard
+        id: activeCard
+        anchors.top: donateCard.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        margin-top: 10
+
+        Label
+          !text: tr('Active passives')
+          anchors.left: parent.left
+          anchors.top: parent.top
+          font: Verdana Bold-11px
+          color: $textBright
+          text-auto-resize: true
+
+        Label
+          id: activeCount
+          anchors.right: parent.right
+          anchors.top: parent.top
+          font: verdana-11px-rounded
+          color: $textDim
+          text-auto-resize: true
+
+        UIWidget
+          id: activeGrid
+          anchors.left: parent.left
+          anchors.right: parent.right
+          anchors.top: parent.top
+          anchors.bottom: parent.bottom
+          margin-top: 24
+          layout:
+            type: grid
+            cell-size: 342 40
+            cell-spacing: 6
+            flow: true
+
+        Label
+          id: activeEmpty
+          anchors.centerIn: activeGrid
+          font: verdana-11px-rounded
+          color: $textMuted
+          text-auto-resize: true
+          !text: tr('No passive chosen yet. The first one opens at guild level 3.')
+
+    // ------------------------------------------------------------ Passives
+    UIWidget
+      id: passivesPage
+      anchors.fill: parent
+      visible: false
+
+      GuildCaption
+        id: passivesHint
+        anchors.top: parent.top
+        anchors.left: parent.left
+
+      GuildList
+        id: passiveList
+        anchors.top: passivesHint.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        margin-top: 8
+        vertical-scrollbar: passiveScroll
+
+      VerticalScrollBar
+        id: passiveScroll
+        anchors.top: passiveList.top
+        anchors.bottom: passiveList.bottom
+        anchors.right: passiveList.right
+        step: 62
+        pixels-scroll: true
+
+    // ------------------------------------------------------------ Spending
+    UIWidget
+      id: spendingPage
+      anchors.fill: parent
+      visible: false
+
+      GuildSpendCard
+        id: suppliesCard
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+
+      GuildSpendCard
+        id: blessingCard
+        anchors.top: suppliesCard.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        margin-top: 10
+
+      Button
+        id: saveSpending
+        !text: tr('Save spending rules')
+        anchors.top: blessingCard.bottom
+        anchors.right: parent.right
+        margin-top: 10
+        width: 150
+        height: 24
+
+      GuildCaption
+        id: leaderOnly
+        !text: tr('Only the guild leader can change what the guild pays for.')
+        anchors.top: blessingCard.bottom
+        anchors.left: parent.left
+        margin-top: 14
+
+      GuildCard
+        id: personalCard
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        height: 54
+
+        CheckBox
+          id: useGuildGold
+          !text: tr('Pay my supplies and blessings with guild gold where the guild allows it')
+          anchors.left: parent.left
+          anchors.right: parent.right
+          anchors.top: parent.top
+
+        GuildCaption
+          !text: tr('Switch it off to always pay from your own purse and bank.')
+          anchors.left: parent.left
+          anchors.top: useGuildGold.bottom
+          margin-top: 4
+          margin-left: 18
+
+    // ------------------------------------------------------------- Members
+    UIWidget
+      id: membersPage
+      anchors.fill: parent
+      visible: false
+
+      UIWidget
+        id: membersHead
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        height: 18
+
+        GuildCaption
+          !text: tr('CHARACTER')
+          anchors.left: parent.left
+          anchors.verticalCenter: parent.verticalCenter
+          margin-left: 8
+
+        GuildCaption
+          !text: tr('RANK')
+          anchors.left: parent.left
+          anchors.verticalCenter: parent.verticalCenter
+          margin-left: 208
+
+        GuildCaption
+          !text: tr('DONATED')
+          anchors.left: parent.left
+          anchors.verticalCenter: parent.verticalCenter
+          margin-left: 298
+
+      HorizontalSeparator
+        id: membersSep
+        anchors.top: membersHead.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        margin-top: 2
+
+      GuildList
+        id: memberList
+        anchors.top: membersSep.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: dangerCard.top
+        margin-top: 4
+        margin-bottom: 10
+        vertical-scrollbar: memberScroll
+
+      VerticalScrollBar
+        id: memberScroll
+        anchors.top: memberList.top
+        anchors.bottom: memberList.bottom
+        anchors.right: memberList.right
+        step: 30
+        pixels-scroll: true
+
+      GuildCard
+        id: dangerCard
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        height: 62
+        image-color: #d9a8a0
+
+        Label
+          !text: tr('Disband the guild')
+          anchors.left: parent.left
+          anchors.top: parent.top
+          font: Verdana Bold-11px
+          color: #e8a196
+          text-auto-resize: true
+
+        GuildCaption
+          id: dangerText
+          anchors.left: parent.left
+          anchors.right: disbandButton.left
+          anchors.bottom: parent.bottom
+          margin-right: 10
+          text-auto-resize: false
+          text-wrap: true
+          height: 24
+
+        Button
+          id: disbandButton
+          !text: tr('Disband')
+          anchors.right: parent.right
+          anchors.verticalCenter: parent.verticalCenter
+          width: 96
+          height: 24
+          color: #f0b0a6
+
+    // ----------------------------------------------------------------- Log
+    UIWidget
+      id: logPage
+      anchors.fill: parent
+      visible: false
+
+      GuildList
+        id: logList
+        anchors.fill: parent
+        vertical-scrollbar: logScroll
+
+      VerticalScrollBar
+        id: logScroll
+        anchors.top: logList.top
+        anchors.bottom: logList.bottom
+        anchors.right: logList.right
+        step: 22
+        pixels-scroll: true
+
+  Label
+    id: statusLabel
+    anchors.left: parent.left
+    anchors.right: closeButton.left
+    anchors.verticalCenter: closeButton.verticalCenter
+    margin-right: 8
+    font: verdana-11px-rounded
+    color: $textBright
+
+  Button
+    id: closeButton
+    !text: tr('Close')
+    anchors.bottom: parent.bottom
+    anchors.right: parent.right
+    width: 80
+    height: 22
+    @onClick: modules.game_guild.close()

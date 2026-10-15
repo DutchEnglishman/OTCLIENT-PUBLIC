@@ -1,0 +1,8 @@
+Module
+  name: game_guild
+  description: Guild bank, upgrades and passives
+  author: Roel
+  sandboxed: true
+  scripts: [ guild ]
+  @onLoad: init()
+  @onUnload: terminate()

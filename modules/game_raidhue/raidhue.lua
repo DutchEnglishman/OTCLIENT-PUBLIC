@@ -33,11 +33,13 @@ local function clearDots()
 end
 
 -- A tile rect off the camera's floor is invalid, and an anchor to it resolves
--- to 0, so a dot on another floor is hidden rather than left anchored.
+-- to 0, so a dot on another floor is hidden rather than left anchored. Before
+-- the minimap first centres on the player its camera is invalid and reads as
+-- nil, so every dot stays hidden until onCameraPositionChange.
 local function updateVisibility(minimapWidget)
-    local z = minimapWidget:getCameraPosition().z
+    local camera = minimapWidget:getCameraPosition()
     for _, dot in ipairs(dots) do
-        dot.widget:setVisible(dot.z == z)
+        dot.widget:setVisible(camera ~= nil and dot.z == camera.z)
     end
 end
 
