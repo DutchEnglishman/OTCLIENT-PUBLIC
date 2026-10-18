@@ -1,0 +1,10 @@
+Module
+  name: game_alchemy
+  description: Alchemy window, opened by using an alchemy table
+  author: Shattered Realms
+  website: None
+  sandboxed: true
+  autoload: true
+  scripts: [ alchemy ]
+  @onLoad: init()
+  @onUnload: terminate()

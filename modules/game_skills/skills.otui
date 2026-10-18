@@ -290,8 +290,30 @@ MiniWindow
         image-source: /images/icons/icon_fishing
         image-size: 9 9
       SkillPercentPanel
+
+    // Alchemy and farming are server-side skills with no protocol field; both
+    // rows are filled by PROFESSIONS_OPCODE in skills.lua.
+    SkillButton
+      id: alchemySkill
+      SkillNameLabel
+        !text: tr('Alchemy')
+      SkillValueLabel
+      ImageSkill
+        image-source: /images/icons/icon_alchemy
+        image-size: 9 9
+      SkillPercentPanel
+
+    SkillButton
+      id: farmingSkill
+      SkillNameLabel
+        !text: tr('Farming')
+      SkillValueLabel
+      ImageSkill
+        image-source: /images/icons/icon_farming
+        image-size: 9 9
+      SkillPercentPanel
       margin-bottom: 5
-        
+
 
     HorizontalSeparator
       id: gearResistSeparator

@@ -96,6 +96,19 @@ local function onUsableGrounds(protocol, opcode, buffer)
     end
 end
 
+-- Tiles holding the player's own land plots ("x:y:z;..." at login and after
+-- every place or pack), which get "Pack" in the right-click menu. Must match
+-- FarmingConfig.plotsOpcode in the server's data/farming/farming_config.lua.
+local PLOTS_OPCODE = 90
+local plotTiles = {}
+
+local function onPlotTiles(protocol, opcode, buffer)
+    plotTiles = {}
+    for key in buffer:gmatch('[^;]+') do
+        plotTiles[key] = true
+    end
+end
+
 local function talkToNpc(npc)
     local word = npcConversations[npc:getId()]
     g_game.talk(word and word ~= '' and word or 'hi')
@@ -160,6 +173,7 @@ function init()
     }, true)
     ProtocolGame.registerExtendedOpcode(NPC_FOCUS_OPCODE, onNpcFocus)
     ProtocolGame.registerExtendedOpcode(USABLE_GROUNDS_OPCODE, onUsableGrounds)
+    ProtocolGame.registerExtendedOpcode(PLOTS_OPCODE, onPlotTiles)
 
     -- Call load AFTER game window has been created and
     -- resized to a stable state, otherwise the saved
@@ -342,6 +356,7 @@ function terminate()
     })
     ProtocolGame.unregisterExtendedOpcode(NPC_FOCUS_OPCODE, onNpcFocus)
     ProtocolGame.unregisterExtendedOpcode(USABLE_GROUNDS_OPCODE, onUsableGrounds)
+    ProtocolGame.unregisterExtendedOpcode(PLOTS_OPCODE, onPlotTiles)
 
     for k, v in pairs(panelsList) do
         disconnect(v.checkbox, {
@@ -973,6 +988,16 @@ function createThingMenu(menuPosition, lookThing, useThing, creatureThing)
         if useThing:isRotateable() then
             menu:addOption(tr('Rotate'), function()
                 g_game.rotate(useThing)
+            end)
+        end
+
+        local plotPos = useThing:getPosition()
+        if plotPos and plotPos.x ~= 0xffff and plotTiles[groundKey(plotPos)] then
+            menu:addOption(tr('Pack'), function()
+                local protocol = g_game.getProtocolGame()
+                if protocol then
+                    protocol:sendExtendedOpcode(PLOTS_OPCODE, 'pack|' .. plotPos.x .. '|' .. plotPos.y .. '|' .. plotPos.z)
+                end
             end)
         end
 

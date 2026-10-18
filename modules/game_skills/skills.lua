@@ -250,7 +250,29 @@ local function onMiningSkill(protocol, opcode, buffer)
     setSkillPercent(MINING_SKILL_ROW, percent, tr('You have %s percent to go', 100 - percent))
 end
 
+-- Alchemy and farming, "alchemy=<level>:<percent>;farming=<level>:<percent>",
+-- from Professions.send (OTSERV data/professions/professions.lua) at login and
+-- whenever either gains experience.
+PROFESSIONS_OPCODE = 88
+
+local PROFESSION_ROWS = {
+    alchemy = 'alchemySkill',
+    farming = 'farmingSkill'
+}
+
+local function onProfessions(protocol, opcode, buffer)
+    for name, level, percent in buffer:gmatch('(%a+)=(%d+):(%d+)') do
+        local rowId = PROFESSION_ROWS[name]
+        if rowId then
+            percent = tonumber(percent)
+            setSkillValue(rowId, tonumber(level))
+            setSkillPercent(rowId, percent, tr('You have %s percent to go', 100 - percent))
+        end
+    end
+end
+
 function skillController:onInit()
+    ProtocolGame.registerExtendedOpcode(PROFESSIONS_OPCODE, onProfessions)
     ProtocolGame.registerExtendedOpcode(MINING_SKILL_OPCODE, onMiningSkill)
     ProtocolGame.registerExtendedOpcode(RESISTANCES_OPCODE, onResistances)
     ProtocolGame.registerExtendedOpcode(FOOD_TIME_OPCODE, onFoodTime)
@@ -310,6 +332,7 @@ function skillController:onInit()
 end
 
 function skillController:onTerminate()
+    ProtocolGame.unregisterExtendedOpcode(PROFESSIONS_OPCODE)
     ProtocolGame.unregisterExtendedOpcode(MINING_SKILL_OPCODE)
     ProtocolGame.unregisterExtendedOpcode(RESISTANCES_OPCODE)
     ProtocolGame.unregisterExtendedOpcode(FOOD_TIME_OPCODE)

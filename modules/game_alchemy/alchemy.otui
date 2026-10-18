@@ -1,0 +1,264 @@
+GroupButton < UIButton
+  font: verdana-11px-antialised
+  color: $textBright
+  size: 80 23
+  image-source: /images/ui/button
+  image-color: #ababab
+  image-clip: 0 0 22 23
+  image-border: 3
+
+  $hover !disabled:
+    image-color: #dfdfdf
+
+  $pressed:
+    image-clip: 0 46 22 23
+
+  $on:
+    image-color: #ffffff
+
+RecipeRow < Panel
+  phantom: false
+  height: 36
+  image-source: /images/ui/button
+  image-color: #ababab
+  image-clip: 0 0 22 23
+  image-border: 3
+  padding-left: 3
+
+  $hover !disabled:
+    image-color: #dfdfdf
+
+  $focus:
+    image-color: #ffffff
+
+  UIItem
+    id: item
+    anchors.verticalCenter: parent.verticalCenter
+    anchors.left: parent.left
+    size: 34 34
+    padding: 1
+    virtual: true
+    phantom: true
+
+  Label
+    id: name
+    anchors.top: item.top
+    anchors.left: item.right
+    anchors.right: parent.right
+    margin-top: 3
+    margin-left: 5
+    text-align: left
+    phantom: true
+
+  Label
+    id: level
+    anchors.left: item.right
+    anchors.right: parent.right
+    anchors.bottom: item.bottom
+    margin-bottom: 3
+    margin-left: 5
+    text-align: left
+    color: #afafaf
+    phantom: true
+
+IngredientSlot < UIWidget
+  size: 64 54
+
+  UIItem
+    id: item
+    anchors.top: parent.top
+    anchors.horizontalCenter: parent.horizontalCenter
+    size: 34 34
+    padding: 1
+    virtual: true
+
+  Label
+    id: count
+    anchors.top: item.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 2
+    text-align: center
+    font: verdana-11px-rounded
+
+MainWindow
+  id: alchemyWindow
+  !text: tr('Alchemy')
+  size: 660 500
+  @onEscape: modules.game_alchemy.hide()
+
+  Label
+    id: levelLabel
+    anchors.top: parent.top
+    anchors.left: parent.left
+    width: 130
+    text-align: left
+
+  ProgressBar
+    id: levelBar
+    anchors.verticalCenter: levelLabel.verticalCenter
+    anchors.left: levelLabel.right
+    width: 160
+    height: 12
+    background-color: #3fa05a
+
+  Label
+    id: goldLabel
+    anchors.verticalCenter: levelLabel.verticalCenter
+    anchors.right: parent.right
+    text-auto-resize: true
+    text-align: right
+
+  Panel
+    id: groups
+    anchors.top: levelLabel.bottom
+    anchors.left: parent.left
+    margin-top: 10
+    width: 340
+    height: 23
+    layout:
+      type: horizontalBox
+      spacing: 4
+
+  TextEdit
+    id: searchInput
+    anchors.verticalCenter: groups.verticalCenter
+    anchors.right: parent.right
+    width: 150
+    !placeholder: tr('Search')
+    @onTextChange: modules.game_alchemy.rebuildList()
+
+  HorizontalSeparator
+    anchors.top: groups.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 8
+
+  ScrollablePanel
+    id: recipeList
+    anchors.top: prev.bottom
+    anchors.left: parent.left
+    anchors.bottom: separator.top
+    margin-top: 8
+    margin-bottom: 8
+    width: 230
+    vertical-scrollbar: recipeListScrollbar
+    layout: verticalBox
+    padding-right: 14
+    auto-focus: none
+
+  VerticalScrollBar
+    id: recipeListScrollbar
+    anchors.top: recipeList.top
+    anchors.bottom: recipeList.bottom
+    anchors.right: recipeList.right
+    step: 36
+    pixels-scroll: true
+
+  FlatPanel
+    id: brewPanel
+    anchors.top: recipeList.top
+    anchors.bottom: recipeList.bottom
+    anchors.left: recipeList.right
+    anchors.right: parent.right
+    margin-left: 10
+    padding: 8
+
+    UIItem
+      id: product
+      anchors.top: parent.top
+      anchors.left: parent.left
+      size: 34 34
+      padding: 1
+      virtual: true
+
+    Label
+      id: productName
+      anchors.top: product.top
+      anchors.left: product.right
+      anchors.right: parent.right
+      margin-left: 8
+      text-align: left
+      color: $textBright
+
+    Label
+      id: productLevel
+      anchors.top: productName.bottom
+      anchors.left: productName.left
+      anchors.right: parent.right
+      margin-top: 4
+      text-align: left
+
+    Label
+      id: productDescription
+      anchors.top: product.bottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      margin-top: 8
+      text-wrap: true
+      text-auto-resize: true
+      text-align: topleft
+      color: #c0c0c0
+
+    Panel
+      id: ingredients
+      anchors.top: productDescription.bottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      margin-top: 10
+      height: 170
+      layout:
+        type: grid
+        cell-size: 64 54
+        cell-spacing: 2
+        num-columns: 5
+        flow: true
+
+    Button
+      id: brewButton
+      anchors.bottom: parent.bottom
+      anchors.horizontalCenter: parent.horizontalCenter
+      width: 100
+      !text: tr('Brew')
+      @onClick: modules.game_alchemy.brew()
+
+    Label
+      id: amountLabel
+      anchors.left: parent.left
+      anchors.bottom: brewButton.top
+      margin-bottom: 10
+      width: 90
+      text-align: left
+
+    HorizontalScrollBar
+      id: amount
+      anchors.left: amountLabel.right
+      anchors.right: parent.right
+      anchors.verticalCenter: amountLabel.verticalCenter
+      margin-left: 6
+      focusable: false
+      @onValueChange: modules.game_alchemy.renderAmount()
+
+    Label
+      id: costLabel
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.bottom: amountLabel.top
+      margin-bottom: 8
+      text-wrap: true
+      text-auto-resize: true
+      text-align: left
+
+  HorizontalSeparator
+    id: separator
+    anchors.bottom: parent.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-bottom: 30
+
+  Button
+    anchors.bottom: parent.bottom
+    anchors.right: parent.right
+    width: 60
+    !text: tr('Close')
+    @onClick: modules.game_alchemy.hide()

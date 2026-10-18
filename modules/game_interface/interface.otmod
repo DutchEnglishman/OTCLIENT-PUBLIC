@@ -55,6 +55,7 @@ Module
     - game_tasksystem
     - game_dungeons
     - game_crafting
+    - game_alchemy
     - game_itemtooltip
     - game_itemshare
     - game_stackabledepot
