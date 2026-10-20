@@ -214,9 +214,6 @@ messagesPanel = nil
 -- Where the hotkey line starts, in tiles below the middle of the map (the
 -- middle of the character's tile).
 HOTKEY_LABEL_TILES_BELOW_CENTER = 0.05
--- Where a raid announcement ends, in tiles above it: clear of the character's
--- name and health bar at any zoom.
-RAID_LABEL_TILES_ABOVE_CENTER = 1.5
 
 -- The hotkey line, raid announcements and private messages are parented to the
 -- map rather than to messagesPanel: that panel ends at the chat, so anything
@@ -319,6 +316,38 @@ function wantedInServerLog(msgtype, text)
     return involvesLocalPlayer(text)
 end
 
+-- A critical hit's number arrives wrapped in SO/SI bytes (OTSERV critDamageText,
+-- src/game.cpp). Returns the line as setColoredText markup with that number in
+-- red and the rest in the line's own colour, plus the line with the bytes
+-- removed; nil when the line carries no crit.
+local CRIT_OPEN, CRIT_CLOSE = '\14', '\15'
+local CRIT_COLOR = '#ff3030'
+
+local function critMarkup(text, color)
+    if not text:find(CRIT_OPEN, 1, true) then
+        return nil
+    end
+
+    local parts = {}
+    local pos = 1
+    while true do
+        local open = text:find(CRIT_OPEN, pos, true)
+        local close = open and text:find(CRIT_CLOSE, open + 1, true)
+        if not close then
+            break
+        end
+        if open > pos then
+            parts[#parts + 1] = string.format('{%s, %s}', text:sub(pos, open - 1), color)
+        end
+        parts[#parts + 1] = string.format('{%s, %s}', text:sub(open + 1, close - 1), CRIT_COLOR)
+        pos = close + 1
+    end
+    if pos <= #text then
+        parts[#parts + 1] = string.format('{%s, %s}', text:sub(pos), color)
+    end
+    return table.concat(parts), (text:gsub('[' .. CRIT_OPEN .. CRIT_CLOSE .. ']', ''))
+end
+
 function displayMessage(mode, text)
 
     if not g_game.isOnline() then
@@ -373,6 +402,11 @@ function displayMessage(mode, text)
         return
     end
 
+    local critText, plainText = critMarkup(text, msgtype.color or TextColors.white)
+    if critText then
+        text = plainText
+    end
+
     if msgtype.consoleTab ~= nil and
         (msgtype.consoleOption == nil or modules.client_options.getOption(msgtype.consoleOption)) and
         wantedInServerLog(msgtype, text) then
@@ -381,6 +415,9 @@ function displayMessage(mode, text)
             local lootTabName = tr(msgtype.consoleTab)
             local targetTab = modules.game_console.getTab(lootTabName) and lootTabName or tr("Server Log")
             modules.game_console.addText(lootColoredText, msgtype, targetTab)
+        elseif critText then
+            local coloredType = setmetatable({ colored = true }, { __index = msgtype })
+            modules.game_console.addText(critText, coloredType, tr(msgtype.consoleTab))
         else
             modules.game_console.addText(text, msgtype, tr(msgtype.consoleTab))
         end
@@ -396,6 +433,9 @@ function displayMessage(mode, text)
         elseif msgtype == MessageSettings.loot or msgtype == MessageSettings.valuableLoot then
             local coloredText = ItemsDatabase.setColorLootMessage(text)
             label:setColoredText(coloredText)
+        elseif critText then
+            label:setColor(msgtype.color)
+            label:setColoredText(critText)
         else
             label:setText(text)
             label:setColor(msgtype.color)
@@ -403,9 +443,15 @@ function displayMessage(mode, text)
 
         placeMapLabel(label)
         label:setVisible(true)
+        if label == hotkeyLabel then
+            placeMapLabels()
+        end
         removeEvent(label.hideEvent)
         label.hideEvent = scheduleEvent(function()
             label:setVisible(false)
+            if label == hotkeyLabel then
+                placeMapLabels()
+            end
         end, calculateVisibleTime(text))
     end
 end
@@ -429,7 +475,12 @@ function placeMapLabel(label)
     if label == hotkeyLabel then
         y = centerY + tile * HOTKEY_LABEL_TILES_BELOW_CENTER
     elseif label:getId() == 'raidLabel' then
-        y = centerY - tile * RAID_LABEL_TILES_ABOVE_CENTER - label:getHeight()
+        -- The hotkey line's spot; while one is showing the raid line sits
+        -- directly under it, so a potion used mid-raid does not cover it.
+        y = centerY + tile * HOTKEY_LABEL_TILES_BELOW_CENTER
+        if hotkeyLabel:isVisible() then
+            y = y + hotkeyLabel:getHeight() + 2
+        end
     else
         -- A private message is centred halfway between the top of the map and
         -- the character, where it sat before the chat could move it.

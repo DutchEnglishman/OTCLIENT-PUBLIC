@@ -2050,20 +2050,13 @@ function onTalk(name, level, mode, message, channelId, creaturePos)
         local staticText = StaticText.create()
         local staticMessage = plainForScreen(message)
         if npcSpeech then
-            local highlightedText = getHighlightedText(staticMessage, speaktype.color, "#1f9ffe")
-
-            local processedText = staticMessage
-            local colorPattern = "{([^,]+),[ ]*[^}]+}"
-            for textContent in highlightedText:gmatch(colorPattern) do
-                local plainText = textContent:gsub("%[text%-event%](.-)%[/text%-event%]", "%1")
-                -- remove possible no-underline marker (0x01) inserted by getHighlightedText
-                if plainText:sub(1,1) == string.char(1) then
-                    plainText = plainText:sub(2)
-                end
-                processedText = processedText:gsub("{" .. textContent .. "}", plainText)
+            -- The static text strips the {braces} itself and draws the word in
+            -- the console's keyword blue.
+            if staticText.setHighlightColor then
+                staticText:setHighlightColor("#1f9ffe")
+            else
+                staticMessage = staticMessage:gsub("{([^},]*)[^}]*}", "%1")
             end
-            processedText = processedText:gsub("{([^}]+)}", "%1")
-            staticMessage = processedText
             staticText:setColor(speaktype.color)
         end
 
