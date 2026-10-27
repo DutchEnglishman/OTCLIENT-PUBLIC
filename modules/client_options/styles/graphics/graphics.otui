@@ -151,5 +151,5 @@ UIWidget
 
     OptionCheckBox
       id: transparentSidePanels
-      !text: tr('Transparent side panels (90%)')
+      !text: tr('Transparent side panels (90%%)')
       !tooltip: tr('Draw the equipment, health and minimap panels almost fully see-through. Off keeps the usual tint.')
