@@ -508,6 +508,12 @@ function EnterGame.hide()
     enterGame:hide()
 end
 
+function EnterGame.focus()
+    if enterGame and enterGame:isVisible() then
+        enterGame:focus()
+    end
+end
+
 function EnterGame.openWindow()
     if g_game.isOnline() then
         CharacterList.show()

@@ -1,0 +1,42 @@
+FishingZone < UIWidget
+  phantom: true
+  background-color: #2fbf4a
+  anchors.top: parent.top
+  anchors.bottom: parent.bottom
+  anchors.left: parent.left
+
+FishingZoneIcon < UIItem
+  phantom: true
+  virtual: true
+  size: 16 16
+  anchors.top: parent.top
+  anchors.left: parent.left
+
+FishingBar < UIWidget
+  phantom: true
+  focusable: false
+  size: 132 28
+  margin-left: -50
+  margin-top: -36
+
+  UIWidget
+    id: track
+    phantom: true
+    height: 10
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    background-color: #000000
+    border-width: 1
+    border-color: #5a5a5a
+    padding: 1
+
+  UIWidget
+    id: pointer
+    phantom: true
+    width: 2
+    anchors.top: parent.top
+    anchors.bottom: parent.bottom
+    anchors.left: parent.left
+    margin-top: 16
+    background-color: #ffffff

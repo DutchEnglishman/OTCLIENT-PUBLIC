@@ -499,6 +499,13 @@ function setupOptionsMainButton()
         '/images/options/button_options', toggle, true)
 end
 
+-- Background opacity of the side-panel furniture (PhantomMiniWindowBackground,
+-- data/styles/30-miniwindow.otui): 0.6 is the style's own, 0.1 is the
+-- "Transparent side panels" setting's 90% transparency.
+function getSidePanelOpacity()
+    return options.transparentSidePanels.value and 0.1 or 0.6
+end
+
 function getOption(key)
     local option = options[key]
     if option == nil then

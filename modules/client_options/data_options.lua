@@ -255,6 +255,19 @@ return {
             -- exists in styles/graphics/effects.otui; the lookup would be nil.
         end
     },
+    -- Equipment, health, minimap and the main options panel. setOption only
+    -- stores option.value after the action, so the opacity is worked out from
+    -- value here rather than through getSidePanelOpacity.
+    transparentSidePanels             = {
+        value = false,
+        action = function(value, options, controller, panels, extraWidgets)
+            local opacity = value and 0.1 or 0.6
+            local backgrounds = g_ui.getRootWidget():recursiveGetChildrenByStyleName('PhantomMiniWindowBackground')
+            for _, background in ipairs(backgrounds) do
+                background:setOpacity(opacity)
+            end
+        end
+    },
     limitVisibleDimension             = {
         value = false,
         action = function(value, options, controller, panels, extraWidgets)

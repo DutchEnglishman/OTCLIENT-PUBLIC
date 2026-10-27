@@ -174,7 +174,7 @@ local function walk(dir)
     if g_game.getFeature(GameAllowPreWalk) then
         local toPos = Position.translatedToDirection(player:getPosition(), dir)
         local toTile = g_map.getTile(toPos)
-        if toTile and toTile:isWalkable() then
+        if toTile and toTile:isWalkableFrom(g_map.getTile(player:getPosition())) then
             -- The tile looks walkable from here, but the server has already said
             -- it would refuse the step: a blocking= override in items.xml, a
             -- reserved map action id, an ITEM_ATTRIBUTE_BLOCKSOLID set by a
@@ -364,7 +364,11 @@ function WalkController:onGameStart()
         onAutoWalk = onAutoWalk
     })
 
-    modules.game_interface.getRootPanel().onFocusChange = stopSmartWalk
+    -- registerEvents rather than assignment: game_interface hangs its own
+    -- offline focus guard on this same field, and an assignment replaced it.
+    self:registerEvents(modules.game_interface.getRootPanel(), {
+        onFocusChange = stopSmartWalk
+    })
     modules.game_joystick.addOnJoystickMoveListener(function(dir) g_game.walk(dir) end)
 
     if not g_game.isOfficialTibia() then

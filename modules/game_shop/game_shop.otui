@@ -177,11 +177,11 @@ OfferBuyButton < Button
   anchors.top: prev.bottom
   anchors.left: prev.left
   anchors.right: prev.right
-  image-color: #3B86C7
+  image-color: #4CAF50
   focusable: false
   @onClick: modules.game_shop.onOfferBuy(self)
   $disabled:
-    image-color: #1B3F5E
+    image-color: #26572A
 
 OfferBuyPrice < FlatPanel
   anchors.top: prev.bottom

@@ -913,6 +913,12 @@ function CharacterList.showAgain()
     end
 end
 
+function CharacterList.focus()
+    if charactersWindow and charactersWindow:isVisible() then
+        charactersWindow:focus()
+    end
+end
+
 function CharacterList.isVisible()
     if charactersWindow and charactersWindow:isVisible() then
         return true

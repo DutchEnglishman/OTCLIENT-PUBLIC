@@ -56,6 +56,7 @@ Module
     - game_dungeons
     - game_crafting
     - game_alchemy
+    - game_fishing
     - game_itemtooltip
     - game_itemshare
     - game_stackabledepot

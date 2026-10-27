@@ -320,6 +320,22 @@ MiniQtWindow < UIMiniWindow
     size: 258 18
     phantom: true
 
+// Its own style so client_options can find every copy by style name: the
+// Graphics option "Transparent side panels" sets their opacity, and @onSetup
+// gives a window created after that the same value.
+PhantomMiniWindowBackground < UIWidget
+  image-source: /images/ui/background
+  image-repeated: true
+  anchors.fill: parent
+  margin-left: 0
+  margin-right: 0
+  phantom: true
+  opacity: 0.6
+  @onSetup: |
+    if modules.client_options and modules.client_options.getSidePanelOpacity then
+      self:setOpacity(modules.client_options.getSidePanelOpacity())
+    end
+
 PhantomMiniWindow < UIMiniWindow
   draggable: true
   phantom: false
@@ -335,14 +351,7 @@ PhantomMiniWindow < UIMiniWindow
   // vertical line on the health, inventory and minimap panels that read as a
   // drag handle. PhantomMiniWindow has no frame of its own for the inset to
   // make room for, so there is nothing to leave clear.
-  UIWidget
-    image-source: /images/ui/background
-    image-repeated: true
-    anchors.fill: parent
-    margin-left: 0
-    margin-right: 0
-    phantom: true
-    opacity: 0.6
+  PhantomMiniWindowBackground
 
   UIWidget
     id: miniwindowTopBar

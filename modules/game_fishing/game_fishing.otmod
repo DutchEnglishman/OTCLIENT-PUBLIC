@@ -1,0 +1,10 @@
+Module
+  name: game_fishing
+  description: The fishing timing bar shown over a whirlpool after a cast
+  author: Shattered Realms
+  website: None
+  sandboxed: true
+  autoload: true
+  scripts: [ fishing ]
+  @onLoad: init()
+  @onUnload: terminate()

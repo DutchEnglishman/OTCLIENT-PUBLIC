@@ -197,6 +197,7 @@ function init()
     gameRootPanel:hide()
     gameRootPanel:lower()
     gameRootPanel.onGeometryChange = updateStretchShrink
+    connect(gameRootPanel, { onFocusChange = onRootPanelFocusChange })
 
     mouseGrabberWidget = gameRootPanel:getChildById('mouseGrabber')
     mouseGrabberWidget.onMouseRelease = onMouseGrabberRelease
@@ -380,6 +381,28 @@ end
 function onGameEnd()
     npcConversations = {}
     hide()
+end
+
+-- Logout queues deferred work (setupViewMode's addEvent, the console's focus
+-- chain) that can focus a widget inside this panel a frame after the character
+-- list took focus. focusChild does not check visibility, so the hidden panel
+-- became the root's focused child and every key -- Enter on the character list
+-- included -- went down into it until a click moved focus back. Deferred so the
+-- refocus does not run inside the focusChild call that triggered it.
+function onRootPanelFocusChange(widget, focused)
+    if not focused or g_game.isOnline() then
+        return
+    end
+    addEvent(function()
+        if g_game.isOnline() or not gameRootPanel or not gameRootPanel:isFocused() then
+            return
+        end
+        if CharacterList and CharacterList.isVisible() then
+            CharacterList.focus()
+        elseif EnterGame and EnterGame.focus then
+            EnterGame.focus()
+        end
+    end)
 end
 
 function show()

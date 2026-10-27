@@ -754,3 +754,73 @@ AttachedEffectManager.register(462, 'Deepcrown ward', 8, ThingCategoryEffect, {
     speed = 0.7,
     offset = { 0, 0, true }
 })
+
+-- The Epic Boss Rift's two bosses (OTSERV data/scripts/boss_skills/
+-- azrakhul_skills.lua and varzug_skills.lua; textures by
+-- tools/effect-generators/make_rift_bosses.ps1, whose header lists every id).
+-- All of them ride verbs that already exist: the brand and the skull fly by
+-- "glide" and land with their impact, everything else is the plain "on" verb
+-- of opcode 73, held for the length the server sends.
+-- 870/890: in flight, 64x64 with the tile as the middle square, at the
+-- missile's draw order. 871/891: the landing and a husk's burst, the same.
+AttachedEffectManager.register(870, 'Rift brand', '/images/game/effects/rift_brand', ThingExternalTexture, {
+    offset = { 16, 16, true },
+    drawOrder = 4
+})
+AttachedEffectManager.register(871, 'Rift brand impact', '/images/game/effects/rift_brand_impact', ThingExternalTexture, {
+    offset = { 16, 16, true },
+    drawOrder = 4
+})
+-- 872: a corruption pool, under creatures: the mechanic is standing in it.
+AttachedEffectManager.register(872, 'Rift corruption pool', '/images/game/effects/rift_pool', ThingExternalTexture, {
+    offset = { 0, 0, false }
+})
+-- 873-876: Rending Claws on one tile, N/E/S/W, so the message is 873 + the
+-- server's direction.
+for d, dir in ipairs({ 'n', 'e', 's', 'w' }) do
+    AttachedEffectManager.register(872 + d, 'Rift claws ' .. dir, '/images/game/effects/rift_claw_' .. dir, ThingExternalTexture, {
+        offset = { 0, 0, true },
+        drawOrder = 4
+    })
+end
+-- 877: a fissure opening, under creatures; 878: the fire running it, over.
+AttachedEffectManager.register(877, 'Rift fissure', '/images/game/effects/rift_crack', ThingExternalTexture, {
+    offset = { 0, 0, false }
+})
+AttachedEffectManager.register(878, 'Rift fissure flame', '/images/game/effects/rift_flame', ThingExternalTexture, {
+    offset = { 0, 0, true },
+    drawOrder = 4
+})
+AttachedEffectManager.register(890, 'Rift wailing skull', '/images/game/effects/rift_skull', ThingExternalTexture, {
+    offset = { 16, 16, true },
+    drawOrder = 4
+})
+AttachedEffectManager.register(891, 'Rift skull burst', '/images/game/effects/rift_burst', ThingExternalTexture, {
+    offset = { 16, 16, true },
+    drawOrder = 4
+})
+-- 892: a bone shard running "\" (north-west/south-east), 893 "/".
+AttachedEffectManager.register(892, 'Rift bone shard back','/images/game/effects/rift_shard_back', ThingExternalTexture, {
+    offset = { 0, 0, true },
+    drawOrder = 4
+})
+AttachedEffectManager.register(893, 'Rift bone shard forward', '/images/game/effects/rift_shard_fwd', ThingExternalTexture, {
+    offset = { 0, 0, true },
+    drawOrder = 4
+})
+-- 894: one tile of Soul Siphon's beam, re-held every step as it follows.
+AttachedEffectManager.register(894, 'Rift soul siphon', '/images/game/effects/rift_siphon', ThingExternalTexture, {
+    offset = { 0, 0, true },
+    drawOrder = 4
+})
+-- 895: a Grave Rising safe patch, under creatures, bright at the rim so it
+-- still reads with a body on it (Hellgorak's sigil rule, see 451).
+AttachedEffectManager.register(895, 'Rift grave rune', '/images/game/effects/rift_rune', ThingExternalTexture, {
+    offset = { 0, 0, false },
+    light = { color = 30, intensity = 2 }
+})
+-- 896: the dead clawing up where a husk rises.
+AttachedEffectManager.register(896, 'Rift risen dead', '/images/game/effects/rift_rise', ThingExternalTexture, {
+    offset = { 0, 0, true },
+    drawOrder = 4
+})
