@@ -3,7 +3,7 @@ Module
   description: Manage map (on game screen) shaders
   author:
   website:
-  scripts: [ shaders.lua ]
+  scripts: [ variant_sprites.lua, shaders.lua ]
   sandboxed: true
   @onLoad: ShaderController:init()
   @onUnload: ShaderController:terminate()

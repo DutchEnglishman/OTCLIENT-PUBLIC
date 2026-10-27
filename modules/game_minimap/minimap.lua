@@ -310,6 +310,21 @@ function zoomOut()
     minimapUi():zoomOut()
 end
 
+-- For the game view's context menu: a mark placed from the tile itself, through
+-- the minimap's own mark window. A tile already marked has nothing to create,
+-- since addFlag skips a position that holds a flag.
+function canCreateMark(pos)
+    local minimap = minimapUi()
+    return minimap ~= nil and minimap:getFlag(pos) == nil
+end
+
+function createMark(pos)
+    local minimap = minimapUi()
+    if minimap then
+        minimap:createFlagWindow(pos)
+    end
+end
+
 function openCyclopediaMap()
     if g_game.getClientVersion() >= 1310 then
         modules.game_cyclopedia.toggle('map')

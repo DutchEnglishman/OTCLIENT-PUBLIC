@@ -431,6 +431,7 @@ return {
     },
     shiftClickOpensNewWindow          = true,
     shiftClickOpensFixedContainers    = false,
+    contextMenuCreateMark             = true,
     showPartyMembersOnMinimap = {
         value = true,
         action = function(value, options, controller, panels, extraWidgets)

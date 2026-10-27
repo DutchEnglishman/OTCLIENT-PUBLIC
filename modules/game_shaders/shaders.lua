@@ -505,6 +505,11 @@ function ShaderController:getMonsterShaderName(creature)
 
     local normalizedName = monsterName:lower()
 
+    -- A variant drawn with its own recoloured sprite needs no shader to stand out.
+    if VARIANT_SPRITE_LOOKTYPES[creature:getOutfit().type] then
+        return nil
+    end
+
     if normalizedName:find('^tainted ') then
         return 'Outfit - Shimmering'
     end

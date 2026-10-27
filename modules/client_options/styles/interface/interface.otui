@@ -63,6 +63,17 @@ UIWidget
     margin-top: 7
     height: 22
 
+    OptionCheckBox
+      id: contextMenuCreateMark
+      !text: tr('Show "Create mark" when Ctrl + clicking the map')
+
+  SmallReversedQtPanel
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    margin-top: 7
+    height: 22
+
     $mobile:
       height: 0
       margin-top: 0

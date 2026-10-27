@@ -1282,6 +1282,16 @@ function createThingMenu(menuPosition, lookThing, useThing, creatureThing)
         end
     end
 
+    -- Only for something on the map: a carried item's position is x 0xffff.
+    local markThing = lookThing or useThing or creatureThing
+    local markPos = markThing and markThing:getPosition()
+    if markPos and modules.client_options.getOption('contextMenuCreateMark') and markPos.x ~= 0xffff and modules.game_minimap and modules.game_minimap.canCreateMark(markPos) then
+        menu:addSeparator()
+        menu:addOption(tr('Create mark'), function()
+            modules.game_minimap.createMark(markPos)
+        end)
+    end
+
     menu:display(menuPosition)
 end
 
