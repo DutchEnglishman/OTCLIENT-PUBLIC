@@ -13,7 +13,10 @@ game
     max-z: 15
     sea-floor: 7
     underground-floor: 8
-    aware-underground-floor-range: 2
+    // floors sent above/below the player underground; must match the server's
+    // Map::undergroundFloorsUp/Down (src/map.h) or the map packet mis-parses
+    aware-underground-floor-range-up: 2
+    aware-underground-floor-range-down: 3
 
   tile
     max-elevation: 24
@@ -41,13 +44,10 @@ game
 
   player
     // What a diagonal step costs the PLAYER, in plain step durations. This is
-    // not taste: it has to be the server's own figure or every diagonal is dead
-    // time. TFS charges a player two (Creature::onCreatureMove takes the shared
-    // diagonal cost of 3 back down by one for a player) and lets him step again
-    // at that point, so a 3 here made the client sit out a whole extra step
-    // duration on every diagonal that the server was already done waiting for.
-    // Monsters keep 3 under `creature` above, which is what TFS charges them.
-    diagonal-walk-speed: 2
+    // not taste: it has to be the server's own figure (OTSERV
+    // Creature::onCreatureMove, 3 for everyone as in TFS 0.4 r3777), or the
+    // client is either ahead of the server and bounced, or sits out dead time.
+    diagonal-walk-speed: 3
 
   render
     // Milliseconds one animation frame is held. Bigger is slower. Engine

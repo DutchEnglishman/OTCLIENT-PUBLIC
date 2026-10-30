@@ -556,7 +556,7 @@ function init()
     end
 
     guildButton = modules.game_mainpanel.addToggleButton('guildButton', tr('Guild'),
-        '/modules/game_guild/images/button_guild', toggle)
+        '/images/options/button_guild', toggle)
     guildButton:setOn(false)
 
     drawWaiver()
