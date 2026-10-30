@@ -12,7 +12,7 @@ local ownedCallback = nil
 local showOthers = true
 
 -- Settings cannot hide it. Matched by text: Titles.list on the server never offers it.
-local STAFF_TEXT = '[STAFF]'
+local STAFF_TEXT = '[ADMIN]'
 
 local function visible(creature, entry)
     if showOthers or entry.text == STAFF_TEXT then
@@ -92,7 +92,7 @@ function choose(titleId, colorIndex)
 end
 
 -- client_options' showPlayerTitles. Off hides every other player's title but
--- [STAFF]; the titles stay remembered, so turning it back on shows them at once.
+-- [ADMIN]; the titles stay remembered, so turning it back on shows them at once.
 function setShowOthers(value)
     showOthers = value ~= false
     for id in pairs(titles) do

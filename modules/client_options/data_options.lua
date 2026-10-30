@@ -321,7 +321,7 @@ return {
             end
         end
     },
-    -- Off hides the title above every other player's name except [STAFF]; the
+    -- Off hides the title above every other player's name except [ADMIN]; the
     -- player's own stays. Applied in game_titles.
     showPlayerTitles                  = {
         value = true,

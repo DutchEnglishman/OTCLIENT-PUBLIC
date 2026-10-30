@@ -74,11 +74,11 @@ local function updateTitlePreview()
     local label = window.preview.panel.bars.title
     local text, color = nil, nil
     if titleData and titleData.staff then
-        text, color = "[STAFF]", "#ff0000"
+        text, color = "[ADMIN]", "#ff0000"
     elseif titleChoice and titleChoice.id > 0 then
         text, color = titleText(titleChoice.id), titleColor()
     elseif titleData and titleData.staffDefault then
-        text, color = "[STAFF]", "#ff0000"
+        text, color = "[ADMIN]", "#ff0000"
     end
     label:setVisible(text ~= nil)
     if text then
@@ -90,7 +90,7 @@ end
 local function updateTitleRowText()
     local chosen = titleChoice and titleText(titleChoice.id)
     if titleData and (titleData.staff or (titleData.staffDefault and not chosen)) then
-        updateAppearanceText("title", "[STAFF]")
+        updateAppearanceText("title", "[ADMIN]")
     else
         updateAppearanceText("title", chosen or "None")
     end
@@ -121,7 +121,7 @@ local function buildTitleColors()
     titleColorGroup = UIRadioGroup.create()
 
     if titleData.staff then
-        window.appearance.titleColors.label:setText("Staff always wear [STAFF].")
+        window.appearance.titleColors.label:setText("Staff always wear [ADMIN].")
         return
     end
     window.appearance.titleColors.label:setText("Title colour:")
@@ -1272,7 +1272,7 @@ function showTitle()
     window.selectionList:destroyChildren()
 
     local staffDefault = titleData and titleData.staffDefault
-    local entries = { { id = 0, text = staffDefault and "[STAFF]" or "None" } }
+    local entries = { { id = 0, text = staffDefault and "[ADMIN]" or "None" } }
     for _, title in ipairs(titleData and titleData.titles or {}) do
         entries[#entries + 1] = title
     end

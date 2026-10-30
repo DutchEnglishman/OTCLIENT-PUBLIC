@@ -32,7 +32,7 @@ UIWidget
       OptionCheckBox
         id: showPlayerTitles
         !text: tr('Display player titles')
-        !tooltip: tr('Off hides the titles of other players. [STAFF] is always shown.')
+        !tooltip: tr('Off hides the titles of other players. [ADMIN] is always shown.')
 
     SmallReversedQtPanel
       anchors.left: parent.left
