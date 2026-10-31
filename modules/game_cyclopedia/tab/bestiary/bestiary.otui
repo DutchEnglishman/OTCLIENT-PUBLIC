@@ -3,6 +3,33 @@ UIWidget
   anchors.fill: parent
   visible: false
 
+  // The two bestiary sections; the one on screen is "on" (bright text).
+  Button
+    id: MainlandButton
+    size: 60 20
+    anchors.left: parent.left
+    anchors.bottom: parent.bottom
+    margin-bottom: 35
+    !text: tr('Mainland')
+    font: small-9px
+    text-offset: 0 -1
+    color: #808080
+    @onClick: modules.game_cyclopedia.Cyclopedia.showBestiarySection("mainland")
+    $on:
+      color: #FFFFFF
+  Button
+    id: RookgaardButton
+    size: 60 20
+    anchors.left: MainlandButton.right
+    anchors.bottom: MainlandButton.bottom
+    margin-left: 4
+    !text: tr('Rookgaard')
+    font: small-9px
+    text-offset: 0 -1
+    color: #808080
+    @onClick: modules.game_cyclopedia.Cyclopedia.showBestiarySection("rookgaard")
+    $on:
+      color: #FFFFFF
   Button
     id: SearchButton
     size: 40 20

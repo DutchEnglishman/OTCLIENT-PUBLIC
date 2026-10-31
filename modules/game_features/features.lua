@@ -9,6 +9,13 @@ controller:registerEvents(g_game, {
 
         g_game.enableFeature(GameFormatCreatureName)
 
+        -- Sprite transparency. data/things/860/Tibia.spr stores every coloured pixel as RGBA
+        -- (Tibia.otfi `transparency: true`, which RME and the sprite tools read), so that wings
+        -- and auras keep their soft edges. The spr and this line move together: with the
+        -- feature off, SpriteManager::getSpriteImage reads 3 bytes a pixel and every sprite
+        -- comes out as garbage. Client-only; the server never reads sprites.
+        g_game.enableFeature(GameSpritesAlphaChannel)
+
         -- Ping. The version ladder below only switches a ping feature on at 953,
         -- so at 860 the client never started its ping timer (Game::
         -- processGameStart) and the top menu hid the row outright regardless of

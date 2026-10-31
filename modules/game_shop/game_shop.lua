@@ -280,6 +280,11 @@ function buyPoints()
 end
 
 function onGameShopFetchOffers(data)
+    -- A long category (Wings) comes in parts, since one message stops at 8192 bytes.
+    data = JsonChunks.receive('shop:' .. tostring(data.category), data, 'offers')
+    if not data then
+        return
+    end
     offers[data.category] = data.offers
     -- Opens whichever category is first in the sidebar. This used to test for
     -- the literal name "Premium Time", so a server whose first category is

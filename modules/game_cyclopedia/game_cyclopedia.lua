@@ -149,6 +149,30 @@ function Cyclopedia.getRaceData(raceId)
     return g_things.getRaceData(raceId)
 end
 
+-- The Rookgaard copies are registered "Rook <name>" (OTSERV's
+-- data/monster/rookgaard/), which is also the name the race cache carries.
+function Cyclopedia.isRookgaardRace(raceId)
+    local race = raceCache[tonumber(raceId)]
+    return race ~= nil and race.name:lower():sub(1, 5) == "rook "
+end
+
+-- Every cached raceId of one bestiary section, "mainland" or "rookgaard".
+-- Empty until the race cache has arrived.
+function Cyclopedia.getSectionRaceIds(section)
+    local wantRookgaard = section == "rookgaard"
+    local result = {}
+    for raceId in pairs(raceCache) do
+        if Cyclopedia.isRookgaardRace(raceId) == wantRookgaard then
+            result[#result + 1] = raceId
+        end
+    end
+    return result
+end
+
+function Cyclopedia.hasRaceCache()
+    return next(raceCache) ~= nil
+end
+
 function Cyclopedia.getRacesByName(text)
     text = text:lower()
     local result = {}

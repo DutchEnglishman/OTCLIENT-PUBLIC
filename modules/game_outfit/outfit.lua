@@ -214,6 +214,11 @@ local function showSelectionList(data, tempValue, tempField, onSelectCallback)
             button:setId(tostring(itemData[1]))
 
             local Category = modules.game_attachedeffects.getCategory(itemData[1])
+            -- A wing or an aura (a creature-category effect, a texture) alone is only half a
+            -- picture: it is shown on the player, like an effect.
+            if tempField == "wings" or tempField == "aura" then
+                Category = 2
+            end
             if Category == 1 then
                 button.outfit:setOutfit({
                     type = modules.game_attachedeffects.thingId(itemData[1])
@@ -247,6 +252,55 @@ local function showSelectionList(data, tempValue, tempField, onSelectCallback)
     window.selectionList:show()
     window.selectionScroll:show()
     window.listSearch:show()
+end
+
+-- Wings and auras come from the server too (modules/game_cosmetics), each into the stock row
+-- for it: the pick rides that row's lastSelect* and tempOutfit field as the attached effect id,
+-- exactly as the stock rows do. cosmeticData[kind] is the server's last answer for a kind.
+local COSMETIC_ROWS = {
+    wings = {
+        row = "wings", field = "wings", option = "showWings", select = function(...) onWingsSelect(...) end,
+        getLast = function() return lastSelectWings end, setLast = function(v) lastSelectWings = v end
+    },
+    auras = {
+        row = "aura", field = "auras", option = "showAura", select = function(...) onAuraSelect(...) end,
+        getLast = function() return lastSelectAura end, setLast = function(v) lastSelectAura = v end
+    }
+}
+local cosmeticData = {}
+
+local function onCosmeticOwned(kind, data)
+    if not window then
+        return
+    end
+    local cosmetics = modules.game_cosmetics
+    local rowInfo = COSMETIC_ROWS[kind]
+    local first = cosmeticData[kind] == nil
+    data.owned = data.owned or {}
+    cosmeticData[kind] = data
+
+    ServerData[rowInfo.field] = {}
+    for _, id in ipairs(data.owned) do
+        table.insert(ServerData[rowInfo.field], { cosmetics.effectId(kind, id), cosmetics.getName(kind, id) })
+    end
+    window.appearance.settings[rowInfo.row]:setVisible(true)
+    window.preview.options[rowInfo.option]:setVisible(true)
+
+    -- Only the first answer sets what is worn; a later one (one bought while the window is
+    -- open) must not undo a pick not yet sent.
+    if first and (data.current or 0) > 0 then
+        local effect = cosmetics.effectId(kind, data.current)
+        rowInfo.setLast(effect)
+        tempOutfit[rowInfo.field] = effect
+        updateAppearanceText(rowInfo.row, cosmetics.getName(kind, data.current))
+        if settings[rowInfo.option] then
+            attachOrDetachEffect(effect, true)
+        end
+    end
+
+    if appearanceGroup and appearanceGroup:getSelectedWidget() == window.appearance.settings[rowInfo.row].check then
+        showSelectionList(ServerData[rowInfo.field], tempOutfit[rowInfo.field], rowInfo.row, rowInfo.select)
+    end
 end
 
 local AppearanceData = { "preset", "outfit", "mount", "familiar", "wings", "aura", "effects", "shader", "healthBar",
@@ -622,6 +676,11 @@ function create(player, outfitList, creatureMount, mountList, familiarList, wing
     if modules.game_titles then
         modules.game_titles.requestOwned(onTitlesOwned)
     end
+    if modules.game_cosmetics then
+        for kind in pairs(COSMETIC_ROWS) do
+            modules.game_cosmetics.requestOwned(kind, function(data) onCosmeticOwned(kind, data) end)
+        end
+    end
     previewCreature:getCreature():setDirection(2)
     window.listSearch.search.onKeyPress = onFilterSearch
     window.listSearch.onlyMine.onCheckChange = onFilterOnlyMine
@@ -665,6 +724,12 @@ function destroy()
         titleChoice = nil
         if modules.game_titles then
             modules.game_titles.stopOwned()
+        end
+        cosmeticData = {}
+        if modules.game_cosmetics then
+            for kind in pairs(COSMETIC_ROWS) do
+                modules.game_cosmetics.stopOwned(kind)
+            end
         end
 
         ServerData = {
@@ -1985,6 +2050,15 @@ function accept()
     if titleData and not titleData.staff and titleChoice
         and (titleChoice.id ~= titleData.current or titleChoice.color ~= titleData.color) then
         modules.game_titles.choose(titleChoice.id, titleChoice.color)
+    end
+    for kind, rowInfo in pairs(COSMETIC_ROWS) do
+        local data = cosmeticData[kind]
+        if data then
+            local chosen = modules.game_cosmetics.entryId(kind, rowInfo.getLast())
+            if chosen ~= (data.current or 0) then
+                modules.game_cosmetics.choose(kind, chosen)
+            end
+        end
     end
     destroy()
 end

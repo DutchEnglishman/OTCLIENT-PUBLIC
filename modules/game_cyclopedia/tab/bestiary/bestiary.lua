@@ -69,8 +69,30 @@ function showBestiary()
         end
     end, UI.SearchEdit)
 
+    Cyclopedia.showBestiarySection(Cyclopedia.Bestiary.Section or "mainland")
+end
+
+-- The list is split in two: Rookgaard's own monsters, and everything else.
+-- Both are the flat "search" list with an explicit raceId list; an empty list
+-- would mean "every monster" to the server, so it is never sent for a section.
+function Cyclopedia.showBestiarySection(section)
+    Cyclopedia.Bestiary.Section = section
+    UI.MainlandButton:setOn(section ~= "rookgaard")
+    UI.RookgaardButton:setOn(section == "rookgaard")
     Cyclopedia.Bestiary.Page = 1
-    g_game.requestBestiaryOverview("Result", true, {})
+
+    if not Cyclopedia.hasRaceCache() then
+        -- Nothing to split by yet: show everything rather than nothing.
+        g_game.requestBestiaryOverview("Result", true, {})
+        return
+    end
+
+    local raceIds = Cyclopedia.getSectionRaceIds(section)
+    if #raceIds == 0 then
+        Cyclopedia.loadBestiarySearchCreatures({})
+        return
+    end
+    g_game.requestBestiaryOverview("Result", true, raceIds)
 end
 
 Cyclopedia.Bestiary = {}
@@ -596,7 +618,9 @@ function Cyclopedia.BestiarySearch()
         -- shown anywhere yet, so letting a name search surface them would
         -- leak exactly what the "Unknown" label and blacked-out sprite are
         -- hiding.
-        if Cyclopedia.getKillCount(race.raceId) >= 1 then
+        -- A search stays inside the section on screen.
+        if Cyclopedia.getKillCount(race.raceId) >= 1
+            and Cyclopedia.isRookgaardRace(race.raceId) == (Cyclopedia.Bestiary.Section == "rookgaard") then
             list[#list + 1] = race.raceId
         end
     end

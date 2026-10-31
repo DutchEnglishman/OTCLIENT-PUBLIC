@@ -1,6 +1,6 @@
 DatSpr
   extended: true
-  transparency: false
+  transparency: true
   frame-durations: false
   frame-groups: false
   metadata-file: Tibia.dat
