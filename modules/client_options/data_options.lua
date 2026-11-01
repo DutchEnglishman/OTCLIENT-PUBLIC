@@ -490,6 +490,49 @@ return {
         value = true,
         action = function(value, options, controller, panels, extraWidgets)
             g_app.setDrawMounts(value)
+            -- a rider's aura sits higher while the mount is drawn (game_cosmetics)
+            if modules.game_cosmetics and modules.game_cosmetics.refresh then
+                modules.game_cosmetics.refresh()
+            end
+        end
+    },
+    -- Local only. Off draws nobody's aura, this player's own included; what is
+    -- owned and worn is untouched, so turning it back on shows them at once.
+    -- Applied in game_cosmetics.
+    showAuras                         = {
+        value = true,
+        action = function(value, options, controller, panels, extraWidgets)
+            if modules.game_cosmetics and modules.game_cosmetics.setShown then
+                modules.game_cosmetics.setShown('showAuras', value)
+            end
+        end
+    },
+    -- Local only, like showAuras: off draws nobody's wings, this player's own
+    -- included. Applied in game_cosmetics.
+    showWings                         = {
+        value = true,
+        action = function(value, options, controller, panels, extraWidgets)
+            if modules.game_cosmetics and modules.game_cosmetics.setShown then
+                modules.game_cosmetics.setShown('showWings', value)
+            end
+        end
+    },
+    -- Local only, like showAuras: off draws nobody's shader or outline, this
+    -- player's own included. Applied in game_cosmetics.
+    showShaders                       = {
+        value = true,
+        action = function(value, options, controller, panels, extraWidgets)
+            if modules.game_cosmetics and modules.game_cosmetics.setShown then
+                modules.game_cosmetics.setShown('showShaders', value)
+            end
+        end
+    },
+    showOutlines                      = {
+        value = true,
+        action = function(value, options, controller, panels, extraWidgets)
+            if modules.game_cosmetics and modules.game_cosmetics.setShown then
+                modules.game_cosmetics.setShown('showOutlines', value)
+            end
         end
     },
     floorViewMode                     = {

@@ -1,9 +1,9 @@
 Module
   name: game_cosmetics
-  description: Wings and auras worn as attached effects, fed by the server
+  description: Wings, auras, shaders and outlines worn by players, fed by the server
   author: Roel
   sandboxed: true
-  dependencies: [ game_attachedeffects ]
-  scripts: [ wings_list, auras_list, cosmetics ]
+  dependencies: [ game_attachedeffects, game_shaders ]
+  scripts: [ wings_list, auras_list, shaders_list, outlines_list, cosmetics ]
   @onLoad: init()
   @onUnload: terminate()

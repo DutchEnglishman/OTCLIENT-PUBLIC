@@ -23,6 +23,50 @@ local CATEGORY_OUTFIT = 3
 local CATEGORY_MOUNT = 4
 local CATEGORY_EXTRAS = 5
 
+-- Takes any aura, shader or outline off an outfit widget's creature.
+local function clearStyles(widget)
+    local creature = widget:getCreature()
+    if creature then
+        creature:setShader('')
+        creature:clearOutline()
+        creature:clearAttachedEffects()
+    end
+end
+
+-- An aura, shader or outline offer carries `style` = "<kind>:<id>" (OTSERV
+-- GameShopConfig.cosmeticShop) and no picture of its own: it is drawn on the buyer's own outfit.
+local function showStyleOffer(widget, style)
+    local kind, id = style:match('^(%a+):(%d+)$')
+    local look = g_game.getLocalPlayer():getOutfit()
+    look.mount = 0
+    widget:show()
+    widget:setOutfit(look)
+    if kind and modules.game_cosmetics then
+        modules.game_cosmetics.wearOn(kind, widget:getCreature(), tonumber(id))
+    end
+end
+
+-- Shows looktype `lookType` in a mount widget (otui: margin-right and -bottom 8). A wing's art sits
+-- off-centre in its picture, so it is moved by its `shop` shift, scaled from its picture (64 px, 96
+-- for a 3x3 wing: the shift's third figure) to the box, with the client's own crop-size centring off
+-- (Creature::draw) so that picture fills the box exactly; anything else is put back where the otui
+-- has it.
+local function showMountOffer(widget, lookType)
+    local shift = modules.game_cosmetics and modules.game_cosmetics.wingShopShift(lookType)
+    widget:setCenter(shift == nil)
+    local x, y = 0, 0
+    if shift then
+        local scale = (widget:getParent():getWidth() - 8) / (shift[3] or 64)
+        x, y = math.floor(shift[1] * scale + 0.5), math.floor(shift[2] * scale + 0.5)
+    end
+    widget:setMarginLeft(x)
+    widget:setMarginRight(8 - x)
+    widget:setMarginTop(y)
+    widget:setMarginBottom(8 - y)
+    widget:show()
+    widget:setOutfit({type = lookType})
+end
+
 local searchResultCategoryId = "Search Results"
 
 function init()
@@ -465,7 +509,9 @@ function showOffers(id)
             local outfit = imagePanel:getChildById("outfit")
             local mount = imagePanel:getChildById("mount")
 
-            if type(offersCache[i].id) == "string" then
+            if offersCache[i].style then
+                showStyleOffer(outfit, offersCache[i].style)
+            elseif type(offersCache[i].id) == "string" then
                 image:show()
                 image:setImageSource("/game_shop/images/" .. offersCache[i].id)
             elseif type(offersCache[i].id) == "number" then
@@ -479,8 +525,7 @@ function showOffers(id)
                     outfit:show()
                     outfit:setOutfit(currentOutfit)
                 elseif categoryId == CATEGORY_MOUNT then
-                    mount:show()
-                    mount:setOutfit({type = offersCache[i].id})
+                    showMountOffer(mount, offersCache[i].id)
                 elseif categoryId == CATEGORY_EXTRAS then
                     item:show()
                     item:setItemId(offersCache[i].id)
@@ -572,7 +617,11 @@ function updateDescription(self)
     item:hide()
     outfit:hide()
     mount:hide()
-    if type(self.data.id) == "string" then
+    -- The same outfit widget shows every offer, so a style the last one put on comes off first.
+    clearStyles(outfit)
+    if self.data.style then
+        showStyleOffer(outfit, self.data.style)
+    elseif type(self.data.id) == "string" then
         image:show()
         image:setImageSource("/game_shop/images/" .. self.data.id)
     elseif type(self.data.id) == "number" then
@@ -585,8 +634,7 @@ function updateDescription(self)
             outfit:show()
             outfit:setOutfit(currentOutfit)
         elseif categoryId == CATEGORY_MOUNT then
-            mount:show()
-            mount:setOutfit({type = self.data.id})
+            showMountOffer(mount, self.data.id)
         end
     end
 end

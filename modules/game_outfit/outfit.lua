@@ -41,6 +41,7 @@ local ServerData = {
     wings = {},
     auras = {},
     shaders = {},
+    outlines = {},
     healthBars = {},
     effects = {},
     title = {}
@@ -50,6 +51,8 @@ local lastSelectAura = "None"
 local lastSelectWings = "None"
 local lastSelectEffects = 0
 local lastSelectShader = "Outfit - Default"
+-- An outline id (game_cosmetics outlines_list.lua), 0 for none.
+local lastSelectOutline = 0
 
 -- Titles come from the server (modules/game_titles), not from the outfit packet:
 -- titleData is its last answer, titleChoice what this window has picked so far.
@@ -163,11 +166,22 @@ local function checkPresetsValidity(presets)
     return false
 end
 
+-- The copy of a wing or aura effect that fits the creature it goes on: an aura has a second,
+-- raised copy for a mounted rider (game_cosmetics). Any other effect id comes back unchanged.
+local function fitted(creature, effectId)
+    local cosmetics = modules.game_cosmetics
+    local id = tonumber(effectId)
+    if creature and id and cosmetics and cosmetics.fittedEffect then
+        return cosmetics.fittedEffect(creature, id)
+    end
+    return effectId
+end
+
 local function attachEffectIfValid(UICreature, value)
     local creature = UICreature:getCreature()
     if checkPresetsValidity({ value }) then
         if creature then
-            creature:attachEffect(g_attachedEffects.getById(value))
+            creature:attachEffect(g_attachedEffects.getById(fitted(creature, value)))
         end
     end
 end
@@ -176,15 +190,16 @@ local function attachOrDetachEffect(Id, attach)
     local creature = previewCreature:getCreature()
     if checkPresetsValidity({ Id }) then
         if creature then
+            local fit = fitted(creature, Id)
             if attach then
-                if not creature:getAttachedEffectById(Id) then
-                    local effect = g_attachedEffects.getById(Id)
+                if not creature:getAttachedEffectById(fit) then
+                    local effect = g_attachedEffects.getById(fit)
                     if effect then
                         creature:attachEffect(effect)
                     end
                 end
             else
-                creature:detachEffectById(Id)
+                creature:detachEffectById(fit)
             end
         end
     end
@@ -228,7 +243,7 @@ local function showSelectionList(data, tempValue, tempField, onSelectCallback)
                 button.outfit:setCenter(true)
             elseif Category == 2 then
                 button.outfit:setOutfit(previewCreature:getCreature():getOutfit())
-                button.outfit:getCreature():attachEffect(g_attachedEffects.getById(itemData[1]))
+                button.outfit:getCreature():attachEffect(g_attachedEffects.getById(fitted(button.outfit:getCreature(), itemData[1])))
             elseif Category == 5 then
                 button.outfit:setImageSource(modules.game_attachedeffects.getTexture(itemData[1]))
             end
@@ -254,9 +269,34 @@ local function showSelectionList(data, tempValue, tempField, onSelectCallback)
     window.listSearch:show()
 end
 
--- Wings and auras come from the server too (modules/game_cosmetics), each into the stock row
--- for it: the pick rides that row's lastSelect* and tempOutfit field as the attached effect id,
--- exactly as the stock rows do. cosmeticData[kind] is the server's last answer for a kind.
+-- Puts the picked shader and outline on the preview, or takes both off while the preview's
+-- Shader/Outline box is unticked. A shader name nobody registered ("Outfit - Default") is none.
+local function wearStylesOnPreview()
+    local creature = previewCreature and previewCreature:getCreature()
+    if not creature then
+        return
+    end
+    creature:setShader(settings.showShader and lastSelectShader or "Outfit - Default")
+    if modules.game_cosmetics then
+        modules.game_cosmetics.wearStyle("outlines", creature, settings.showShader and lastSelectOutline or 0)
+    end
+end
+
+-- Ticks the preview's Shader/Outline box without running its handler, so a pick shows at once.
+local function showStylesInPreview()
+    settings.showShader = true
+    if showShaderCheck then
+        showShaderCheck.onCheckChange = nil
+        showShaderCheck:setChecked(true)
+        showShaderCheck.onCheckChange = onShowShaderChange
+    end
+end
+
+-- Wings, auras, shaders and outlines come from the server too (modules/game_cosmetics), each
+-- into the stock row for it: the pick rides that row's lastSelect* and tempOutfit field as the
+-- attached effect id, exactly as the stock rows do -- or, for a `style` (worn through the outfit,
+-- not attached to it), as game_cosmetics' value for it: a shader name, an outline id. `none` is
+-- a style row's value for nothing worn. cosmeticData[kind] is the server's last answer for a kind.
 local COSMETIC_ROWS = {
     wings = {
         row = "wings", field = "wings", option = "showWings", select = function(...) onWingsSelect(...) end,
@@ -265,6 +305,16 @@ local COSMETIC_ROWS = {
     auras = {
         row = "aura", field = "auras", option = "showAura", select = function(...) onAuraSelect(...) end,
         getLast = function() return lastSelectAura end, setLast = function(v) lastSelectAura = v end
+    },
+    shaders = {
+        row = "shader", field = "shaders", option = "showShader", style = true, none = "Outfit - Default",
+        select = function(...) onShaderSelect(...) end,
+        getLast = function() return lastSelectShader end, setLast = function(v) lastSelectShader = v end
+    },
+    outlines = {
+        row = "outline", field = "outlines", option = "showShader", style = true, none = 0,
+        select = function(...) onOutlineSelect(...) end,
+        getLast = function() return lastSelectOutline end, setLast = function(v) lastSelectOutline = v end
     }
 }
 local cosmeticData = {}
@@ -293,18 +343,24 @@ local function onCosmeticOwned(kind, data)
         rowInfo.setLast(effect)
         tempOutfit[rowInfo.field] = effect
         updateAppearanceText(rowInfo.row, cosmetics.getName(kind, data.current))
-        if settings[rowInfo.option] then
+        if rowInfo.style then
+            wearStylesOnPreview()
+        elseif settings[rowInfo.option] then
             attachOrDetachEffect(effect, true)
         end
     end
 
     if appearanceGroup and appearanceGroup:getSelectedWidget() == window.appearance.settings[rowInfo.row].check then
-        showSelectionList(ServerData[rowInfo.field], tempOutfit[rowInfo.field], rowInfo.row, rowInfo.select)
+        if rowInfo.style then
+            showStyleList(kind)
+        else
+            showSelectionList(ServerData[rowInfo.field], tempOutfit[rowInfo.field], rowInfo.row, rowInfo.select)
+        end
     end
 end
 
-local AppearanceData = { "preset", "outfit", "mount", "familiar", "wings", "aura", "effects", "shader", "healthBar",
-    "title" }
+local AppearanceData = { "preset", "outfit", "mount", "familiar", "wings", "aura", "effects", "shader", "outline",
+    "healthBar", "title" }
 
 function init()
     connect(g_game, {
@@ -484,7 +540,9 @@ function create(player, outfitList, creatureMount, mountList, familiarList, wing
         wings = wingsList,
         auras = auraList,
         effects = effectsList,
-        shaders = shaderList
+        -- Filled from game_cosmetics, like wings and auras; 8.60's packet carries no shaders.
+        shaders = {},
+        outlines = {}
         --[[
         healthBars = barsList,
         title = titleList]]
@@ -624,6 +682,7 @@ function create(player, outfitList, creatureMount, mountList, familiarList, wing
     appearanceGroup:addWidget(window.appearance.settings.aura.check)
     appearanceGroup:addWidget(window.appearance.settings.wings.check)
     appearanceGroup:addWidget(window.appearance.settings.shader.check)
+    appearanceGroup:addWidget(window.appearance.settings.outline.check)
     appearanceGroup:addWidget(window.appearance.settings.healthBar.check)
     appearanceGroup:addWidget(window.appearance.settings.effects.check)
     appearanceGroup:addWidget(window.appearance.settings.title.check)
@@ -658,6 +717,7 @@ function create(player, outfitList, creatureMount, mountList, familiarList, wing
         { window.appearance.settings.wings,     ServerData.wings },
         { window.appearance.settings.aura,      ServerData.auras },
         { window.appearance.settings.shader,    ServerData.shaders },
+        { window.appearance.settings.outline,   ServerData.outlines },
         { window.appearance.settings.healthBar, ServerData.healthBars },
         { window.appearance.settings.effects,   ServerData.effects },
         { window.appearance.settings.title,     ServerData.title },
@@ -740,6 +800,7 @@ function destroy()
             wings = {},
             auras = {},
             shaders = {},
+            outlines = {},
             healthBars = {},
             effects = {},
             title = {}
@@ -753,6 +814,7 @@ function destroy()
         lastSelectWings = "None"
         lastSelectEffects = 0
         lastSelectShader = "Outfit - Default"
+        lastSelectOutline = 0
     end
 end
 
@@ -814,6 +876,7 @@ function newPreset()
     lastSelectWings = "None"
     lastSelectEffects = 0
     lastSelectShader = "Outfit - Default"
+    lastSelectOutline = 0
 end
 
 function deletePreset()
@@ -843,10 +906,12 @@ function deletePreset()
         if creature then
             creature:clearAttachedEffects()
             creature:setShader("Outfit - Default")
+            creature:clearOutline()
         end
     end
     updateAppearanceText("preset", "None")
-    updateAppearanceText("shader", "Outfit - Default")
+    updateAppearanceText("shader", "None")
+    updateAppearanceText("outline", "None")
     updateAppearanceText("aura", "None")
     updateAppearanceText("wings", "None")
     updateAppearanceText("effects", "None")
@@ -878,6 +943,7 @@ function savePreset()
     settings.presets[presetId].effects = lastSelectEffects or 0
     settings.presets[presetId].wings = lastSelectWings or "None"
     settings.presets[presetId].shaders = lastSelectShader or "None"
+    settings.presets[presetId].outline = lastSelectOutline or 0
 
     settings.currentPreset = presetId
 
@@ -909,6 +975,11 @@ function savePreset()
                 creature:setShader(lastSelectShader)
             end
         end
+    end
+
+    local presetCreature = window.presetsList[presetId].creature:getCreature()
+    if presetCreature and modules.game_cosmetics then
+        modules.game_cosmetics.wearStyle("outlines", presetCreature, lastSelectOutline)
     end
 end
 
@@ -971,7 +1042,9 @@ function onAppearanceChange(widget, selectedWidget)
         showSelectionList(ServerData.effects, tempOutfit.effects, "effects", onEffectBarSelect)
         -- strings
     elseif id == "shader" then
-        showShaders()
+        showStyleList("shaders")
+    elseif id == "outline" then
+        showStyleList("outlines")
     elseif id == "healthBar" then
         showHealthBars()
     elseif id == "title" then
@@ -1012,7 +1085,9 @@ function showPresets()
 
             if preset.shaders ~= "None" then
                 presetWidget.creature:getCreature():setShader(preset.shaders)
-                lastSelectShader = preset.shaders
+            end
+            if modules.game_cosmetics then
+                modules.game_cosmetics.wearStyle("outlines", presetWidget.creature:getCreature(), preset.outline or 0)
             end
 
             if presetId == settings.currentPreset then
@@ -1207,7 +1282,12 @@ function showFamiliars()
     window.listSearch:show()
 end
 
-function showShaders()
+-- The Shader or Outline row's list (a COSMETIC_ROWS `style` kind): "None" and every one the
+-- server says this character owns, each drawn on the outfit being edited. A button's `value`
+-- is what the row keeps (COSMETIC_ROWS).
+function showStyleList(kind)
+    local rowInfo = COSMETIC_ROWS[kind]
+    local cosmetics = modules.game_cosmetics
     window.presetsList:hide()
     window.presetsScroll:hide()
     window.presetButtons:hide()
@@ -1215,57 +1295,37 @@ function showShaders()
     window.selectionList.onChildFocusChange = nil
     window.selectionList:destroyChildren()
 
+    local current = rowInfo.getLast()
+    local look = table.copy(tempOutfit)
+    look.mount = 0
     local focused = nil
-    do
+    local function addButton(value, name)
         local button = g_ui.createWidget("SelectionButton", window.selectionList)
-        button:setId("Outfit - Default")
-
-        button.outfit:setOutfit({
-            type = tempOutfit.type,
-            addons = tempOutfit.addons
-        })
-
+        button:setId(tostring(value))
+        button.value = value
+        button.outfit:setOutfit(look)
         button.outfit:setCenter(true)
-
-        button.outfit:getCreature():setShader("Outfit - Default")
-        button.name:setText("Outfit - Default")
-        if tempOutfit.shaders == "Outfit - Default" then
-            focused = "Outfit - Default"
+        cosmetics.wearStyle(kind, button.outfit:getCreature(), cosmetics.entryId(kind, value))
+        button.name:setText(name)
+        if value == current then
+            focused = button
         end
     end
 
-    if ServerData.shaders and #ServerData.shaders > 0 then
-        for _, shaderData in ipairs(ServerData.shaders) do
-            local button = g_ui.createWidget("SelectionButton", window.selectionList)
-            button:setId(shaderData[2])
-
-            button.outfit:setOutfit({
-                type = tempOutfit.type,
-                addons = tempOutfit.addons
-
-            })
-
-            button.outfit:setCenter(true)
-
-            button.outfit:getCreature():setShader(shaderData[2])
-
-            button.name:setText(shaderData[2])
-
-            if tempOutfit.shaders == shaderData[2] then
-                focused = shaderData[2]
-            end
-        end
+    addButton(rowInfo.none, "None")
+    for _, data in ipairs(ServerData[rowInfo.field] or {}) do
+        addButton(data[1], data[2])
     end
-    if focused ~= nil then
-        local w = window.selectionList[focused]
-        w:focus()
-        window.selectionList:ensureChildVisible(w, {
+
+    if focused then
+        focused:focus()
+        window.selectionList:ensureChildVisible(focused, {
             x = 0,
             y = 196
         })
     end
 
-    window.selectionList.onChildFocusChange = onShaderSelect
+    window.selectionList.onChildFocusChange = rowInfo.select
     window.selectionList:show()
     window.selectionScroll:show()
     window.listSearch:show()
@@ -1302,7 +1362,7 @@ function showHealthBars()
                 button.outfit:setHeight(32)
             else
                 button.outfit:setOutfit(previewCreature:getCreature():getOutfit())
-                button.outfit:getCreature():attachEffect(g_attachedEffects.getById(barData))
+                button.outfit:getCreature():attachEffect(g_attachedEffects.getById(fitted(button.outfit:getCreature(), barData)))
             end
 
             button.bar:show()
@@ -1430,30 +1490,23 @@ function onPresetSelect(list, focusedChild, unfocusedChild, reason)
             attachEffectIfValid(previewCreature, preset.auras)
         end
 
-        if not settings.showShader or preset.shaders == "None" then
-            if previewCreature then
-                local creature = previewCreature:getCreature()
-                if creature then
-                    creature:setShader("Outfit - Default")
-                end
-            end
-        else
-            if previewCreature then
-                local creature = previewCreature:getCreature()
-                if creature then
-                    creature:setShader(preset.shaders)
-                end
-            end
-        end
-
+        local presetShader = (preset.shaders and preset.shaders ~= "None") and preset.shaders or "Outfit - Default"
         tempOutfit.wings = preset.wings
         tempOutfit.auras = preset.auras
-        tempOutfit.shaders = preset.shaders
+        tempOutfit.shaders = presetShader
+        tempOutfit.outlines = preset.outline or 0
         tempOutfit.effects = preset.effects
         lastSelectAura = preset.auras
         lastSelectWings = preset.wings
         lastSelectEffects = preset.effects
-        lastSelectShader = preset.shaders
+        lastSelectShader = presetShader
+        lastSelectOutline = preset.outline or 0
+        wearStylesOnPreview()
+        if modules.game_cosmetics then
+            local cosmetics = modules.game_cosmetics
+            updateAppearanceText("shader", cosmetics.getName("shaders", cosmetics.entryId("shaders", lastSelectShader)))
+            updateAppearanceText("outline", cosmetics.getName("outlines", lastSelectOutline))
+        end
     end
 end
 
@@ -1533,14 +1586,14 @@ function onAuraSelect(list, focusedChild, unfocusedChild, reason)
     if auraName ~= "None" then
         local auraId = tonumber(lastSelectAura)
         if auraId then
-            previewCreature:getCreature():detachEffectById(auraId)
+            previewCreature:getCreature():detachEffectById(fitted(previewCreature:getCreature(), auraId))
         end
     end
     if focusedChild then
         local auraType = tonumber(focusedChild:getId())
 
         if checkPresetsValidity({ auraType }) then
-            previewCreature:getCreature():attachEffect(g_attachedEffects.getById(auraType))
+            previewCreature:getCreature():attachEffect(g_attachedEffects.getById(fitted(previewCreature:getCreature(), auraType)))
             lastSelectAura = auraType
             tempOutfit.auras = auraType
             updatePreview()
@@ -1582,36 +1635,31 @@ function onWingsSelect(list, focusedChild, unfocusedChild, reason)
 end
 
 function onShaderSelect(list, focusedChild, unfocusedChild, reason)
-    if focusedChild then
-        local shaderType = focusedChild:getId()
-        if previewCreature then
-            local creature = previewCreature:getCreature()
-            if creature then
-                if shaderType ~= "None" then
-                    -- Enable shader display when selecting a shader
-                    settings.showShader = true
-                    -- Update checkbox without triggering event
-                    if showShaderCheck then
-                        showShaderCheck.onCheckChange = nil
-                        showShaderCheck:setChecked(true)
-                        showShaderCheck.onCheckChange = onShowShaderChange
-                    end
-
-                    lastSelectShader = shaderType
-                    tempOutfit.shaders = shaderType
-                    creature:setShader(shaderType)
-                else
-                    lastSelectShader = "Outfit - Default"
-                    tempOutfit.shaders = "Outfit - Default"
-                    creature:setShader("Outfit - Default")
-                end
-            end
-        end
-
-        deselectPreset()
-
-        updateAppearanceText("shader", focusedChild.name:getText())
+    if not focusedChild then
+        return
     end
+    lastSelectShader = focusedChild.value or "Outfit - Default"
+    tempOutfit.shaders = lastSelectShader
+    if lastSelectShader ~= "Outfit - Default" then
+        showStylesInPreview()
+    end
+    wearStylesOnPreview()
+    deselectPreset()
+    updateAppearanceText("shader", focusedChild.name:getText())
+end
+
+function onOutlineSelect(list, focusedChild, unfocusedChild, reason)
+    if not focusedChild then
+        return
+    end
+    lastSelectOutline = focusedChild.value or 0
+    tempOutfit.outlines = lastSelectOutline
+    if lastSelectOutline ~= 0 then
+        showStylesInPreview()
+    end
+    wearStylesOnPreview()
+    deselectPreset()
+    updateAppearanceText("outline", focusedChild.name:getText())
 end
 
 function onHealthBarSelect(list, focusedChild, unfocusedChild, reason)
@@ -1803,21 +1851,7 @@ function updatePreview()
         attachOrDetachEffect(lastSelectEffects, false)
     end
 
-    if not settings.showShader then
-        if previewCreature then
-            local creature = previewCreature:getCreature()
-            if creature then
-                creature:setShader("Outfit - Default")
-            end
-        end
-    else
-        if previewCreature and lastSelectShader then
-            local creature = previewCreature:getCreature()
-            if creature then
-                creature:setShader(lastSelectShader)
-            end
-        end
-    end
+    wearStylesOnPreview()
 
     if not settings.showBars then
         previewOutfit.healthBar = 0

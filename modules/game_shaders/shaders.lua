@@ -330,7 +330,59 @@ local OUTFIT_SHADERS = {
         vert = 'shaders/vertex/outfit_stars_vertex.frag',
         frag = 'shaders/fragment/outfit_stars_fragment.frag',
         tex1 = 'images/stars'
-    }, 
+    },
+    -- Only worn as a player's chosen shader (game_cosmetics shaders_list.lua). Each texture is
+    -- the one whose size the vertex shader divides by.
+    {
+        name = 'Outfit - Cosmos',
+        vert = 'shaders/vertex/outfit_cosmos_vertex.frag',
+        frag = 'shaders/fragment/outfit_cosmos_fragment.frag',
+        tex1 = 'images/cosmos2'
+    },
+    {
+        name = 'Outfit - Sun',
+        vert = 'shaders/vertex/outfit_sun_vertex.frag',
+        frag = 'shaders/fragment/outfit_sun_fragment.frag',
+        tex1 = 'images/sun'
+    },
+    {
+        name = 'Outfit - Purple Sky',
+        vert = 'shaders/vertex/outfit_purplesky_vertex.frag',
+        frag = 'shaders/fragment/outfit_purplesky_fragment.frag',
+        tex1 = 'images/purplesky'
+    },
+    {
+        name = 'Outfit - Purple Neon',
+        vert = 'shaders/vertex/outfit_purpleneon_vertex.frag',
+        frag = 'shaders/fragment/outfit_purpleneon_fragment.frag',
+        tex1 = 'images/purpleneon'
+    },
+    {
+        name = 'Outfit - Static',
+        vert = 'shaders/vertex/outfit_static_vertex.frag',
+        frag = 'shaders/fragment/outfit_static_fragment.frag',
+        tex1 = 'images/static'
+    },
+    {
+        name = 'Outfit - Camouflage',
+        vert = 'shaders/vertex/outfit_camouflage_vertex.frag',
+        frag = 'shaders/fragment/outfit_camouflage_fragment.frag',
+        tex1 = 'images/camouflage'
+    },
+    -- Outlines, drawn behind the body by Creature::setOutline beside whatever shader the
+    -- creature wears; the colour comes with the call (game_cosmetics outlines_list.lua).
+    {
+        name = 'Outline - Solid',
+        frag = 'shaders/fragment/outline_solid.frag'
+    },
+    {
+        name = 'Outline - Pulse',
+        frag = 'shaders/fragment/outline_pulse.frag'
+    },
+    {
+        name = 'Outline - Rainbow',
+        frag = 'shaders/fragment/outline_rainbow.frag'
+    },
     {
         name = 'Monster - Corrupted',
         frag = 'shaders/fragment/monster_corrupted.frag'
