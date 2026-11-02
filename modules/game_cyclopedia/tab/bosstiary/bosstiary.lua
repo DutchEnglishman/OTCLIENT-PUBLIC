@@ -3,6 +3,9 @@ function showBosstiary()
     UI = g_ui.loadUI("bosstiary", contentContainer)
     UI:show()
     Cyclopedia.Bosstiary.Page = 1
+    Cyclopedia.Bosstiary.Section = Cyclopedia.Bosstiary.Section or "mainland"
+    UI.MainlandButton:setOn(Cyclopedia.Bosstiary.Section ~= "rookgaard")
+    UI.RookgaardButton:setOn(Cyclopedia.Bosstiary.Section == "rookgaard")
     g_game.requestBosstiaryInfo()
     UI.FilterBase.BaneIcon:setTooltip(
         "Bane\n\nFor unlocking a level, you will receive the following boss points:\nProwess: 5\nExpertise: 15\nMastery: 30")
@@ -421,6 +424,10 @@ function Cyclopedia.CreateBosstiaryCreature(data)
         else
             widget.TrackCheck:hide()
         end
+        -- The boss's loot and task panel live on the bestiary's detail page.
+        function widget:onClick()
+            Cyclopedia.openTrackedCreature(0, data.raceId)
+        end
     else
         widget.Sprite:getCreature():setShader("Outfit - cyclopedia-black")
         widget.TrackCheck:disable()
@@ -428,13 +435,57 @@ function Cyclopedia.CreateBosstiaryCreature(data)
     end
 end
 
+-- Like the bestiary, split into Rookgaard's bosses and everyone else's. The
+-- server sends one roster, so the split is made here from the last one.
+function Cyclopedia.showBosstiarySection(section)
+    Cyclopedia.Bosstiary.Section = section
+    if not UI or not UI.PageValue then
+        return
+    end
+    UI.MainlandButton:setOn(section ~= "rookgaard")
+    UI.RookgaardButton:setOn(section == "rookgaard")
+    Cyclopedia.Bosstiary.Page = 1
+
+    -- A new list starts unfiltered, so the filter boxes must say so too.
+    for _, id in ipairs({"BaneCheck", "ArchfoeCheck", "NemesisCheck", "NoKillsCheck", "FewKillsCheck",
+        "ProwessCheck", "ExpertiseCheck", "MasteryCheck"}) do
+        UI.FilterBase[id]:setChecked(true)
+    end
+    UI.SearchEdit:setText("", true)
+
+    if Cyclopedia.Bosstiary.LastData then
+        Cyclopedia.LoadBosstiaryCreatures(Cyclopedia.Bosstiary.LastData)
+    end
+end
+
 function Cyclopedia.LoadBosstiaryCreatures(data)
     Cyclopedia.syncBosstiaryTrackerFromBosstiaryInfo(data)
+    Cyclopedia.Bosstiary.LastData = data
 
     if not UI or not UI.PageValue then
         return
     end
     local maxCategoriesPerPage = 8
+
+    -- A tracker row opening a boss from the other section switches to it.
+    local pending = Cyclopedia.pendingBosstiaryRaceId
+    if pending and Cyclopedia.getRaceData(pending) then
+        local wanted = Cyclopedia.isRookgaardRace(pending) and "rookgaard" or "mainland"
+        if wanted ~= Cyclopedia.Bosstiary.Section then
+            Cyclopedia.Bosstiary.Section = wanted
+            UI.MainlandButton:setOn(wanted ~= "rookgaard")
+            UI.RookgaardButton:setOn(wanted == "rookgaard")
+        end
+    end
+
+    local wantRookgaard = Cyclopedia.Bosstiary.Section == "rookgaard"
+    local sectionData = {}
+    for _, dataEntry in ipairs(data) do
+        if Cyclopedia.isRookgaardRace(dataEntry.raceId) == wantRookgaard then
+            sectionData[#sectionData + 1] = dataEntry
+        end
+    end
+    data = sectionData
 
     Cyclopedia.Bosstiary.Creatures = {}
     Cyclopedia.Bosstiary.NotVisibleCreatures = {}

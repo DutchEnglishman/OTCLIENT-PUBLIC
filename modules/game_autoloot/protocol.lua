@@ -64,12 +64,10 @@ function AutoLoot.sendContainer(role, item)
         return false
     end
 
+    -- The client id, not a catalog lookup: the server matches it against the
+    -- bag at that position, so a bag missing from the catalog or sharing its
+    -- sprite with another server id still binds.
     local clientId = item:getId()
-    local serverId = AutoLoot.getServerIdFromClientId(clientId)
-    if not serverId then
-        print(string.format("[AUTOLOOT] No server id mapping for container client id %d", clientId))
-        return false
-    end
 
     local position = item:getPosition()
     if not position then
@@ -79,7 +77,7 @@ function AutoLoot.sendContainer(role, item)
     return sendMessage(string.format(
         "CONTAINER|%s|%d|%d|%d|%d",
         role,
-        serverId,
+        clientId,
         position.x,
         position.y,
         position.z

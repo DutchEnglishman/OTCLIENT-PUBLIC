@@ -1,6 +1,9 @@
 -- Server -> client, '|'-separated: "set|<creatureId>|<#rrggbb>|<text>",
--- "clear|<creatureId>", "reset" ahead of a full list, and "owned|<json>" (the
--- titles the outfit window may offer). Client -> server: "list" and
+-- "clear|<creatureId>", "reset" ahead of a full list, "owned|<json>" (the
+-- titles the outfit window may offer), and at login
+-- "bosses|<#rrggbb>|<text>|<prefix>,<prefix>|<name>|<name>|..." (the boss tag,
+-- matched by lowercased display name, bare or after one variant prefix such as
+-- "tainted "). Client -> server: "list" and
 -- "choose|<titleId>|<colorIndex>". The 8.60 creature packet has no title field;
 -- the server half is data/scripts/titles/titles.lua.
 local TITLES_OPCODE = 81
@@ -10,20 +13,43 @@ local TITLES_OPCODE = 81
 local titles = {}
 local ownedCallback = nil
 local showOthers = true
+local bossNames = {}
+local bossPrefixes = {}
+local bossTag = nil
 
 -- Settings cannot hide it. Matched by text: Titles.list on the server never offers it.
 local STAFF_TEXT = '[ADMIN]'
 
+-- The player-titles setting hides players' titles, not the boss tag.
 local function visible(creature, entry)
-    if showOthers or entry.text == STAFF_TEXT then
+    if showOthers or entry.text == STAFF_TEXT or entry.boss then
         return true
     end
     local player = g_game.getLocalPlayer()
     return player ~= nil and player:getId() == creature:getId()
 end
 
+local function isBoss(creature)
+    if not creature:isMonster() then
+        return false
+    end
+    local name = creature:getName():lower()
+    if bossNames[name] then
+        return true
+    end
+    for _, prefix in ipairs(bossPrefixes) do
+        if prefix ~= '' and name:sub(1, #prefix + 1) == prefix .. ' ' and bossNames[name:sub(#prefix + 2)] then
+            return true
+        end
+    end
+    return false
+end
+
 local function apply(creature)
     local entry = titles[creature:getId()]
+    if not entry and bossTag and isBoss(creature) then
+        entry = bossTag
+    end
     if entry and visible(creature, entry) then
         creature:setTitle(entry.text, entry.color)
     elseif creature:getTitle() ~= '' then
@@ -54,6 +80,23 @@ local function onOpcode(protocol, opcode, buffer)
         end
         if ownedCallback then
             ownedCallback(data)
+        end
+        return
+    end
+
+    if buffer:sub(1, 7) == 'bosses|' then
+        local fields = buffer:sub(8):split('|')
+        bossTag = { color = fields[1], text = fields[2], boss = true }
+        bossPrefixes = (fields[3] or ''):split(',')
+        bossNames = {}
+        for i = 4, #fields do
+            bossNames[fields[i]] = true
+        end
+        local player = g_game.getLocalPlayer()
+        if player then
+            for _, creature in ipairs(g_map.getSpectators(player:getPosition(), true)) do
+                apply(creature)
+            end
         end
         return
     end
@@ -103,6 +146,9 @@ end
 local function onGameEnd()
     titles = {}
     ownedCallback = nil
+    bossNames = {}
+    bossPrefixes = {}
+    bossTag = nil
 end
 
 function init()

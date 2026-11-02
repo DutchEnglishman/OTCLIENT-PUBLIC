@@ -398,6 +398,17 @@ local OUTFIT_SHADERS = {
     } }
 
 
+-- Country flags, written by tools/effect-generators/make_flag_shaders.ps1. They read the body's
+-- outline from the creature's own framebuffer, so they need useFramebuffer.
+for _, key in ipairs({ 'brazil', 'sweden', 'poland', 'netherlands', 'finland', 'norway', 'spain', 'chile',
+    'argentina', 'mexico', 'usa', 'canada', 'egypt', 'germany', 'italy' }) do
+    table.insert(OUTFIT_SHADERS, {
+        name = 'Outfit - Flag ' .. key,
+        useFramebuffer = true,
+        frag = 'shaders/fragment/flag_' .. key .. '.frag'
+    })
+end
+
 if VARIANT_MONSTER_SHADER_CONFIG.enabled then
     table.insert(OUTFIT_SHADERS, {
         name = VARIANT_MONSTER_SHADER_CONFIG.demonic.name,
