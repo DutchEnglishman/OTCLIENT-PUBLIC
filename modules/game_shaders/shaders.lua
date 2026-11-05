@@ -297,6 +297,11 @@ local OUTFIT_SHADERS = {
         frag = 'shaders/fragment/outfit_shimmering_fragment.frag'
     },
     {
+        name = 'Outfit - Echo',
+        vert = 'shaders/vertex/outfit_shimmering_vertex.frag',
+        frag = 'shaders/fragment/outfit_echo_fragment.frag'
+    },
+    {
         name = 'Outfit - Shine',
         vert = 'shaders/vertex/outfit_shine_vertex.frag',
         frag = 'shaders/fragment/outfit_shine_fragment.frag'
@@ -567,6 +572,11 @@ function ShaderController:getMonsterShaderName(creature)
     end
 
     local normalizedName = monsterName:lower()
+
+    -- Ahead of the recolour check: an Echo wears a variant recolour but is not a variant.
+    if normalizedName:find('^echo of a ') then
+        return 'Outfit - Echo'
+    end
 
     -- A variant drawn with its own recoloured sprite needs no shader to stand out.
     if VARIANT_SPRITE_LOOKTYPES[creature:getOutfit().type] then

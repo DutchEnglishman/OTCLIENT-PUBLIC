@@ -1,5 +1,6 @@
 -- Shows the server-wide boosts that are currently running as a small row of
--- badges at the bottom-left of the map, directly above the chat window. The
+-- badges on the right of the spell cooldown strip above the chat, ending over
+-- the chat's "Open new channel" button and growing leftwards from it. The
 -- server pushes the list on login, whenever a boost starts or ends, and on its
 -- own tick; the countdown between those pushes runs locally so the numbers
 -- move every second rather than in ten-second jumps.
@@ -96,7 +97,25 @@ local function rebuild(boosts)
     boostsBar:setWidth(math.max(1, count * ICON_SIZE + math.max(0, count - 1) * ICON_SPACING))
     boostsBar:setHeight(ICON_SIZE)
     boostsBar:setVisible(count > 0)
+    modules.game_cooldown.setBoostsShown(count > 0)
     updateTimers()
+end
+
+local function getChannelsButton()
+    local console = modules.game_console.consolePanel
+    return console and console:getChildById('channelsButton')
+end
+
+-- The button lives in the console panel, not in the strip, so it cannot be an
+-- anchor target; its right edge is copied over as a margin whenever either moves.
+local function alignToChannelsButton()
+    local button = getChannelsButton()
+    if not boostsBar or not button then
+        return
+    end
+    local strip = boostsBar:getParent():getRect()
+    local rect = button:getRect()
+    boostsBar:setMarginRight(math.max(0, (strip.x + strip.width) - (rect.x + rect.width)))
 end
 
 function onExtendedOpcode(protocol, code, buffer)
@@ -123,19 +142,28 @@ function create()
         return
     end
 
-    local mapPanel = modules.game_interface.getMapPanel()
-    if not mapPanel then
+    local strip = modules.game_cooldown.cooldownWindow
+    if not strip then
         return
     end
 
-    boostsBar = g_ui.loadUI("globalboosts", mapPanel)
-    -- The map panel's bottom edge is the splitter above the chat, so its
-    -- bottom-left corner is the strip of screen directly above the chat window.
-    boostsBar:addAnchor(AnchorLeft, 'parent', AnchorLeft)
-    boostsBar:addAnchor(AnchorBottom, 'parent', AnchorBottom)
-    boostsBar:setMarginLeft(6)
-    boostsBar:setMarginBottom(6)
+    boostsBar = g_ui.loadUI("globalboosts", strip)
+    boostsBar:addAnchor(AnchorTop, 'parent', AnchorTop)
+    boostsBar:addAnchor(AnchorRight, 'parent', AnchorRight)
+    boostsBar:setMarginTop(2)
     boostsBar:hide()
+
+    -- Spell tiles stop short of the badges instead of running under them.
+    local cooldownPanel = strip:getChildById('cooldownPanel')
+    cooldownPanel:addAnchor(AnchorRight, boostsBar:getId(), AnchorLeft)
+    cooldownPanel:setMarginRight(5)
+
+    connect(strip, {onGeometryChange = alignToChannelsButton})
+    local button = getChannelsButton()
+    if button then
+        connect(button, {onGeometryChange = alignToChannelsButton})
+    end
+    alignToChannelsButton()
 
     if not tickEvent then
         tickEvent = cycleEvent(updateTimers, 1000)
@@ -149,8 +177,18 @@ function destroy()
     end
     clearIcons()
     if boostsBar then
+        local strip = boostsBar:getParent()
+        disconnect(strip, {onGeometryChange = alignToChannelsButton})
+        local button = getChannelsButton()
+        if button then
+            disconnect(button, {onGeometryChange = alignToChannelsButton})
+        end
+        local cooldownPanel = strip:getChildById('cooldownPanel')
+        cooldownPanel:addAnchor(AnchorRight, 'parent', AnchorRight)
+        cooldownPanel:setMarginRight(0)
         boostsBar:destroy()
         boostsBar = nil
+        modules.game_cooldown.setBoostsShown(false)
     end
 end
 

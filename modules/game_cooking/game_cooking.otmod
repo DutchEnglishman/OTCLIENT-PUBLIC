@@ -1,0 +1,10 @@
+Module
+  name: game_cooking
+  description: Cooking window, opened by using a cast iron oven
+  author: Shattered Realms
+  website: None
+  sandboxed: true
+  autoload: true
+  scripts: [ cooking ]
+  @onLoad: init()
+  @onUnload: terminate()

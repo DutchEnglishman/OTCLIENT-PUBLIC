@@ -256,18 +256,36 @@ AttachedEffectManager.register(13, 'Orbiting Fireball', 111, ThingCategoryEffect
     end
 })
 
--- Tainted and Corrupted spawn portals (attachedeffects.lua, opcode 73): the
--- dat effects 101 and 160 looped on the corpse tile at half speed until
--- the monster steps out. Ids match OTSERV variant_config.lua spawnEffects.
-AttachedEffectManager.register(40, 'Tainted Spawn Portal', 101, ThingCategoryEffect, {
-    speed = 0.5,
-    offset = { 0, 0, true }
-})
-
-AttachedEffectManager.register(41, 'Corrupted Spawn Portal', 160, ThingCategoryEffect, {
-    speed = 0.5,
-    offset = { 0, 0, true }
-})
+-- Tainted and Corrupted spawn portals (OTSERV variant_config.lua
+-- spawnEffects): the server names them 40 and 41, which are not registered
+-- themselves -- attachedeffects.lua's SPAWN_PORTALS plays each as its three
+-- parts on the corpse tile: 897/900 opening, 898/901 the loop, 899/902 the
+-- explosion the monster steps out of, 96x96 centred on the tile so the
+-- blast reaches past it, and 903/904 as it arrives. Drawn by
+-- make_spawn_portals.ps1.
+for v, variant in ipairs({ 'tainted', 'corrupted' }) do
+    local first = 897 + 3 * (v - 1)
+    -- All three above everything, or a corpse bigger than its tile (a
+    -- demon's 2x2) is drawn over the portal it is lying in.
+    AttachedEffectManager.register(first, 'Spawn portal ' .. variant .. ' open', '/images/game/effects/spawn_portal_' .. variant .. '_open', ThingExternalTexture, {
+        offset = { 0, 0, true },
+        drawOrder = 4
+    })
+    AttachedEffectManager.register(first + 1, 'Spawn portal ' .. variant .. ' loop', '/images/game/effects/spawn_portal_' .. variant .. '_loop', ThingExternalTexture, {
+        offset = { 0, 0, true },
+        drawOrder = 4
+    })
+    AttachedEffectManager.register(first + 2, 'Spawn portal ' .. variant .. ' explode', '/images/game/effects/spawn_portal_' .. variant .. '_explode', ThingExternalTexture, {
+        offset = { 32, 32, true },
+        drawOrder = 4
+    })
+    -- 903/904: the monster arriving, the game's teleport sparkle in the
+    -- portal's green, in place of the blue one the server leaves out.
+    AttachedEffectManager.register(902 + v, 'Spawn portal ' .. variant .. ' appear', '/images/game/effects/spawn_portal_' .. variant .. '_appear', ThingExternalTexture, {
+        offset = { 0, 0, true },
+        drawOrder = 4
+    })
+end
 
 -- Tether beam between Latrivan and Golgordan (attachedeffects.lua, opcode
 -- 73, kept alive by the server's once-a-second refresh): one looping

@@ -4,203 +4,38 @@ UIWidget
   visible: false
   margin-bottom:30
   UIWidget
-    id: StarBase
-    anchors.top: parent.top
-    anchors.left: parent.left
-    margin-top: 10
-    size: 164 70
-    image-source: /images/ui/2pixel_up_frame_borderimage
-    image-border: 10
-    UIWidget
-      id: Info2
-      anchors.verticalCenter: parent.verticalCenter
-      anchors.right: parent.right
-      margin-right: 18
-      image-source: /images/icons/show_gui_help_grey
-    UIWidget
-      id: Info1
-      anchors.right: Info2.right
-      anchors.bottom: Info2.top
-      margin-bottom: 10
-      image-source: /images/icons/show_gui_help_grey
-    UIWidget
-      id: Info3
-      anchors.right: Info2.right
-      anchors.top: Info2.bottom
-      margin-top: 10
-      image-source: /images/icons/show_gui_help_grey
-    UIWidget
-      id: Star1_1
-      anchors.bottom: Info1.bottom
-      anchors.left: parent.left
-      margin-left: 50
-      image-source: /game_cyclopedia/images/boss/icon_star_bronze
-    UIWidget
-      id: Star2_1
-      anchors.bottom: Info2.bottom
-      anchors.left: parent.left
-      margin-left: 50
-      image-source: /game_cyclopedia/images/boss/icon_star_silver
-    UIWidget
-      id: Star2_2
-      anchors.bottom: Info2.bottom
-      anchors.right: Star2_1.left
-      margin-right: 5
-      image-source: /game_cyclopedia/images/boss/icon_star_silver
-    UIWidget
-      id: Star3_1
-      anchors.bottom: Info3.bottom
-      anchors.left: parent.left
-      margin-left: 50
-      image-source: /game_cyclopedia/images/boss/icon_star_gold
-    UIWidget
-      id: Star3_2
-      anchors.bottom: Info3.bottom
-      anchors.right: Star3_1.left
-      margin-right: 5
-      image-source: /game_cyclopedia/images/boss/icon_star_gold
-    UIWidget
-      id: Star3_3
-      anchors.bottom: Info3.bottom
-      anchors.right: Star3_2.left
-      margin-right: 5
-      image-source: /game_cyclopedia/images/boss/icon_star_gold
-    Label
-      id: Text1
-      anchors.top: Info1.top
-      anchors.left: Star1_1.right
-      margin-left: 5
-      text-auto-resize: true
-      !text: tr('Prowess')
-      color: #BCBCBC
-    Label
-      id: Text2
-      anchors.top: Info2.top
-      anchors.left: Star2_1.right
-      margin-left: 5
-      text-auto-resize: true
-      !text: tr('Expertise')
-      color: #BCBCBC
-    Label
-      id: Text3
-      anchors.top: Info3.top
-      anchors.left: Star3_1.right
-      margin-left: 5
-      text-auto-resize: true
-      !text: tr('Mastery')
-      color: #BCBCBC
-  UIWidget
     id: FilterBase
-    anchors.left: StarBase.right
+    anchors.left: parent.left
     anchors.right: parent.right
     anchors.top: parent.top
     margin-top: 10
-    margin-left: 10
     // Was window_new at border 10, which put that image's band and its accent line inside
     // the tiled middle and repeated them down the panel. Panel surface, real band, sliced
     // at what it was built for.
     image-source: /images/ui/panel_window_header
     image-border: 4
     image-border-top: 20
-    height: 70
+    height: 50
     !text: tr('Filter')
     text-align: top
     text-offset: 0 6
     color: #919191
     CheckBox
-      id: BaneCheck
+      id: NoKillsCheck
       anchors.top: parent.top
       anchors.left: parent.left
-      margin-top: 25
-      margin-left: 10
-      !text: tr('Bane')
-      text-auto-resize: true
-      text-offset: 30 -1
-      checked: true
-      @onClick: modules.game_cyclopedia.Cyclopedia.changeBosstiaryFilter(self, self:isChecked())
-    UIWidget
-      id: BaneIcon
-      anchors.left: BaneCheck.left
-      anchors.verticalCenter: BaneCheck.verticalCenter
-      image-source: /game_cyclopedia/images/boss/icon_bane
-      margin-left: 15
-    CheckBox
-      id: ArchfoeCheck
-      anchors.top: BaneCheck.top
-      anchors.left: BaneCheck.right
-      margin-left: 30
-      !text: tr('Archfoe')
-      text-auto-resize: true
-      text-offset: 30 -1
-      checked: true
-      @onClick: modules.game_cyclopedia.Cyclopedia.changeBosstiaryFilter(self, self:isChecked())
-    UIWidget
-      id: ArchfoeIcon
-      anchors.left: ArchfoeCheck.left
-      anchors.verticalCenter: ArchfoeCheck.verticalCenter
-      image-source: /game_cyclopedia/images/boss/icon_archfoe
-      margin-left: 15
-    CheckBox
-      id: NemesisCheck
-      anchors.top: ArchfoeCheck.top
-      anchors.left: ArchfoeCheck.right
-      margin-left: 30
-      !text: tr('Nemesis')
-      text-auto-resize: true
-      text-offset: 30 -1
-      checked: true
-      @onClick: modules.game_cyclopedia.Cyclopedia.changeBosstiaryFilter(self, self:isChecked())
-    UIWidget
-      id: NemesisIcon
-      anchors.left: NemesisCheck.left
-      anchors.verticalCenter: NemesisCheck.verticalCenter
-      image-source: /game_cyclopedia/images/boss/icon_nemesis
-      margin-left: 15
-    CheckBox
-      id: NoKillsCheck
-      anchors.top: BaneCheck.bottom
-      anchors.left: parent.left
-      margin-top: 10
+      margin-top: 27
       margin-left: 10
       !text: tr('No Kills')
       text-auto-resize: true
       checked: true
       @onClick: modules.game_cyclopedia.Cyclopedia.changeBosstiaryFilter(self, self:isChecked())
     CheckBox
-      id: FewKillsCheck
-      anchors.top: BaneCheck.bottom
-      anchors.left: ArchfoeCheck.left
-      margin-top: 10
-      !text: tr('Few Kills')
-      text-auto-resize: true
-      checked: true
-      @onClick: modules.game_cyclopedia.Cyclopedia.changeBosstiaryFilter(self, self:isChecked())
-    CheckBox
-      id: ProwessCheck
-      anchors.top: BaneCheck.bottom
-      anchors.left: NemesisCheck.left
-      margin-top: 10
-      !text: tr('Prowess')
-      text-auto-resize: true
-      checked: true
-      @onClick: modules.game_cyclopedia.Cyclopedia.changeBosstiaryFilter(self, self:isChecked())
-    CheckBox
-      id: ExpertiseCheck
-      anchors.top: BaneCheck.bottom
-      anchors.left: ProwessCheck.right
-      margin-top: 10
+      id: KilledCheck
+      anchors.top: NoKillsCheck.top
+      anchors.left: NoKillsCheck.right
       margin-left: 30
-      !text: tr('Expertise')
-      text-auto-resize: true
-      checked: true
-      @onClick: modules.game_cyclopedia.Cyclopedia.changeBosstiaryFilter(self, self:isChecked())
-    CheckBox
-      id: MasteryCheck
-      anchors.top: BaneCheck.bottom
-      anchors.left: ExpertiseCheck.right
-      margin-top: 10
-      margin-left: 30
-      !text: tr('Mastery')
+      !text: tr('Killed')
       text-auto-resize: true
       checked: true
       @onClick: modules.game_cyclopedia.Cyclopedia.changeBosstiaryFilter(self, self:isChecked())

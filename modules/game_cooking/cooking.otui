@@ -1,0 +1,401 @@
+// Five tabs across the 640-pixel window, 4 apart.
+CookingTab < UIButton
+  font: verdana-11px-antialised
+  color: $textBright
+  size: 124 26
+  image-source: /images/ui/button
+  image-color: #ababab
+  image-clip: 0 0 22 23
+  image-border: 3
+  text-offset: 12 0
+
+  $hover !disabled:
+    image-color: #dfdfdf
+
+  $pressed:
+    image-clip: 0 46 22 23
+
+  $on:
+    image-color: #ffffff
+
+  UIItem
+    id: icon
+    anchors.verticalCenter: parent.verticalCenter
+    anchors.left: parent.left
+    margin-left: 6
+    size: 20 20
+    virtual: true
+    phantom: true
+
+CookingRecipeRow < Panel
+  phantom: false
+  height: 36
+  image-source: /images/ui/button
+  image-color: #ababab
+  image-clip: 0 0 22 23
+  image-border: 3
+  padding-left: 3
+
+  $hover !disabled:
+    image-color: #dfdfdf
+
+  $focus:
+    image-color: #ffffff
+
+  UIItem
+    id: item
+    anchors.verticalCenter: parent.verticalCenter
+    anchors.left: parent.left
+    size: 34 34
+    padding: 1
+    virtual: true
+    phantom: true
+
+  Label
+    id: name
+    anchors.top: item.top
+    anchors.left: item.right
+    margin-top: 3
+    margin-left: 5
+    text-auto-resize: true
+    color: $textBright
+    phantom: true
+
+  UIWidget
+    id: star
+    anchors.verticalCenter: name.verticalCenter
+    anchors.left: name.right
+    margin-left: 4
+    size: 9 10
+    image-source: /images/game/prey/prey_star
+    !tooltip: tr('Never cooked: four times the experience for the first one')
+    visible: false
+
+  Label
+    id: level
+    anchors.left: item.right
+    anchors.right: parent.right
+    anchors.bottom: item.bottom
+    margin-bottom: 3
+    margin-left: 5
+    text-align: left
+    color: #afafaf
+    phantom: true
+
+// One ingredient on the recipe scroll: icon, name, have / need. Two columns fill the
+// scroll's 312-pixel text area.
+CookingIngredient < UIWidget
+  size: 155 26
+
+  UIItem
+    id: item
+    anchors.verticalCenter: parent.verticalCenter
+    anchors.left: parent.left
+    size: 24 24
+    virtual: true
+
+  Label
+    id: name
+    anchors.verticalCenter: parent.verticalCenter
+    anchors.left: item.right
+    anchors.right: count.left
+    margin-left: 4
+    text-align: left
+    ttf-font: fondamento
+    ttf-font-size: 12
+    color: #3a2a18
+
+  Label
+    id: count
+    anchors.verticalCenter: parent.verticalCenter
+    anchors.right: parent.right
+    width: 32
+    text-align: right
+    ttf-font: fondamento
+    ttf-font-size: 12
+
+MainWindow
+  id: cookingWindow
+  !text: tr('Cooking')
+  size: 660 500
+  @onEscape: modules.game_cooking.hide()
+
+  Panel
+    id: tabs
+    anchors.top: parent.top
+    anchors.left: parent.left
+    anchors.right: parent.right
+    height: 26
+    layout:
+      type: horizontalBox
+      spacing: 4
+      fit-children: false
+
+  Label
+    id: searchLabel
+    anchors.top: tabs.bottom
+    anchors.left: parent.left
+    margin-top: 10
+    !text: tr('Search')
+    text-auto-resize: true
+
+  TextEdit
+    id: searchInput
+    anchors.verticalCenter: searchLabel.verticalCenter
+    anchors.left: searchLabel.right
+    margin-left: 6
+    width: 120
+    @onTextChange: modules.game_cooking.rebuildList()
+
+  Label
+    id: nextLevelLabel
+    anchors.verticalCenter: searchLabel.verticalCenter
+    anchors.right: parent.right
+    text-auto-resize: true
+
+  ProgressBar
+    id: levelBar
+    anchors.verticalCenter: searchLabel.verticalCenter
+    anchors.right: nextLevelLabel.left
+    margin-right: 6
+    width: 150
+    height: 12
+    background-color: #3fa05a
+
+  Label
+    id: levelLabel
+    anchors.verticalCenter: searchLabel.verticalCenter
+    anchors.right: levelBar.left
+    margin-right: 6
+    text-auto-resize: true
+
+  Label
+    id: recipesTitle
+    anchors.top: searchLabel.bottom
+    anchors.left: parent.left
+    margin-top: 10
+    width: 190
+    !text: tr('Recipes')
+    text-align: center
+    color: $textBright
+
+  ScrollablePanel
+    id: recipeList
+    anchors.top: recipesTitle.bottom
+    anchors.left: parent.left
+    anchors.bottom: separator.top
+    margin-top: 4
+    margin-bottom: 6
+    width: 190
+    vertical-scrollbar: recipeListScrollbar
+    layout: verticalBox
+    padding-right: 14
+    auto-focus: none
+
+  VerticalScrollBar
+    id: recipeListScrollbar
+    anchors.top: recipeList.top
+    anchors.bottom: recipeList.bottom
+    anchors.right: recipeList.right
+    step: 36
+    pixels-scroll: true
+
+  Label
+    id: recipeTitle
+    anchors.top: recipesTitle.top
+    anchors.left: recipeList.right
+    anchors.right: parent.right
+    margin-left: 10
+    !text: tr('Recipe')
+    text-align: center
+    color: $textBright
+
+  // 440 wide, so the 428-pixel scroll fits with 6 to spare on each side.
+  FlatPanel
+    id: recipePanel
+    anchors.top: recipeList.top
+    anchors.bottom: recipeList.bottom
+    anchors.left: recipeList.right
+    anchors.right: parent.right
+    margin-left: 10
+
+    // The owner's scroll art (images/), one per tier, 428 x 307: the scroll area is
+    // 360 x 287 at 34, 10, and the text sits inside it with padding 27 top, 24 sides.
+    UIWidget
+      id: scroll
+      anchors.top: parent.top
+      anchors.horizontalCenter: parent.horizontalCenter
+      size: 428 307
+      image-source: /game_cooking/images/parchment_blank
+      phantom: true
+
+      Panel
+        id: parchment
+        anchors.top: parent.top
+        anchors.left: parent.left
+        margin-top: 37
+        margin-left: 58
+        size: 312 250
+        phantom: true
+
+        UIItem
+          id: dish
+          anchors.top: parent.top
+          anchors.left: parent.left
+          size: 32 32
+          virtual: true
+
+        Label
+          id: dishName
+          anchors.top: dish.top
+          anchors.left: dish.right
+          anchors.right: parent.right
+          margin-left: 8
+          text-align: left
+          ttf-font: almendra-bold
+          ttf-font-size: 18
+          color: #3a2a18
+
+        Label
+          id: dishEffect
+          anchors.top: dishName.bottom
+          anchors.left: dishName.left
+          anchors.right: parent.right
+          text-align: left
+          ttf-font: fondamento
+          ttf-font-size: 13
+          color: #8a1f12
+
+        Label
+          id: ingredientsTitle
+          anchors.top: dish.bottom
+          anchors.left: parent.left
+          margin-top: 8
+          !text: tr('Ingredients')
+          text-auto-resize: true
+          ttf-font: almendra-bold
+          ttf-font-size: 14
+          color: #5a3a18
+
+        Panel
+          id: ingredients
+          anchors.top: ingredientsTitle.bottom
+          anchors.left: parent.left
+          anchors.right: parent.right
+          margin-top: 2
+          height: 110
+          layout:
+            type: grid
+            cell-size: 155 26
+            cell-spacing: 2
+            num-columns: 2
+            flow: true
+
+        Label
+          id: stepsTitle
+          anchors.top: ingredients.bottom
+          anchors.left: parent.left
+          margin-top: 2
+          !text: tr('How to cook it')
+          text-auto-resize: true
+          ttf-font: almendra-bold
+          ttf-font-size: 14
+          color: #5a3a18
+
+        Label
+          id: steps
+          anchors.top: stepsTitle.bottom
+          anchors.left: parent.left
+          anchors.right: parent.right
+          text-wrap: true
+          text-auto-resize: true
+          text-align: topleft
+          ttf-font: fondamento
+          ttf-font-size: 12
+          color: #3a2a18
+
+    // Right under the scroll area: the image's last 10 pixels are only its shadow.
+    Panel
+      id: cookPanel
+      anchors.top: scroll.bottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      margin-top: -10
+      margin-left: 6
+      margin-right: 6
+      height: 36
+
+      Button
+        id: minusButton
+        anchors.left: parent.left
+        anchors.verticalCenter: cookButton.verticalCenter
+        size: 16 18
+        text: -
+        @onClick: modules.game_cooking.changeAmount(-1)
+
+      Label
+        id: amountLabel
+        anchors.left: minusButton.right
+        anchors.verticalCenter: cookButton.verticalCenter
+        width: 30
+        text-align: center
+        text: 0
+
+      Button
+        id: plusButton
+        anchors.left: amountLabel.right
+        anchors.verticalCenter: cookButton.verticalCenter
+        size: 16 18
+        text: +
+        @onClick: modules.game_cooking.changeAmount(1)
+
+      Button
+        id: maxButton
+        anchors.left: plusButton.right
+        anchors.verticalCenter: cookButton.verticalCenter
+        margin-left: 4
+        size: 34 18
+        !text: tr('Max')
+        @onClick: modules.game_cooking.setMaxAmount()
+
+      Button
+        id: cookButton
+        anchors.left: maxButton.right
+        anchors.verticalCenter: parent.verticalCenter
+        margin-left: 10
+        size: 72 26
+        !text: tr('Cook')
+        @onClick: modules.game_cooking.cook()
+
+      Label
+        id: failLabel
+        anchors.top: parent.top
+        anchors.right: parent.right
+        text-auto-resize: true
+
+      Label
+        id: experienceLabel
+        anchors.top: failLabel.bottom
+        anchors.right: parent.right
+        text-auto-resize: true
+
+      Label
+        id: missingLabel
+        anchors.top: experienceLabel.bottom
+        anchors.right: parent.right
+        text-auto-resize: true
+        color: #f55e5e
+
+  HorizontalSeparator
+    id: separator
+    anchors.bottom: parent.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-bottom: 28
+
+  Button
+    anchors.bottom: parent.bottom
+    anchors.right: parent.right
+    width: 60
+    !text: tr('Close')
+    @onClick: modules.game_cooking.hide()

@@ -511,6 +511,9 @@ function showOffers(id)
 
             if offersCache[i].style then
                 showStyleOffer(outfit, offersCache[i].style)
+            elseif offersCache[i].picture then
+                image:show()
+                image:setImageSource("/game_shop/images/" .. offersCache[i].picture)
             elseif type(offersCache[i].id) == "string" then
                 image:show()
                 image:setImageSource("/game_shop/images/" .. offersCache[i].id)
@@ -621,6 +624,9 @@ function updateDescription(self)
     clearStyles(outfit)
     if self.data.style then
         showStyleOffer(outfit, self.data.style)
+    elseif self.data.picture then
+        image:show()
+        image:setImageSource("/game_shop/images/" .. self.data.picture)
     elseif type(self.data.id) == "string" then
         image:show()
         image:setImageSource("/game_shop/images/" .. self.data.id)

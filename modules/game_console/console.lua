@@ -2702,7 +2702,7 @@ function returnChat()
     local children = gameBottomPanel:getChildren()
     for _, child in pairs(children) do
         if child:getId() == "cooldownWindow" then
-            child:setVisible(modules.client_options.getOption('showSpellCooldowns'))
+            modules.game_cooldown.refreshVisibility()
         else
             child:setVisible(true)
         end
@@ -2915,7 +2915,7 @@ function toggleReadOnlyMode()
         readOnlyPanel:hide()
         readOnlyButton:setText("")
         readOnlyButton:setIcon("/images/game/console/readOnly")
-        readOnlyButton:setImageSource("")
+        readOnlyButton:setOn(false)
         activeactiveReadOnlyTabName = ""
         readOnlyButton:setWidth(readOnlyButton.tabWidth)
     else
@@ -2928,7 +2928,7 @@ function toggleReadOnlyMode()
         readOnlyPanel:addAnchor(AnchorRight, "parent", AnchorRight)
         readOnlyButton:removeAnchor(AnchorLeft)
         readOnlyButton:setIcon("")
-        readOnlyButton:setImageSource("/images/ui/console_button")
+        readOnlyButton:setOn(true)
     end
     readOnlyModeEnabled = not readOnlyModeEnabled
 end

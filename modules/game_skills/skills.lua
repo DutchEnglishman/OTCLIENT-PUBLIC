@@ -250,14 +250,15 @@ local function onMiningSkill(protocol, opcode, buffer)
     setSkillPercent(MINING_SKILL_ROW, percent, tr('You have %s percent to go', 100 - percent))
 end
 
--- Alchemy and farming, "alchemy=<level>:<percent>;farming=<level>:<percent>",
+-- Alchemy, farming and cooking, "alchemy=<level>:<percent>;farming=...;cooking=...",
 -- from Professions.send (OTSERV data/professions/professions.lua) at login and
--- whenever either gains experience.
+-- whenever any of them gains experience.
 PROFESSIONS_OPCODE = 88
 
 local PROFESSION_ROWS = {
     alchemy = 'alchemySkill',
-    farming = 'farmingSkill'
+    farming = 'farmingSkill',
+    cooking = 'cookingSkill'
 }
 
 local function onProfessions(protocol, opcode, buffer)

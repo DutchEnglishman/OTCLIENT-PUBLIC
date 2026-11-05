@@ -424,7 +424,8 @@ Panel
     anchors.top: parent.top
     margin-right: 5
     size: 96 18
-    image-clip: 0 0 96 18
+    image-source: /images/ui/console_button
+    image-clip: 0 18 96 18
     icon: /images/game/console/readOnly
     color: $textBright
     font: verdana-11px-rounded

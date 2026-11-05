@@ -450,13 +450,12 @@ end
 
 -- Timed effects on a tile, opcode 73: "on,x,y,z,<effectId>,<remainingMs>"
 -- attaches the effect and lets it run out on its own after remainingMs;
--- "off,x,y,z,<effectId>" ends it early. Used for the Tainted and Corrupted
--- spawn portals (OTSERV global.lua, MonsterVariants.spawnWithEffect): a
--- looping attached effect has no seam, where the same dat effect replayed
--- as a magic effect goes dark between plays. The server repeats "on" every
--- second with the time left, so a player who walks up halfway through sees
--- the portal for the rest of its life; a repeat for an effect already on
--- the tile is ignored, its timer was set by the first one.
+-- "off,x,y,z,<effectId>" ends it early. A sender that repeats "on" every
+-- second with the time left lets a player who walks up halfway through see
+-- the effect for the rest of its life; a repeat for an effect already on
+-- the tile is ignored, its timer was set by the first one. The Tainted and
+-- Corrupted spawn portals (40, 41) arrive this way but are played as a
+-- sequence of their own, see SPAWN_PORTALS.
 --
 -- remainingMs 0 means "held": the effect stays for as long as the server
 -- keeps repeating "on" and is dropped TILE_HOLD_TTL_MS after the last
@@ -630,6 +629,95 @@ local function dropTileEffect(pos, effectId)
         tile:detachEffectById(effectId)
     end
     heldTileEffects[tileEffectKey(pos, effectId)] = nil
+end
+
+-- The Tainted and Corrupted spawn portals, effects 40 and 41: the server
+-- sends a plain timed "on" with the time left until the monster steps out,
+-- and the client plays three textures in turn (make_spawn_portals.ps1): it
+-- opens, loops, and explodes so the blast lands as the monster appears,
+-- with the teleport sparkle in green on top (the server sends that monster
+-- without the blue one). A player who walks up halfway gets the repeat, and
+-- starts wherever the portal is by then. The lengths mirror the textures'
+-- own frame counts.
+local SPAWN_PORTAL_OPEN_MS = 3000
+local SPAWN_PORTAL_BLAST_MS = 200 -- the blast is the explosion's third frame
+local SPAWN_PORTAL_EXPLODE_MS = 1100
+local SPAWN_PORTAL_APPEAR_MS = 600
+local SPAWN_PORTALS = {
+    [40] = { open = 897, loop = 898, explode = 899, appear = 903 },
+    [41] = { open = 900, loop = 901, explode = 902, appear = 904 },
+}
+-- "x,y,z:effectId" -> {pos, parts, events}
+local spawnPortals = {}
+
+local function attachSpawnPortalPart(pos, effectId, durationMs)
+    local tile = g_map.getTile(pos)
+    local effect = g_attachedEffects.getById(effectId)
+    if not tile or not effect then
+        return
+    end
+    effect:setDuration(durationMs)
+    tile:attachEffect(effect)
+end
+
+local function detachSpawnPortalParts(pos, ids)
+    local tile = g_map.getTile(pos)
+    if tile then
+        for _, id in ipairs(ids) do
+            tile:detachEffectById(id)
+        end
+    end
+end
+
+local function spawnPortalOff(key)
+    local portal = spawnPortals[key]
+    if not portal then
+        return
+    end
+    for _, event in ipairs(portal.events) do
+        removeEvent(event)
+    end
+    detachSpawnPortalParts(portal.pos, { portal.parts.open, portal.parts.loop, portal.parts.explode, portal.parts.appear })
+    spawnPortals[key] = nil
+end
+
+local function spawnPortalOn(pos, effectId, remainingMs)
+    local key = tileEffectKey(pos, effectId)
+    if spawnPortals[key] or not g_map.getTile(pos) then
+        return
+    end
+    local parts = SPAWN_PORTALS[effectId]
+    local portal = { pos = pos, parts = parts, events = {} }
+    spawnPortals[key] = portal
+
+    -- Each part is taken off by the next one; the durations only make sure
+    -- nothing outlives a lost event.
+    local explodeIn = math.max(0, remainingMs - SPAWN_PORTAL_BLAST_MS)
+    if explodeIn >= SPAWN_PORTAL_OPEN_MS then
+        attachSpawnPortalPart(pos, parts.open, SPAWN_PORTAL_OPEN_MS + 500)
+        table.insert(portal.events, scheduleEvent(function()
+            detachSpawnPortalParts(pos, { parts.open })
+            attachSpawnPortalPart(pos, parts.loop, explodeIn - SPAWN_PORTAL_OPEN_MS + 500)
+        end, SPAWN_PORTAL_OPEN_MS))
+    elseif explodeIn > 0 then
+        attachSpawnPortalPart(pos, parts.loop, explodeIn + 500)
+    end
+    table.insert(portal.events, scheduleEvent(function()
+        detachSpawnPortalParts(pos, { parts.open, parts.loop })
+        attachSpawnPortalPart(pos, parts.explode, SPAWN_PORTAL_EXPLODE_MS)
+    end, explodeIn))
+    table.insert(portal.events, scheduleEvent(function()
+        attachSpawnPortalPart(pos, parts.appear, SPAWN_PORTAL_APPEAR_MS)
+    end, explodeIn + SPAWN_PORTAL_BLAST_MS))
+    table.insert(portal.events, scheduleEvent(function()
+        spawnPortals[key] = nil
+    end, explodeIn + math.max(SPAWN_PORTAL_EXPLODE_MS, SPAWN_PORTAL_BLAST_MS + SPAWN_PORTAL_APPEAR_MS)))
+end
+
+local function clearSpawnPortals()
+    for key in pairs(spawnPortals) do
+        spawnPortalOff(key)
+    end
 end
 
 -- Lord Morvane's throws (OTSERV data/scripts/boss_skills/morvane_throws.lua)
@@ -1795,10 +1883,18 @@ local function onTileEffectOpcode(protocol, opcode, buffer)
     end
 
     local pos = { x = tonumber(x), y = tonumber(y), z = tonumber(z) }
-    if action == 'off' then
-        dropTileEffect(pos, tonumber(effectId))
+    local id = tonumber(effectId)
+    local ms = tonumber(remainingMs) or 0
+    if SPAWN_PORTALS[id] then
+        if action == 'off' then
+            spawnPortalOff(tileEffectKey(pos, id))
+        elseif action == 'on' and ms > 0 then
+            spawnPortalOn(pos, id, ms)
+        end
+    elseif action == 'off' then
+        dropTileEffect(pos, id)
     elseif action == 'on' then
-        holdTileEffect(pos, tonumber(effectId), tonumber(remainingMs) or 0)
+        holdTileEffect(pos, id, ms)
     end
 end
 
@@ -1856,6 +1952,7 @@ function controller:onGameEnd()
     ProtocolGame.unregisterExtendedOpcode(TILE_EFFECT_OPCODE)
     shines = {}
     heldTileEffects = {}
+    clearSpawnPortals()
     tetherOff()
     clearBallRuns()
     clearBlazeRuns()

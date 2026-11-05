@@ -225,7 +225,26 @@ function terminate()
     cooldownWindow:destroy()
 end
 
-function setSpellCooldownsVisible(visible)
+local cooldownsVisible = false
+local boostsShown = false
+
+-- The strip also carries game_globalboosts' badges on its right, so it stays up
+-- while a boost runs even with the spell cooldowns switched off.
+function refreshVisibility()
+    local visible = cooldownsVisible or boostsShown
     cooldownWindow:setVisible(visible)
     cooldownWindow:setHeight(visible and 24 or 0)
+end
+
+function setSpellCooldownsVisible(visible)
+    cooldownsVisible = visible
+    for _, id in ipairs({'groupIconAttack', 'progressRectAttack', 'groupIconHealing', 'progressRectHealing', 'separator', 'cooldownPanel'}) do
+        cooldownWindow:getChildById(id):setVisible(visible)
+    end
+    refreshVisibility()
+end
+
+function setBoostsShown(shown)
+    boostsShown = shown
+    refreshVisibility()
 end

@@ -873,102 +873,29 @@ BosstiaryItem < UIWidget
   text-align: top
   text-offset: 0 4
   color: #919191
-  UIWidget
-    id: TypeIcon
-    anchors.left: parent.left
-    anchors.top: parent.top
-    margin-left: 7
-    margin-top: 22
-    image-source: images/boss/icon_bane
   ProgressBackground
-    id: ProgressBorder2
+    id: KillsBox
     anchors.horizontalCenter: parent.horizontalCenter
     anchors.bottom: parent.bottom
-    margin-bottom: 20
-    size: 47 14
-  ProgressBackground
-    id: ProgressBorder1
-    anchors.right: ProgressBorder2.left
-    anchors.bottom: ProgressBorder2.bottom
-    margin-right: 2
-    size: 47 14
-  ProgressBackground
-    id: ProgressBorder3
-    anchors.left: ProgressBorder2.right
-    anchors.bottom: ProgressBorder2.bottom
-    margin-left: 2
-    size: 47 14
-  UIWidget
-    id: ProgressBack
-    anchors.left: ProgressBorder1.left
-    anchors.bottom: ProgressBorder2.bottom
-    height: 12
-    phantom: true
-    image-source: /game_cyclopedia/images/bestiary/fill
-  UIWidget
-    id: ProgressBack33
-    anchors.left: ProgressBorder2.left
-    anchors.bottom: ProgressBorder2.bottom
-    height: 12
-    phantom: true
-    image-source: /game_cyclopedia/images/bestiary/fill
-  UIWidget
-    id: ProgressBack55
-    anchors.left: ProgressBorder3.left
-    anchors.bottom: ProgressBorder2.bottom
-    height: 12
-    phantom: true
-    image-source: /game_cyclopedia/images/bestiary/fill
-  UIWidget
-    anchors.left: ProgressBorder1.right
-    anchors.top: ProgressBorder1.top
-    image-source: /images/ui/progress-separator
-    phantom: true
-  UIWidget
-    anchors.left: ProgressBorder2.right
-    anchors.top: ProgressBorder1.top
-    image-source: /images/ui/progress-separator
-    phantom: true
+    margin-bottom: 12
+    size: 145 14
   Label
     id: ProgressValue
-    anchors.centerIn: ProgressBorder2
+    anchors.centerIn: KillsBox
     text-auto-resize: true
     !text: tr('0')
-  UIWidget
-    id: bronzeStar
-    anchors.top: ProgressBorder1.bottom
-    anchors.horizontalCenter: ProgressBorder1.horizontalCenter
-    margin-top: 3
-    image-source: images/boss/icon_star_dark
-  UIWidget
-    id: silverStar
-    anchors.top: ProgressBorder2.bottom
-    anchors.horizontalCenter: ProgressBorder2.horizontalCenter
-    margin-top: 3
-    margin-right: 5
-    image-source: images/boss/icon_star_dark
-    image-repeated: true
-    width: 18
-  UIWidget
-    id: goldStar
-    anchors.top: ProgressBorder3.bottom
-    anchors.horizontalCenter: ProgressBorder3.horizontalCenter
-    margin-top: 3
-    image-source: images/boss/icon_star_dark
-    image-repeated: true
-    width: 27
   Label
     id: KillsLabel
-    anchors.left: ProgressBorder1.left
-    anchors.bottom: ProgressBorder1.top
+    anchors.left: KillsBox.left
+    anchors.bottom: KillsBox.top
     margin-bottom: 5
     !text: tr('Total Kills')
     text-auto-resize: true
     color: #C1C1C1
   CheckBox
     id: TrackCheck
-    anchors.right: ProgressBorder3.right
-    anchors.bottom: ProgressBorder1.top
+    anchors.right: KillsBox.right
+    anchors.bottom: KillsBox.top
     margin-bottom: 5
     !text: tr('Track')
     text-auto-resize: true
