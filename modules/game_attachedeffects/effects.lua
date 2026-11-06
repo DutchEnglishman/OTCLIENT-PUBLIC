@@ -842,3 +842,23 @@ AttachedEffectManager.register(896, 'Rift risen dead', '/images/game/effects/rif
     offset = { 0, 0, true },
     drawOrder = 4
 })
+
+-- 910-921: the pickaxe swinging onto a mining node (OTSERV data/mining/mining.lua),
+-- 910 + 2 * tier + side, tier 0 copper .. 5 rune, side 0 when the player stands
+-- west of the node (or straight north/south), 1 east. 64x56, laid on the node's
+-- tile, which is x 16-47, rows 24-55.
+for t, tier in ipairs({ 'copper', 'iron', 'gold', 'mithril', 'adamant', 'rune' }) do
+    for s, side in ipairs({ 'west', 'east' }) do
+        AttachedEffectManager.register(910 + 2 * (t - 1) + (s - 1), 'Mining swing ' .. tier .. ' ' .. side,
+            '/images/game/effects/mining/swing_' .. tier .. '_' .. side, ThingExternalTexture, {
+                offset = { 16, 24, true },
+                drawOrder = 4
+            })
+    end
+end
+-- 922: a firework on the player's tile when mining gives something besides the
+-- ore. 64x64, the tile is the bottom-right square.
+AttachedEffectManager.register(922, 'Mining find firework', '/images/game/effects/mining/find_firework', ThingExternalTexture, {
+    offset = { 32, 32, true },
+    drawOrder = 4
+})

@@ -1838,6 +1838,11 @@ local function onTileEffectOpcode(protocol, opcode, buffer)
         onChain(buffer)
         return
     end
+    local bx, by, bz, barPercent, barMs = buffer:match('^bar,(%d+),(%d+),(%d+),(%d+),(%d+)$')
+    if bx then
+        TileBars.set({ x = tonumber(bx), y = tonumber(by), z = tonumber(bz) }, tonumber(barPercent), tonumber(barMs))
+        return
+    end
     if buffer:sub(1, 6) == 'glide,' then
         onGlide(buffer)
         return
@@ -1953,6 +1958,7 @@ function controller:onGameEnd()
     shines = {}
     heldTileEffects = {}
     clearSpawnPortals()
+    TileBars.clear()
     tetherOff()
     clearBallRuns()
     clearBlazeRuns()

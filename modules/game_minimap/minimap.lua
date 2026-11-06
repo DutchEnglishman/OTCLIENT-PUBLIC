@@ -3,6 +3,12 @@ local iconTopMenu = nil
 local minimapWidget = nil -- bot fix
 local otmm = true
 local WORLD_MINIMAP_FILE = '/minimap/world.otmm'
+-- Tiles taken out of world.otmm after players had already merged them into their own map
+-- (OTSERV tools/generate_revealed_minimap.ps1 writes it). Bump FORGET_VERSION whenever the
+-- file changes, so every client forgets them once more.
+local FORGET_MINIMAP_FILE = '/minimap/forget.otmm'
+local FORGET_VERSION = 1
+local FORGET_SETTING = 'minimapForgetVersion'
 local oldPos = nil
 local fullscreenWidget
 local fullscreenControls
@@ -253,6 +259,16 @@ function mapController:onGameStart()
 
     if g_resources.fileExists(minimapFile) then
         loadFnc(minimapFile)
+    end
+
+    -- Once per FORGET_VERSION, and only on an exe that has forgetOtmm: an older one leaves
+    -- the setting alone, so the client that does have it still runs it.
+    if otmm and g_minimap.forgetOtmm and g_settings.getNumber(FORGET_SETTING) < FORGET_VERSION
+        and g_resources.fileExists(FORGET_MINIMAP_FILE) and g_minimap.forgetOtmm(FORGET_MINIMAP_FILE) then
+        -- Saved now rather than at logout, so a crash cannot keep the setting and lose the map.
+        g_minimap.saveOtmm(minimapFile)
+        g_settings.set(FORGET_SETTING, FORGET_VERSION)
+        g_settings.save()
     end
 
     -- The world as it was when data/minimap/world.otmm was generated

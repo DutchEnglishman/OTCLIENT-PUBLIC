@@ -2350,7 +2350,10 @@ end
 function onIncreaseRightPanels()
     rightIncreaseSidePanels:setEnabled(false)
     rightDecreaseSidePanels:setEnabled(true)
-    modules.client_options.setOption('showRightExtraPanel', true)
+    -- Forced: extended view shuts the panel without clearing the saved option,
+    -- so a client that logged out with it open reads true here and an unforced
+    -- set would skip the action that opens it.
+    modules.client_options.setOption('showRightExtraPanel', true, true)
     -- Update action bars when right extra panel is shown
     if modules.game_actionbar and modules.game_actionbar.updateVisibleWidgetsExternal then
         addEvent(function()
