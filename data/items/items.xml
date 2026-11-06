@@ -2831,7 +2831,7 @@
 	</item>
 	<item id="2304" article="a" name="great fireball rune">
 		<attribute key="type" value="rune" />
-		<attribute key="runeSpellName" value="adori mas flam" />
+		<attribute key="runeSpellName" value="adori gran flam" />
 		<attribute key="weight" value="52" />
 		<attribute key="charges" value="4" />
 	</item>
