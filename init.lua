@@ -118,18 +118,15 @@ if ENABLE_SERVERS then
         }
     }
 
-    -- The beta server (OTSERV-BETA), listed only in a dev build (otclient_dev.exe) so it can
-    -- be tested before players are pointed at it; the signed release never shows it. Same
-    -- dev-build test as UPDATER_ENABLED below.
-    if g_scriptIntegrity and not g_scriptIntegrity.isEnforced() then
-        Servers_init["5.161.162.43"] = {
-            name = "Beta",
-            port = 7171,
-            protocol = 860,
-            httpLogin = false,
-            useAuthenticator = false
-        }
-    end
+    -- The beta server (OTSERV-BETA). Both entries share this client's Tibia.dat/.spr, so
+    -- they only work side by side while the two servers run identical client data.
+    Servers_init["5.161.162.43"] = {
+        name = "Beta",
+        port = 7171,
+        protocol = 860,
+        httpLogin = false,
+        useAuthenticator = false
+    }
 end
 
 g_app.setName("The Shattered Realms");
