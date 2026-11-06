@@ -82,10 +82,10 @@ local ENABLE_SERVERS = true
 -- a new world opens. Nothing else should spell it out: read WORLD_NAME rather
 -- than repeating the string, or the next edition ships under two names.
 --
--- The server keeps its own copy in config.lua (serverName), which is what the
--- character list's World column shows and what the status protocol advertises.
--- The two are not wired together, so a new edition has to change both.
-WORLD_NAME = "Shattered Realm"
+-- The character list's World column shows the dropdown name of the server logged
+-- into (getCharacterWorldLabel, client_entergame/characterlist.lua), not the
+-- server's own config.lua serverName, which only the status protocol advertises.
+WORLD_NAME = "Test"
 
 Servers_init = {}
 
@@ -102,7 +102,7 @@ if ENABLE_SERVERS then
     -- version field on the screen any more, so an entry here is the only
     -- way to reach a server.
     -- @table Servers_init
-    -- @field name Text shown in the dropdown; WORLD_NAME above, not a literal
+    -- @field name Text shown in the dropdown and in the character list's World column
     -- @field port TCP port of the login server
     -- @field protocol Client version to speak
     -- @field httpLogin Whether the login goes over HTTP instead of the game protocol
@@ -123,7 +123,7 @@ if ENABLE_SERVERS then
     -- dev-build test as UPDATER_ENABLED below.
     if g_scriptIntegrity and not g_scriptIntegrity.isEnforced() then
         Servers_init["5.161.162.43"] = {
-            name = WORLD_NAME .. " (Beta)",
+            name = "Beta",
             port = 7171,
             protocol = 860,
             httpLogin = false,

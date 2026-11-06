@@ -273,7 +273,6 @@ function EnterGame.showPanels()
     if g_modules.getModule("client_bottommenu"):isLoaded()  then
         modules.client_bottommenu.show()
     end
-    modules.client_topmenu.show()
 end
 
 

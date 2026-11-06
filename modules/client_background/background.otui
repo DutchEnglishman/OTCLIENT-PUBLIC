@@ -22,8 +22,14 @@ Panel
     color: #ffffff
     font: verdana-11px-monochrome
 
-  UIParticles
-    id: particles
-    effect: background-effect
-    anchors.fill: parent
+  // title.png is 1228x344, drawn at 88%; keep that ratio if it has to shrink.
+  UIWidget
+    id: titleImage
+    image-source: /images/title/title
+    image-smooth: true
+    size: 1081 303
+    anchors.top: parent.top
+    anchors.horizontalCenter: parent.horizontalCenter
+    margin-top: -58
     phantom: true
+    focusable: false

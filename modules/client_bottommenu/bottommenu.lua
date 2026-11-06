@@ -11,6 +11,7 @@ local showOffWindow
 
 local eventSchedulerTimestamp
 local eventSchedulerCalendar
+local scheduleRefreshEvent
 local eventSchedulerCalendarYearIndex
 local eventSchedulerCalendarMonth
 
@@ -19,20 +20,50 @@ local monsterOutfit
 local monsterImage
 local bossOutfit
 local bossImage
+local creatureName
+local bossName
+local nameFont
 
 local CREATURE_BONUS_TEXT = "Today's boosted creature: %s\n\n\tBoosted creatures yield more experience\n points, carry more loot than usual\n and respawn at a faster rate."
 local BOSS_BONUS_TEXT = "Today's boosted boss: %s\n\n\tBoosted boss contain more loot and\n count more kills for your bosstiary."
 
+-- One is picked at random each time the login screen opens.
 local default_info = {
-    -- hint 1
     {
         image = "images/randomhint",
-        Title = "Enabling Boosted Creature Panel",
-        description = "Boosted creatures panel requires configuring a webservice (init.lua) and preloading a client version by either setting one server in Servers_init (init.lua) or by altering entergame.lua.\n\nFor more hints, visit:\t\t https://github.com/mehah/otclient/wiki"
+        Title = "Your Mailbox",
+        description = "All mail you receive lands in the mailbox next to your depot chest. Coin shop items that don't fit in your backpack go there too."
     },
-
-    -- hint 2
-    -- {image = "image of label", Title = "title", description = "your hint here"},
+    {
+        image = "images/randomhint",
+        Title = "The Market",
+        description = "Every depot locker has a market. Buy and sell items with other players for gold or coins."
+    },
+    {
+        image = "images/randomhint",
+        Title = "Spells Level Up",
+        description = "Every spell you cast counts toward its next level, up to level 5. Each level makes the spell stronger."
+    },
+    {
+        image = "images/randomhint",
+        Title = "Daily, Weekly and Monthly Tasks",
+        description = "The Task Master hands out daily, weekly and monthly hunting tasks. They pay out task points to spend in the task shop."
+    },
+    {
+        image = "images/randomhint",
+        Title = "Follow Your Quests",
+        description = "Open the Quest channel (Open a new channel) to see every new quest and mission step as it happens. The Raid channel announces raids."
+    },
+    {
+        image = "images/randomhint",
+        Title = "Place a Bounty",
+        description = "Say !hunt <name>, <crystals> to put a bounty on a player. Whoever kills them collects every open bounty at once."
+    },
+    {
+        image = "images/randomhint",
+        Title = "Boosted Creature",
+        description = "Hover the boosted creature and boss on the right to see today's bonuses. Hunting them pays off more than usual."
+    },
 }
 
 function init()
@@ -57,6 +88,9 @@ function init()
     boostedWindow = bottomMenu:recursiveGetChildById('boostedWindow')
     monsterOutfit = boostedWindow:recursiveGetChildById('creature')
     bossOutfit = boostedWindow:recursiveGetChildById('boss')
+    creatureName = boostedWindow:recursiveGetChildById('creatureName')
+    bossName = boostedWindow:recursiveGetChildById('bossName')
+    nameFont = creatureName:getFont()
 
 --  if not Services.status and default_info then
     if default_info then
@@ -89,6 +123,10 @@ function init()
 end
 
 function terminate()
+    if scheduleRefreshEvent then
+        removeEvent(scheduleRefreshEvent)
+        scheduleRefreshEvent = nil
+    end
     bottomMenu:destroy()
     calendarWindow:destroy()
 end
@@ -319,21 +357,51 @@ function reloadEventsSchedulerCalender()
         end
     end
 
+    refreshActiveAndUpcoming()
+end
+
+-- Active and Upcoming go by the events' own start and end times rather than by
+-- calendar day, so an event starting at 21:00 is Upcoming until then and moves
+-- to Active on the minute: the schedule is fetched once, at startup, so the
+-- panel re-sorts itself at the next start or end it knows of.
+function refreshActiveAndUpcoming()
+    if scheduleRefreshEvent then
+        removeEvent(scheduleRefreshEvent)
+        scheduleRefreshEvent = nil
+    end
+
     activeScheduleEvent:clearEvents()
-    local currentDay = getCalendarDays(os.time(), os.time())
-    if #currentDay > 0 then
-        for _, event in ipairs(currentDay[1]) do
+    upcomingScheduleEvent:clearEvents()
+
+    local now = os.time()
+    local today = os.date('*t', now)
+    -- Upcoming is anything starting before tomorrow ends, as it was by day.
+    local upcomingUntil = os.time({year = today.year, month = today.month, day = today.day + 2, hour = 0})
+    -- At midnight the next day's events come into that window.
+    local nextChange = os.time({year = today.year, month = today.month, day = today.day + 1, hour = 0})
+
+    for _, info in ipairs(eventSchedulerCalendar) do
+        local event = {
+            active = (info.colorlight .. "ff"),
+            inactive = (info.colordark .. "ff"),
+            description = info.description,
+            priority = info.displaypriority,
+            season = info.isseasonal,
+            name = info.name,
+            special = info.specialevent
+        }
+        if info.startdate <= now and now < info.enddate then
             activeScheduleEvent:addScheduleEvent(event, true, onClickOnCalendar)
+            nextChange = math.min(nextChange, info.enddate)
+        elseif info.startdate > now and info.startdate < upcomingUntil then
+            upcomingScheduleEvent:addScheduleEvent(event, false, onClickOnCalendar)
+        end
+        if info.startdate > now then
+            nextChange = math.min(nextChange, info.startdate)
         end
     end
 
-    upcomingScheduleEvent:clearEvents()
-    local nextDay = getCalendarDays(os.time() + 86400, os.time() + 86400)
-    if #nextDay > 0 then
-        for _, event in ipairs(nextDay[1]) do
-            upcomingScheduleEvent:addScheduleEvent(event, false, onClickOnCalendar)
-        end
-    end
+    scheduleRefreshEvent = scheduleEvent(refreshActiveAndUpcoming, (nextChange - now) * 1000 + 1000)
 end
 
 function setEventsSchedulerCalender(calender)
@@ -511,9 +579,30 @@ function onClickOnNextCalendar()
     reloadEventsSchedulerCurrentPage()
 end
 
+-- A name too wide for its half of the window drops to the small font, then is cut with "...";
+-- the outfit's tooltip still carries the full name.
+local function setBoostedName(label, name)
+    if not label or not name or name == '' then
+        return
+    end
+
+    label:setFont(nameFont)
+    label:setText(name)
+    if label:getTextSize().width <= label:getWidth() then
+        return
+    end
+
+    label:setFont('small-9px')
+    local shown = name
+    while #shown > 1 and label:getTextSize().width > label:getWidth() do
+        shown = shown:sub(1, -2)
+        label:setText(shown:gsub('%s+$', '') .. '...')
+    end
+end
+
 -- (internal)
 -- set creature/boss to boosted slot
-local function applyToBoostedSlot(raceId, outfitWidget, imageWidget, fileName, tooltipText)
+local function applyToBoostedSlot(raceId, outfitWidget, imageWidget, nameLabel, fileName, tooltipText)
     -- check if raceId was provided in the JSON response
     if not raceId then
         return
@@ -535,6 +624,7 @@ local function applyToBoostedSlot(raceId, outfitWidget, imageWidget, fileName, t
     outfitWidget:setVisible(true)
     imageWidget:setVisible(false)
     outfitWidget:setTooltip(tr(tooltipText, raceData.name or "Unknown"))
+    setBoostedName(nameLabel, raceData.name)
 end
 
 -- The Shattered Realms' login.php sends the day's pick as database rows, outfit included
@@ -544,7 +634,7 @@ local BOOSTED_BONUSES = {
     boss = {{'exp_bonus', 'experience'}, {'loot_bonus', 'loot'}},
 }
 
-local function applyBoostedRow(kind, row, outfitWidget, imageWidget)
+local function applyBoostedRow(kind, row, outfitWidget, imageWidget, nameLabel)
     if type(row) ~= 'table' or (tonumber(row.looktype) or 0) == 0 then
         return
     end
@@ -566,6 +656,7 @@ local function applyBoostedRow(kind, row, outfitWidget, imageWidget)
         lines[#lines + 1] = string.format('+%d%% %s', tonumber(row[bonus[1]]) or 0, bonus[2])
     end
     outfitWidget:setTooltip(table.concat(lines, '\n'))
+    setBoostedName(nameLabel, row.name)
 end
 
 function setBoostedCreatureAndBoss(data)
@@ -574,8 +665,8 @@ function setBoostedCreatureAndBoss(data)
     end
 
     if data.creature ~= nil or data.boss ~= nil then
-        applyBoostedRow('creature', data.creature, monsterOutfit, monsterImage)
-        applyBoostedRow('boss', data.boss, bossOutfit, bossImage)
+        applyBoostedRow('creature', data.creature, monsterOutfit, monsterImage, creatureName)
+        applyBoostedRow('boss', data.boss, bossOutfit, bossImage, bossName)
         return
     end
 
@@ -586,8 +677,8 @@ function setBoostedCreatureAndBoss(data)
     -- before bosstiary was introduced, the webservice was sending creature race in 'raceid' field
     -- after bosstiary was added, it was changed to 'creatureraceid'
     -- this 'or' statement ensures backwards compatibility
-    applyToBoostedSlot(data.creatureraceid or data.raceid, monsterOutfit, monsterImage, fileName, CREATURE_BONUS_TEXT)
+    applyToBoostedSlot(data.creatureraceid or data.raceid, monsterOutfit, monsterImage, creatureName, fileName, CREATURE_BONUS_TEXT)
 
     -- boosted boss
-    applyToBoostedSlot(data.bossraceid, bossOutfit, bossImage, fileName, BOSS_BONUS_TEXT)
+    applyToBoostedSlot(data.bossraceid, bossOutfit, bossImage, bossName, fileName, BOSS_BONUS_TEXT)
 end

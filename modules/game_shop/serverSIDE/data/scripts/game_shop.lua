@@ -1,4 +1,4 @@
-local DONATION_URL = "https://github.com/mehah/otclient"
+local DONATION_URL = "https://shatteredrealms.net"
 local GAME_SHOP = nil
 local SECOND_CURRENCY_ENABLED = false
 

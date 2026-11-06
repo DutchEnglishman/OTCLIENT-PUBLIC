@@ -278,8 +278,13 @@ local function getPvpTypeText(pvpType)
     return nil
 end
 
+local function getWorldDisplayName(characterInfo)
+    local server = Servers_init and Servers_init[G.host]
+    return server and server.name or tostring(characterInfo.worldName or '')
+end
+
 local function getCharacterWorldLabel(characterInfo)
-    local worldName = tostring(characterInfo.worldName or '')
+    local worldName = getWorldDisplayName(characterInfo)
     if worldName == '' then
         return worldName
     end
@@ -810,7 +815,7 @@ function CharacterList.rebuildCharactersList()
                 elseif key == 'worldName' and showAppearance then
                     subWidget:setText(getCharacterWorldLabel(characterInfo))
                 else
-                    local text = value
+                    local text = key == 'worldName' and getWorldDisplayName(characterInfo) or value
                     if subWidget.baseText and subWidget.baseTranslate then
                         text = tr(subWidget.baseText, text)
                     elseif subWidget.baseText then

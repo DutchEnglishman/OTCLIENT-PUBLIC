@@ -14,8 +14,16 @@ local fpsLabel
 local pingLabel
 local topLeftYoutubeLink
 local topLeftDiscordLink
+local loginBar
+local loginFpsPill
+local loginFpsLabel
+local loginPlayersLabel
+local loginDiscordButton
+local loginYoutubeButton
 local url_discord = ""
 local url_youtube = ""
+local DEFAULT_DISCORD_URL = "https://discord.com/invite/theshatteredrealms"
+local DEFAULT_YOUTUBE_URL = "https://shatteredrealms.net" -- the homepage until there is a YouTube channel
 local lastSyncValue = -1
 local fpsEvent = nil
 local fpsMin = -1;
@@ -126,6 +134,15 @@ function init()
     topLeftYoutubeLink = topMenu:recursiveGetChildById('youtubeIcon')
     topLeftDiscordLink = topMenu:recursiveGetChildById('discordIcon')
 
+    -- The login screen's own chrome; the old bar above stays for Ctrl+Shift+T in game.
+    loginBar = g_ui.displayUI('loginbar')
+    loginFpsPill = loginBar:recursiveGetChildById('fpsPill')
+    loginFpsLabel = loginBar:recursiveGetChildById('fpsPillLabel')
+    loginPlayersLabel = loginBar:recursiveGetChildById('playersPillLabel')
+    loginDiscordButton = loginBar:recursiveGetChildById('discordButton')
+    loginYoutubeButton = loginBar:recursiveGetChildById('youtubeButton')
+    topMenu:hide()
+
     Keybind.new("UI", "Toggle Top Menu", "Ctrl+Shift+T", "")
     Keybind.bind("UI", "Toggle Top Menu", {
       {
@@ -149,6 +166,9 @@ function init()
             end)
         updateZoomButtons()
     end
+    -- login.php sends no links today, so these defaults are what the buttons open.
+    setLinkDiscord(nil)
+    setLinkYoutube(nil)
     if g_game.isOnline() then
         online()
     end
@@ -165,6 +185,8 @@ function terminate()
     })
 
     topMenu:destroy()
+    loginBar:destroy()
+    loginBar = nil
     if PingWidget and not PingWidget:isDestroyed() then
         PingWidget:destroy()
         PingWidget = nil
@@ -219,6 +241,7 @@ end
 
 function online()
     showGameButtons()
+    loginBar:hide()
 
     addEvent(function()
         if modules.game_interface.currentViewMode ~= 2 and g_game.isOnline() then
@@ -265,6 +288,7 @@ end
 
 function offline()
     hideGameButtons()
+    loginBar:show()
     pingLabel:hide()
     if pingRow then
         pingRow:hide()
@@ -304,6 +328,10 @@ function updateFps(fps)
             fpsLabel:removeTooltip()
         end
         fpsLabel:setText(text)
+    end
+
+    if loginFpsPill:isVisible() and loginBar:isVisible() then
+        loginFpsLabel:setText('FPS: ' .. fps)
     end
 
     local text = fps .. ' fps'
@@ -370,13 +398,16 @@ end
 
 function setFpsVisible(enable)
     fpsLabel:setVisible(enable)
+    loginFpsPill:setVisible(enable)
     if fpsRow then
         fpsRow:setVisible(enable)
     end
 end
 
 function setPlayersOnline(value)
-    topLeftOnlinePlayersLabel:setText(value .. " " .. tr('players online'))
+    local text = value .. " " .. tr('players online')
+    topLeftOnlinePlayersLabel:setText(text)
+    loginPlayersLabel:setText(text)
 end
 function setDiscordStreams(value)
     topLeftDiscordStreamersLabel:setText(value)
@@ -389,26 +420,33 @@ function setYoutubeViewers(value)
     topLeftYoutubeViewersLabel:setText(value)
 end
 
-function setLinkYoutube(value)
+local function linkOrDefault(value, default)
+    if type(value) == 'string' and value ~= '' then
+        return value
+    end
+    return default
+end
 
-    url_youtube = value
-    topLeftYoutubeLink.onClick = function()
-        if url_youtube then
+function setLinkYoutube(value)
+    url_youtube = linkOrDefault(value, DEFAULT_YOUTUBE_URL)
+    local onClick = function()
+        if url_youtube ~= '' then
             g_platform.openUrl(url_youtube)
         end
     end
-
+    topLeftYoutubeLink.onClick = onClick
+    loginYoutubeButton.onClick = onClick
 end
 
 function setLinkDiscord(value)
-
-    url_discord = value
-    topLeftDiscordLink.onClick = function()
-        if url_discord then
+    url_discord = linkOrDefault(value, DEFAULT_DISCORD_URL)
+    local onClick = function()
+        if url_discord ~= '' then
             g_platform.openUrl(url_discord)
         end
     end
-
+    topLeftDiscordLink.onClick = onClick
+    loginDiscordButton.onClick = onClick
 end
 
 function addLeftButton(id, description, icon, callback, front)
@@ -507,7 +545,8 @@ function getRightGameButtonsPanel()
 end
 
 function toggle()
-    if not topMenu then
+    -- The login screen has loginBar instead; the old bar would sit over it.
+    if not topMenu or not g_game.isOnline() then
         return
     end
 
@@ -542,8 +581,6 @@ function extendedView(extendedView)
         -- calls just below take them off the bar, and online() builds
         -- PingWidget on the map panel instead. Ctrl+Shift+T brings the bar back
         -- whenever it is wanted; hide() reclaims its 32px for the map.
-        --
-        -- The login screen keeps it: that is the only chrome there.
         hide()
 
         pingLabel:setVisible(false)
@@ -554,15 +591,8 @@ function extendedView(extendedView)
         topMenu.topLeftDiscord:hide()
         topMenu.topLeftYoutube:hide()
     else
-        -- The show is not redundant now that the bar is hidden in game: leaving
-        -- the game runs this branch (game_interface.hide -> setupViewMode(0)),
-        -- and nothing else puts the bar back. Without it a single login would
-        -- leave the login screen with no chrome at all for the rest of the run.
-        if g_game.isOnline() then
-            topMenu:hide()
-        else
-            topMenu:show()
-        end
+        -- Hidden in game and on the login screen alike, which has loginBar.
+        topMenu:hide()
         topMenu:addAnchor(AnchorHorizontalCenter, 'parent', AnchorHorizontalCenter)
         modules.game_interface.getRootPanel():addAnchor(AnchorTop, 'parent', AnchorTop)
         topMenu:setWidth(1020)

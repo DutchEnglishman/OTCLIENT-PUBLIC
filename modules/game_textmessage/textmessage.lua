@@ -367,23 +367,23 @@ function displayMessage(mode, text)
         MessageTypes[MessageModes.MonsterSay] = MessageSettings.consoleOrange
         MessageTypes[MessageModes.MonsterYell] = MessageSettings.consoleOrange
     end
-    -- Loot goes to the Loot tab and nowhere else -- no green flash across the
-    -- middle of the screen, no duplicate in Server Log.
+    -- Loot goes to Server Log for everyone and also to the Loot tab for
+    -- premium players. It never flashes on screen.
     --
     -- Matched on the text because protocol 860 has no loot message mode:
-    -- MessageModes.Loot is a 10.x addition, and the server sends loot as plain
-    -- MESSAGE_INFO_DESCR (OTSERV data/events/scripts/monster.lua), which
-    -- protocolcodes.cpp maps to MessageLook for version >= 840 -- the same mode
-    -- as "You see a ...". So the mode cannot tell them apart and the string is
-    -- the only handle. Matching is safe because that same server script is what
-    -- formats the string.
-    --
-    -- The tab is created on demand rather than only when the player opens the
-    -- Loot channel: falling through to normal handling is what put the line on
-    -- the green centre label, so there is no fallthrough left.
+    -- MessageModes.Loot is a 10.x addition. The server
+    -- (OTSERV Player.sendLootMessage, data/lib/core/player.lua) sends premium
+    -- players MESSAGE_INFO_DESCR (MessageModes.Look here) and everyone else
+    -- MESSAGE_STATUS_DEFAULT, so the mode carries premium and the text marks
+    -- the line as loot. The Server Log copy skips wantedInServerLog: a loot line
+    -- is always the player's own, and it names neither "you" nor the player.
     if text:find('^Loot of ') then
-        local lootTab = modules.game_console.ensureLootTab()
-        modules.game_console.addTabText(ItemsDatabase.setColorLootMessage(text), MessageSettings.loot, lootTab)
+        local coloredText = ItemsDatabase.setColorLootMessage(text)
+        modules.game_console.addText(coloredText, MessageSettings.loot, tr('Server Log'))
+        if mode == MessageModes.Look then
+            local lootTab = modules.game_console.ensureLootTab()
+            modules.game_console.addTabText(coloredText, MessageSettings.loot, lootTab)
+        end
         return
     end
 

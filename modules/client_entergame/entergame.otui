@@ -17,6 +17,9 @@ EnterGameWindow
   // 5, so the button landed 9px into the moulding. 258 puts its bottom flush with the
   // content box (bottom = height - padding-bottom) again.
   size: 280 258
+  // Centred 40px high (a centre anchor reads margin-top minus margin-bottom), clear of
+  // the knight's helmet in the login background.
+  margin-bottom: 40
   @onEnter: EnterGame.doLogin()
 
   Label

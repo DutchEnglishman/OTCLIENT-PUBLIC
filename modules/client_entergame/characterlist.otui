@@ -186,6 +186,8 @@ MainWindow
   id: charactersWindow
   !text: tr('Character List')
   visible: false
+  // The Enter Game window's 40px lift.
+  margin-bottom: 40
   @onEnter: CharacterList.doLogin()
   @onEscape: CharacterList.hide(true)
   @onSetup: |

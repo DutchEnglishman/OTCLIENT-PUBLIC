@@ -209,6 +209,94 @@ OfferDescriptionLabel < Label
   text-vertical-auto-resize: true
   color: $textColor
 
+# What a box can give (an offer's `preview`, OTSERV GameShop.boxPreview): per rarity a header
+# with its chance and how many the player owns, then a grid of the outfits in it.
+BoxRarityHeader < UIWidget
+  height: 20
+  margin-top: 6
+  focusable: false
+
+  Label
+    id: name
+    anchors.left: parent.left
+    anchors.top: parent.top
+    font: Verdana Bold-11px
+    text-auto-resize: true
+
+  Label
+    id: chance
+    anchors.left: prev.right
+    anchors.top: prev.top
+    margin-left: 6
+    color: #e0e0e0
+    text-auto-resize: true
+
+  Label
+    id: owned
+    anchors.right: parent.right
+    anchors.top: parent.top
+    color: #909090
+    text-auto-resize: true
+
+  UIWidget
+    id: line
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    height: 1
+
+BoxRarityGrid < UIWidget
+  margin-top: 4
+  focusable: false
+  layout:
+    type: grid
+    cell-size: 58 84
+    cell-spacing: 3
+    flow: true
+    fit-children: true
+
+BoxOutfitTile < UIWidget
+  background-color: #00000055
+  border-width: 1
+  focusable: false
+  @onClick: modules.game_shop.previewBoxOutfit(self)
+  $hover:
+    background-color: #ffffff22
+
+  UICreature
+    id: creature
+    anchors.top: parent.top
+    anchors.horizontalCenter: parent.horizontalCenter
+    size: 56 56
+    margin-top: 1
+    phantom: true
+    animate: true
+
+  Label
+    id: name
+    anchors.top: prev.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    margin: 0 2 2 2
+    text-align: top
+    text-wrap: true
+    font: verdana-9px-rounded
+    color: $textColor
+    phantom: true
+
+  Label
+    id: owned
+    anchors.top: parent.top
+    anchors.right: parent.right
+    margin: 2 3 0 0
+    text: Owned
+    font: small-9px
+    color: #44AD25
+    text-auto-resize: true
+    phantom: true
+    visible: false
+
 ShopBalanceWidget < FlatPanel
   image-color: #A0A0A0
   height: 21
@@ -344,6 +432,18 @@ OfferWidget < FlatPanel
     text-align: topLeft
     text-wrap: true
     color: $textColor
+
+  # An outfit offer this character already has (the offer's `owned`).
+  Label
+    id: owned
+    anchors.left: name.left
+    anchors.bottom: parent.bottom
+    margin-bottom: 8
+    text: Owned
+    color: #44AD25
+    text-auto-resize: true
+    phantom: true
+    visible: false
 
 MainWindow
   id: shopWindow

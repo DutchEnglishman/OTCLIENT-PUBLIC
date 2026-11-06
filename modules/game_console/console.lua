@@ -1041,13 +1041,12 @@ function addChannel(name, id)
     return tab
 end
 
--- Every loot line is routed to this tab and to nowhere else (game_textmessage
--- displayMessage), so it has to exist before the first kill rather than only
--- after the player picks Loot out of the channel list. Without it the loot text
--- fell through to the green centre label.
+-- Opened by a premium player's first loot line (game_textmessage
+-- displayMessage), not at login: only the server knows who is premium, and it
+-- says so through the loot line's message mode, so a free player never gets an
+-- empty Loot tab.
 --
--- Never focused: this runs on login and again on any kill where the tab has
--- gone missing, and neither is a moment to move the player off the tab they
+-- Never focused: a kill is not a moment to move the player off the tab they
 -- were reading.
 function ensureLootTab()
     local tab = getChannelTab(LOOT_CHANNEL_ID)
@@ -2577,8 +2576,6 @@ function consoleController:onGameStart()
             focusChainTo(consolePanel)
         end
     end)
-
-    ensureLootTab()
 
     -- open last channels
     local lastChannelsOpen = g_settings.getNode('lastChannelsOpen')

@@ -1,0 +1,98 @@
+LoginPill < UIWidget
+  height: 44
+  image-border: 20
+  layout:
+    type: horizontalBox
+    fit-children: true
+  focusable: false
+
+LoginPillLabel < Label
+  text-auto-resize: true
+  text-align: left
+  color: #EBE1C8
+  ttf-font: verdana-bold
+  ttf-font-size: 15
+  phantom: true
+
+// The PNGs are 128px renders of buttons.source.html, drawn at half size.
+LoginRoundButton < UIWidget
+  size: 64 64
+  image-smooth: true
+  opacity: 0.85
+  focusable: false
+  $hover:
+    opacity: 1.0
+
+UIWidget
+  id: loginBar
+  anchors.fill: parent
+  phantom: true
+  focusable: false
+
+  // A horizontalBox skips hidden children, so hiding the FPS pill moves the
+  // players pill into the corner.
+  UIWidget
+    id: loginPills
+    anchors.top: parent.top
+    anchors.left: parent.left
+    margin-top: 16
+    margin-left: 16
+    height: 44
+    phantom: true
+    focusable: false
+    layout:
+      type: horizontalBox
+      spacing: 8
+      fit-children: true
+
+    LoginPill
+      id: fpsPill
+      image-source: /images/login/fps_pill
+      padding-left: 15
+      padding-right: 15
+      visible: false
+
+      LoginPillLabel
+        id: fpsPillLabel
+        text: FPS: -
+
+    LoginPill
+      id: playersPill
+      image-source: /images/login/players_pill
+      // The dot reaches x=25; inside the 20px default it fell into the tiled
+      // middle and repeated through the text.
+      image-border-left: 30
+      padding-left: 34
+      padding-right: 16
+
+      LoginPillLabel
+        id: playersPillLabel
+        !text: '- ' .. tr('players online')
+
+  LoginRoundButton
+    id: settingsButton
+    image-source: /images/login/btn_settings
+    !tooltip: tr('Settings')
+    anchors.top: parent.top
+    anchors.right: parent.right
+    margin-top: 10
+    margin-right: 12
+    @onClick: modules.client_options.toggle()
+
+  LoginRoundButton
+    id: youtubeButton
+    image-source: /images/login/btn_youtube
+    !tooltip: tr('YouTube')
+    anchors.top: parent.top
+    anchors.right: prev.left
+    margin-top: 10
+    margin-right: 4
+
+  LoginRoundButton
+    id: discordButton
+    image-source: /images/login/btn_discord
+    !tooltip: tr('Discord')
+    anchors.top: parent.top
+    anchors.right: prev.left
+    margin-top: 10
+    margin-right: 4

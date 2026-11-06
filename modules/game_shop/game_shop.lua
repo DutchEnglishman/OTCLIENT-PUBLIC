@@ -330,6 +330,18 @@ function onGameShopFetchOffers(data)
         return
     end
     offers[data.category] = data.offers
+    -- The server re-sends a tab when what it owns changed (an outfit bought or unboxed): redraw
+    -- it in place if it is the one open, keeping the offer that was selected.
+    if selected and selected:getId() == data.category and gameShopWindow:getChildById("offers"):isVisible() then
+        local keep = selectedOffer and selectedOffer.data and selectedOffer.data.name
+        selectedOffer = nil
+        showOffers(data.category)
+        local again = keep and gameShopWindow:getChildById("offers"):getChildById("offersList"):getChildById(keep)
+        if again then
+            selectOffer(again)
+        end
+        return
+    end
     -- Opens whichever category is first in the sidebar. This used to test for
     -- the literal name "Premium Time", so a server whose first category is
     -- named anything else opened the window with nothing selected.
@@ -497,6 +509,7 @@ function showOffers(id)
             priceWidget:getChildById("value"):setText(comma_value(price))
 
             widget:getChildById("name"):setText(offersCache[i].name)
+            widget:getChildById("owned"):setVisible(offersCache[i].owned == true)
             widget:getChildById("count"):setText(offersCache[i].count .. "x")
             widget:setId(offersCache[i].name)
             widget.data = offersCache[i]
@@ -610,6 +623,8 @@ function updateDescription(self)
         additionalPriceWidget:hide()
     end
 
+    showBoxPreview(descriptionPanel, self.data.preview)
+
     local currentOutfit = g_game.getLocalPlayer():getOutfit()
     local imagePanel = offerDetails:getChildById("imagePanel")
     local image = imagePanel:getChildById("image")
@@ -691,6 +706,78 @@ function onQuantityChange(value)
     local buyButton = offerDetails:getChildById("buyButton")
     buyButton:setText(value > 1 and ("Buy " .. value) or "Buy")
     buyButton:setEnabled(affordable)
+
+    -- An outfit this character already has: the server would refuse it anyway.
+    if data.owned then
+        buyButton:setText("Owned")
+        buyButton:setEnabled(false)
+    end
+end
+
+-- The look every preview is drawn in: the player's own colours, both addons, no mount.
+local function previewLook(lookType)
+    local look = g_game.getLocalPlayer():getOutfit()
+    look.type = lookType
+    look.addons = 3
+    look.mount = 0
+    return look
+end
+
+-- Under an offer's description, what a box can give (OTSERV GameShop.boxPreview): each rarity
+-- with its chance and how many of it this character owns, then its outfits in its colour.
+-- Clicking one shows it large in the offer's picture.
+function showBoxPreview(descriptionPanel, preview)
+    local old = descriptionPanel:getChildById("boxPreview")
+    if old then
+        old:destroy()
+    end
+    if not preview or not preview.rarities then
+        return
+    end
+
+    local container = g_ui.createWidget("UIWidget", descriptionPanel)
+    container:setId("boxPreview")
+    container:setLayout(UIVerticalLayout.create(container))
+    container:getLayout():setFitChildren(true)
+
+    for _, rarity in ipairs(preview.rarities) do
+        local owned = 0
+        for _, outfit in ipairs(rarity.outfits) do
+            if outfit.owned then
+                owned = owned + 1
+            end
+        end
+
+        local header = g_ui.createWidget("BoxRarityHeader", container)
+        header:getChildById("name"):setText(rarity.name)
+        header:getChildById("name"):setColor(rarity.color)
+        header:getChildById("chance"):setText(rarity.chance)
+        header:getChildById("owned"):setText(owned .. "/" .. #rarity.outfits .. " owned")
+        header:getChildById("line"):setBackgroundColor(rarity.color)
+
+        local grid = g_ui.createWidget("BoxRarityGrid", container)
+        for _, outfit in ipairs(rarity.outfits) do
+            local tile = g_ui.createWidget("BoxOutfitTile", grid)
+            tile:setBorderColor(rarity.color)
+            tile:setTooltip(outfit.name .. " (" .. rarity.name .. ", " .. rarity.chance .. ")")
+            tile.lookType = outfit.lookType
+            tile:getChildById("creature"):setOutfit(previewLook(outfit.lookType))
+            tile:getChildById("name"):setText(outfit.name)
+            if outfit.owned then
+                tile:getChildById("owned"):show()
+                tile:getChildById("creature"):setOpacity(0.45)
+            end
+        end
+    end
+end
+
+function previewBoxOutfit(tile)
+    local imagePanel = gameShopWindow:getChildById("offers"):getChildById("offerDetails"):getChildById("imagePanel")
+    imagePanel:getChildById("image"):hide()
+    local outfit = imagePanel:getChildById("outfit")
+    clearStyles(outfit)
+    outfit:show()
+    outfit:setOutfit(previewLook(tile.lookType))
 end
 
 function onGameShopFetchDescription(data)
