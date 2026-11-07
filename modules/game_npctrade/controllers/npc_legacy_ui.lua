@@ -54,6 +54,7 @@ local ignoreEquipped = nil
 local showAllItems = nil
 local SHOW_ALL_ITEMS_SETTING = 'npctrade-show-all-items'
 local sellAllButton = nil
+local SELL_ALL_MAX_AMOUNT = 100
 
 local playerFreeCapacity = 0
 local playerMoney = 0
@@ -682,6 +683,7 @@ function checkSellAllTooltip()
         local data = getTradeItemData(key, SELL)
         if data then
             amount = getSellQuantityLegacy(data.ptr)
+            amount = math.min(amount, SELL_ALL_MAX_AMOUNT)
             if amount > 0 then
                 if data and amount > 0 then
                     info = info .. (not first and '\n' or '') .. amount .. ' ' .. data.name .. ' (' .. data.price *
@@ -730,10 +732,13 @@ function getBuyItemsLegacy()
     return tradeItems[BUY] or {}
 end
 
+-- One sell per item type, all sent at once: the server lets a burst of sells
+-- through (Player::consumeShopSellSlot). A sell carries at most 100 pieces
+-- (Game::playerSellItem), so a bigger stack sells 100 a click.
 function sellAllLegacy()
-    for itemid, item in pairs(playerItems) do
+    for itemid in pairs(playerItems) do
         local item = Item.create(itemid)
-        local amount = getSellQuantityLegacy(item)
+        local amount = math.min(getSellQuantityLegacy(item), SELL_ALL_MAX_AMOUNT)
         if amount > 0 then
             g_game.sellItem(item, amount, ignoreEquipped:isChecked())
         end

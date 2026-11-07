@@ -80,6 +80,15 @@ MessageSettings = {
         color = TextColors.white,
         screenTarget = 'statusLabel'
     },
+    -- OTSERV's MESSAGE_STATUS_CONSOLE_RED (18), which carries only "Your questlog
+    -- has been updated." when the same action already put a message on the
+    -- map centre (Player::addStorageValue, src/player.cpp).
+    statusRed = {
+        color = TextColors.red,
+        consoleTab = 'Server Log',
+        screenTarget = 'statusLabel',
+        consoleOption = 'showEventMessagesInConsole'
+    },
     private = {
         color = TextColors.lightblue,
         consoleTab = 'Local Chat',
@@ -163,7 +172,7 @@ MessageTypes = {
     [MessageModes.Warning] = MessageSettings.centerRed,
     [MessageModes.Look] = MessageSettings.centerGreen,
     [MessageModes.Loot] = MessageSettings.loot,
-    [MessageModes.Red] = MessageSettings.consoleRed,
+    [MessageModes.Red] = MessageSettings.statusRed,
     [MessageModes.Blue] = MessageSettings.consoleBlue,
     [MessageModes.PrivateFrom] = MessageSettings.private,
     [MessageModes.PrivateTo] = MessageSettings.privatePlayerToPlayer,

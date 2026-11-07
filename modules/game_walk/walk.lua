@@ -4,6 +4,7 @@ local walkEvent = nil
 local lastTurn = 0
 local nextWalkDir = nil
 local lastWalkDir = nil
+local takeoverDir = nil
 local lastCancelWalkTime = 0
 
 local TELEPORT_WALK_LOCK_MS = 50
@@ -162,15 +163,24 @@ local function walk(dir)
     -- branch returns without walking, so g_game.walk's onWalk never fires for it.
     g_game.dropChaseForManualWalk()
 
+    -- A key pressed during a click-walk is sent as a walk, not a stop: the
+    -- server swaps its path for this one step (Game::playerMove), so the key
+    -- takes over on the very next step. A stop finished that step, cancelled,
+    -- and locked the keys for one more before the key did anything. Sent once
+    -- per server step; the held key's repeats wait for onWalkFinish.
     local isAutoWalking = player:isAutoWalking()
     if isAutoWalking or player:isServerWalking() then
-        g_game.stop()
         if isAutoWalking then
             player:stopAutoWalk()
         end
-        player:lockWalk(player:getStepDuration() + 50)
+        if takeoverDir ~= dir then
+            takeoverDir = dir
+            modules.game_interface.lastManualWalk = g_clock.millis()
+            g_game.walk(dir)
+        end
         return
     end
+    takeoverDir = nil
 
     if not player:canWalk() then
         if lastWalkDir ~= dir then
@@ -324,6 +334,7 @@ end
 
 --- Handles the end of a walking event.
 local function onWalkFinish(player)
+    takeoverDir = nil
     if nextWalkDir then
         if not g_game.getFeature(GameAllowPreWalk) then
             walk(nextWalkDir)

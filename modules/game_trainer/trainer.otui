@@ -34,7 +34,7 @@ TrainerHint < Label
 // &save keeps the dock position and open state across sessions.
 MiniWindow
   id: trainerWindow
-  height: 178
+  height: 204
   &save: true
   // Overrides the base style's focusable: false. Without this the text fields
   // can never receive keyboard focus, however they are configured themselves.
@@ -67,12 +67,23 @@ MiniWindow
     id: contentsPanel
     padding: 6
 
-    TrainerCheck
-      id: autoEat
-      !text: tr('Auto eat food')
+    // The master switch: nothing below runs while it is off, and it can be on
+    // with nothing below filled in, when it only keeps the character awake.
+    // trainer.lua sets its text and colour from the saved state.
+    Button
+      id: masterToggle
       anchors.top: parent.top
       anchors.left: parent.left
       anchors.right: parent.right
+      height: 20
+
+    TrainerCheck
+      id: autoEat
+      !text: tr('Auto eat food')
+      anchors.top: masterToggle.bottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      margin-top: 6
 
     TrainerHint
       id: autoEatHint

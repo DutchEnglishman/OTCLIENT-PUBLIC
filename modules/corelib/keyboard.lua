@@ -217,8 +217,8 @@ end
 -- Enter, Tab, Backspace, arrows, Home/End, page keys) and F1-F12 and the
 -- NumLock-off numpad sit above 126, so windows keep their navigation keys and the
 -- traditional Tibia hotkey slots keep working while a field has focus. The
--- NumLock-on digits (Num0-Num9) sit above 126 too but do type a digit, so they
--- count as text.
+-- NumLock-on digits (Num0-Num9) and the numpad operators (NumPlus-NumDecimal)
+-- sit above 126 too but do type a character, so they count as text.
 --
 -- Ctrl/Alt/Meta exempt a combo, Shift does not: Shift+A still types an "A".
 --
@@ -226,8 +226,8 @@ end
 -- the handlers below (the chat line's onKeyPress in game_console) has to apply
 -- the same rule, or it reopens exactly this hole.
 function keyTypesText(keyCode, keyboardModifiers)
-    local typesDigit = keyCode >= KeyNumLock0 and keyCode <= KeyNumLock9
-    if not typesDigit and (keyCode < KeySpace or keyCode > KeyTilde) then
+    local typesNumpad = keyCode >= KeyNumLock0 and keyCode <= KeyNumpadDecimal
+    if not typesNumpad and (keyCode < KeySpace or keyCode > KeyTilde) then
         return false
     end
     return bit.band(keyboardModifiers, KeyboardCtrlModifier) == 0 and

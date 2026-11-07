@@ -17,6 +17,7 @@ Module
     dofile 'player'
     dofile 'market'
     dofile 'jsonchunks'
+    dofile 'characterrename'
     dofile 'textmessages'
     dofile 'thing'
     dofile 'spells'

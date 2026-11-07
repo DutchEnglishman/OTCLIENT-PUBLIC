@@ -270,6 +270,13 @@ function onMiniWindowClose()
 end
 
 function online()
+    -- Back in the panel, slot and open state this character left it in. Detached
+    -- first because UIMiniWindowContainer:scheduleInsert ignores the saved index
+    -- for a window already in that panel.
+    widgetsWindow:setParent(nil, true)
+    widgetsWindow:setupOnStart()
+    widgetsButton:setOn(widgetsWindow:isExplicitlyVisible())
+
     -- Collapsed the first time a character sees it, their own choice after that.
     -- Here rather than in init() because the saved state is per character and
     -- there is no character name until login. Safe against the row-sizing in

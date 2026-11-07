@@ -201,9 +201,14 @@ KeyNumLock6                  = 157
 KeyNumLock7                  = 158
 KeyNumLock8                  = 159
 KeyNumLock9                  = 160
+KeyNumpadPlus                = 161
+KeyNumpadMinus               = 162
+KeyNumpadMultiply            = 163
+KeyNumpadDivide              = 164
+KeyNumpadDecimal             = 165
 
 FirstKey                     = KeyUnknown
-LastKey                      = KeyNumLock9
+LastKey                      = KeyNumpadDecimal
 
 ExtendedActivate             = 0
 ExtendedLocales              = 1
@@ -338,7 +343,13 @@ KeyCodeDescs                 = {
     [KeyNumLock6] = 'Num6',
     [KeyNumLock7] = 'Num7',
     [KeyNumLock8] = 'Num8',
-    [KeyNumLock9] = 'Num9'
+    [KeyNumLock9] = 'Num9',
+    -- Never a literal '+': key combos are joined and split on it (keyboard.lua).
+    [KeyNumpadPlus] = 'NumPlus',
+    [KeyNumpadMinus] = 'NumMinus',
+    [KeyNumpadMultiply] = 'NumMultiply',
+    [KeyNumpadDivide] = 'NumDivide',
+    [KeyNumpadDecimal] = 'NumDecimal'
 }
 
 NetworkMessageTypes          = {

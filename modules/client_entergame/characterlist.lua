@@ -395,6 +395,8 @@ local function tryLogin(charInfo, tries)
 
     CharacterList.hide()
 
+    CharacterRename.applyPending(charInfo.characterName)
+
     g_game.loginWorld(G.account, G.password, charInfo.worldName, charInfo.worldHost, charInfo.worldPort,
                       charInfo.characterName, G.authenticatorToken, G.sessionKey)
 

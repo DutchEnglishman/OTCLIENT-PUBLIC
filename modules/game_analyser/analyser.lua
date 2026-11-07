@@ -298,11 +298,45 @@ function startNewSession(login)
   ControllerAnalyser:startEvent()
 end
 
+local function onAnalyserShown(buttonId)
+  if buttonId == 'impactButton' then
+    ImpactAnalyser:checkAnchos()
+  elseif buttonId == 'damageButton' then
+    InputAnalyser:checkAnchos()
+  elseif buttonId == 'xpButton' then
+    XPAnalyser:checkAnchos()
+    XPAnalyser:forceUpdateUI()  -- Update UI with any accumulated XP data
+  end
+end
+
+-- Puts every analyser back where this character left it, open or closed. Detached
+-- first because UIMiniWindowContainer:scheduleInsert does nothing for a window
+-- already in that panel, so the saved index would be ignored.
+local function restoreWindows()
+  analyserMiniWindow:setParent(nil, true)
+  analyserMiniWindow:setupOnStart()
+  analyserMiniWindow.isOpen = analyserMiniWindow:isExplicitlyVisible()
+  analyserButton:setOn(analyserMiniWindow.isOpen)
+
+  for buttonId, widget in pairs(openedWindows) do
+    widget:setParent(nil, true)
+    widget:setupOnStart()
+    widget.isOpen = widget:isExplicitlyVisible()
+    local buttonWidget = analyserMiniWindow:recursiveGetChildById(buttonId)
+    if buttonWidget then
+      buttonWidget:setOn(widget.isOpen)
+    end
+    if widget.isOpen then
+      onAnalyserShown(buttonId)
+    end
+  end
+end
+
 function onlineAnalyser()
-  local benchmark = g_clock.millis()
   startNewSession(true)
 
   loadGainAndWastConfigJson()
+  restoreWindows()
 end
 
 function offlineAnalyser()
@@ -351,7 +385,11 @@ function hide()
 end
 
 function onOpen()
-  analyserMiniWindow:setHeight(237)
+  -- setupOnStart opens a window right after minimizing it; growing it here
+  -- would undo that.
+  if not analyserMiniWindow:isOn() then
+    analyserMiniWindow:setHeight(237)
+  end
   analyserMiniWindow.isOpen = true
 end
 
@@ -379,19 +417,10 @@ function toggleAnalysers(buttonId)
     widget.isOpen = true
     widget:open()
 
-    if buttonId == 'impactButton' then
-      ImpactAnalyser:checkAnchos()
-    elseif buttonId == 'damageButton' then
-      InputAnalyser:checkAnchos()
-    elseif buttonId == 'xpButton' then
-      XPAnalyser:checkAnchos()
-      XPAnalyser:forceUpdateUI()  -- Update UI with any accumulated XP data
-    elseif buttonId == 'bossButton' then
+    onAnalyserShown(buttonId)
+    if buttonId == 'bossButton' then
       toggleBossCDFocus(false)
       widget:focus()
-    elseif buttonId == 'xpAnalyser' then
-      XPAnalyser:checkAnchos()
-      XPAnalyser:forceUpdateUI()  -- Update UI with any accumulated XP data
     end
 
     -- Properly assign widget to a panel if it doesn't have a parent

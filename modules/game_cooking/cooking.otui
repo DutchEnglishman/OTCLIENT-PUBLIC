@@ -328,7 +328,7 @@ MainWindow
       Button
         id: minusButton
         anchors.left: parent.left
-        anchors.verticalCenter: cookButton.verticalCenter
+        anchors.verticalCenter: parent.verticalCenter
         size: 16 18
         text: -
         @onClick: modules.game_cooking.changeAmount(-1)
@@ -336,7 +336,7 @@ MainWindow
       Label
         id: amountLabel
         anchors.left: minusButton.right
-        anchors.verticalCenter: cookButton.verticalCenter
+        anchors.verticalCenter: parent.verticalCenter
         width: 30
         text-align: center
         text: 0
@@ -344,7 +344,7 @@ MainWindow
       Button
         id: plusButton
         anchors.left: amountLabel.right
-        anchors.verticalCenter: cookButton.verticalCenter
+        anchors.verticalCenter: parent.verticalCenter
         size: 16 18
         text: +
         @onClick: modules.game_cooking.changeAmount(1)
@@ -352,7 +352,7 @@ MainWindow
       Button
         id: maxButton
         anchors.left: plusButton.right
-        anchors.verticalCenter: cookButton.verticalCenter
+        anchors.verticalCenter: parent.verticalCenter
         margin-left: 4
         size: 34 18
         !text: tr('Max')

@@ -130,21 +130,21 @@ local FOOD_IDS = {
 local EAT_INTERVAL = 60 * 1000
 local TICK_INTERVAL = 500
 
--- Anti-idle, on while any trainer toggle is.
+-- Anti-idle, on exactly while the master switch is, whichever features are
+-- checked: keeping the character logged in is part of what ON means.
 --
 -- The server kicks after kickIdlePlayerAfterMinutes with no packet that counts
--- as activity (src/player.cpp:1418), and a working trainer easily goes that
--- long without sending one: auto-eat fires once a minute and only when it
--- finds food, and both spell trainers hold fire below their threshold.
--- Regenerating from empty mana is exactly the case where the trainer is doing
--- its job and the player looks idle.
+-- as activity (OTSERV Player::onThink, the idleTime block), and a working
+-- trainer easily goes that long without sending one: auto-eat fires once a
+-- minute and only when it finds food, and both spell trainers hold fire below
+-- their threshold.
 --
 -- A turn towards the direction the character already faces is the cheapest
--- signal that counts. Game::playerTurn resets the idle timer BEFORE calling
--- internalCreatureTurn (src/game.cpp:3044), which returns early on an
--- unchanged direction (src/game.cpp:3309) -- so nothing reaches other players
--- and no state changes. Player:onTurn is disabled in events.xml, so no script
--- runs either. That is why this needs no server-side counterpart.
+-- signal that counts. OTSERV Game::playerTurn resets the idle timer BEFORE
+-- calling internalCreatureTurn, which returns early on an unchanged direction
+-- -- so nothing reaches other players and no state changes. Player:onTurn is
+-- disabled in events.xml, so no script runs either. That is why this needs no
+-- server-side counterpart.
 --
 -- 30s holds idleTime under half a minute whatever the config says, so this
 -- keeps working if kickIdlePlayerAfterMinutes is ever lowered.
@@ -166,6 +166,26 @@ local BACKOFF_STEP = 1000
 -- A refusal is only credited to our cast if it arrives within this window.
 local BLAME_WINDOW = 1500
 
+-- A refused cast spends no mana and no cooldown (OTSERV
+-- InstantSpell::playerCastInstant only runs postCastSpell on success), so a
+-- runemaker with no blank rune would own every tick and mana training's adori
+-- blank would never get its turn. A trainer refused for one of these steps
+-- aside until the other one casts (which may be what makes the blank rune) or
+-- this long passes (a rune put in by hand), so it keeps retrying without
+-- saying the spell every tick.
+local BLOCKED_RETRY = 10000
+local BLOCKING_REFUSALS = {
+    'you need a magic item', -- no blank rune (OTSERV Player.conjureItem)
+    'you do not have enough soul',
+    'you do not have enough mana', -- the threshold is below the spell's cost
+}
+
+-- Every successful cast puts the server's 1000 ms global cooldown on every
+-- other spell (OTSERV Spell::postCastSpell, GLOBAL_COOLDOWN), so the other
+-- trainer waits this long after any cast. Without it, the rune cast right
+-- after an adori blank was refused as exhausted and ratcheted its backoff.
+local CROSS_CAST_GAP = 1500
+
 -- The text fields, as opposed to the toggles: these are the only widgets that
 -- should hold the keyboard, so a click anywhere else hands it back.
 local FIELD_IDS = { 'manaSpell', 'manaPercent', 'runeSpell', 'runePercent' }
@@ -185,12 +205,13 @@ local contentsPanel = nil
 local tickEvent = nil
 local nextEatAt = 0
 local lastAntiIdleTime = 0
+local trainerEnabled = false
 
 -- One cooldown model per trainer: they cast different spells with different
 -- cooldowns, so a shared timer would let the slower one gate the faster.
 local casters = {
-    rune = { interval = BASE_COOLDOWN, nextCastAt = 0 },
-    mana = { interval = BASE_COOLDOWN, nextCastAt = 0 },
+    rune = { interval = BASE_COOLDOWN, nextCastAt = 0, blockedUntil = 0 },
+    mana = { interval = BASE_COOLDOWN, nextCastAt = 0, blockedUntil = 0 },
 }
 local lastCaster = nil
 local lastCastAt = 0
@@ -201,6 +222,7 @@ local function resetCooldowns()
     for _, caster in pairs(casters) do
         caster.interval = BASE_COOLDOWN
         caster.nextCastAt = 0
+        caster.blockedUntil = 0
     end
     lastCaster = nil
 end
@@ -221,6 +243,7 @@ local function saveSettings()
     end
 
     g_settings.mergeNode(key, {
+        enabled = trainerEnabled,
         autoEat = controls.autoEat:isChecked(),
         manaTraining = controls.manaTraining:isChecked(),
         manaSpell = controls.manaSpell:getText(),
@@ -231,10 +254,25 @@ local function saveSettings()
     })
 end
 
+local function showMasterState()
+    local button = controls.masterToggle
+    if trainerEnabled then
+        button:setText(tr('TRAINER: ON'))
+        button:setColor('#55dd55')
+    else
+        button:setText(tr('TRAINER: OFF'))
+        button:setColor('#ff5555')
+    end
+end
+
 local function loadSettings()
     local key = settingsKey()
     local saved = key and g_settings.getNode(key) or {}
 
+    -- Off for a character that never saved it, including everyone who had the
+    -- trainer set up before the switch existed.
+    trainerEnabled = saved.enabled == true
+    showMasterState()
     controls.autoEat:setChecked(saved.autoEat or false)
     controls.manaTraining:setChecked(saved.manaTraining or false)
     controls.manaSpell:setText(saved.manaSpell or '')
@@ -449,6 +487,12 @@ local function castSpell(caster, spell)
     end
 
     g_game.talk(spell)
+    for _, other in pairs(casters) do
+        if other ~= caster then
+            other.blockedUntil = 0
+            other.nextCastAt = math.max(other.nextCastAt, now + CROSS_CAST_GAP)
+        end
+    end
     caster.nextCastAt = now + caster.interval
     lastCaster = caster
     lastCastAt = now
@@ -463,10 +507,6 @@ local function onTextMessage(_mode, text)
         return
     end
 
-    if not text:lower():find('exhausted', 1, true) then
-        return
-    end
-
     -- Only blame our own cast. Manual casting or another source producing this
     -- message would otherwise ratchet the interval up for no reason.
     local now = g_clock.millis()
@@ -474,14 +514,20 @@ local function onTextMessage(_mode, text)
         return
     end
 
+    local lower = text:lower()
+    for _, refusal in ipairs(BLOCKING_REFUSALS) do
+        if lower:find(refusal, 1, true) then
+            lastCaster.blockedUntil = now + BLOCKED_RETRY
+            return
+        end
+    end
+
+    if not lower:find('exhausted', 1, true) then
+        return
+    end
+
     lastCaster.interval = math.min(lastCaster.interval + BACKOFF_STEP, MAX_COOLDOWN)
     lastCaster.nextCastAt = now + lastCaster.interval
-end
-
-local function anyTrainerEnabled()
-    return controls.autoEat:isChecked()
-        or controls.manaTraining:isChecked()
-        or controls.runemaking:isChecked()
 end
 
 -- A diagonal step leaves the CLIENT facing NorthEast..NorthWest -- Creature::walk
@@ -516,50 +562,55 @@ local function keepAwake()
 end
 
 local function tick()
-    if not g_game.isOnline() then
+    if not g_game.isOnline() or not trainerEnabled then
         return
     end
 
-    -- Ahead of the trainers themselves: the runemaking branch below returns
-    -- early, and that branch is the one most likely to sit idle.
-    if anyTrainerEnabled() then
-        keepAwake()
-    end
+    keepAwake()
 
     if controls.autoEat:isChecked() and g_clock.millis() >= nextEatAt then
         tryEat()
     end
 
-    -- Both trainers spend the same mana, so at most one casts per tick and the
-    -- LOWER percentage goes first: that is the trainer willing to spend mana the
-    -- other is still holding in reserve. Runemaking used to outrank mana
-    -- training unconditionally; the two thresholds carry that decision now, so
-    -- runemaking comes first by being given the lower number. Equal percentages
-    -- keep the old order.
-    --
-    -- The winner owns the tick even while its own cooldown is running: the two
-    -- spells share the server's exhaustion, so letting the loser fill the gap
-    -- only earns a refusal and ratchets its backoff. Nothing is lost by yielding
-    -- the whole tick either -- the loser always holds the HIGHER threshold, so
-    -- mana below the winner's floor is below the loser's too.
+    -- Both trainers spend the same mana, so at most one casts per tick, and
+    -- runemaking has priority: while it is usable and not blocked it owns the
+    -- tick, below its threshold and on cooldown included, so mana training
+    -- never spends mana runemaking is saving up for. Mana training gets the
+    -- tick only while runemaking is off, unusable or blocked on a refusal
+    -- (BLOCKED_RETRY) -- which is how a runemaker out of blank runes lets an
+    -- adori blank in the mana training field make the next one.
     local rune = activeTrainer(controls.runemaking, controls.runeSpell, controls.runePercent, casters.rune)
     local mana = activeTrainer(controls.manaTraining, controls.manaSpell, controls.manaPercent, casters.mana)
-
-    local first, second = rune, mana
-    if mana and (not rune or mana.threshold < rune.threshold) then
-        first, second = mana, rune
-    end
 
     local current = manaPercent()
     if not current then
         return
     end
 
-    for _, trainer in ipairs({ first, second }) do
-        if current >= trainer.threshold then
-            castSpell(trainer.caster, trainer.spell)
-            return
-        end
+    local now = g_clock.millis()
+    local trainer = mana
+    if rune and now >= rune.caster.blockedUntil then
+        trainer = rune
+    end
+
+    if trainer and current >= trainer.threshold and now >= trainer.caster.blockedUntil then
+        castSpell(trainer.caster, trainer.spell)
+    end
+end
+
+-- Off stops every feature and the anti-idle turn at once, since tick() checks
+-- the switch before anything else. On starts eating and casting afresh rather
+-- than waiting out timers left from before it was switched off.
+local function setTrainerEnabled(enabled)
+    trainerEnabled = enabled
+    showMasterState()
+    saveSettings()
+    if enabled then
+        nextEatAt = 0
+        lastAntiIdleTime = 0
+        resetCooldowns()
+    else
+        setHint(nil)
     end
 end
 
@@ -601,6 +652,13 @@ function onMiniWindowClose()
 end
 
 function online()
+    -- Back in the panel, slot and open state this character left it in. Detached
+    -- first because UIMiniWindowContainer:scheduleInsert ignores the saved index
+    -- for a window already in that panel.
+    trainerWindow:setParent(nil, true)
+    trainerWindow:setupOnStart()
+    trainerButton:setOn(trainerWindow:isExplicitlyVisible())
+
     -- Collapsed the first time a character sees it, their own choice after that.
     -- Here rather than in init() because the saved state is per character and
     -- there is no character name until login.
@@ -628,15 +686,23 @@ function init()
     -- Drag the bottom border to resize. The minimum sits just under the natural
     -- content height so there is room to shrink as well as grow.
     trainerWindow:enableResize()
-    trainerWindow:setContentMinimumHeight(120)
+    trainerWindow:setContentMinimumHeight(146)
     trainerWindow:setContentMaximumHeight(420)
     trainerWindow:setup()
 
     contentsPanel = trainerWindow:getChildById('contentsPanel')
-    for _, id in ipairs({ 'autoEat', 'autoEatHint', 'manaTraining', 'manaSpell', 'manaPercent',
+    for _, id in ipairs({ 'masterToggle', 'autoEat', 'autoEatHint', 'manaTraining', 'manaSpell', 'manaPercent',
                           'runemaking', 'runeSpell', 'runePercent' }) do
         controls[id] = contentsPanel:getChildById(id)
     end
+
+    -- A button consumes its own click like a toggle does, so it releases the
+    -- keyboard itself.
+    controls.masterToggle.onClick = function()
+        setTrainerEnabled(not trainerEnabled)
+        releaseFocus()
+    end
+    showMasterState()
 
     -- Digits only, three of them: the percent fields are parsed with tonumber
     -- and a stray letter would silently switch that trainer off.

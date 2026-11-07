@@ -618,7 +618,10 @@ function controllerCyclopedia:onGameStart()
         -- Only create if it doesn't exist
         if not trackerMiniWindowBosstiary then
             trackerMiniWindowBosstiary = g_ui.createWidget('BestiaryTracker', modules.game_interface.getRightPanel())
-            
+            -- Its own id: the saved dock slot and open state are keyed by it, and
+            -- the style's id would share one entry with the bestiary tracker.
+            trackerMiniWindowBosstiary:setId('BosstiaryTracker')
+
             -- Set the title with length limit like in containers
             local titleWidgetBosstiary = trackerMiniWindowBosstiary:getChildById('miniwindowTitle')
             if titleWidgetBosstiary then
@@ -667,15 +670,19 @@ function controllerCyclopedia:onGameStart()
             trackerMiniWindowBosstiary:setup()
             trackerMiniWindowBosstiary:hide()
         end
+        -- Detached first because UIMiniWindowContainer:scheduleInsert ignores the
+        -- saved index for a window already in that panel.
+        trackerMiniWindow:setParent(nil, true)
         trackerMiniWindow:setupOnStart()
+        trackerMiniWindowBosstiary:setParent(nil, true)
         trackerMiniWindowBosstiary:setupOnStart()
         Cyclopedia.loadTrackerFilters("bestiary")
         Cyclopedia.loadTrackerFilters("bosstiary")
 
-        if trackerMiniWindow:isVisible() then
+        if trackerMiniWindow:isExplicitlyVisible() then
             trackerButton:setOn(true)
         end
-        if trackerMiniWindowBosstiary:isVisible() and trackerButtonBosstiary then
+        if trackerMiniWindowBosstiary:isExplicitlyVisible() and trackerButtonBosstiary then
             trackerButtonBosstiary:setOn(true)
         end
         

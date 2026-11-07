@@ -1344,6 +1344,7 @@ BestiaryTrackerSeparator < HorizontalSeparator
 
 BestiaryTracker < MiniWindow
   id: BestiaryTracker
+  &save: true
   @onClose: modules.game_cyclopedia.Cyclopedia.onTrackerClose(self:getText())
 
   UIWidget
