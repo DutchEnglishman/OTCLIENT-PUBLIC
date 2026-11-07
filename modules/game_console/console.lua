@@ -1075,7 +1075,7 @@ function addPrivateText(text, speaktype, name, isPrivateCommand, creatureName)
 
     local privateTab = getTab(name)
     if privateTab == nil then
-        if (modules.client_options.getOption('showPrivateMessagesInConsole') and not focus) or
+        if (not modules.client_options.getOption('openPrivateMessageTabs') and not focus) or
             (isPrivateCommand and not privateTab) then
             privateTab = defaultTab
         else

@@ -89,6 +89,22 @@ local function groundKey(pos)
     return pos.x .. ':' .. pos.y .. ':' .. pos.z
 end
 
+-- The server answers a use, open or pickup of a map item out of reach by walking
+-- the player to it, so with right-click walking disabled such a click must not
+-- be sent at all.
+local function rightClickWouldWalk(thing)
+    if not thing or not modules.client_options.getOption('disableRightClickWalk') then
+        return false
+    end
+    local pos = thing:getPosition()
+    local player = g_game.getLocalPlayer()
+    if not pos or pos.x == 0xffff or not player then
+        return false
+    end
+    local playerPos = player:getPosition()
+    return pos.z ~= playerPos.z or math.abs(pos.x - playerPos.x) > 1 or math.abs(pos.y - playerPos.y) > 1
+end
+
 local function onUsableGrounds(protocol, opcode, buffer)
     usableGrounds = {}
     for key in buffer:gmatch('[^;]+') do
@@ -198,6 +214,7 @@ function init()
     gameRootPanel:lower()
     gameRootPanel.onGeometryChange = updateStretchShrink
     connect(gameRootPanel, { onFocusChange = onRootPanelFocusChange })
+    connect(rootWidget, { onChildFocusChange = onRootChildFocusChange })
 
     mouseGrabberWidget = gameRootPanel:getChildById('mouseGrabber')
     mouseGrabberWidget.onMouseRelease = onMouseGrabberRelease
@@ -350,6 +367,7 @@ function terminate()
 
     hookedMenuOptions = {}
 
+    disconnect(rootWidget, { onChildFocusChange = onRootChildFocusChange })
     disconnect(g_game, {
         onGameStart = onGameStart,
         onGameEnd = onGameEnd,
@@ -402,6 +420,51 @@ function onRootPanelFocusChange(widget, focused)
         elseif EnterGame and EnterGame.focus then
             EnterGame.focus()
         end
+    end)
+end
+
+local KEYBOARD_WINDOW_CLASSES = {
+    UIWindow = true,
+    UIMiniWindow = true,
+    UIMessageBox = true,
+    UIInputBox = true,
+    UIPopupMenu = true,
+    UIPopupScrollMenu = true,
+    UITextEdit = true
+}
+
+local function wantsKeyboard(widget)
+    if KEYBOARD_WINDOW_CLASSES[widget:getClassName()] then
+        return true
+    end
+    for _, child in ipairs(widget:recursiveGetChildren()) do
+        if child:getClassName() == 'UITextEdit' and child:isVisible() then
+            return true
+        end
+    end
+    return false
+end
+
+-- The walk keys are bound on this panel, so they work only while it is the
+-- root's focused child. A root-level window that is hidden or destroyed while
+-- focused (the NPC trade window, any dialog) hands focus to the topmost visible
+-- root child instead, and that is often a HUD widget that takes no keys -- the
+-- player could not walk until a click on the map focused this panel again.
+-- Mouse focus is left alone: a click is the player choosing.
+function onRootChildFocusChange(root, focused, unfocused, reason)
+    if reason == MouseFocusReason or focused == gameRootPanel then
+        return
+    end
+    addEvent(function()
+        if not g_game.isOnline() or not gameRootPanel or not gameRootPanel:isVisible() or
+            gameRootPanel:isFocused() then
+            return
+        end
+        local current = rootWidget:getFocusedChild()
+        if current and current:isVisible() and wantsKeyboard(current) then
+            return
+        end
+        gameRootPanel:focus()
     end)
 end
 
@@ -977,11 +1040,12 @@ function createThingMenu(menuPosition, lookThing, useThing, creatureThing)
         end)
     end
 
-    -- Sends the bag to the server, which walks it -- including bags inside it --
-    -- and moves every stackable into the stackable depot. Only offered on a
-    -- container you carry while standing at a locker; the server checks both.
+    -- Sends a bag or a single stackable item to the server, which moves it --
+    -- for a bag, every stackable in it and in bags inside it -- into the
+    -- stackable depot. Only offered on something you carry while standing at a
+    -- locker; the server checks both.
     if lookThing and modules.game_stackabledepot and modules.game_stackabledepot.canStow(lookThing) then
-        menu:addOption(tr("Stash Stackables"), function()
+        menu:addOption(modules.game_stackabledepot.getStowLabel(lookThing), function()
             modules.game_stackabledepot.stow(lookThing)
         end)
     end
@@ -1614,6 +1678,8 @@ function processMouseAction(menuPosition, mouseButton, autoWalkPos, lookThing, u
                 elseif creatureThing and creatureThing ~= player and autoWalkPos and creatureThing:getPosition().z == autoWalkPos.z then
                     g_game.attack(creatureThing)
                     return true
+                elseif rightClickWouldWalk(useThing or (lookThing and not lookThing:isCreature() and lookThing:isPickupable() and lookThing)) then
+                    return true
                 elseif useThing then
                     -- For containers/corpses
                     if useThing:isContainer() or useThing:isLyingCorpse() then
@@ -1707,6 +1773,8 @@ function processMouseAction(menuPosition, mouseButton, autoWalkPos, lookThing, u
                     return true
                 elseif creatureThing and creatureThing ~= player and autoWalkPos and creatureThing:getPosition().z == autoWalkPos.z then
                     g_game.attack(creatureThing)
+                    return true
+                elseif rightClickWouldWalk(useThing) then
                     return true
                 elseif useThing then
                     -- For containers
@@ -1805,6 +1873,8 @@ function processMouseAction(menuPosition, mouseButton, autoWalkPos, lookThing, u
                     return true
                 elseif creatureThing and creatureThing ~= player and autoWalkPos and creatureThing:getPosition().z == autoWalkPos.z then
                     g_game.attack(creatureThing)
+                    return true
+                elseif rightClickWouldWalk(useThing) then
                     return true
                     -- Use the item if it's a container in inventory or use other items
                 elseif useThing then

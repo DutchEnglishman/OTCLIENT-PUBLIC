@@ -191,9 +191,19 @@ KeyNumpad6                   = 147
 KeyNumpad7                   = 148
 KeyNumpad8                   = 149
 KeyNumpad9                   = 150
+KeyNumLock0                  = 151
+KeyNumLock1                  = 152
+KeyNumLock2                  = 153
+KeyNumLock3                  = 154
+KeyNumLock4                  = 155
+KeyNumLock5                  = 156
+KeyNumLock6                  = 157
+KeyNumLock7                  = 158
+KeyNumLock8                  = 159
+KeyNumLock9                  = 160
 
 FirstKey                     = KeyUnknown
-LastKey                      = KeyNumpad9
+LastKey                      = KeyNumLock9
 
 ExtendedActivate             = 0
 ExtendedLocales              = 1
@@ -318,7 +328,17 @@ KeyCodeDescs                 = {
     [KeyNumpad6] = 'Numpad6',
     [KeyNumpad7] = 'Numpad7',
     [KeyNumpad8] = 'Numpad8',
-    [KeyNumpad9] = 'Numpad9'
+    [KeyNumpad9] = 'Numpad9',
+    [KeyNumLock0] = 'Num0',
+    [KeyNumLock1] = 'Num1',
+    [KeyNumLock2] = 'Num2',
+    [KeyNumLock3] = 'Num3',
+    [KeyNumLock4] = 'Num4',
+    [KeyNumLock5] = 'Num5',
+    [KeyNumLock6] = 'Num6',
+    [KeyNumLock7] = 'Num7',
+    [KeyNumLock8] = 'Num8',
+    [KeyNumLock9] = 'Num9'
 }
 
 NetworkMessageTypes          = {

@@ -74,8 +74,8 @@ UIWidget
     height: 22
   
     OptionCheckBox
-      id: showPrivateMessagesInConsole
-      !text: tr('Show private messages')
+      id: openPrivateMessageTabs
+      !text: tr('Open a new tab for private messages')
 
   SmallReversedQtPanel
     anchors.left: parent.left

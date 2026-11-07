@@ -91,6 +91,13 @@ function UICreatureButton:setup(creature, onlyOutfit)
 end
 
 function UICreatureButton:update()
+    -- Every battle window holds its own button for a creature, and all of them draw that
+    -- creature's one square. Read from the game, not kept per button: a button whose flag
+    -- lagged (its window was hidden when the target was picked) hid the square another
+    -- button had just shown, and the square flickered.
+    self.isTarget = self.creature == g_game.getAttackingCreature()
+    self.isFollowed = self.creature == g_game.getFollowingCreature()
+
     local color = CreatureButtonColors.onIdle
     if self.isTarget then
         color = CreatureButtonColors.onTargeted

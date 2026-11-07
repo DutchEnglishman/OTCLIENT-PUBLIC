@@ -175,7 +175,7 @@ return {
     showInfoMessagesInConsole         = true,
     showTimestampsInConsole           = true,
     showLevelsInConsole               = true,
-    showPrivateMessagesInConsole      = true,
+    openPrivateMessageTabs            = false,
     -- Off leaves the Server Log exactly as it has always been. On, the log keeps
     -- only the status lines that name the player or address them directly, which
     -- drops every "<someone else> loses N hitpoints due to an attack by ..." a

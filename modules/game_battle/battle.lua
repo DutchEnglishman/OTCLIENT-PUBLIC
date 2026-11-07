@@ -1180,21 +1180,23 @@ function BattleListInstance:removeCreature(creature, all)
         valuetoSearch.id = creatureId
         
         local index = binarySearch(self.binaryTree, valuetoSearch, BSComparatorSortType, sortType, creatureId)
-        if index ~= nil and creatureId == self.binaryTree[index].id then
-            local creatureListSize = #self.binaryTree
-            if index < creatureListSize then
-                for i = index, creatureListSize - 1 do
-                    -- Swap elements in instance binary tree
-                    local tmp = self.binaryTree[i]
-                    self.binaryTree[i] = self.binaryTree[i + 1]
-                    self.binaryTree[i + 1] = tmp
+        if index == nil or self.binaryTree[index].id ~= creatureId then
+            -- The key the button carries has drifted from the tree's; a miss here
+            -- used to keep the button, which is a dead creature left in the list.
+            index = nil
+            for i, entry in ipairs(self.binaryTree) do
+                if entry.id == creatureId then
+                    index = i
+                    break
                 end
             end
-            self.binaryTree[creatureListSize] = nil
-            BattleButtonPool:release(battleButton)
-            self.battleButtons[creatureId] = nil
-            return true
         end
+        if index ~= nil then
+            table.remove(self.binaryTree, index)
+        end
+        BattleButtonPool:release(battleButton)
+        self.battleButtons[creatureId] = nil
+        return true
     end
     return false
 end
@@ -2001,7 +2003,7 @@ function attackNext(previous)
     local children = mainInstance.panel:getChildren()
 
     for _, battleButton in pairs(mainInstance.panel:getChildren()) do
-        if battleButton:isVisible() then
+        if battleButton:isExplicitlyVisible() then
             -- select visible first child
             if not firstElement then
                 firstElement = battleButton
@@ -2283,7 +2285,7 @@ function onCreaturePositionChange(creature, newPos, oldPos) -- Update battleButt
                                     elseif newDistance < oldDistance then
                                         battleButton:setVisible(canBeSeen(creature))
 
-                                        if lastCreatureSelected == creature and not battleButton:isVisible() then
+                                        if lastCreatureSelected == creature and not battleButton:isExplicitlyVisible() then
                                             lastCreatureSelected:hideStaticSquare()
                                             lastCreatureSelected = nil
                                         end
@@ -2324,9 +2326,6 @@ function onCreatureHealthPercentChange(creature, healthPercent, oldHealthPercent
             local sortType = instance:getSortType()
             if battleButton.setLifeBarPercent then
                 battleButton:setLifeBarPercent(healthPercent)
-            end
-            if battleButton.data then
-                battleButton.data.healthpercent = healthPercent
             end
             local skipInstance = false
             if sortType == 'health' then
@@ -2373,6 +2372,10 @@ function onCreatureHealthPercentChange(creature, healthPercent, oldHealthPercent
                         instance:correctBattleButtons()
                     end
                 end
+            elseif battleButton.data then
+                -- Only off the health sort: under it, data.healthpercent is the key
+                -- removeCreature searches the tree by, so it moves with the tree above.
+                battleButton.data.healthpercent = healthPercent
             end
             if not skipInstance and battleButton.creature then
                 battleButton:update()

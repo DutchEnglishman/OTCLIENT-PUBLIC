@@ -348,7 +348,7 @@ end
 -- One trainer, ready to cast: toggle on, a spell to say, and a readable
 -- threshold. nil for any trainer that is missing one of the three.
 --
--- The % is a FLOOR: cast while mana is ABOVE it and stop there, leaving that
+-- The % is a FLOOR: cast while mana is AT OR ABOVE it, leaving that
 -- much in reserve. The rejected alternative was to wait until the threshold
 -- then drain to empty.
 local function normalizeSpell(text)
@@ -556,7 +556,7 @@ local function tick()
     end
 
     for _, trainer in ipairs({ first, second }) do
-        if current > trainer.threshold then
+        if current >= trainer.threshold then
             castSpell(trainer.caster, trainer.spell)
             return
         end

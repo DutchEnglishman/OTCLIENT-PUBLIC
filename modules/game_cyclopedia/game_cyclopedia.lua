@@ -446,6 +446,7 @@ function controllerCyclopedia:onInit()
     ProtocolGame.registerExtendedOpcode(TIER_STAGES_OPCODE, onTierStages)
     ProtocolGame.registerExtendedOpcode(TRACKER_OPCODE, onRecentKills)
     ProtocolGame.registerExtendedOpcode(BESTIARY_LOOT_OPCODE, onBestiaryLoot)
+    ProtocolGame.registerExtendedOpcode(SPELL_ARCHIVE_OPCODE, function(...) MagicalArchive.onSpellList(...) end)
 end
 
 function controllerCyclopedia:onGameStart()
@@ -721,6 +722,7 @@ function controllerCyclopedia:onTerminate()
     ProtocolGame.unregisterExtendedOpcode(TIER_STAGES_OPCODE)
     ProtocolGame.unregisterExtendedOpcode(TRACKER_OPCODE)
     ProtocolGame.unregisterExtendedOpcode(BESTIARY_LOOT_OPCODE)
+    ProtocolGame.unregisterExtendedOpcode(SPELL_ARCHIVE_OPCODE)
 
     if trackerButton then
         trackerButton:destroy()

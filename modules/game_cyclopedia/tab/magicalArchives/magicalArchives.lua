@@ -1,12 +1,18 @@
 local UI = nil
 
-local ARCHIVE_PROFILE = 'Default'
-local ARCHIVE_FILTER_VOCATION_ANY = 0
+-- The server's spell list (data/scripts/spell_archive/spell_archive.lua),
+-- asked for every time the tab opens. The stock SpellInfo table is only used
+-- to find an icon for a spell it happens to know.
+SPELL_ARCHIVE_OPCODE = 97
+
+local ARCHIVE_FILTER_VOCATION_ANY = -1
 
 local archiveState = {
     vocationId = ARCHIVE_FILTER_VOCATION_ANY,
     search = ''
 }
+
+local archiveSpells = nil
 
 MagicalArchive = MagicalArchive or {}
 
@@ -22,49 +28,51 @@ local function archiveContains(list, value)
     return false
 end
 
--- promoted counterpart of a base vocation (server ids): 1-4 -> 5-8, Monk 9 -> Exalted Monk 10
+-- promoted counterpart of a base vocation (server ids): 1-4 -> 5-8
 local function archivePromotedId(vocationId)
     if vocationId >= 1 and vocationId <= 4 then
         return vocationId + 4
     end
-    if vocationId == 9 then
-        return 10
-    end
     return nil
 end
 
-function MagicalArchive.buildSpellNames(spellInfo)
-    local names = {}
-    for name in pairs(spellInfo) do
-        table.insert(names, name)
+local function archiveInitials(name)
+    local letters = ''
+    for word in name:gmatch('%S+') do
+        letters = letters .. word:sub(1, 1):upper()
     end
-    table.sort(names)
-    return names
+    return letters:sub(1, 2)
 end
 
-function MagicalArchive.matchesVocation(info, vocationId)
-    if vocationId == ARCHIVE_FILTER_VOCATION_ANY then
+local function archiveSeconds(ms)
+    return (ms / 1000) .. 's'
+end
+
+-- An empty vocation list means every vocation may cast it.
+function MagicalArchive.matchesVocation(entry, vocationId)
+    if vocationId == ARCHIVE_FILTER_VOCATION_ANY or #entry.vocations == 0 then
         return true
     end
-    return archiveContains(info.vocations, vocationId) or
-        archiveContains(info.vocations, archivePromotedId(vocationId))
+    return archiveContains(entry.vocations, vocationId) or
+        archiveContains(entry.vocations, archivePromotedId(vocationId))
 end
 
-function MagicalArchive.matchesSearch(name, info, searchText)
+function MagicalArchive.matchesSearch(entry, searchText)
     if not searchText or searchText == '' then
         return true
     end
     local needle = searchText:lower()
-    if name:lower():find(needle, 1, true) then
-        return true
-    end
-    return (info.words or ''):lower():find(needle, 1, true) ~= nil
+    return entry.name:lower():find(needle, 1, true) ~= nil or
+        (entry.words or ''):lower():find(needle, 1, true) ~= nil
 end
 
 -- promoted vocations are hidden when their base vocation is also present ("Sorcerer" implies "Master Sorcerer")
 function MagicalArchive.formatVocations(vocations, vocationNames)
     vocationNames = vocationNames or VocationNames
-    local baseOf = { [5] = 1, [6] = 2, [7] = 3, [8] = 4, [10] = 9 }
+    if #vocations == 0 then
+        return tr('All')
+    end
+    local baseOf = { [5] = 1, [6] = 2, [7] = 3, [8] = 4 }
     local result = ''
     for i = 1, #vocations do
         local vocationId = vocations[i]
@@ -76,28 +84,49 @@ function MagicalArchive.formatVocations(vocations, vocationNames)
     return result
 end
 
-function MagicalArchive.formatGroupAndCooldown(info, spellGroups)
-    spellGroups = spellGroups or SpellGroups
-    local cooldown = (info.exhaustion / 1000) .. 's'
-    local group = ''
-    for groupId, groupName in ipairs(spellGroups) do
-        if info.group[groupId] then
-            group = group .. (group:len() == 0 and '' or ' / ') .. groupName
-            cooldown = cooldown .. ' / ' .. (info.group[groupId] / 1000) .. 's'
-        end
+function MagicalArchive.formatMana(entry)
+    local mana = entry.mana
+    if mana == 0 and entry.manapercent > 0 then
+        mana = entry.manapercent .. '%'
     end
-    return group, cooldown
+    return mana .. ' / ' .. entry.soul
 end
 
 local function archiveSetDetailRow(rowId, value)
     local row = UI.spellAndRune.DetailPanel.DetailRows[rowId]
-    row.value:setText(value)
+    row:setVisible(value ~= nil)
+    row.value:setText(value or '')
+end
+
+local function archiveSetIcon(entry)
+    local detail = UI.spellAndRune.DetailPanel
+    detail.SpellIcon:setImageSource('')
+    detail.SpellIcon:setText('')
+    detail.RuneIcon:setVisible(false)
+
+    if entry.rune then
+        detail.RuneIcon:setItemId(entry.rune.clientId)
+        detail.RuneIcon:setVisible(true)
+        return
+    end
+
+    local spell, profile = Spells.getSpellByWords(entry.words)
+    if not spell then
+        profile = Spells.getSpellProfileByName(entry.name)
+        spell = profile and SpellInfo[profile][entry.name]
+    end
+    local iconId = spell and tonumber(spell.clientId)
+    if iconId then
+        detail.SpellIcon:setImageSource(SpelllistSettings[profile].iconFile)
+        detail.SpellIcon:setImageClip(Spells.getImageClip(iconId, profile))
+    else
+        detail.SpellIcon:setText(archiveInitials(entry.name))
+    end
 end
 
 local function archiveSelectSpell(widget)
-    local name = widget.spellName or widget:getId()
-    local info = SpellInfo[ARCHIVE_PROFILE][name]
-    if not info then
+    local entry = widget.entry
+    if not entry then
         return
     end
 
@@ -105,39 +134,65 @@ local function archiveSelectSpell(widget)
     UI.spellAndRune.PlaceholderLabel:setVisible(false)
     detail:setVisible(true)
 
-    local iconId = tonumber(info.clientId)
-    if iconId then
-        detail.SpellIcon:setImageSource(SpelllistSettings[ARCHIVE_PROFILE].iconFile)
-        detail.SpellIcon:setImageClip(Spells.getImageClip(iconId, ARCHIVE_PROFILE))
-    end
+    archiveSetIcon(entry)
+    detail.NameLabel:setText(entry.name)
+    detail.FormulaLabel:setText(entry.words and ('\'' .. entry.words .. '\'') or tr('Rune'))
 
-    detail.NameLabel:setText(name)
-    detail.FormulaLabel:setText('\'' .. info.words .. '\'')
+    local isRune = entry.type == 'Rune'
+    archiveSetDetailRow('RowVocation', MagicalArchive.formatVocations(entry.vocations))
+    archiveSetDetailRow('RowGroup', entry.group)
+    archiveSetDetailRow('RowType', entry.type)
+    archiveSetDetailRow('RowCooldown', archiveSeconds(entry.cooldown))
+    archiveSetDetailRow('RowLevel', tostring(entry.level))
+    archiveSetDetailRow('RowMagicLevel', tostring(entry.mlevel))
+    archiveSetDetailRow('RowMana', not isRune and MagicalArchive.formatMana(entry) or nil)
+    archiveSetDetailRow('RowPremium', entry.premium and tr('yes') or tr('no'))
+    archiveSetDetailRow('RowLearn', not isRune and (entry.learn and tr('must be learned') or tr('known')) or nil)
 
-    local group, cooldown = MagicalArchive.formatGroupAndCooldown(info)
-    archiveSetDetailRow('RowVocation', MagicalArchive.formatVocations(info.vocations))
-    archiveSetDetailRow('RowGroup', group)
-    archiveSetDetailRow('RowType', info.type)
-    archiveSetDetailRow('RowCooldown', cooldown)
-    archiveSetDetailRow('RowLevel', tostring(info.level))
-    archiveSetDetailRow('RowMana', info.mana .. ' / ' .. info.soul)
-    archiveSetDetailRow('RowPremium', info.premium and 'yes' or 'no')
+    local rune = entry.type == 'Conjure' and entry.rune
+    archiveSetDetailRow('RowRune', rune and tr('level %d, magic level %d, %s, %s cooldown', rune.level, rune.mlevel,
+        rune.group, archiveSeconds(rune.cooldown)) or nil)
 end
 
 local function archiveRebuildList()
+    if not UI then
+        return
+    end
     local list = UI.InformationBase.selectSpell.SpellListBase.questList
     list:destroyChildren()
-    for _, name in ipairs(MagicalArchive.buildSpellNames(SpellInfo[ARCHIVE_PROFILE])) do
-        local info = SpellInfo[ARCHIVE_PROFILE][name]
-        if MagicalArchive.matchesVocation(info, archiveState.vocationId) and
-            MagicalArchive.matchesSearch(name, info, archiveState.search) then
+    if not archiveSpells then
+        return
+    end
+    for _, entry in ipairs(archiveSpells) do
+        if MagicalArchive.matchesVocation(entry, archiveState.vocationId) and
+            MagicalArchive.matchesSearch(entry, archiveState.search) then
             local row = g_ui.createWidget('ArchiveSpellLabel', list)
-            row:setId(name)
-            row.spellName = name
-            row:setText(name)
+            row.entry = entry
+            row:setText(entry.name)
             row.onClick = archiveSelectSpell
         end
     end
+end
+
+local function archiveSetPlaceholder()
+    if UI and not UI.spellAndRune.DetailPanel:isVisible() then
+        UI.spellAndRune.PlaceholderLabel:setText(archiveSpells and tr('select a spell to view detailed information.') or
+            tr('Loading spells...'))
+    end
+end
+
+function MagicalArchive.onSpellList(protocol, opcode, buffer)
+    local ok, data = pcall(json.decode, buffer)
+    if not ok or type(data) ~= 'table' then
+        return
+    end
+    data = JsonChunks.receive(SPELL_ARCHIVE_OPCODE, data, 'spells')
+    if not data then
+        return
+    end
+    archiveSpells = data.spells or {}
+    archiveRebuildList()
+    archiveSetPlaceholder()
 end
 
 function showMagicalArchives()
@@ -160,7 +215,7 @@ function showMagicalArchives()
     vocationFilter:addOption(tr('Druid'), VocationsServer.Druid)
     vocationFilter:addOption(tr('Paladin'), VocationsServer.Paladin)
     vocationFilter:addOption(tr('Knight'), VocationsServer.Knight)
-    vocationFilter:addOption(tr('Monk'), VocationsServer.Monk)
+    vocationFilter:addOption(tr('No Vocation'), 0)
     vocationFilter.onOptionChange = function(widget, text, data)
         archiveState.vocationId = data
         archiveRebuildList()
@@ -188,12 +243,21 @@ function showMagicalArchives()
         RowType = tr('Type') .. ':',
         RowCooldown = tr('Cooldown') .. ':',
         RowLevel = tr('Level') .. ':',
+        RowMagicLevel = tr('Magic Level') .. ':',
         RowMana = tr('Mana / Soul') .. ':',
-        RowPremium = tr('Premium') .. ':'
+        RowPremium = tr('Premium') .. ':',
+        RowLearn = tr('Learning') .. ':',
+        RowRune = tr('Rune use') .. ':'
     }
     for rowId, caption in pairs(captions) do
         detailRows[rowId].caption:setText(caption)
     end
 
     archiveRebuildList()
+    archiveSetPlaceholder()
+
+    local protocol = g_game.getProtocolGame()
+    if protocol then
+        protocol:sendExtendedOpcode(SPELL_ARCHIVE_OPCODE, 'list')
+    end
 end

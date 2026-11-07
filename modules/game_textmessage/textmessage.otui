@@ -6,18 +6,11 @@ TextMessageLabel < UILabel
   margin-bottom: 2
   visible: false
 
-// Hotkey use ("Using one of 12 mana potions..."): created on the map widget by
-// textmessage.lua and placed by placeMapLabel every time it is shown.
-// Phantom so a click on the map under it still reaches the map.
-HotkeyMessageLabel < TextMessageLabel
-  id: hotkeyLabel
-  width: 303
-  phantom: true
-
-// Raid announcements and private messages: on the map widget too, placed by
-// textmessage.lua's placeMapLabel, so resizing the chat never moves them.
-RaidMessageLabel < TextMessageLabel
-  id: raidLabel
+// Every on-screen message but private ones: created on the map widget by
+// textmessage.lua and stacked under the character's feet by placeMapLabels, so
+// resizing the chat never moves them. Phantom so a click on the map under one
+// still reaches the map.
+ScreenMessageLabel < TextMessageLabel
   width: 303
   phantom: true
 
@@ -26,7 +19,8 @@ PrivateMessageLabel < TextMessageLabel
   width: 290
   phantom: true
 
-// Bottom tracks the chat panel itself, NOT gameMapPanel and NOT bottomSplitter.
+// Status lines stay just above the chat, so this panel's bottom tracks the chat
+// panel itself, NOT gameMapPanel and NOT bottomSplitter.
 //
 // gameMapPanel is wrong because extended view mode calls gameMapPanel:fill(
 // 'parent') (gameinterface.lua:1974) -- the map then covers the whole screen
@@ -47,21 +41,6 @@ Panel
   anchors.top: gameMapPanel.top
   anchors.bottom: gameBottomPanel.top
   focusable: false
-
-  Panel
-    id: centerTextMessagePanel
-    layout:
-      type: verticalBox
-      fit-children: true
-    width: 303
-    anchors.centerIn: parent
-
-    TextMessageLabel
-      id: highCenterLabel
-    TextMessageLabel
-      id: middleCenterLabel
-    TextMessageLabel
-      id: lowCenterLabel
 
   TextMessageLabel
     id: statusLabel

@@ -188,7 +188,7 @@ UIWidget
       anchors.top: prev.bottom
       margin-top: 5
       !text: tr('Show Expiry In Containers')
-      !tooltip: tr('Check this box to see how mmuch time or how many charges the \nitems in your open containers have left')
+      !tooltip: tr('Check this box to see how much time or how many charges the \nitems in your open containers have left')
 
     OptionCheckBoxMarked
       id: showExpiryOnUnusedItems

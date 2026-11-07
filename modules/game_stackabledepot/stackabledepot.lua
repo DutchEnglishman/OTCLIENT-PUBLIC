@@ -100,11 +100,18 @@ local function askAmount(serverId)
     end
     label:setText(scrollbar:getValue() .. ' of ' .. maximum)
 
-    amountWindow:getChildById('buttonOk').onClick = function()
+    local function confirm()
         send({a = 'w', s = serverId, n = scrollbar:getValue()})
         closeAmountWindow()
     end
+    amountWindow:getChildById('buttonOk').onClick = confirm
     amountWindow:getChildById('buttonCancel').onClick = closeAmountWindow
+
+    -- UIWindow:onKeyPress turns Enter and Escape into these, but only for the
+    -- focused window, and the stash window's search box would otherwise keep it.
+    amountWindow.onEnter = confirm
+    amountWindow.onEscape = closeAmountWindow
+    amountWindow:focus()
 end
 
 -- Whether an entry survives the current filter and search box. The tile count
@@ -309,10 +316,16 @@ local function isCarried(thing)
     return restore ~= nil and container ~= nil and restore.pathOf(container) ~= nil
 end
 
--- Whether the Stash Stackables row belongs on this thing's menu: a container
--- you carry, while you stand at a locker. The server checks both again.
+-- Whether the stash row belongs on this thing's menu: a container or a
+-- stackable item you carry, while you stand at a locker. The server checks all
+-- of it again.
 function canStow(thing)
-    return thing and thing:isItem() and thing:isContainer() and isCarried(thing) and isAtLocker()
+    return thing and thing:isItem() and (thing:isContainer() or thing:isStackable()) and isCarried(thing) and
+        isAtLocker()
+end
+
+function getStowLabel(thing)
+    return thing:isContainer() and tr('Stash Stackables') or tr('Stash')
 end
 
 -- The same addressing game_protect uses: a container slot reaches the server as

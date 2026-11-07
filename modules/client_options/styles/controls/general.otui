@@ -84,7 +84,7 @@ UIWidget
       OptionCheckBox
         id: disableRightClickWalk
         !text: tr('Disable right-click walking')
-        !tooltip: tr('Right-clicking a tile with nothing to use, attack or loot no longer walks you there')
+        !tooltip: tr('Right-clicking never walks you: not to an empty tile, and not to a corpse or item more than one step away')
 
     SmallReversedQtPanel
       anchors.left: parent.left

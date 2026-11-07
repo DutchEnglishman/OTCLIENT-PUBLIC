@@ -215,8 +215,10 @@ end
 -- const.lua, so this is the precise set that produces text -- no guessing at
 -- which keys are "letters". Everything below 32 is a control key (Escape,
 -- Enter, Tab, Backspace, arrows, Home/End, page keys) and F1-F12 and the
--- numpad sit above 126, so windows keep their navigation keys and the
--- traditional Tibia hotkey slots keep working while a field has focus.
+-- NumLock-off numpad sit above 126, so windows keep their navigation keys and the
+-- traditional Tibia hotkey slots keep working while a field has focus. The
+-- NumLock-on digits (Num0-Num9) sit above 126 too but do type a digit, so they
+-- count as text.
 --
 -- Ctrl/Alt/Meta exempt a combo, Shift does not: Shift+A still types an "A".
 --
@@ -224,7 +226,8 @@ end
 -- the handlers below (the chat line's onKeyPress in game_console) has to apply
 -- the same rule, or it reopens exactly this hole.
 function keyTypesText(keyCode, keyboardModifiers)
-    if keyCode < KeySpace or keyCode > KeyTilde then
+    local typesDigit = keyCode >= KeyNumLock0 and keyCode <= KeyNumLock9
+    if not typesDigit and (keyCode < KeySpace or keyCode > KeyTilde) then
         return false
     end
     return bit.band(keyboardModifiers, KeyboardCtrlModifier) == 0 and

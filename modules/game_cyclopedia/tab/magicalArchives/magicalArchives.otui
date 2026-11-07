@@ -91,6 +91,14 @@ UIWidget
         anchors.top: parent.top
         anchors.left: parent.left
         size: 32 32
+        font: Verdana Bold-11px
+        color: #F6F6F6
+        text-align: center
+
+      UIItem
+        id: RuneIcon
+        anchors.fill: SpellIcon
+        visible: false
 
       Label
         id: NameLabel
@@ -134,6 +142,12 @@ UIWidget
         ArchiveDetailRow
           id: RowLevel
         ArchiveDetailRow
+          id: RowMagicLevel
+        ArchiveDetailRow
           id: RowMana
         ArchiveDetailRow
           id: RowPremium
+        ArchiveDetailRow
+          id: RowLearn
+        ArchiveDetailRow
+          id: RowRune

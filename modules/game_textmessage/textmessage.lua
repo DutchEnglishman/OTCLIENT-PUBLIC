@@ -209,20 +209,25 @@ MessageTypes = {
     [254] = MessageSettings.private
 }
 
-messagesPanel = nil
+-- The on-screen system messages start under the character's feet. It stands
+-- on the map's centre tile, drawn 8 of its 32 px up from the tile's bottom, so
+-- its feet are a quarter tile below the centre; the gap is about half a
+-- centimetre at 96 dpi.
+FEET_TILES_BELOW_CENTER = 0.25
+GAP_BELOW_FEET = 19
 
--- Where the hotkey line starts, in tiles below the middle of the map (the
--- middle of the character's tile).
-HOTKEY_LABEL_TILES_BELOW_CENTER = 0.05
+-- Top to bottom under the feet. A fixed order, so a line never swaps places
+-- with another when one appears or expires.
+local STACK_ORDER = { 'hotkeyLabel', 'lowCenterLabel', 'middleCenterLabel', 'highCenterLabel', 'raidLabel' }
 
--- The hotkey line, raid announcements and private messages are parented to the
--- map rather than to messagesPanel: that panel ends at the chat, so anything
--- laid out in it -- anchored, or unanchored and clamped back inside it by
--- UIWidget::onGeometryChange -- moved whenever the chat was resized. The map
--- does not move with the chat and is drawn under it, so the chat simply covers
--- them.
-hotkeyLabel = nil
+-- Every label but the status line is parented to the map, not to a panel that
+-- ends at the chat: anything laid out in such a panel -- anchored, or
+-- unanchored and clamped back inside it by UIWidget::onGeometryChange -- moved
+-- whenever the chat was resized. The map does not move with the chat and is
+-- drawn under it, so the chat simply covers them. The status line is the one
+-- meant to sit just above the chat, so it lives in messagesPanel.
 local mapLabels = {}
+messagesPanel = nil
 
 function init()
     for messageMode, _ in pairs(MessageTypes) do
@@ -232,12 +237,13 @@ function init()
     connect(g_game, 'onGameEnd', clearMessages)
     messagesPanel = g_ui.loadUI('textmessage', modules.game_interface.getRootPanel())
     local map = modules.game_interface.getMapPanel()
-    hotkeyLabel = g_ui.createWidget('HotkeyMessageLabel', map)
-    mapLabels = {
-        hotkeyLabel = hotkeyLabel,
-        raidLabel = g_ui.createWidget('RaidMessageLabel', map),
-        privateLabel = g_ui.createWidget('PrivateMessageLabel', map)
-    }
+    mapLabels = {}
+    for _, id in ipairs(STACK_ORDER) do
+        local label = g_ui.createWidget('ScreenMessageLabel', map)
+        label:setId(id)
+        mapLabels[id] = label
+    end
+    mapLabels.privateLabel = g_ui.createWidget('PrivateMessageLabel', map)
     -- The map itself does resize in windowed mode, where the chat takes its
     -- height; the character stays on its centre, so the labels follow it.
     connect(map, { onGeometryChange = placeMapLabels })
@@ -257,7 +263,6 @@ function terminate()
         label:destroy()
     end
     mapLabels = {}
-    hotkeyLabel = nil
 end
 
 local function screenLabel(target)
@@ -441,29 +446,23 @@ function displayMessage(mode, text)
             label:setColor(msgtype.color)
         end
 
-        placeMapLabel(label)
         label:setVisible(true)
-        if label == hotkeyLabel then
-            placeMapLabels()
-        end
+        placeMapLabels()
         removeEvent(label.hideEvent)
         label.hideEvent = scheduleEvent(function()
             label:setVisible(false)
-            if label == hotkeyLabel then
-                placeMapLabels()
-            end
+            placeMapLabels()
         end, calculateVisibleTime(text))
     end
 end
 
--- Placed from the map widget itself rather than anchored: the message panel
--- ends at the chat, which in extended view is drawn over the map, so the
--- panel's centre is not where the character stands. The character is on the
--- map's centre tile; the tile size is the map's rect over the tiles it shows.
--- Anything not one of mapLabels is laid out by its panel and left alone.
-function placeMapLabel(label)
+-- Placed from the map widget itself rather than anchored: the chat is drawn
+-- over the map in extended view, so nothing that ends at the chat knows where
+-- the character stands. The character is on the map's centre tile; the tile
+-- size is the map's rect over the tiles it shows.
+function placeMapLabels()
     local map = modules.game_interface.getMapPanel()
-    if not map or mapLabels[label:getId()] ~= label then
+    if not map then
         return
     end
     local rect = map:getRect()
@@ -471,29 +470,24 @@ function placeMapLabel(label)
     local tile = math.min(rect.width / dimension.width, rect.height / dimension.height)
     local centerX = rect.x + rect.width / 2
     local centerY = rect.y + rect.height / 2
-    local y
-    if label == hotkeyLabel then
-        y = centerY + tile * HOTKEY_LABEL_TILES_BELOW_CENTER
-    elseif label:getId() == 'raidLabel' then
-        -- The hotkey line's spot; while one is showing the raid line sits
-        -- directly under it, so a potion used mid-raid does not cover it.
-        y = centerY + tile * HOTKEY_LABEL_TILES_BELOW_CENTER
-        if hotkeyLabel:isVisible() then
-            y = y + hotkeyLabel:getHeight() + 2
-        end
-    else
-        -- A private message is centred halfway between the top of the map and
-        -- the character, where it sat before the chat could move it.
-        y = (rect.y + centerY) / 2 - label:getHeight() / 2
-    end
-    label:setPosition({x = math.floor(centerX - label:getWidth() / 2), y = math.floor(y)})
-end
 
-function placeMapLabels()
-    for _, label in pairs(mapLabels) do
+    local y = centerY + tile * FEET_TILES_BELOW_CENTER + GAP_BELOW_FEET
+    for _, id in ipairs(STACK_ORDER) do
+        local label = mapLabels[id]
         if label:isVisible() then
-            placeMapLabel(label)
+            label:setPosition({x = math.floor(centerX - label:getWidth() / 2), y = math.floor(y)})
+            y = y + label:getHeight() + 2
         end
+    end
+
+    -- A private message is centred halfway between the top of the map and the
+    -- character, where it sat before the chat could move it.
+    local private = mapLabels.privateLabel
+    if private:isVisible() then
+        private:setPosition({
+            x = math.floor(centerX - private:getWidth() / 2),
+            y = math.floor((rect.y + centerY) / 2 - private:getHeight() / 2)
+        })
     end
 end
 
@@ -527,8 +521,8 @@ function displayPrivateMessage(text)
         label:setText(text)
     end
 
-    placeMapLabel(label)
     label:setVisible(true)
+    placeMapLabels()
     removeEvent(label.hideEvent)
     label.hideEvent = scheduleEvent(function()
         label:setVisible(false)
@@ -552,12 +546,9 @@ function displayBroadcastMessage(text)
 end
 
 function clearMessages()
-    for _i, child in pairs(messagesPanel:recursiveGetChildren()) do
-        if child:getId():match('Label') then
-            child:hide()
-            removeEvent(child.hideEvent)
-        end
-    end
+    local status = messagesPanel:getChildById('statusLabel')
+    status:hide()
+    removeEvent(status.hideEvent)
     for _, label in pairs(mapLabels) do
         label:hide()
         removeEvent(label.hideEvent)

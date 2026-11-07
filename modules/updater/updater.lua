@@ -685,6 +685,21 @@ end
 
 -- manifest --------------------------------------------------------------------
 
+-- The executable of the same kind as the one running: an OpenGL client must never be
+-- swapped for the DirectX one or the reverse. `binary` stays the OpenGL exe, because a
+-- client older than `binaries` reads only that field; an exe that cannot say what it is
+-- predates the DirectX build and so is OpenGL.
+local function manifestBinaryFor(data)
+  local backend = g_app.getGraphicsBackend and g_app.getGraphicsBackend() or 'opengl'
+  if type(data.binaries) == 'table' and data.binaries[backend] ~= nil then
+    return data.binaries[backend]
+  end
+  if backend == 'opengl' then
+    return data.binary
+  end
+  return nil
+end
+
 local function validateManifest(data)
   if type(data) ~= 'table' then
     return nil, 'manifest is not an object'
@@ -728,7 +743,7 @@ local function validateManifest(data)
   end
 
   local binaryEntry
-  local binary = data.binary
+  local binary = manifestBinaryFor(data)
   if config.allowExecutableUpdate and type(binary) == 'table'
       and type(binary.asset) == 'string' and binary.asset ~= ''
       and isSha256(binary.sha256) then

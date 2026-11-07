@@ -126,3 +126,11 @@ function g_game.closeContainerByItemId(itemId, tier)
     end
     return #containersToClose > 0
 end
+
+-- A walk key while attacking in chase mode means "let me go": with chase left on,
+-- the server paths the player back to the target on its next step.
+function g_game.dropChaseForManualWalk()
+    if modules.client_options.getOption('autoChaseOverride') and g_game.isAttacking() and g_game.getChaseMode() == ChaseOpponent then
+        g_game.setChaseMode(DontChase)
+    end
+end

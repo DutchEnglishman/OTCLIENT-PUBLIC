@@ -99,13 +99,20 @@ local function canChangeFloor(pos, deltaZ)
     end
 
     if deltaZ > 0 then
-        -- Going DOWN
-        return toTile:isWalkable() and (toTile:hasElevation(3) or toTile:hasFloorChange())
+        -- Going DOWN. A climb either way makes the server drop every blocking
+        -- item and creature from the check (Game::getStepDestination), so only a
+        -- ground is asked for: isWalkable() would apply the stack-height rule with
+        -- no tile to step from, call the parcels a wall, and leave the player on
+        -- the roof.
+        if toTile:hasElevation(3) then
+            return toTile:getGround() ~= nil
+        end
+        return toTile:isWalkable() and toTile:hasFloorChange()
     end
     -- deltaZ < 0
-    -- Going UP: check if current tile has elevation (stairs to climb) AND destination is walkable
+    -- Going UP from a stack of 3 onto the floor above.
     local fromTile = g_map.getTile(player:getPosition())
-    return fromTile and fromTile:hasElevation(3) and toTile:isWalkable()
+    return fromTile and fromTile:hasElevation(3) and toTile:getGround() ~= nil
 end
 
 --- Whether the server has told us it would refuse this step.
@@ -150,6 +157,10 @@ local function walk(dir)
     if g_game.isFollowing() then
         g_game.cancelFollow()
     end
+
+    -- Before the stop branch below: a chase in progress is a server walk, and that
+    -- branch returns without walking, so g_game.walk's onWalk never fires for it.
+    g_game.dropChaseForManualWalk()
 
     local isAutoWalking = player:isAutoWalking()
     if isAutoWalking or player:isServerWalking() then

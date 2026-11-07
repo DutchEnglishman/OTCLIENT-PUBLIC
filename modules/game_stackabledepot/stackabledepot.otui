@@ -190,7 +190,7 @@ MainWindow
     text-align: center
     text-auto-resize: true
     color: $textDisabled
-    text: Click a tile to choose an amount, ctrl-click to take it all. Right-click a bag and choose Stash Stackables to put them in.
+    text: Click a tile to choose an amount, ctrl-click to take it all. Right-click a bag and choose Stash Stackables, or a stackable item and choose Stash, to put them in.
 
   Button
     id: closeButton
