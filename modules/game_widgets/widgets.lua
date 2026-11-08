@@ -30,6 +30,7 @@ local MENU_ORDER = {
     'vipListButton',
     'CyclopediaButton',
     'trackerButton',
+    'huntingTasksTrackerButton',
     'questLogButton',
     'highscoreButton',
     'Store shop',

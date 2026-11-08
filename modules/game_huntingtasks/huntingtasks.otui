@@ -1,0 +1,454 @@
+HuntingTaskPip < UIWidget
+  size: 7 7
+  border-width: 1
+  border-color: #000000
+  background-color: $panelFillLight
+  focusable: false
+  phantom: true
+
+HuntingTaskRow < UIWidget
+  height: 38
+  focusable: true
+  background-color: alpha
+  padding: 3 5
+
+  $hover !focus:
+    background-color: $hoverOverlay
+
+  $focus:
+    background-color: $selectionFill
+
+  Creature
+    id: creature
+    size: 32 32
+    anchors.left: parent.left
+    anchors.verticalCenter: parent.verticalCenter
+    phantom: true
+    border-width: 1
+    border-color: $borderColor
+    background-color: #00000066
+
+  UIWidget
+    id: pips
+    size: 25 7
+    anchors.right: parent.right
+    anchors.verticalCenter: parent.verticalCenter
+    layout:
+      type: horizontalBox
+      spacing: 2
+    phantom: true
+
+    HuntingTaskPip
+      id: pip1
+    HuntingTaskPip
+      id: pip2
+    HuntingTaskPip
+      id: pip3
+
+  Label
+    id: name
+    font: verdana-11px-rounded
+    color: $textBright
+    anchors.left: creature.right
+    anchors.right: pips.left
+    anchors.top: parent.top
+    margin-left: 6
+    margin-right: 4
+    margin-top: 2
+    text-auto-resize: false
+    phantom: true
+
+  Label
+    id: sub
+    font: verdana-11px-monochrome
+    color: $textDim
+    anchors.left: name.left
+    anchors.right: name.right
+    anchors.top: name.bottom
+    margin-top: 1
+    phantom: true
+
+  UIProgressBar
+    id: bar
+    height: 4
+    anchors.left: name.left
+    anchors.right: name.right
+    anchors.top: sub.bottom
+    margin-top: 1
+    background-color: #d39b3a
+    border: 1 black
+    phantom: true
+
+HuntingTaskFact < UIWidget
+  height: 34
+  background-color: $panelFillDark
+  border-width: 1
+  border-color: $separatorColor
+  padding: 3 6
+
+  Label
+    id: title
+    font: verdana-11px-monochrome
+    color: $textDim
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: parent.top
+
+  Label
+    id: value
+    font: verdana-11px-rounded
+    color: $textBright
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    margin-top: 2
+
+HuntingTaskRun < UIWidget
+  background-color: $panelFillDark
+  border-width: 1
+  border-color: $separatorColor
+  padding: 4 6
+
+  Label
+    id: title
+    font: verdana-11px-rounded
+    color: $textDim
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: parent.top
+
+  Label
+    id: lines
+    font: verdana-11px-monochrome
+    color: $textColor
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    margin-top: 3
+    text-wrap: true
+    text-auto-resize: true
+
+HuntingTaskTab < Button
+  height: 20
+  width: 104
+
+HuntingTasksWindow < MainWindow
+  id: huntingTasksWindow
+  !text: tr('Hunting Tasks')
+  size: 680 482
+  @onEscape: modules.game_huntingtasks.hide()
+
+  HuntingTaskTab
+    id: tab_active
+    anchors.left: parent.left
+    anchors.top: parent.top
+    @onClick: modules.game_huntingtasks.selectTab('active')
+
+  HuntingTaskTab
+    id: tab_available
+    anchors.left: prev.right
+    anchors.top: parent.top
+    margin-left: 4
+    @onClick: modules.game_huntingtasks.selectTab('available')
+
+  HuntingTaskTab
+    id: tab_completed
+    anchors.left: prev.right
+    anchors.top: parent.top
+    margin-left: 4
+    @onClick: modules.game_huntingtasks.selectTab('completed')
+
+  TextEdit
+    id: searchEdit
+    width: 150
+    height: 20
+    anchors.right: parent.right
+    anchors.top: parent.top
+    placeholder: Search monster...
+    @onTextChange: modules.game_huntingtasks.refreshList()
+
+  ComboBox
+    id: sortBox
+    width: 86
+    height: 20
+    anchors.right: searchEdit.left
+    anchors.top: parent.top
+    margin-right: 6
+
+  Label
+    id: sortLabel
+    !text: tr('Sort')
+    color: $textDim
+    anchors.right: sortBox.left
+    anchors.verticalCenter: sortBox.verticalCenter
+    margin-right: 5
+
+  TextList
+    id: taskList
+    width: 280
+    anchors.left: parent.left
+    anchors.top: tab_active.bottom
+    anchors.bottom: footer.top
+    margin-top: 6
+    margin-bottom: 6
+    vertical-scrollbar: taskListScroll
+    background-color: $panelFill
+    border-width: 1
+    border-color: $separatorColor
+    // The scrollbar is drawn over the list's right edge; the rows stop short of it.
+    padding: 1 14 1 1
+
+  VerticalScrollBar
+    id: taskListScroll
+    anchors.top: taskList.top
+    anchors.bottom: taskList.bottom
+    anchors.right: taskList.right
+    step: 38
+    pixels-scroll: true
+
+  Label
+    id: emptyLabel
+    anchors.left: taskList.left
+    anchors.right: taskList.right
+    anchors.top: taskList.top
+    margin-top: 14
+    text-align: center
+    color: $textDim
+    phantom: true
+
+  UIWidget
+    id: detail
+    anchors.left: taskList.right
+    anchors.right: parent.right
+    anchors.top: taskList.top
+    anchors.bottom: taskList.bottom
+    margin-left: 8
+    background-color: $panelFill
+    border-width: 1
+    border-color: $separatorColor
+    padding: 10
+
+    Creature
+      id: creature
+      size: 64 64
+      anchors.left: parent.left
+      anchors.top: parent.top
+      border-width: 1
+      border-color: $borderColor
+      background-color: #00000066
+      phantom: true
+
+    Label
+      id: name
+      font: verdana-11px-rounded
+      color: $textBright
+      anchors.left: creature.right
+      anchors.right: parent.right
+      anchors.top: creature.top
+      margin-left: 10
+      margin-top: 8
+
+    Label
+      id: counts
+      color: $textDim
+      anchors.left: name.left
+      anchors.right: parent.right
+      anchors.top: name.bottom
+      margin-top: 4
+      text-wrap: true
+      text-auto-resize: true
+
+    HuntingTaskFact
+      id: factKills
+      anchors.left: parent.left
+      anchors.top: creature.bottom
+      margin-top: 10
+      width: 112
+
+    HuntingTaskFact
+      id: factLevel
+      anchors.left: prev.right
+      anchors.top: prev.top
+      margin-left: 6
+      width: 112
+
+    HuntingTaskFact
+      id: factRuns
+      anchors.left: prev.right
+      anchors.right: parent.right
+      anchors.top: prev.top
+      margin-left: 6
+
+    ProgressBar
+      id: progress
+      height: 16
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.top: factKills.bottom
+      margin-top: 8
+      background-color: #c08a2a
+
+    HuntingTaskRun
+      id: run1
+      width: 112
+      height: 120
+      anchors.left: parent.left
+      anchors.top: progress.bottom
+      margin-top: 8
+
+    HuntingTaskRun
+      id: run2
+      width: 112
+      height: 120
+      anchors.left: prev.right
+      anchors.top: prev.top
+      margin-left: 6
+
+    HuntingTaskRun
+      id: run3
+      height: 120
+      anchors.left: prev.right
+      anchors.right: parent.right
+      anchors.top: prev.top
+      margin-left: 6
+
+    Button
+      id: claimButton
+      !text: tr('Claim reward')
+      width: 96
+      anchors.right: parent.right
+      anchors.bottom: parent.bottom
+      @onClick: modules.game_huntingtasks.onAction('claim')
+
+    Button
+      id: cancelButton
+      !text: tr('Cancel task')
+      width: 96
+      anchors.right: claimButton.left
+      anchors.bottom: parent.bottom
+      margin-right: 6
+      @onClick: modules.game_huntingtasks.onAction('cancel')
+
+    Button
+      id: startButton
+      !text: tr('Start task')
+      width: 96
+      anchors.right: parent.right
+      anchors.bottom: parent.bottom
+      @onClick: modules.game_huntingtasks.onAction('start')
+
+  UIWidget
+    id: footer
+    height: 20
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    phantom: true
+
+    Label
+      id: slotsLabel
+      !text: tr('Active slots')
+      color: $textDim
+      anchors.left: parent.left
+      anchors.verticalCenter: parent.verticalCenter
+
+    UIWidget
+      id: slots
+      height: 12
+      anchors.left: slotsLabel.right
+      anchors.verticalCenter: parent.verticalCenter
+      margin-left: 8
+      layout:
+        type: horizontalBox
+        spacing: 3
+        fit-children: true
+      phantom: true
+
+    Label
+      id: levelLabel
+      color: $textDim
+      anchors.left: slots.right
+      anchors.verticalCenter: parent.verticalCenter
+      margin-left: 16
+
+    Button
+      id: closeButton
+      !text: tr('Close')
+      width: 64
+      anchors.right: parent.right
+      anchors.verticalCenter: parent.verticalCenter
+      @onClick: modules.game_huntingtasks.hide()
+
+HuntingTaskSlot < UIWidget
+  size: 12 12
+  border-width: 1
+  border-color: #000000
+  background-color: #000000
+  phantom: true
+
+HuntingTrackerRow < UIWidget
+  height: 30
+  padding: 2 2
+
+  Creature
+    id: creature
+    size: 26 26
+    anchors.left: parent.left
+    anchors.verticalCenter: parent.verticalCenter
+    phantom: true
+
+  Label
+    id: name
+    font: verdana-11px-monochrome
+    color: $textBright
+    anchors.left: creature.right
+    anchors.right: parent.right
+    anchors.top: parent.top
+    margin-left: 5
+    margin-top: 1
+    text-auto-resize: false
+
+  UIProgressBar
+    id: bar
+    height: 11
+    anchors.left: name.left
+    anchors.right: parent.right
+    anchors.top: name.bottom
+    margin-top: 2
+    background-color: #d39b3a
+    border: 1 black
+    font: verdana-11px-rounded
+    text-offset: 0 1
+
+HuntingTrackerEmpty < Label
+  height: 18
+  text-align: center
+  color: $textMuted
+  !text: tr('empty slot')
+
+HuntingTasksTracker < MiniWindow
+  id: huntingTasksTracker
+  height: 190
+  @onOpen: modules.game_huntingtasks.onTrackerOpen()
+  @onClose: modules.game_huntingtasks.onTrackerClose()
+  &save: true
+
+  Label
+    id: miniwindowTitle
+    anchors.top: miniwindowHeader.top
+    anchors.left: miniwindowHeader.left
+    anchors.right: miniwindowHeader.right
+    margin-top: 2
+    margin-left: 6
+    margin-right: 50
+    font: verdana-11px-monochrome
+    height: 13
+    !text: tr('Task Tracker')
+    color: #9d9d9dff
+
+  MiniWindowContents
+    id: contentsPanel
+    padding-left: 4
+    padding-right: 4
+    padding-top: 2
+    layout: verticalBox

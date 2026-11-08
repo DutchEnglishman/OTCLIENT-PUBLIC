@@ -1,0 +1,13 @@
+Module
+  name: game_huntingtasks
+  description: Grizzly Adams' hunting task window and the Task Tracker mini-window
+  author: Roel
+  sandboxed: true
+  autoload: true
+
+  dependencies:
+    - game_interface
+
+  scripts: [ huntingtasks ]
+  @onLoad: init()
+  @onUnload: terminate()

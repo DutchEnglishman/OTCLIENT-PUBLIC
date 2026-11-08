@@ -201,6 +201,16 @@ local function setup()
         end
     end
 
+    -- Right-click walking starts disabled. The load loop above writes every
+    -- option back to the config, so a config from before the default changed
+    -- holds false for everyone, chosen or not; it is switched on once, marked so
+    -- that a player who then turns it off keeps that. Before, false was the
+    -- default, so only someone who switched it on and back off chose it.
+    if not g_settings.getBoolean('disableRightClickWalkDefaulted') then
+        setOption('disableRightClickWalk', true, true)
+        g_settings.set('disableRightClickWalkDefaulted', true)
+    end
+
     -- Migration: restore normal mode when prior configs were set to heavy
     -- floor render modes that can make movement/animation feel too fast.
     if options.floorViewMode and (options.floorViewMode.value == 4 or options.floorViewMode.value == 1) then

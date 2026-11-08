@@ -185,9 +185,11 @@ MainWindow
   Label
     id: hint
     anchors.top: prev.bottom
-    anchors.horizontalCenter: parent.horizontalCenter
+    anchors.left: grid.left
+    anchors.right: grid.right
     margin-top: 8
     text-align: center
+    text-wrap: true
     text-auto-resize: true
     color: $textDisabled
     text: Click a tile to choose an amount, ctrl-click to take it all. Right-click a bag and choose Stash Stackables, or a stackable item and choose Stash, to put them in.

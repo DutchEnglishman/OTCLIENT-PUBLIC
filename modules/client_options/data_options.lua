@@ -168,7 +168,7 @@ return {
     smartWalk                         = false,
     autoChaseOverride                 = true,
     talkOnRightClick                  = false,
-    disableRightClickWalk             = false,
+    disableRightClickWalk             = true,
     moveStack                         = false,
     showStatusMessagesInConsole       = true,
     showEventMessagesInConsole        = true,

@@ -288,7 +288,6 @@ function skillController:onInit()
         onFreeCapacityChange = onFreeCapacityChange,
         onTotalCapacityChange = onTotalCapacityChange,
         onBaseCapacityChange = onBaseCapacityChange,
-        onStaminaChange = onStaminaChange,
         onOfflineTrainingChange = onOfflineTrainingChange,
         onRegenerationChange = onRegenerationChange,
         onSpeedChange = onSpeedChange,
@@ -365,7 +364,7 @@ local SKILL_GROUPS = {
         'momentum', 'transcendence', 'amplification'
     },
     individual = {
-        'level', 'stamina', 'offlineTraining', 'magiclevel', 'skillId0', 'skillId1', 
+        'level', 'offlineTraining', 'magiclevel', 'skillId0', 'skillId1', 
         'skillId2', 'skillId3', 'skillId4', 'skillId5', 'skillId6'
     },
     GameAdditionalSkills = {
@@ -569,7 +568,6 @@ function onSkillsMenuAction(actionId)
     else
         local skillMap = {
             showLevel = 'level',
-            showStamina = 'stamina',
             showOfflineTraining = 'offlineTraining',
             showMagic = 'magiclevel',
             showFist = 'skillId0',
@@ -590,7 +588,6 @@ end
 function getSkillVisibilityState(actionId)
     local skillMap = {
         showLevel = 'level',
-        showStamina = 'stamina',
         showOfflineTraining = 'offlineTraining',
         showMagic = 'magiclevel',
         showFist = 'skillId0',
@@ -1049,7 +1046,6 @@ function refresh()
     onHealthChange(player, player:getHealth(), player:getMaxHealth())
     onManaChange(player, player:getMana(), player:getMaxMana())
     onFreeCapacityChange(player, player:getFreeCapacity())
-    onStaminaChange(player, player:getStamina())
     onMagicLevelChange(player, player:getMagicLevel(), player:getMagicLevelPercent())
     onOfflineTrainingChange(player, player:getOfflineTrainingTime())
     onRegenerationChange(player, player:getRegenerationTime())
@@ -1390,49 +1386,6 @@ local function formatTime(minutes)
     return hours .. ':' .. mins
 end
 
-local function getStaminaTooltip(hours, minutes, stamina)
-    local timeText = tr('You have %s hours and %s minutes left', hours, minutes)
-    
-    if stamina > 2400 and g_game.getClientVersion() >= 1038 then
-        local player = g_game.getLocalPlayer()
-        if player:isPremium() then
-            return timeText .. '\n' .. tr('Now you will gain 50%% more experience')
-        else
-            return timeText .. '\n' .. tr('You will not gain 50%% more experience because you aren\'t premium player, now you receive only 1x experience points')
-        end
-    elseif stamina >= 2400 and g_game.getClientVersion() < 1038 then
-        return timeText .. '\n' .. tr('If you are premium player, you will gain 50%% more experience')
-    elseif stamina < 2400 and stamina > 840 then
-        return timeText
-    elseif stamina <= 840 and stamina > 0 then
-        return timeText .. '\n' .. tr('You gain only 50%% experience and you don\'t may gain loot from monsters')
-    elseif stamina == 0 then
-        return timeText .. '\n' .. tr('You don\'t may receive experience and loot from monsters')
-    end
-    return timeText
-end
-
-function onStaminaChange(localPlayer, stamina)
-    local hours = math.floor(stamina / 60)
-    local minutes = stamina % 60
-    local percent = math.floor(100 * stamina / (42 * 60))
-    
-    setSkillValue('stamina', formatTime(stamina))
-    
-    local tooltip = getStaminaTooltip(hours, minutes, stamina)
-    local color = 'orange'
-    
-    if stamina > 2400 then
-        color = g_game.getClientVersion() >= 1038 and localPlayer:isPremium() and 'green' or '#89F013'
-    elseif stamina <= 840 and stamina > 0 then
-        color = 'red'
-    elseif stamina == 0 then
-        color = 'black'
-    end
-    
-    setSkillPercent('stamina', percent, tooltip, color)
-end
-
 function onOfflineTrainingChange(localPlayer, offlineTrainingTime)
     if not g_game.getFeature(GameOfflineTrainingTime) then
         return
@@ -1560,9 +1513,6 @@ local function updateExperienceRate(localPlayer)
     if (ExpRating[ExperienceRate.LOW_LEVEL] or 0) > 0 then
         tooltip = tooltip .. string.format("\n- Low Level Bonus: %d%%", ExpRating[ExperienceRate.LOW_LEVEL])
     end
-
-    tooltip = tooltip .. string.format("\n- Stamina multiplier: x%.1f (%s h remaining)", staminaMultiplier / 100,
-        formatTimeByMinutes(localPlayer:getStamina() - 2340))
 
     xpgainrate:setTooltip(tooltip)
 

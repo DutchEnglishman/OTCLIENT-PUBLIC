@@ -367,6 +367,13 @@ function consoleController:onInit()
           callback = sendCurrentMessage,
         }
       }, consolePanel)
+    Keybind.new("Chat", "Toggle WASD chat mode", "", "")
+    Keybind.bind("Chat", "Toggle WASD chat mode", {
+        {
+          type = KEY_DOWN,
+          callback = toggleChat,
+        }
+      }, gameRootPanel)
     Keybind.new("Chat Channel", "Open Channel List", "Ctrl+O", "")
     Keybind.bind("Chat Channel", "Open Channel List", {
         {
@@ -597,6 +604,7 @@ function consoleController:onTerminate()
     Keybind.delete("Chat Channel", "Open Channel List")
     Keybind.delete("Chat Channel", "Open Help Channel")
     Keybind.delete("Chat", "Send current chat line")
+    Keybind.delete("Chat", "Toggle WASD chat mode")
     saveCommunicationSettings()
     clearReadOnlyTab()
     if readOnlyModeEnabled then

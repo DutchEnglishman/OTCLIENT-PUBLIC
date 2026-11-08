@@ -205,15 +205,11 @@ function EnterGame.init()
     local host, server = selectedServer()
     local servers = g_settings.getNode("ServerList") or {}
     local serverData = host and servers[host] or {}
-    if serverData and serverData.account then
-        EnterGame.setAccountName(serverData.account)
-        EnterGame.setPassword(serverData.password)
-        enterGame:getChildById('rememberEmailBox'):setChecked(true)
-    else
-        EnterGame.setAccountName('')
-        EnterGame.setPassword('')
-        enterGame:getChildById('rememberEmailBox'):setChecked(false)
-    end
+    -- setAccountName ticks "Remember password" only when a real account comes
+    -- back out. Unticking stores g_crypt.encrypt(''), which is a non-empty string
+    -- (the checksum alone), so testing serverData.account itself re-ticked it.
+    EnterGame.setAccountName(serverData.account)
+    EnterGame.setPassword(serverData.password)
 
     enterGame:getChildById('autoLoginBox'):setChecked(serverData.autologin == true)
     enterGame:getChildById('stayLoggedBox'):setChecked(stayLogged)

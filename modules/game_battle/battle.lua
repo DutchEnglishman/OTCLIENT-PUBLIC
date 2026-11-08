@@ -2000,17 +2000,20 @@ function attackNext(previous)
         return
     end
 
-    local children = mainInstance.panel:getChildren()
+    -- The game's own target, not battleButton.isTarget: onAttack only sets that
+    -- flag while the battle window is open, so with it closed every press found
+    -- no target and attacked the first creature again.
+    local attacking = g_game.getAttackingCreature()
+    local targetId = attacking and attacking:getId()
 
-    for _, battleButton in pairs(mainInstance.panel:getChildren()) do
-        if battleButton:isExplicitlyVisible() then
-            -- select visible first child
+    for _, battleButton in ipairs(mainInstance.panel:getChildren()) do
+        if battleButton:isExplicitlyVisible() and battleButton.creature then
             if not firstElement then
                 firstElement = battleButton
             end
             lastElement = battleButton
 
-            if battleButton.isTarget then
+            if battleButton.creature:getId() == targetId then
                 foundTarget = true
             elseif foundTarget and not nextElement then
                 nextElement = battleButton

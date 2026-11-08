@@ -189,13 +189,6 @@ MiniWindow
       SkillValueLabel
 
     SkillButton
-      id: stamina
-      SkillNameLabel
-        !text: tr('Stamina')
-      SkillValueLabel
-      RedPercentPanel
-
-    SkillButton
       id: offlineTraining
       SkillNameLabel
         !text: tr('Offline Training')
@@ -805,10 +798,6 @@ SkillsListSubMenu < PopupMenu
   SkillsSubMenuOption
     id: showLevel
     !text: tr('Level')
-
-  SkillsSubMenuOption
-    id: showStamina
-    !text: tr('Stamina')
 
   SkillsSubMenuOption
     id: showOfflineTraining

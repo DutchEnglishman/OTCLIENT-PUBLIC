@@ -2022,17 +2022,34 @@ local function handleItemInteraction(item, widget, callback)
         spinbox.onValueChange = spinBoxValueChange
     end
 
+    -- Destroying the focused dialog makes the root focus its topmost visible
+    -- focusable child (UIWidget::removeChild -> focusPreviousChild), not
+    -- necessarily this panel, and onRootChildFocusChange leaves focus wherever
+    -- that lands if the widget looks like it takes keys (a floating miniwindow,
+    -- anything holding a text field). The walk keys live on gameRootPanel, so
+    -- the player could not walk until clicking the map. Queued after that
+    -- handler's own deferred check, so this runs last.
+    local returnFocusToGame = function()
+        addEvent(function()
+            if g_game.isOnline() and gameRootPanel and gameRootPanel:isVisible() then
+                gameRootPanel:focus()
+            end
+        end)
+    end
+
     local okButton = widget:getChildById('buttonOk')
     local moveFunc = function()
         callback(itembox:getItemCount())
         okButton:getParent():destroy()
         widget = nil
+        returnFocusToGame()
     end
     local cancelButton = widget:getChildById('buttonCancel')
     local cancelFunc = function()
         cancelButton:getParent():destroy()
         countWindow = nil
         widget = nil
+        returnFocusToGame()
     end
 
     widget.onEnter = moveFunc
