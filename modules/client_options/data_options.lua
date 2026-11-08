@@ -186,7 +186,11 @@ return {
     -- the Interface options did nothing at all.
     hideOthersServerLogMessages       = false,
     showPrivateMessagesOnScreen       = true,
-    showLootMessagesOnScreen          = true,
+    -- Off by default, since on-screen loot was once switched off for everyone.
+    -- A new key, not showLootMessagesOnScreen: the load loop writes every
+    -- option back, so every existing config holds that one as true from when
+    -- its checkbox did nothing, and reusing it would turn loot on for them all.
+    showLootOnScreen                  = false,
     showHighlightedUnderline          = {
         value = false,
         action = function(value, options, controller, panels, extraWidgets)

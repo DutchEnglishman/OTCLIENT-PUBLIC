@@ -134,3 +134,41 @@ function g_game.dropChaseForManualWalk()
         g_game.setChaseMode(DontChase)
     end
 end
+
+-- The drawn map rect, mirroring UIMap::updateMapSize (src/client/uimap.cpp):
+-- the padding rect inset by a pixel, letterboxed to the view's aspect ratio
+-- when keepAspectRatio is on, and centred on the padding rect either way.
+function getMapDrawRect(mapPanel)
+    local pad = mapPanel:getPaddingRect()
+    local width, height = pad.width - 2, pad.height - 2
+
+    if mapPanel:isKeepAspectRatioEnabled() then
+        local dimension = mapPanel:getVisibleDimension()
+        local ratio = dimension.width / dimension.height
+        if width / height > ratio then
+            width = math.floor(height * ratio)
+        else
+            height = math.floor(width / ratio)
+        end
+    end
+
+    return pad.x + math.floor((pad.width - width) / 2), pad.y + math.floor((pad.height - height) / 2), width, height
+end
+
+-- Where the player's tile is actually drawn, and the drawn tile size. It is
+-- NOT the centre of the map rect: MapView::calcFramebufferSource crops one
+-- tile off west, east and north to hide the edge void bars, and the vertical
+-- crop is one-sided, so the camera tile has one fewer row above it than below
+-- and sits exactly half a drawn tile above the rect's centre.
+function getPlayerScreenCenter(mapPanel)
+    local x, y, width, height = getMapDrawRect(mapPanel)
+    local dimension = mapPanel:getVisibleDimension()
+
+    -- Rows of the visible dimension the rect can actually show: the source is
+    -- fitted to the rect's aspect ratio before the crop, so a rect wider than
+    -- the dimension draws fewer rows than it asks for.
+    local rows = math.min(dimension.height, dimension.width * height / width)
+    local tile = rows > 1 and height / (rows - 1) or 0
+
+    return x + width / 2, y + height / 2 - tile / 2, tile
+end

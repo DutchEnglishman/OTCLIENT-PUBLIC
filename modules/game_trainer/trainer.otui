@@ -5,16 +5,20 @@ TrainerCheck < CheckBox
 // focusable is set on BOTH the field and the window below. The base MiniWindow
 // style is focusable: false, which stops the focus chain before it can reach a
 // child -- with only this half, the fields render but swallow every keystroke.
+// shift-navigation lets Left and Right walk as on the chat line; the step then
+// hands the keyboard back (onPlayerMove in trainer.lua).
 TrainerSpellEdit < TextEdit
   height: 18
   width: 104
   focusable: true
+  shift-navigation: true
 
 TrainerPercentEdit < TextEdit
   height: 18
   width: 32
   text-align: center
   focusable: true
+  shift-navigation: true
 
 TrainerSuffix < Label
   text-auto-resize: true

@@ -2333,10 +2333,10 @@ function setupViewMode(mode)
         gameLeftPanel:setOn(true)
         gameLeftPanel:setVisible(true)
         gameRightPanel:setOn(true)
-        gameRightExtraPanel:setOn(false)
-        gameRightExtraPanel:setVisible(false)
-        gameLeftExtraPanel:setOn(false)
-        gameLeftExtraPanel:setVisible(false)
+        -- Every login enters this mode, so the extra columns follow the saved
+        -- options here; shutting them left the checkbox ticked over a closed panel.
+        gameRightExtraPanel:setOn(modules.client_options.getOption('showRightExtraPanel'))
+        gameLeftExtraPanel:setOn(modules.client_options.getOption('showLeftExtraPanel'))
         gameMapPanel:setOn(true)
         gameBottomPanel:setImageColor('#ffffff88')
     end
@@ -2437,10 +2437,7 @@ end
 function onIncreaseRightPanels()
     rightIncreaseSidePanels:setEnabled(false)
     rightDecreaseSidePanels:setEnabled(true)
-    -- Forced: extended view shuts the panel without clearing the saved option,
-    -- so a client that logged out with it open reads true here and an unforced
-    -- set would skip the action that opens it.
-    modules.client_options.setOption('showRightExtraPanel', true, true)
+    modules.client_options.setOption('showRightExtraPanel', true)
     -- Update action bars when right extra panel is shown
     if modules.game_actionbar and modules.game_actionbar.updateVisibleWidgetsExternal then
         addEvent(function()

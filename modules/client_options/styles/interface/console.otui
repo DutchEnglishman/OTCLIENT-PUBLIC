@@ -96,7 +96,7 @@ UIWidget
     height: 22
   
     OptionCheckBox
-      id: showLootMessagesOnScreen
+      id: showLootOnScreen
       !text: tr('Show loot messages on screen')
 
   SmallReversedQtPanel

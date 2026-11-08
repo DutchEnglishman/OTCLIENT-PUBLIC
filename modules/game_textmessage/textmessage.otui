@@ -7,7 +7,8 @@ TextMessageLabel < UILabel
   visible: false
 
 // Every on-screen message but private ones: created on the map widget by
-// textmessage.lua and stacked under the character's feet by placeMapLabels, so
+// textmessage.lua and stacked just above the character's name (or above the
+// health/mana arcs while those are shown) by placeMapLabels, so
 // resizing the chat never moves them. Phantom so a click on the map under one
 // still reaches the map.
 ScreenMessageLabel < TextMessageLabel

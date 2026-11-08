@@ -229,56 +229,88 @@ local function forceFocusChain(widget)
     end
 end
 
--- Hands the keyboard back when a click lands anywhere but a text field.
+-- While a field holds the keyboard, every click outside the fields, every step
+-- and Enter or Escape hands it back to the chat line (or, in WASD mode, to the
+-- walk keys).
 --
--- forceFocusChain has no natural counterpart: normally clicking elsewhere moves
--- focus by focusing whatever was clicked, but gameMapPanel is focusable: false
--- (gameinterface.otui), so clicking the map focuses nothing and the field keeps
--- the keyboard. Arrow keys then move the text cursor instead of the character.
+-- forceFocusChain leaves the whole path from rootWidget pointing at this
+-- window, and nothing else undoes it: a click on the map focuses nothing
+-- (gameMapPanel is focusable: false), and a click on a button inside an
+-- unfocusable side panel only moves focus inside that panel. Typed text then
+-- went into this window with no field to take it, and chat looked dead.
 --
--- Clearing the parent's focused child is enough: propagateOnKeyText only
--- descends into focused children (src/framework/ui/uiwidget.cpp:2081), so with
--- no focused leaf the keys go unconsumed and reach the movement keybinds.
-local function releaseFocus()
+-- Clicks are polled rather than hooked because Lua only ever sees a press that
+-- no widget consumed (UIManager::onInputEvent offers it deepest first); the
+-- poll runs only while a field has the keyboard.
+local keyboardEvent = nil
+
+local function fieldHasKeyboard()
     for _, id in ipairs(FIELD_IDS) do
         local field = controls[id]
-        if field and not field:isDestroyed() and field:isFocused() then
-            local parent = field:getParent()
-            if parent then
-                parent:focusChild(nil, ActiveFocusReason)
-            end
+        if field and not field:isDestroyed() and field:isActive() then
+            return true
         end
+    end
+    return false
+end
+
+local function stopKeyboardWatch()
+    if keyboardEvent then
+        removeEvent(keyboardEvent)
+        keyboardEvent = nil
     end
 end
 
--- Keyed on the fields rather than on the window, so clicking a toggle, a label
--- or the title bar releases the keyboard just as clicking outside does. Only a
--- click on a field itself keeps it.
-local function releaseUnlessOnField(mousePos)
-    if not trainerWindow or trainerWindow:isDestroyed() or not trainerWindow:isVisible() then
+local function releaseFocus()
+    stopKeyboardWatch()
+    if not fieldHasKeyboard() then
         return
     end
 
     for _, id in ipairs(FIELD_IDS) do
         local field = controls[id]
-        if field and not field:isDestroyed() and field:containsPoint(mousePos) then
-            return
+        if field and not field:isDestroyed() and field:isFocused() then
+            field:getParent():focusChild(nil, ActiveFocusReason)
         end
     end
-
-    releaseFocus()
+    modules.game_console.focusChatInput()
 end
 
--- Two hooks are needed, not one. A mouse press is offered to the deepest widget
--- first and stops at whichever consumes it, so this rootWidget handler only
--- sees clicks nothing else claimed -- the game map, empty space. A click on a
--- toggle is consumed by the toggle and never arrives here, which is why the
--- window needs its own handler below.
-local function onRootMousePress(_widget, mousePos)
-    releaseUnlessOnField(mousePos)
-
-    -- Never consumes the click; this only observes where it landed.
+local function isOverField(mousePos)
+    for _, id in ipairs(FIELD_IDS) do
+        local field = controls[id]
+        if field and not field:isDestroyed() and field:isVisible() and field:containsPoint(mousePos) then
+            return true
+        end
+    end
     return false
+end
+
+local function watchKeyboard()
+    -- Something else took focus on its own (a click on the chat line itself).
+    if not fieldHasKeyboard() then
+        stopKeyboardWatch()
+        return
+    end
+
+    local pressed = g_window.isMouseButtonPressed(MouseLeftButton) or
+        g_window.isMouseButtonPressed(MouseRightButton) or
+        g_window.isMouseButtonPressed(MouseMidButton)
+    if pressed and not isOverField(g_window.getMousePosition()) then
+        releaseFocus()
+    end
+end
+
+local function startKeyboardWatch()
+    if not keyboardEvent then
+        keyboardEvent = cycleEvent(watchKeyboard, 10)
+    end
+end
+
+local function onPlayerMove(player)
+    if player:isLocalPlayer() and keyboardEvent then
+        releaseFocus()
+    end
 end
 
 -- Height goes to 0 when hidden, not just visible=false: a hidden widget still
@@ -614,6 +646,7 @@ function online()
 end
 
 function offline()
+    stopKeyboardWatch()
     saveSettings()
     stopTicking()
     setHint(nil)
@@ -635,11 +668,8 @@ function init()
         controls[id] = contentsPanel:getChildById(id)
     end
 
-    -- A button consumes its own click like a toggle does, so it releases the
-    -- keyboard itself.
     controls.masterToggle.onClick = function()
         setTrainerEnabled(not trainerEnabled)
-        releaseFocus()
     end
     showMasterState()
 
@@ -673,16 +703,16 @@ function init()
     for _, id in ipairs(FIELD_IDS) do
         controls[id].onMousePress = function(widget)
             forceFocusChain(widget)
+            startKeyboardWatch()
             return false
         end
-    end
-
-    -- Catches clicks inside the window that never reach rootWidget, either
-    -- because this window consumed them (chrome, empty space) or because a
-    -- toggle did. Returning false leaves the click to its normal handling.
-    trainerWindow.onMousePress = function(_widget, mousePos)
-        releaseUnlessOnField(mousePos)
-        return false
+        controls[id].onKeyPress = function(_widget, keyCode)
+            if keyCode == KeyEnter or keyCode == KeyEscape then
+                releaseFocus()
+                return true
+            end
+            return false
+        end
     end
 
     trainerWindow:getChildById('miniwindowTitle'):setText(tr('Trainer'))
@@ -698,14 +728,8 @@ function init()
         resetCooldowns()
     end
 
-    -- Toggling also drops the keyboard. A checkbox consumes its own click, so
-    -- neither the window nor rootWidget handler ever sees it -- this is the
-    -- only place a toggle press can be observed.
     for _, id in ipairs({ 'autoEat', 'manaTraining', 'runemaking' }) do
-        controls[id].onCheckChange = function()
-            onSettingChanged()
-            releaseFocus()
-        end
+        controls[id].onCheckChange = onSettingChanged
     end
 
     -- Deliberately NOT releasing here: onTextChange fires on every keystroke,
@@ -731,7 +755,7 @@ function init()
     trainerButton:setOn(trainerWindow:isVisible())
 
     connect(g_game, { onGameStart = online, onGameEnd = offline, onTextMessage = onTextMessage })
-    connect(rootWidget, { onMousePress = onRootMousePress })
+    connect(LocalPlayer, { onPositionChange = onPlayerMove })
     ProtocolGame.registerExtendedOpcode(TRAINER_SPELLS_OPCODE, onCastableSpells)
 
     if g_game.isOnline() then
@@ -741,7 +765,8 @@ end
 
 function terminate()
     disconnect(g_game, { onGameStart = online, onGameEnd = offline, onTextMessage = onTextMessage })
-    disconnect(rootWidget, { onMousePress = onRootMousePress })
+    disconnect(LocalPlayer, { onPositionChange = onPlayerMove })
+    stopKeyboardWatch()
     ProtocolGame.unregisterExtendedOpcode(TRAINER_SPELLS_OPCODE)
     stopTicking()
 

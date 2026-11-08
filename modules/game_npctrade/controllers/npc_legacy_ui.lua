@@ -22,7 +22,6 @@ local bankBalance = 0
 -- (SHOP_ITEM_INFO_OPCODE). Cleared with every new shop list.
 local itemInfo = {}
 local WEIGHT_UNIT = 'oz'
-local LAST_INVENTORY = 10
 
 local npcWindow = nil
 local itemsPanel = nil
@@ -394,15 +393,7 @@ function getSellQuantityLegacy(item)
     end
     local removeAmount = 0
     if ignoreEquipped:isChecked() then
-        local localPlayer = g_game.getLocalPlayer()
-        for i = 1, LAST_INVENTORY do
-            local inventoryItem = localPlayer:getInventoryItem(i)
-            if inventoryItem and inventoryItem:getId() == item:getId() then
-                removeAmount = removeAmount + inventoryItem:getCount()
-            end
-        end
-        -- equipped items with an active imbuement are not part of the server goods count
-        removeAmount = math.max(0, removeAmount - controllerNpcTrader:getEquippedImbuedCount(item:getId()))
+        removeAmount = controllerNpcTrader:getEquippedGoodsCount(item:getId())
     end
     return math.max(0, playerItems[item:getId()] - removeAmount)
 end

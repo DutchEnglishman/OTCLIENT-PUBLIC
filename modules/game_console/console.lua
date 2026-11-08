@@ -558,6 +558,14 @@ function switchChat(enabled)
     end
 end
 
+-- For a module that borrowed the keyboard (the trainer's fields) to hand it
+-- back. In WASD mode the walk keys on gameRootPanel need nothing.
+function focusChatInput()
+    if consoleTextEdit and isChatEnabled() then
+        focusChainTo(consoleTextEdit)
+    end
+end
+
 function switchChatOnCall()
     if not g_game.isOnline() or modules.game_hotkeys.areHotkeysDisabled() then
         return

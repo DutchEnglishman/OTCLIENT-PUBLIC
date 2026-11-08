@@ -218,15 +218,17 @@ MessageTypes = {
     [254] = MessageSettings.private
 }
 
--- The on-screen system messages start under the character's feet. It stands
--- on the map's centre tile, drawn 8 of its 32 px up from the tile's bottom, so
--- its feet are a quarter tile below the centre; the gap is about half a
--- centimetre at 96 dpi.
-FEET_TILES_BELOW_CENTER = 0.25
-GAP_BELOW_FEET = 19
+-- The on-screen system messages end just above the character's name. The
+-- name's top is Creature::drawInformation's: the point (-displacementY - 2)
+-- drawn px above the tile's top, displacement 8 for a standard outfit, less
+-- the 12 px name crop.
+NAME_TILES_ABOVE_TILE_TOP = 10 / 32
+NAME_HEIGHT = 12
+GAP_ABOVE_HEAD = 4
+GAP_ABOVE_ARCS = 4
 
--- Top to bottom under the feet. A fixed order, so a line never swaps places
--- with another when one appears or expires.
+-- Top to bottom. A fixed order, so a line never swaps places with another
+-- when one appears or expires.
 local STACK_ORDER = { 'hotkeyLabel', 'lowCenterLabel', 'middleCenterLabel', 'highCenterLabel', 'raidLabel' }
 
 -- Every label but the status line is parented to the map, not to a panel that
@@ -382,7 +384,8 @@ function displayMessage(mode, text)
         MessageTypes[MessageModes.MonsterYell] = MessageSettings.consoleOrange
     end
     -- Loot goes to Server Log for everyone and also to the Loot tab for
-    -- premium players. It never flashes on screen.
+    -- premium players. It flashes green on screen only for players who switch
+    -- showLootOnScreen on (Settings > Interface > Console).
     --
     -- Matched on the text because protocol 860 has no loot message mode:
     -- MessageModes.Loot is a 10.x addition. The server
@@ -397,6 +400,9 @@ function displayMessage(mode, text)
         if mode == MessageModes.Look then
             local lootTab = modules.game_console.ensureLootTab()
             modules.game_console.addTabText(coloredText, MessageSettings.loot, lootTab)
+        end
+        if modules.client_options.getOption('showLootOnScreen') then
+            showOnScreen(MessageSettings.centerGreen, text)
         end
         return
     end
@@ -441,46 +447,61 @@ function displayMessage(mode, text)
     -- same test: hidden from the log but still shown on screen would not be
     -- hiding it at all.
     if msgtype.screenTarget and wantedInServerLog(msgtype, text) then
-        local label = screenLabel(msgtype.screenTarget)
-        if msgtype == MessageSettings.loot and not modules.client_options.getOption('showLootMessagesOnScreen') then
+        if msgtype == MessageSettings.loot and not modules.client_options.getOption('showLootOnScreen') then
             return
-        elseif msgtype == MessageSettings.loot or msgtype == MessageSettings.valuableLoot then
-            local coloredText = ItemsDatabase.setColorLootMessage(text)
-            label:setColoredText(coloredText)
-        elseif critText then
-            label:setColor(msgtype.color)
-            label:setColoredText(critText)
-        else
-            label:setText(text)
-            label:setColor(msgtype.color)
         end
-
-        label:setVisible(true)
-        placeMapLabels()
-        removeEvent(label.hideEvent)
-        label.hideEvent = scheduleEvent(function()
-            label:setVisible(false)
-            placeMapLabels()
-        end, calculateVisibleTime(text))
+        showOnScreen(msgtype, text, critText)
     end
+end
+
+function showOnScreen(msgtype, text, critText)
+    local label = screenLabel(msgtype.screenTarget)
+    if msgtype == MessageSettings.loot or msgtype == MessageSettings.valuableLoot then
+        label:setColoredText(ItemsDatabase.setColorLootMessage(text))
+    elseif critText then
+        label:setColor(msgtype.color)
+        label:setColoredText(critText)
+    else
+        label:setText(text)
+        label:setColor(msgtype.color)
+    end
+
+    label:setVisible(true)
+    placeMapLabels()
+    removeEvent(label.hideEvent)
+    label.hideEvent = scheduleEvent(function()
+        label:setVisible(false)
+        placeMapLabels()
+    end, calculateVisibleTime(text))
 end
 
 -- Placed from the map widget itself rather than anchored: the chat is drawn
 -- over the map in extended view, so nothing that ends at the chat knows where
--- the character stands. The character is on the map's centre tile; the tile
--- size is the map's rect over the tiles it shows.
+-- the character stands.
 function placeMapLabels()
     local map = modules.game_interface.getMapPanel()
-    if not map then
+    if not map or not mapLabels.privateLabel then
         return
     end
     local rect = map:getRect()
-    local dimension = map:getVisibleDimension()
-    local tile = math.min(rect.width / dimension.width, rect.height / dimension.height)
-    local centerX = rect.x + rect.width / 2
-    local centerY = rect.y + rect.height / 2
+    local centerX, centerY, tile = getPlayerScreenCenter(map)
 
-    local y = centerY + tile * FEET_TILES_BELOW_CENTER + GAP_BELOW_FEET
+    local bottom = centerY - tile / 2 - tile * NAME_TILES_ABOVE_TILE_TOP - NAME_HEIGHT - GAP_ABOVE_HEAD
+    -- The health/mana arcs are centred on the character and reach higher than
+    -- its name, so while any is shown the stack ends just above them instead.
+    local healthcircle = modules.game_healthcircle
+    local arcsTop = healthcircle and healthcircle.getArcsTop and healthcircle.getArcsTop()
+    if arcsTop then
+        bottom = math.min(bottom, arcsTop - GAP_ABOVE_ARCS)
+    end
+
+    local stackHeight = 0
+    for _, id in ipairs(STACK_ORDER) do
+        if mapLabels[id]:isVisible() then
+            stackHeight = stackHeight + mapLabels[id]:getHeight() + 2
+        end
+    end
+    local y = math.max(rect.y, bottom - stackHeight)
     for _, id in ipairs(STACK_ORDER) do
         local label = mapLabels[id]
         if label:isVisible() then

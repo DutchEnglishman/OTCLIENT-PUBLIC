@@ -7,7 +7,7 @@ local WORLD_MINIMAP_FILE = '/minimap/world.otmm'
 -- (OTSERV tools/generate_revealed_minimap.ps1 writes it). Bump FORGET_VERSION whenever the
 -- file changes, so every client forgets them once more.
 local FORGET_MINIMAP_FILE = '/minimap/forget.otmm'
-local FORGET_VERSION = 1
+local FORGET_VERSION = 2
 local FORGET_SETTING = 'minimapForgetVersion'
 local oldPos = nil
 local fullscreenWidget

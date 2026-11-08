@@ -476,48 +476,9 @@ function whenSkillsChange()
     end
 end
 
--- The drawn map rect, mirroring UIMap::updateMapSize (src/client/uimap.cpp):
--- the padding rect inset by a pixel, letterboxed to the view's aspect ratio
--- when keepAspectRatio is on, and centred on the padding rect either way.
-local function mapDrawRect()
-    local pad = mapPanel:getPaddingRect()
-    local width, height = pad.width - 2, pad.height - 2
-
-    if mapPanel:isKeepAspectRatioEnabled() then
-        local dimension = mapPanel:getVisibleDimension()
-        local ratio = dimension.width / dimension.height
-        if width / height > ratio then
-            width = math.floor(height * ratio)
-        else
-            height = math.floor(width / ratio)
-        end
-    end
-
-    return pad.x + math.floor((pad.width - width) / 2), pad.y + math.floor((pad.height - height) / 2), width, height
-end
-
--- Where the player is actually drawn, which is NOT the centre of the map rect.
--- MapView::calcFramebufferSource crops one tile off west, east and north to
--- hide the edge void bars, and the vertical crop is one-sided: the camera tile
--- ends up with one fewer row above it than below, so it sits exactly half a
--- drawn tile above the rect's centre. Hanging the circles on that centre is
--- what put them half a tile low.
-local function playerScreenCenter()
-    local x, y, width, height = mapDrawRect()
-    local dimension = mapPanel:getVisibleDimension()
-
-    -- Rows of the visible dimension the rect can actually show: the source is
-    -- fitted to the rect's aspect ratio before the crop, so a rect wider than
-    -- the dimension draws fewer rows than it asks for. Tile size cancels out.
-    local rows = math.min(dimension.height, dimension.width * height / width)
-    local halfTile = rows > 1 and height / (2 * (rows - 1)) or 0
-
-    return x + width / 2, y + height / 2 - halfTile
-end
-
 function whenMapResizeChange()
     if g_game.isOnline() then
-        local centerX, centerY = playerScreenCenter()
+        local centerX, centerY = getPlayerScreenCenter(mapPanel)
 
         local barDistance = 90
         if not (math.floor(mapPanel:getHeight() / 2 * 0.2) < 100) then -- 0.381
@@ -565,6 +526,23 @@ function whenMapResizeChange()
     if StatusIconBar and StatusIconBar.updatePosition then
         StatusIconBar.updatePosition()
     end
+    -- The on-screen messages stack above the arcs, so they move with them.
+    local textmessage = modules.game_textmessage
+    if textmessage and textmessage.placeMapLabels then
+        textmessage.placeMapLabels()
+    end
+end
+
+-- Top of the highest arc drawn above the character, or nil when none is shown.
+-- The empty half of each arc keeps the arc's top edge whatever the fill.
+function getArcsTop()
+    local top
+    for _, arc in ipairs({ healthCircle, manaCircle, expCircle, monkCircleBackground }) do
+        if arc and arc:isVisible() then
+            top = top and math.min(top, arc:getY()) or arc:getY()
+        end
+    end
+    return top
 end
 
 -------------------------------------------------

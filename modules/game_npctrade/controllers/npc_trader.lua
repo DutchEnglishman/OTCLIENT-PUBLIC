@@ -381,6 +381,25 @@ function controllerNpcTrader:getEquippedImbuedCount(itemId)
     return (self.equippedImbuedCounts and self.equippedImbuedCounts[itemId]) or 0
 end
 
+-- How many of the server's goods count for this item are equipped, which is what
+-- "ignore equipped" takes back off it. A protected item is already left out of
+-- that count (Player::getAllItemTypeCount), so subtracting a protected equipped
+-- one as well left nothing to sell while a spare of the same type sat in a bag.
+function controllerNpcTrader:getEquippedGoodsCount(id, subType)
+    local player = g_game.getLocalPlayer()
+    local protect = modules.game_protect
+    local count = 0
+    for slot = InventorySlotFirst, InventorySlotLast do
+        local item = player:getInventoryItem(slot)
+        if item and item:getId() == id and (subType == nil or item:getSubType() == subType)
+            and not (protect and protect.isInventoryProtected(slot)) then
+            count = count + item:getCount()
+        end
+    end
+    -- equipped items with an active imbuement are not part of the server goods count
+    return math.max(0, count - self:getEquippedImbuedCount(id))
+end
+
 function controllerNpcTrader:startEquippedImbuementsTracking()
     self.equippedImbuedCounts = {}
     if g_game.getClientVersion() >= 1100 then
@@ -408,16 +427,7 @@ function controllerNpcTrader:getSellQuantity(itemPtr)
     local inventoryTotal = self.playerItems and self.playerItems[key] or 0
 
     if self.ignoreEquipped then
-        local player = g_game.getLocalPlayer()
-        local equippedCount = 0
-        for i = 1, 10 do
-            local item = player:getInventoryItem(i)
-            if item and item:getId() == id and item:getSubType() == subType then
-                equippedCount = equippedCount + item:getCount()
-            end
-        end
-        equippedCount = math.max(0, equippedCount - self:getEquippedImbuedCount(id))
-        return math.max(0, inventoryTotal - equippedCount)
+        return math.max(0, inventoryTotal - self:getEquippedGoodsCount(id, subType))
     end
 
     return inventoryTotal
