@@ -148,6 +148,18 @@ local function refreshWide()
     updateColumnPadding()
 end
 
+-- The extra column's onVisibilityChange fires from inside UIWidget::updateState's
+-- walk over the root panel's children (logout's gameRootPanel:hide()), and while
+-- wide the map is one of those children: reparenting it there skipped a sibling's
+-- state (the map stayed hidden at the next login) or crashed the client.
+local function refreshWideLater()
+    addEvent(function()
+        if mapController.ui and not mapController.ui:isDestroyed() then
+            refreshWide()
+        end
+    end)
+end
+
 -- One button for both: spanning needs the extra column, so going wide opens it
 -- and going narrow closes it again. The side-panel arrows' own handlers do the
 -- opening and closing, so their enabled state and the action bars follow.
@@ -231,7 +243,7 @@ function mapController:onInit()
     wideOn = g_settings.getBoolean(WIDE_SETTING)
     -- The fullscreen map hides this window; the columns must not keep a gap.
     connect(self.ui, { onVisibilityChange = updateColumnPadding })
-    connect(modules.game_interface.getRightExtraPanel(), { onVisibilityChange = refreshWide })
+    connect(modules.game_interface.getRightExtraPanel(), { onVisibilityChange = refreshWideLater })
 
     -- Ctrl+Left-click GM teleport lives in UIMinimap:onMouseRelease, not here.
     -- Assigning onMouseRelease on this widget would shadow that class method --
@@ -319,7 +331,7 @@ function mapController:onTerminate()
     end
 
     g_keyboard.unbindKeyDown('Ctrl+Shift+M', openCyclopediaMap, modules.game_interface.getRootPanel())
-    disconnect(modules.game_interface.getRightExtraPanel(), { onVisibilityChange = refreshWide })
+    disconnect(modules.game_interface.getRightExtraPanel(), { onVisibilityChange = refreshWideLater })
     if narrowSlot then
         goNarrow()
     end
