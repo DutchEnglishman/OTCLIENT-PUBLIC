@@ -121,8 +121,13 @@ local function goNarrow()
     end
 
     ui:breakAnchors()
-    ui:setParent(parent, true)
-    parent:moveChildToIndex(ui, math.max(1, math.min(slot.index, parent:getChildCount())))
+    -- Something can dock the map back into a column while it is wide; moving it
+    -- to an index inside the column it already sits in crashed the client
+    -- (UIWidget::moveChildToIndex, access violation).
+    if ui:getParent() ~= parent then
+        ui:setParent(parent, true)
+        parent:moveChildToIndex(ui, math.max(1, math.min(slot.index, parent:getChildCount())))
+    end
     ui:setDraggable(slot.draggable)
 end
 
@@ -281,9 +286,12 @@ function mapController:onGameStart()
     self.ui.minimapBorder.minimap:load()
 
     -- make sure this window is docked in the right side panel by default even
-    -- when there is no saved position for it (e.g. a fresh/clean client cache)
+    -- when there is no saved position for it (e.g. a fresh/clean client cache).
+    -- Not while wide: game_interface's show() makes the extra column visible
+    -- before this runs, so the map may already be spanning, and docking it here
+    -- left it in the column under the gap kept for it.
     local mainRightPanel = modules.game_interface.getMainRightPanel()
-    if mainRightPanel and not mainRightPanel:hasChild(mapController.ui) then
+    if not narrowSlot and mainRightPanel and not mainRightPanel:hasChild(mapController.ui) then
         mainRightPanel:insertChild(1, mapController.ui)
         mapController.ui:show()
     end
@@ -488,7 +496,7 @@ function extendedView(extendedView)
         mapController.ui:setBorderColor('alpha')
         mapController.ui:setBorderWidth(0)
         local mainRightPanel = modules.game_interface.getMainRightPanel()
-        if not mainRightPanel:hasChild(mapController.ui) then
+        if not narrowSlot and not mainRightPanel:hasChild(mapController.ui) then
             mainRightPanel:insertChild(1, mapController.ui)
         end
         mapController.ui:show()

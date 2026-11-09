@@ -223,6 +223,10 @@ MessageTypes = {
 -- drawn px above the tile's top, displacement 8 for a standard outfit, less
 -- the 12 px name crop.
 NAME_TILES_ABOVE_TILE_TOP = 10 / 32
+-- The name is centred (16 - displacementX) drawn px right of the tile's left
+-- edge, not on the tile's centre: a standard outfit is drawn 8 px up-left, so
+-- the character and its name sit a quarter tile left of the tile centre.
+NAME_TILES_LEFT_OF_TILE_CENTRE = 8 / 32
 NAME_HEIGHT = 12
 GAP_ABOVE_HEAD = 4
 GAP_ABOVE_ARCS = 4
@@ -485,6 +489,7 @@ function placeMapLabels()
     end
     local rect = map:getRect()
     local centerX, centerY, tile = getPlayerScreenCenter(map)
+    centerX = centerX - tile * NAME_TILES_LEFT_OF_TILE_CENTRE
 
     local bottom = centerY - tile / 2 - tile * NAME_TILES_ABOVE_TILE_TOP - NAME_HEIGHT - GAP_ABOVE_HEAD
     -- The health/mana arcs are centred on the character and reach higher than

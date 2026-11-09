@@ -182,6 +182,20 @@ MiniWindow
       SkillValueLabel
 
     SkillButton
+      id: healthRegen
+      height: 15
+      SkillNameLabel
+        !text: tr('HP Regen')
+      SkillValueLabel
+
+    SkillButton
+      id: manaRegen
+      height: 15
+      SkillNameLabel
+        !text: tr('Mana Regen')
+      SkillValueLabel
+
+    SkillButton
       id: regenerationTime
       height: 15
       SkillNameLabel

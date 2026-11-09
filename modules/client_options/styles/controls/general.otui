@@ -93,6 +93,18 @@ UIWidget
       margin-top: 7
       height: 22
 
+      OptionCheckBox
+        id: shiftRightClickOpensNewWindow
+        !text: tr('Open containers in a new window with Shift + right click')
+        !tooltip: tr('Moves opening a container in a new window from Shift + left click to Shift + right click.\nShift + left click then looks at it instead.\nWhich containers open this way is set in the Interface options.')
+
+    SmallReversedQtPanel
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.top: prev.bottom
+      margin-top: 7
+      height: 22
+
       OptionCheckBoxMarked
         id: returnDisablesChat
         !text: tr('Enter to disable chat')

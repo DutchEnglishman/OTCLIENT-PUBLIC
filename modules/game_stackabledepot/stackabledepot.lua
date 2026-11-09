@@ -208,7 +208,9 @@ function buildFilters(categories)
     local function add(key, label, filterKey)
         local button = g_ui.createWidget('FilterButton', row)
         button:setText(label)
-        button:setWidth(math.max(60, button:getTextSize().width + 20))
+        -- A minimum of 50, not 60: at 60 the ten server categories overflow
+        -- the 718-wide row by 14px.
+        button:setWidth(math.max(50, button:getTextSize().width + 20))
         button.onClick = function() select(filterKey) end
         buttons[key] = button
     end

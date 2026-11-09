@@ -43,7 +43,7 @@ UIWidget
 
     OptionCheckBox
       id: shiftClickOpensNewWindow
-      !text: tr('Shift + left click opens a backpack in a new window')
+      !text: tr('Shift + click opens a backpack in a new window')
 
   SmallReversedQtPanel
     anchors.left: parent.left
@@ -54,7 +54,7 @@ UIWidget
 
     OptionCheckBox
       id: shiftClickOpensFixedContainers
-      !text: tr('Shift + left click opens depots, chests and corpses in a new window')
+      !text: tr('Shift + click opens depots, chests and corpses in a new window')
 
   SmallReversedQtPanel
     anchors.left: parent.left

@@ -176,15 +176,16 @@ return {
     showTimestampsInConsole           = true,
     showLevelsInConsole               = true,
     openPrivateMessageTabs            = false,
-    -- Off leaves the Server Log exactly as it has always been. On, the log keeps
-    -- only the status lines that name the player or address them directly, which
-    -- drops every "<someone else> loses N hitpoints due to an attack by ..." a
-    -- bystander would otherwise read. Applied in game_textmessage.
+    -- On by default (see the one-time flip in options.lua setup). On, the log
+    -- keeps only the status lines that name the player or address them
+    -- directly, which drops every "<someone else> loses N hitpoints due to an
+    -- attack by ..." a bystander would otherwise read. Off shows them all.
+    -- Applied in game_textmessage.
     --
     -- Replaces showOthersStatusMessagesInConsole, which was wired to a
     -- MessageSettings entry no message mode ever mapped to, so the checkbox in
     -- the Interface options did nothing at all.
-    hideOthersServerLogMessages       = false,
+    hideOthersServerLogMessages       = true,
     showPrivateMessagesOnScreen       = true,
     -- Off by default, since on-screen loot was once switched off for everyone.
     -- A new key, not showLootMessagesOnScreen: the load loop writes every
@@ -435,6 +436,7 @@ return {
     },
     shiftClickOpensNewWindow          = true,
     shiftClickOpensFixedContainers    = false,
+    shiftRightClickOpensNewWindow     = false,
     contextMenuCreateMark             = true,
     showPartyMembersOnMinimap = {
         value = true,

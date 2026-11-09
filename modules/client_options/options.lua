@@ -211,6 +211,13 @@ local function setup()
         g_settings.set('disableRightClickWalkDefaulted', true)
     end
 
+    -- Hiding others' Server Log lines starts on, switched on once for existing
+    -- configs the same way and for the same reason as right-click walking.
+    if not g_settings.getBoolean('hideOthersServerLogMessagesDefaulted') then
+        setOption('hideOthersServerLogMessages', true, true)
+        g_settings.set('hideOthersServerLogMessagesDefaulted', true)
+    end
+
     -- Migration: restore normal mode when prior configs were set to heavy
     -- floor render modes that can make movement/animation feel too fast.
     if options.floorViewMode and (options.floorViewMode.value == 4 or options.floorViewMode.value == 1) then

@@ -1413,10 +1413,14 @@ function processMouseAction(menuPosition, mouseButton, autoWalkPos, lookThing, u
         return true
     end
 
-    -- Ahead of the control-mode branches, where Shift+Left is a look. A backpack
+    -- Ahead of the control-mode branches, where Shift+Left is a look and
+    -- Shift+Right a look, open or quickloot by mode; whichever button the
+    -- option picks opens here, and the other keeps that behaviour. A backpack
     -- is a container the player carries: chests, boxes and corpses are
     -- pickupable in the item data too, so isPickupable cannot tell them apart.
-    if useThing and (useThing:isContainer() or useThing:isLyingCorpse()) and mouseButton == MouseLeftButton and
+    local newWindowButton = modules.client_options.getOption('shiftRightClickOpensNewWindow') and MouseRightButton or
+        MouseLeftButton
+    if useThing and (useThing:isContainer() or useThing:isLyingCorpse()) and mouseButton == newWindowButton and
         keyboardModifiers == KeyboardShiftModifier then
         local carried = useThing:getPosition().x == 0xffff
         local option = carried and 'shiftClickOpensNewWindow' or 'shiftClickOpensFixedContainers'

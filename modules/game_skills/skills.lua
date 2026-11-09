@@ -272,12 +272,93 @@ local function onProfessions(protocol, opcode, buffer)
     end
 end
 
+-- Base skill levels, "ml=<base>;0=<fist>;1=<club>;...;6=<fishing>", from
+-- SkillsWindow.sendBaseSkills (OTSERV data/skills_window/skills_window.lua) at
+-- login, on every equipment change and on every skill advance. The 8.60 skills
+-- packet carries only the effective level, so without this a row could never
+-- show what gear or a buff adds to it.
+BASE_SKILLS_OPCODE = 99
+
+local serverBaseSkills = {}
+
+local function refreshBaseRows()
+    local player = g_game.getLocalPlayer()
+    if not player then
+        return
+    end
+    onBaseMagicLevelChange(player, player:getBaseMagicLevel())
+    for id = Skill.Fist, Skill.Fishing do
+        onBaseSkillChange(player, id, player:getSkillBaseLevel(id))
+    end
+end
+
+-- HP Regen and Mana Regen, a second at the full rate, split by source:
+-- "food=<hp>:<mp>;gear=...;effects=...;dishes=...", from
+-- SkillsWindow.sendRegeneration (OTSERV data/skills_window/skills_window.lua)
+-- whenever the figures change.
+REGENERATION_OPCODE = 100
+
+local REGENERATION_SOURCES = {
+    { key = 'food', label = 'Food' },
+    { key = 'gear', label = 'Equipment' },
+    { key = 'effects', label = 'Effects' },
+    { key = 'dishes', label = 'Dishes' }
+}
+
+local function regenFigure(value)
+    return (string.format('%.2f', value):gsub('%.?0+$', ''))
+end
+
+local function setRegenerationRow(rowId, title, sources, side)
+    local total, bonus = 0, 0
+    local lines = {}
+    for _, source in ipairs(REGENERATION_SOURCES) do
+        local value = sources[source.key] and sources[source.key][side] or 0
+        total = total + value
+        if source.key ~= 'food' then
+            bonus = bonus + value
+        end
+        if value > 0 then
+            lines[#lines + 1] = source.label .. ': ' .. regenFigure(value)
+        end
+    end
+
+    local food = sources.food and sources.food[side] or 0
+    setSkillValue(rowId, regenFigure(total) .. '/s')
+    if food <= 0 then
+        setSkillColor(rowId, '#b22222')
+        lines[#lines + 1] = tr('You are hungry: eat to regenerate.')
+    elseif bonus > 0 then
+        setSkillColor(rowId, '#44ad25')
+    end
+    lines[#lines + 1] = tr('Paused in protection zones.')
+    setSkillTooltip(rowId, title .. ': ' .. regenFigure(total) .. ' a second\n' .. table.concat(lines, '\n'))
+end
+
+local function onRegeneration(protocol, opcode, buffer)
+    local sources = {}
+    for key, health, mana in buffer:gmatch('(%a+)=([%d%.]+):([%d%.]+)') do
+        sources[key] = { tonumber(health), tonumber(mana) }
+    end
+    setRegenerationRow('healthRegen', tr('HP Regen'), sources, 1)
+    setRegenerationRow('manaRegen', tr('Mana Regen'), sources, 2)
+end
+
+local function onBaseSkills(protocol, opcode, buffer)
+    for key, level in buffer:gmatch('(%w+)=(%d+)') do
+        serverBaseSkills[tonumber(key) or key] = tonumber(level)
+    end
+    refreshBaseRows()
+end
+
 function skillController:onInit()
     ProtocolGame.registerExtendedOpcode(PROFESSIONS_OPCODE, onProfessions)
     ProtocolGame.registerExtendedOpcode(MINING_SKILL_OPCODE, onMiningSkill)
     ProtocolGame.registerExtendedOpcode(RESISTANCES_OPCODE, onResistances)
     ProtocolGame.registerExtendedOpcode(FOOD_TIME_OPCODE, onFoodTime)
     ProtocolGame.registerExtendedOpcode(COMBAT_STATS_OPCODE, onCombatStats)
+    ProtocolGame.registerExtendedOpcode(BASE_SKILLS_OPCODE, onBaseSkills)
+    ProtocolGame.registerExtendedOpcode(REGENERATION_OPCODE, onRegeneration)
     foodTickEvent = cycleEvent(tickFoodTime, 1000)
 
     skillController:registerEvents(LocalPlayer, {
@@ -337,6 +418,8 @@ function skillController:onTerminate()
     ProtocolGame.unregisterExtendedOpcode(RESISTANCES_OPCODE)
     ProtocolGame.unregisterExtendedOpcode(FOOD_TIME_OPCODE)
     ProtocolGame.unregisterExtendedOpcode(COMBAT_STATS_OPCODE)
+    ProtocolGame.unregisterExtendedOpcode(BASE_SKILLS_OPCODE)
+    ProtocolGame.unregisterExtendedOpcode(REGENERATION_OPCODE)
     if foodTickEvent then
         removeEvent(foodTickEvent)
         foodTickEvent = nil
@@ -798,23 +881,31 @@ function toggleSkill(id, state)
     skill:setVisible(state)
 end
 
+-- Green when gear or a buff raises a row above its trained level, red when a
+-- condition lowers it, and the tooltip splits the figure: "100 + 3".
 function setSkillBase(id, value, baseValue)
-    if baseValue <= 0 or value < 0 then
+    if not baseValue or baseValue < 0 or value < 0 then
         return
     end
     local skill = skillsWindow:recursiveGetChildById(id)
-    local widget = skill:getChildById('value')
-
-    if value > baseValue then
-        widget:setColor('#008b00') -- green
-        skill:setTooltip(baseValue .. ' +' .. (value - baseValue))
-    elseif value < baseValue then
-        widget:setColor('#b22222') -- red
-        skill:setTooltip(baseValue .. ' ' .. (value - baseValue))
-    else
-        widget:setColor('#bbbbbb') -- default
-        skill:removeTooltip()
+    if not skill then
+        return
     end
+    local widget = skill:getChildById('value')
+    local nameLabel = skill:getChildByIndex(1)
+    local name = nameLabel and nameLabel:getText() or ''
+
+    local diff = value - baseValue
+    if diff == 0 then
+        widget:setColor(g_ui.getVariable('textColor'))
+        skill:removeTooltip()
+        return
+    end
+
+    widget:setColor(diff > 0 and '#44ad25' or '#b22222')
+    local tooltip = tr('%s: %d + %d\n%d trained, %s%d from equipment and effects',
+        name, baseValue, diff, baseValue, diff > 0 and '+' or '', diff)
+    skill:setTooltip((tooltip:gsub('%+ %-', '- ')))
 end
 
 function setSkillValue(id, value)
@@ -1181,6 +1272,7 @@ function skillController:onGameEnd()
 
     -- Do not carry a stale countdown into the next character.
     foodSeconds = 0
+    serverBaseSkills = {}
     if expSpeedEvent then
         expSpeedEvent:cancel()
         expSpeedEvent = nil
@@ -1433,6 +1525,10 @@ function onSpeedChange(localPlayer, speed)
 end
 
 function onBaseSpeedChange(localPlayer, baseSpeed)
+    -- 8.60 sends no base speed (GameSkillsBase is 9.10+), so 0 means unknown.
+    if baseSpeed <= 0 then
+        return
+    end
     setSkillBase('speed', localPlayer:getSpeed(), baseSpeed)
 end
 
@@ -1444,7 +1540,7 @@ function onMagicLevelChange(localPlayer, magiclevel, percent)
 end
 
 function onBaseMagicLevelChange(localPlayer, baseMagicLevel)
-    setSkillBase('magiclevel', localPlayer:getMagicLevel(), baseMagicLevel)
+    setSkillBase('magiclevel', localPlayer:getMagicLevel(), serverBaseSkills.ml or baseMagicLevel)
 end
 
 function onSkillChange(localPlayer, id, level, percent)
@@ -1470,7 +1566,7 @@ function onBaseSkillChange(localPlayer, id, baseLevel)
         return
     end
 
-    setSkillBase('skillId' .. id, localPlayer:getSkillLevel(id), baseLevel)
+    setSkillBase('skillId' .. id, localPlayer:getSkillLevel(id), serverBaseSkills[id] or baseLevel)
 end
 
 local function updateExperienceRate(localPlayer)
