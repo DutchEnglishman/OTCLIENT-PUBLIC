@@ -8,6 +8,16 @@ local takeoverDir = nil
 local lastCancelWalkTime = 0
 
 local TELEPORT_WALK_LOCK_MS = 50
+
+-- A step onto a stair, ramp, hole or climbable stack is answered by the server
+-- with the landing on the other floor. Any walk sent before that landing arrives
+-- was aimed from the old floor, but the server (Game::playerMove) runs it from
+-- wherever the player stands, so it became an unpredicted step on the new floor:
+-- a held key's next step leaving before the landing came back read as a double
+-- step, a shove forward. Nothing more is sent until the landing or a cancel; the
+-- cap only keeps a floor change the server never makes from locking the keys.
+local FLOOR_CHANGE_WAIT_MS = 1000
+local floorChangeSentAt = nil
 -- Releasing a turn key a moment before its modifier must not step.
 local TURN_RELEASE_WALK_LOCK_MS = 50
 
@@ -182,6 +192,11 @@ local function walk(dir)
     end
     takeoverDir = nil
 
+    if floorChangeSentAt and g_clock.millis() - floorChangeSentAt < FLOOR_CHANGE_WAIT_MS then
+        return
+    end
+    floorChangeSentAt = nil
+
     if not player:canWalk() then
         if lastWalkDir ~= dir then
             nextWalkDir = dir
@@ -192,9 +207,11 @@ local function walk(dir)
     nextWalkDir = nil
     lastWalkDir = dir
 
+    local changesFloor = false
     if g_game.getFeature(GameAllowPreWalk) then
         local toPos = Position.translatedToDirection(player:getPosition(), dir)
         local toTile = g_map.getTile(toPos)
+        changesFloor = toTile ~= nil and toTile:hasFloorChange()
         if toTile and toTile:isWalkableFrom(g_map.getTile(player:getPosition())) then
             -- The tile looks walkable from here, but the server has already said
             -- it would refuse the step: a blocking= override in items.xml, a
@@ -217,11 +234,18 @@ local function walk(dir)
             if toTile then
                 player:preWalk(dir)
             end
-        elseif not canChangeFloor(toPos, 1) and not canChangeFloor(toPos, -1) then
+        elseif dir < Directions.NorthEast and (canChangeFloor(toPos, 1) or canChangeFloor(toPos, -1)) then
+            -- Only a straight step climbs a roof or a stack of three, or steps off
+            -- one (Game::getStepDestination); the server refuses a diagonal one.
+            changesFloor = true
+        else
             return false
         end
     end
 
+    if changesFloor then
+        floorChangeSentAt = g_clock.millis()
+    end
     modules.game_interface.lastManualWalk = g_clock.millis()
     g_game.walk(dir)
     return true
@@ -317,6 +341,7 @@ end
 
 --- Handles player teleportation events.
 local function onTeleport(player, newPos, oldPos)
+    floorChangeSentAt = nil
     if not newPos or not oldPos then
         return
     end
@@ -349,6 +374,7 @@ end
 
 --- Handles cancellation of a walking event.
 local function onCancelWalk(player)
+    floorChangeSentAt = nil
     player:lockWalk(50)
 end
 
@@ -364,6 +390,7 @@ end
 --- Sets up game-related events for the WalkController.
 function WalkController:onGameStart()
     noclip = false
+    floorChangeSentAt = nil
     ProtocolGame.registerExtendedOpcode(NOCLIP_OPCODE, function(protocol, opcode, buffer)
         noclip = buffer == '1'
     end)

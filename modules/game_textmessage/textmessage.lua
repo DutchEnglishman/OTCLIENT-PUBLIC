@@ -406,7 +406,7 @@ function displayMessage(mode, text)
             modules.game_console.addTabText(coloredText, MessageSettings.loot, lootTab)
         end
         if modules.client_options.getOption('showLootOnScreen') then
-            showOnScreen(MessageSettings.centerGreen, text)
+            showOnScreen(MessageSettings.centerGreen, text, coloredText)
         end
         return
     end
