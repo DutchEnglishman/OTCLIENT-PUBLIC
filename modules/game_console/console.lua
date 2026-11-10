@@ -344,22 +344,33 @@ function consoleController:onInit()
     consoleTabBar.onTabChange = onTabChange
 
     -- tibia like hotkeys
+    -- Tab cycles the chat tabs wherever the keyboard is, and hands it back to
+    -- the chat line: bound on gameRootPanel rather than consolePanel, so a
+    -- focused trainer field (shift-navigation, which lets Tab through) reaches
+    -- it too. A text field without shift-navigation still keeps Tab for moving
+    -- between its own form's fields.
     local gameRootPanel = modules.game_interface.getRootPanel()
     Keybind.new("Chat Channel", "Next Channel", "Tab", "")
     Keybind.bind("Chat Channel", "Next Channel", {
         {
           type = KEY_PRESS,
-          callback = function() consoleTabBar:selectNextTab() end,
+          callback = function()
+              consoleTabBar:selectNextTab()
+              focusChatInput()
+          end,
         }
-      }, consolePanel)
+      }, gameRootPanel)
 
     Keybind.new("Chat Channel", "Previous Channel", "Shift+Tab", "")
     Keybind.bind("Chat Channel", "Previous Channel", {
         {
           type = KEY_PRESS,
-          callback = function() consoleTabBar:selectPrevTab() end,
+          callback = function()
+              consoleTabBar:selectPrevTab()
+              focusChatInput()
+          end,
         }
-    }, consolePanel)
+    }, gameRootPanel)
     Keybind.new("Chat", "Send current chat line", { [CHAT_MODE.ON] = "Enter", [CHAT_MODE.OFF] = "" }, "")
     Keybind.bind("Chat", "Send current chat line", {
         {

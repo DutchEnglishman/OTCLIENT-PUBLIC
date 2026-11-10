@@ -89,7 +89,7 @@ function AutoLoot.setContainer(role, item)
     end
 
     AutoLoot.containers[role] = item:getId()
-    widget:setItem(item)
+    widget:setItem(Item.create(item:getId()))
 
     if AutoLoot.sendContainer then
         AutoLoot.sendContainer(role, item)

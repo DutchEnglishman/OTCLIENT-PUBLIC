@@ -1,5 +1,5 @@
 function UIItem:onDragEnter(mousePos)
-    if self:isVirtual() then
+    if self:isVirtual() or self.noDragOut then
         return false
     end
 

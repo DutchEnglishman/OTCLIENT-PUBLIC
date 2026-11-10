@@ -122,7 +122,7 @@ local function refreshDetail()
         widget:getChildById('value'):setText(value)
     end
     fact('factKills', tr('Kills'), tostring(task.kills))
-    fact('factLevel', tr('Min. level'), tostring(task.level))
+    fact('factLevel', tr('Recommended level'), tostring(task.level))
     fact('factRuns', tr('Completed'), string.format('%d / %d', task.runs, state.maxRuns))
 
     local progress = detail:getChildById('progress')
@@ -149,7 +149,7 @@ local function refreshDetail()
     startButton:setVisible(entry == nil)
     cancelButton:setVisible(entry ~= nil)
     claimButton:setVisible(entry ~= nil)
-    startButton:setEnabled(task.runs < state.maxRuns and state.level >= task.level and #state.active < state.maxActive)
+    startButton:setEnabled(task.runs < state.maxRuns and #state.active < state.maxActive)
     claimButton:setEnabled(entry ~= nil and entry.kills >= task.kills)
 end
 
@@ -198,9 +198,6 @@ function refreshList()
         else
             row:getChildById('sub'):setText(string.format('Lv %d  -  %d kills', task.level, task.kills))
             bar:setVisible(false)
-        end
-        if currentTab == 'available' and state.level < task.level then
-            row:setOpacity(0.45)
         end
         setPips(row, task.runs, state.maxRuns)
         if task.id == selectedId then

@@ -398,6 +398,18 @@ function displayMessage(mode, text)
     -- MESSAGE_STATUS_DEFAULT, so the mode carries premium and the text marks
     -- the line as loot. The Server Log copy skips wantedInServerLog: a loot line
     -- is always the player's own, and it names neither "you" nor the player.
+    -- Autoloot that could not fit everything (OTSERV AutoLootServer.warnLeftBehind,
+    -- data/lib/core/autoloot.lua, which sends this prefix): red on screen for
+    -- players who watch loot there, red in the Loot tab for the rest.
+    if text:find('^Autoloot: ') then
+        if modules.client_options.getOption('showLootOnScreen') then
+            showOnScreen(MessageSettings.centerRed, text)
+        else
+            modules.game_console.addTabText(text, MessageSettings.centerRed, modules.game_console.ensureLootTab())
+        end
+        return
+    end
+
     if text:find('^Loot of ') then
         local coloredText = ItemsDatabase.setColorLootMessage(text)
         modules.game_console.addText(coloredText, MessageSettings.loot, tr('Server Log'))

@@ -1,5 +1,6 @@
 AutoLootSlot < Item
   size: 32 32
+  &noDragOut: true
   border-width: 1
   border-color: #606060
 

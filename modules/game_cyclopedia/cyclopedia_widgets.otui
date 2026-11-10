@@ -879,11 +879,13 @@ BosstiaryItem < UIWidget
     anchors.bottom: parent.bottom
     margin-bottom: 12
     size: 145 14
+    phantom: true
   Label
     id: ProgressValue
     anchors.centerIn: KillsBox
     text-auto-resize: true
     !text: tr('0')
+    phantom: true
   Label
     id: KillsLabel
     anchors.left: KillsBox.left
@@ -892,6 +894,7 @@ BosstiaryItem < UIWidget
     !text: tr('Total Kills')
     text-auto-resize: true
     color: #C1C1C1
+    phantom: true
   CheckBox
     id: TrackCheck
     anchors.right: KillsBox.right
@@ -907,6 +910,7 @@ BosstiaryItem < UIWidget
     anchors.horizontalCenter: parent.horizontalCenter
     margin-bottom: 5
     size: 64 64
+    phantom: true
 BestiaryCreature < UIWidget
   image-source: /images/ui/outfits/minipanel
   image-border: 3

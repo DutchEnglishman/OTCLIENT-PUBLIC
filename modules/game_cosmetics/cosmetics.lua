@@ -251,13 +251,24 @@ local function refit(creature)
     end
 end
 
+-- An invisible player (utana vid) arrives as an empty outfit (OTSERV
+-- Player::sendCreatureChangeVisible), which ProtocolGame::getOutfit turns into effect 13;
+-- item outfits start at id 100, so look type 0 with aux 13 is only ever that.
+local INVISIBLE_EFFECT = 13
+
+local function isInvisible(creature)
+    local outfit = creature:getOutfit()
+    return outfit and (outfit.type or 0) == 0 and outfit.auxType == INVISIBLE_EFFECT
+end
+
 local function apply(creature)
     if not creature:isPlayer() then
         refit(creature)
         return
     end
+    local invisible = isInvisible(creature)
     for kind, k in pairs(KINDS) do
-        local wearing = not hidden[kind] and worn[kind][creature:getId()]
+        local wearing = not hidden[kind] and not invisible and worn[kind][creature:getId()]
         if k.wear then
             k.wear(creature, wearing or nil)
         else

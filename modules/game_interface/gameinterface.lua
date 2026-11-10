@@ -91,9 +91,14 @@ end
 
 -- The server answers a use, open or pickup of a map item out of reach by walking
 -- the player to it, so with right-click walking disabled such a click must not
--- be sent at all.
+-- be sent at all. LuaForceUseItemIds (gamelib/thing.lua) are the exception: their
+-- server action allows far use, so the server uses them from where the player
+-- stands (the whirlpool marker: Game::playerUseItem, isFarUseAllowed).
 local function rightClickWouldWalk(thing)
     if not thing or not modules.client_options.getOption('disableRightClickWalk') then
+        return false
+    end
+    if thing:isItem() and LuaForceUseItemIds[thing:getId()] then
         return false
     end
     local pos = thing:getPosition()

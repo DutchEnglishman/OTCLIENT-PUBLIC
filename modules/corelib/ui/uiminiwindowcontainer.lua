@@ -163,37 +163,73 @@ function UIMiniWindowContainer:swapInsert(widget, index)
 end
 
 function UIMiniWindowContainer:scheduleInsert(widget, index)
-    if index - 1 > self:getChildCount() then
+    for nIndex, nWidget in pairs(self.scheduledWidgets) do
+        if nWidget == widget then
+            self.scheduledWidgets[nIndex] = nil
+        end
+    end
+
+    -- A window saved past the panel's current end waits for the windows before
+    -- it, which may never come: its old neighbours are gone, or the layout was
+    -- copied from another character. It waits at the end of the panel rather
+    -- than with no parent, where opening it showed nothing for the whole
+    -- session -- the "Menus button does nothing until a restart" report.
+    local function placedCount()
+        local count = self:getChildCount()
+        for _, nWidget in pairs(self.scheduledWidgets) do
+            if nWidget:getParent() == self then
+                count = count - 1
+            end
+        end
+        return count
+    end
+
+    local oldParent = widget:getParent()
+    if index - 1 > placedCount() then
         if self.scheduledWidgets[index] then
             pdebug('replacing scheduled widget id ' .. widget:getId())
         end
         self.scheduledWidgets[index] = widget
-    else
-        local oldParent = widget:getParent()
         if oldParent ~= self then
             if oldParent then
                 oldParent:removeChild(widget)
             end
-            self:insertChild(index, widget)
+            self:addChild(widget)
+        end
+        return
+    end
 
-            while true do
-                local placed = false
-                for nIndex, nWidget in pairs(self.scheduledWidgets) do
-                    if nIndex - 1 <= self:getChildCount() then
-                        self:insertChild(nIndex, nWidget)
-                        self.scheduledWidgets[nIndex] = nil
-                        placed = true
-                        break
-                    end
-                end
-                if not placed then
-                    break
-                end
+    if oldParent == self then
+        return
+    end
+    if oldParent then
+        oldParent:removeChild(widget)
+    end
+    self:insertChild(index, widget)
+
+    while true do
+        local placed = false
+        for nIndex, nWidget in pairs(self.scheduledWidgets) do
+            if nWidget:isDestroyed() or nWidget:getParent() ~= self then
+                -- Dragged to another panel (or gone) while it waited.
+                self.scheduledWidgets[nIndex] = nil
+                placed = true
+                break
             end
-
-            self:orderPinned()
+            if nIndex - 1 <= placedCount() then
+                self.scheduledWidgets[nIndex] = nil
+                self:removeChild(nWidget)
+                self:insertChild(nIndex, nWidget)
+                placed = true
+                break
+            end
+        end
+        if not placed then
+            break
         end
     end
+
+    self:orderPinned()
 end
 
 -- Windows created without a parent (skills, viplist) reach the panel through
