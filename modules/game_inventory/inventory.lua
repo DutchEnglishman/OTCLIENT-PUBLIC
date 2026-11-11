@@ -236,13 +236,14 @@ local function inventoryEvent(player, slot, item, oldItem)
 end
 
 -- Task points replace the old Soul slot. They arrive over extended opcode 53
--- (game_tasksystem pushes them here) rather than being a player stat, so the
+-- as "TASKPOINTS|<points>" rather than being a player stat, so the
 -- last value has to be held: both panels are re-read on every shrink/expand
 -- and on every inventory refresh, and would otherwise drop back to 0.
 -- nil until the server's first push. A placeholder rather than 0 keeps "the
 -- value has not arrived" distinguishable from "the balance really is zero" --
 -- otherwise a server that never sends looks identical to a new character.
 local taskPoints = nil
+local TASK_POINTS_OPCODE = 53
 
 -- Never wider than four characters: the slot is 34px and cipsoftFont draws 8px
 -- per glyph, so a fifth one runs off the edge. Balances are fractional
@@ -276,7 +277,11 @@ local function refreshTaskPoints()
     end
 end
 
-function setTaskPoints(points)
+local function onTaskPointsOpcode(protocol, opcode, buffer)
+    local points = buffer:match('^TASKPOINTS|(.*)$')
+    if not points then
+        return
+    end
     taskPoints = tonumber(points) or 0
     refreshTaskPoints()
 end
@@ -441,6 +446,8 @@ function inventoryController:onInit()
     connect(pvpModeRadioGroup, {
         onSelectionChange = onSetPVPMode
     })
+
+    ProtocolGame.registerExtendedOpcode(TASK_POINTS_OPCODE, onTaskPointsOpcode)
 end
 
 function inventoryController:onGameStart()
@@ -554,6 +561,8 @@ function inventoryController:onGameEnd()
 end
 
 function inventoryController:onTerminate()
+    ProtocolGame.unregisterExtendedOpcode(TASK_POINTS_OPCODE)
+
     if iconTopMenu then
         iconTopMenu:destroy()
         iconTopMenu = nil

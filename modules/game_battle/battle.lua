@@ -2000,6 +2000,13 @@ function attackNext(previous)
         return
     end
 
+    -- With the battle window closed the creature events are disconnected
+    -- (onClose -> disconnecting), so the panel still holds whatever was on screen
+    -- when it closed: rebuild it from the map before reading it.
+    if not eventsConnected then
+        mainInstance:checkCreatures()
+    end
+
     -- The game's own target, not battleButton.isTarget: onAttack only sets that
     -- flag while the battle window is open, so with it closed every press found
     -- no target and attacked the first creature again.

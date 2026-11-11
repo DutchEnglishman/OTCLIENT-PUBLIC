@@ -818,7 +818,35 @@ function destroy()
     end
 end
 
+-- The addons this looktype has art for: one per pattern-y row past the first
+-- (Creature::internalDraw). Owning an addon of an outfit drawn without those
+-- rows changes nothing on screen, so it is not offered.
+local function drawableAddons(lookType)
+    local thingType = g_things.getThingType(lookType, ThingCategoryCreature)
+    if not thingType then
+        return 0
+    end
+    local rows = thingType:getNumPatternY()
+    return (rows > 1 and 1 or 0) + (rows > 2 and 2 or 0)
+end
+
+-- Both bits of a 0-3 addon value that are set in mask as well.
+local function maskAddons(addons, mask)
+    local result = 0
+    if addons % 2 == 1 and mask % 2 == 1 then
+        result = result + 1
+    end
+    if addons >= 2 and mask >= 2 then
+        result = result + 2
+    end
+    return result
+end
+
 function configureAddons(addons)
+    local drawable = drawableAddons(tempOutfit.type)
+    addons = maskAddons(addons, drawable)
+    tempOutfit.addons = maskAddons(tempOutfit.addons or 0, drawable)
+
     local hasAddon1 = addons == 1 or addons == 3
     local hasAddon2 = addons == 2 or addons == 3
     window.configure.addon1.check:setEnabled(hasAddon1)

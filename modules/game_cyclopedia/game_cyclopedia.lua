@@ -10,7 +10,6 @@ local buttonSelection = nil
 local items = nil
 local bestiary = nil
 local charms = nil
-local map = nil
 local houses = nil
 local character = nil
 local CyclopediaButton = nil
@@ -458,7 +457,7 @@ function controllerCyclopedia:onGameStart()
         return
     else
         CyclopediaButton = modules.game_mainpanel.addToggleButton('CyclopediaButton', tr('Cyclopedia'),
-            '/images/options/cooldowns', function() toggle("map") end, false, 7)
+            '/images/options/cooldowns', function() toggle("bestiary") end, false, 7)
         CyclopediaButton:setOn(false)
         -- "Open Bosstiary dialog" topbar button removed by request. The tab
         -- itself still exists and is reachable from the Cyclopedia window's
@@ -468,7 +467,6 @@ function controllerCyclopedia:onGameStart()
         buttonSelection = controllerCyclopedia.ui:recursiveGetChildById('buttonSelection')
         items = buttonSelection:recursiveGetChildById('items')
         bestiary = buttonSelection:recursiveGetChildById('bestiary')
-        map = buttonSelection:recursiveGetChildById('map')
         bosstiary = buttonSelection:recursiveGetChildById('bosstiary')
         bossSlot = buttonSelection:recursiveGetChildById('bossSlot')
         magicalArchives = buttonSelection:recursiveGetChildById('magicalArchives')
@@ -477,7 +475,9 @@ function controllerCyclopedia:onGameStart()
         -- subsystem this project doesn't have (character info opcode,
         -- charm-points economy, house auctions) -- not fixable by bridging
         -- client-side data the way Bestiary/Bosstiary/Boss Slots were.
-        -- Items and Boss Slot cut per explicit request. Destroyed, not
+        -- Items and Boss Slot cut per explicit request; the Map tab is gone
+        -- entirely (the minimap and its Ctrl+Shift+M fullscreen view cover
+        -- it). Destroyed, not
         -- hidden: the sidebar row is a chain of anchors.left: prev.right
         -- (game_cyclopedia.otui), resolved once at parse time to each
         -- widget's literal predecessor. Hiding leaves the (invisible)
@@ -485,7 +485,7 @@ function controllerCyclopedia:onGameStart()
         -- as a gap -- destroying it removes the slot, but leaves its
         -- former successor's anchor dangling, so every survivor gets
         -- explicitly re-anchored below into the final order: Bestiary,
-        -- Bosstiary, Magical Archives, Map (Map last, per request).
+        -- Bosstiary, Magical Archives.
         charms = buttonSelection:recursiveGetChildById('charms')
         houses = buttonSelection:recursiveGetChildById('houses')
         character = buttonSelection:recursiveGetChildById('character')
@@ -511,15 +511,9 @@ function controllerCyclopedia:onGameStart()
             magicalArchives:addAnchor(AnchorTop, 'bosstiary', AnchorTop)
             magicalArchives:addAnchor(AnchorLeft, 'bosstiary', AnchorRight)
         end
-        if map then
-            map:breakAnchors()
-            map:addAnchor(AnchorTop, 'magicalArchives', AnchorTop)
-            map:addAnchor(AnchorLeft, 'magicalArchives', AnchorRight)
-        end
 
         windowTypes = {
             bestiary = { obj = bestiary, func = showBestiary },
-            map = { obj = map, func = showMap },
             bosstiary = { obj = bosstiary, func = showBosstiary },
             magicalArchives = { obj = magicalArchives, func = showMagicalArchives },
         }
@@ -859,7 +853,7 @@ function SelectWindow(type, isBackButtonPress)
         end
     end
     if CyclopediaButton then
-        CyclopediaButton:setOn(type == "map" or type == "magicalArchives")
+        CyclopediaButton:setOn(windowTypes[type] ~= nil)
     end
     if ButtonBossSlot then
         ButtonBossSlot:setOn(type == "bossSlot")

@@ -219,7 +219,7 @@ function mapController:onInit()
     self.ui.minimapBorder.minimap:getChildById('resetButton'):hide()
 
     -- Same action as the fullscreen-map button next to the minimap.
-    g_keyboard.bindKeyDown('Ctrl+Shift+M', openCyclopediaMap, modules.game_interface.getRootPanel())
+    g_keyboard.bindKeyDown('Ctrl+Shift+M', fullscreen, modules.game_interface.getRootPanel())
 
     -- The panel carries no `save` flag, so UIMiniWindow's per-character height
     -- setting is a no-op here; the height is kept client-wide instead.
@@ -330,7 +330,7 @@ function mapController:onTerminate()
         iconTopMenu = nil
     end
 
-    g_keyboard.unbindKeyDown('Ctrl+Shift+M', openCyclopediaMap, modules.game_interface.getRootPanel())
+    g_keyboard.unbindKeyDown('Ctrl+Shift+M', fullscreen, modules.game_interface.getRootPanel())
     disconnect(modules.game_interface.getRightExtraPanel(), { onVisibilityChange = refreshWideLater })
     if narrowSlot then
         goNarrow()
@@ -358,14 +358,6 @@ function createMark(pos)
     local minimap = minimapUi()
     if minimap then
         minimap:createFlagWindow(pos)
-    end
-end
-
-function openCyclopediaMap()
-    if g_game.getClientVersion() >= 1310 then
-        modules.game_cyclopedia.toggle('map')
-    else
-        return fullscreen()
     end
 end
 

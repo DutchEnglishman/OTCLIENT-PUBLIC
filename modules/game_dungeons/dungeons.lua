@@ -9,8 +9,7 @@ local REQ_SLOTS = 3
 
 -- Bare globals, not DungeonsUI fields: the otui's @onClick/@onEscape handlers
 -- are evaluated as "modules.game_dungeons.X()" expressions, which resolve only
--- to a module's top-level globals and not to fields nested in a table (the same
--- reason game_tasksystem carries a bare toggle()).
+-- to a module's top-level globals and not to fields nested in a table.
 function toggle()
     DungeonsUI.toggle()
 end

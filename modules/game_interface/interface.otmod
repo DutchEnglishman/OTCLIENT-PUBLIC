@@ -53,7 +53,6 @@ Module
     - game_store
     - game_quickloot
     - game_cyclopedia
-    - game_tasksystem
     - game_dungeons
     - game_crafting
     - game_alchemy
