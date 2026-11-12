@@ -101,6 +101,14 @@ function AutoLoot.syncAllToServer()
     AutoLoot.syncFilterToServer()
 end
 
+function AutoLoot.sendGoldMode(mode)
+    sendMessage('GOLD_MODE|' .. (mode == 'bag' and 'bag' or 'bank'))
+end
+
+function AutoLoot.sendConvertGold(on)
+    sendMessage('CONVERT|' .. (on and '1' or '0'))
+end
+
 function AutoLoot.requestDailyBankStatus()
     sendMessage('BANK_STATUS')
 end
@@ -140,6 +148,24 @@ function AutoLoot.onExtendedOpcode(protocol, opcode, buffer)
 
         if AutoLoot.refreshDailyBankUI then
             AutoLoot.refreshDailyBankUI()
+        end
+
+        return
+    end
+
+    if command == "GOLD" then
+        local toBag, unlocked, convert = payload:match("^(%d)|(%d)|(%d)$")
+
+        if not toBag then
+            return
+        end
+
+        AutoLoot.goldToBag = toBag == '1'
+        AutoLoot.convertUnlocked = unlocked == '1'
+        AutoLoot.convertGold = convert == '1'
+
+        if AutoLoot.refreshGoldUI then
+            AutoLoot.refreshGoldUI()
         end
 
         return

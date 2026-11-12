@@ -9,7 +9,7 @@ ContainerWindow < MiniWindow
     id: miniwindowIcon
     anchors.top: miniwindowHeader.top
     anchors.left: miniwindowHeader.left
-    margin-top: 2
+    margin-top: 3
     margin-left: 4
     size: 12 12
     image-smooth: false

@@ -1724,9 +1724,16 @@ end
 -- a creature's chest. GLIDE_ORIGIN is the registered offset of a 64x64
 -- missile with the tile as its middle square, which setOffset replaces
 -- rather than adds to.
+--
+-- The effect always belongs to the tile under its middle (run.at), moved
+-- from tile to tile as it crosses them. A tile draws its own effects in its
+-- own turn, so one drawn below the topmost draw layer -- Thorgrim's rolling
+-- kegs -- passes behind a pillar standing south of its path instead of over
+-- it, as it would if it stayed on the tile it set off from. Moving it does
+-- not restart its animation (only cloning does).
 local GLIDE_LIFT_PX = 8
 local GLIDE_ORIGIN = 16
-local glideRuns = {} -- runId -> {event, pos, effect}
+local glideRuns = {} -- runId -> {event, pos, at, effect}
 
 local function glideRunClear(run)
     if run.event then
@@ -1734,7 +1741,7 @@ local function glideRunClear(run)
         run.event = nil
     end
     if run.effect then
-        local tile = g_map.getTile(run.pos)
+        local tile = g_map.getTile(run.at)
         if tile then
             tile:detachEffect(run.effect)
         end
@@ -1757,7 +1764,7 @@ local function glideRunStep(runId)
         return
     end
     if not run.effect then
-        local tile = g_map.getTile(run.pos)
+        local tile = g_map.getTile(run.at)
         local effect = tile and g_attachedEffects.getById(run.effectId)
         if effect then
             effect:setDuration(run.ms + 200)
@@ -1766,8 +1773,23 @@ local function glideRunStep(runId)
         end
     end
     if run.effect then
-        local px = math.floor(run.dx * f * 32 + 0.5)
-        local py = math.floor(run.dy * f * 32 + 0.5)
+        local under = {
+            x = run.pos.x + math.floor(run.dx * f + 0.5),
+            y = run.pos.y + math.floor(run.dy * f + 0.5),
+            z = run.pos.z,
+        }
+        if under.x ~= run.at.x or under.y ~= run.at.y then
+            local from, to = g_map.getTile(run.at), g_map.getTile(under)
+            if to then
+                if from then
+                    from:detachEffect(run.effect)
+                end
+                to:attachEffect(run.effect)
+                run.at = under
+            end
+        end
+        local px = math.floor((run.dx * f - (run.at.x - run.pos.x)) * 32 + 0.5)
+        local py = math.floor((run.dy * f - (run.at.y - run.pos.y)) * 32 + 0.5)
         run.effect:setOffset(GLIDE_ORIGIN - px, GLIDE_ORIGIN - py + GLIDE_LIFT_PX)
     end
     run.event = scheduleEvent(function() glideRunStep(runId) end, 1)
@@ -1784,7 +1806,7 @@ local function onGlide(buffer)
     end
     local pos = { x = tonumber(x), y = tonumber(y), z = tonumber(z) }
     glideRuns[runId] = {
-        pos = pos, effectId = tonumber(effectId), dx = tonumber(dx), dy = tonumber(dy),
+        pos = pos, at = pos, effectId = tonumber(effectId), dx = tonumber(dx), dy = tonumber(dy),
         ms = math.max(1, tonumber(ms)), startedAt = g_clock.millis(),
         landId = tonumber(landId), landMs = tonumber(landMs) or 0,
         landPos = { x = pos.x + tonumber(dx), y = pos.y + tonumber(dy), z = pos.z },

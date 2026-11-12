@@ -55,7 +55,7 @@ MainWindow
     margin-top: 10
     text-align: left
     text-horizontal-auto-resize: true
-    text: Amount to gift: 0
+    text: Amount to gift:
 
   UIWidget
     anchors.left: prev.right
@@ -64,9 +64,17 @@ MainWindow
     margin-left: 6
     phantom: true
 
+  TextEdit
+    id: coinsAmountInput
+    anchors.verticalCenter: coinsAmountLabel.verticalCenter
+    anchors.right: parent.right
+    width: 80
+    text: 0
+    @onTextChange: modules.game_shop.typeGiftAmount(self, "coinsAmountScrollbar")
+
   HorizontalScrollBar
     id: coinsAmountScrollbar
-    anchors.top: prev.bottom
+    anchors.top: coinsAmountLabel.bottom
     anchors.left: parent.left
     anchors.right: parent.right
     margin-top: 10
@@ -99,7 +107,7 @@ MainWindow
     margin-top: 10
     text-align: left
     text-horizontal-auto-resize: true
-    text: Amount to gift: 0
+    text: Amount to gift:
 
   UIWidget
     id: taskPointsLabelCoin
@@ -109,9 +117,17 @@ MainWindow
     margin-left: 6
     phantom: true
 
+  TextEdit
+    id: taskPointsAmountInput
+    anchors.verticalCenter: taskPointsAmountLabel.verticalCenter
+    anchors.right: parent.right
+    width: 80
+    text: 0
+    @onTextChange: modules.game_shop.typeGiftAmount(self, "taskPointsAmountScrollbar")
+
   HorizontalScrollBar
     id: taskPointsAmountScrollbar
-    anchors.top: prev.bottom
+    anchors.top: taskPointsAmountLabel.bottom
     anchors.left: parent.left
     anchors.right: parent.right
     margin-top: 10

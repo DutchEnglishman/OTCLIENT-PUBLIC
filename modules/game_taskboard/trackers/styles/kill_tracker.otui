@@ -198,7 +198,7 @@ TaskBoardKillTracker < MiniWindow
     id: miniwindowIcon
     anchors.top: miniwindowHeader.top
     anchors.left: miniwindowHeader.left
-    margin-top: 2
+    margin-top: 3
     margin-left: 4
     image-source: /images/icons/icon-prey-widget
     image-rect: 0 0 12 12

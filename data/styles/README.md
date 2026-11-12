@@ -1,4 +1,4 @@
-# OTML Variables for OTClient Styles
+# OTML Variables for TSRclient Styles
 
 OTML files can now expose lightweight variables that keep palettes, spacing tokens and theme tweaks in sync without rewriting the same literals across styles. In this context, a standalone OTML node whose tag begins with `&` is treated as a variable definition and is skipped by `UIManager` when instantiating widgets; its value is made available to subsequent nodes through `$name` references.
 

@@ -17,6 +17,27 @@ game
     // Map::undergroundFloorsUp/Down (src/map.h) or the map packet mis-parses
     aware-underground-floor-range-up: 2
     aware-underground-floor-range-down: 3
+    // Map pixels per sprite pixel. A walking creature and the camera are placed
+    // on this grid, so at 1 the screen scrolls in whole sprite pixels, which at
+    // the usual ~2x window stretch reads as jitter (2,4,2,4 screen px a frame);
+    // at 2 it moves on roughly screen pixels. 2 is also the look picked between
+    // the old soft blur (1) and hard-edged pixels (3, which a ~2.3x window
+    // shrinks onto uneven blocks). 1-4. Read at startup: a client restart, no
+    // rebuild.
+    render-scale: 2
+    // How much of the old soft look is laid back over the 2x map, 0-1: 0 is
+    // hard pixels, 1 the old blur. 0.6 was picked against another client's
+    // screenshot. Only with render-scale 2 and antialiasing enabled; names and
+    // health bars are drawn separately and stay sharp. Client restart, no
+    // rebuild.
+    smoothing: 0.6
+    // true: the map is rebuilt the moment the screen takes the last build, so
+    // every frame shows the walk exactly one frame old. false: the map thread
+    // runs on its own timer (twice the refresh rate, at least 120/s), which
+    // drifts against the screen's rate and made each frame's position 1-9 ms
+    // old at random -- measured as the walking jitter. Client restart, no
+    // rebuild.
+    frame-sync: true
 
   tile
     max-elevation: 24
@@ -51,16 +72,23 @@ game
 
   render
     // Milliseconds one animation frame is held. Bigger is slower. Engine
-    // defaults (gameconfig.h:133) are 500 / 500 / 75 / 75; invisible sits
-    // past its default on purpose, because stock reads as frantic here.
+    // defaults (gameconfig.h:135) are 500 / 500 / 75 / 75; invisible sits
+    // past its default on purpose, because stock reads as frantic here. Item
+    // stays at 500: every 2-frame item CipSoft kept unchanged into 10.98 is
+    // 500 ms there, so that is the classic figure. Effect is 100 for the same
+    // reason: the 8.60 effects whose frame count CipSoft kept into 10.98 are
+    // 100 ms a frame there, and at 75 our effects ran a median 1.47x short of
+    // CipSoft's lengths. Missiles have no timing in any dat (a missile flies
+    // 2 x this x sqrt(tiles) ms, missile.cpp:87), so they keep the stock 75; a
+    // slower one only lands further behind the damage the server sent with it.
     //
     // invisible = creature invisibility sparkles
     // item      = torches, fire and energy fields, every animated map item,
-    //             and creature sprite animation (creature.cpp:489)
+    //             and a creature dressed as an item (creature.cpp:534)
     // effect    = magic effects, missile = projectiles in flight
     invisible-ticks-per-frame: 750
     item-ticks-per-frame: 500
-    effect-ticks-per-frame: 75
+    effect-ticks-per-frame: 100
     missile-ticks-per-frame: 75
     animated-text-duration: 1000
     static-duration-per-character: 60

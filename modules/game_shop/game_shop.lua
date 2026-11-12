@@ -396,6 +396,8 @@ function onGameShopUpdatePoints(data)
         balanceSecondWidget:setMarginLeft(6)
         transferWindow.taskPointsLabelCoin:show()
         transferWindow.taskPointsAmountScrollbar:show()
+        transferWindow.taskPointsAmountInput:show()
+        transferWindow.taskPointsAmountLabel:show()
         transferWindow.taskPointsCoin:show()
         transferWindow.taskPointsBalance:show()
         transferWindow.taskPointsBalance:setText(tr("Transferable Task points: ") .. comma_value(premiumSecondPoints))
@@ -408,6 +410,7 @@ function onGameShopUpdatePoints(data)
         transferWindow.taskPointsAmountLabel:hide()
         transferWindow.taskPointsLabelCoin:hide()
         transferWindow.taskPointsAmountScrollbar:hide()
+        transferWindow.taskPointsAmountInput:hide()
         transferWindow.taskPointsCoin:hide()
     end
 
@@ -991,11 +994,42 @@ function displayInfoBoxWithCallback(title, message, callback)
 end
 
 function changeCoinsAmount(value)
-    transferWindow:getChildById("coinsAmountLabel"):setText("Amount to gift: " .. comma_value(value))
+    showGiftAmount('coinsAmountInput', value)
 end
 
 function changeTaskPointsAmount(value)
-    transferWindow:getChildById("taskPointsAmountLabel"):setText("Amount to gift: " .. comma_value(value))
+    showGiftAmount('taskPointsAmountInput', value)
+end
+
+-- The field and the slider each move the other; the flag stops the echo, so
+-- typing "1" is not rewritten under the cursor while the player keeps typing.
+local syncingGiftAmount = false
+
+function showGiftAmount(inputId, value)
+    if syncingGiftAmount or not transferWindow then
+        return
+    end
+    syncingGiftAmount = true
+    transferWindow:getChildById(inputId):setText(tostring(value))
+    syncingGiftAmount = false
+end
+
+function typeGiftAmount(input, scrollbarId)
+    if syncingGiftAmount or not transferWindow then
+        return
+    end
+    local scrollbar = transferWindow:getChildById(scrollbarId)
+    local text = input:getText()
+    local digits = text:gsub("%D", "")
+    local value = math.min(tonumber(digits) or 0, scrollbar:getMaximum())
+    local shown = digits == "" and "" or tostring(value)
+    syncingGiftAmount = true
+    if shown ~= text then
+        input:setText(shown)
+        input:setCursorPos(#shown)
+    end
+    scrollbar:setValue(value)
+    syncingGiftAmount = false
 end
 
 function confirmGiftCoins()
@@ -1021,6 +1055,8 @@ function confirmGiftCoins()
         transferWindow.recipient:setText("")
         transferWindow.coinsAmountScrollbar:setValue(0)
         transferWindow.taskPointsAmountScrollbar:setValue(0)
+        transferWindow.coinsAmountInput:setText("0")
+        transferWindow.taskPointsAmountInput:setText("0")
     end
 end
 

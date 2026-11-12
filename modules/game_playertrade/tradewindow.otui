@@ -8,7 +8,7 @@ TradeWindow < MiniWindow
     size: 16 16
     anchors.top: parent.top
     anchors.left: parent.left
-    margin-top: 4
+    margin-top: 2
     margin-left: 4
 
   MiniWindowContents

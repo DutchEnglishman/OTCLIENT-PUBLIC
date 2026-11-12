@@ -30,3 +30,8 @@
 &headerBevelLight: #66666640
 &headerBevelShadow: #31313160
 &headerBorderColor: #2a2a2a
+
+// The wooden rim along the top of a mini-window header, in px: the header image's top
+// border (30-miniwindow.otui). The generated header images in oak carry a 2 px
+// rim (make_*.ps1, trimTop); any other image keeps the 4 px it was drawn with.
+&headerRim: 4

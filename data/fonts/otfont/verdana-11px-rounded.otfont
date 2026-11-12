@@ -6,3 +6,5 @@ Font
   y-offset: -2
   spacing: 0 -3
   space-width: 4
+  left-bearing:
+    j: -2

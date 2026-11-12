@@ -2662,22 +2662,16 @@ function setExtendedView(bool)
     if bool then
         consolePanel:setMarginRight(10)
         consolePanel:setMarginBottom(10)
-        consolePanel:getChildById('extendedViewDraggable'):show()
         consolePanel:getChildById('extendedViewTransparent'):show()
         consolePanel:getChildById('extendedViewTransparent'):setChecked(transparentChatEnabled)
     else
         consolePanel:setMarginRight(0)
         consolePanel:setMarginBottom(0)
-        consolePanel:getChildById('extendedViewDraggable'):hide()
         consolePanel:getChildById('extendedViewTransparent'):hide()
         gameBottomPanel:show(true)
         destroyButtonChat()
     end
-    gameBottomPanel:setDraggable(not bool)
-end
-
-function extendedViewDraggable(bool)
-    gameBottomPanel:setDraggable(not bool)
+    gameBottomPanel:setDraggable(false)
 end
 
 function extendedViewTransparent(bool)

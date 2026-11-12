@@ -16,6 +16,7 @@ Module
     - protocol
     - containers
     - filters
+    - gold
     - presets
     - items
     - search

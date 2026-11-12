@@ -116,7 +116,7 @@
     "on": false
   },
   "manaShield": "utamo vita",
-  "autoTradeMessage": "I'm using OTClient Shattered Realms!",
+  "autoTradeMessage": "I'm using TSRclient!",
   "antiParalyze": "utani hur",
   "manaTrain": {
     "max": 100,

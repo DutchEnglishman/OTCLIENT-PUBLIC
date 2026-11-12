@@ -871,7 +871,7 @@ end
 -- contents panel's margins and padding, and the pages bar when it shows.
 local function containerChromeHeight(containerWindow, contentsPanel, pages)
     local topBar = containerWindow:getChildById('miniwindowTopBar')
-    local height = topBar:getMarginTop() + topBar:getHeight() + contentsPanel:getMarginTop() +
+    local height = containerWindow:getPaddingTop() + topBar:getMarginTop() + topBar:getHeight() + contentsPanel:getMarginTop() +
         contentsPanel:getPaddingTop() + contentsPanel:getPaddingBottom() + contentsPanel:getMarginBottom()
     if pages then
         local separator = containerWindow:getChildById('separator')

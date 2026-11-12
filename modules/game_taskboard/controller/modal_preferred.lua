@@ -14,7 +14,7 @@ local MONSTER_ROW_HEIGHT_MIN_PX = 36
 local MONSTER_ROW_HEIGHT_MAX_PX = 72
 
 -- Split a large pixel value across three spacer segments (max 20000px each).
--- Needed because OTClient widget heights are capped; three divs simulate tall spacers.
+-- Needed because TSRclient widget heights are capped; three divs simulate tall spacers.
 local function splitSpacerPx(totalPx)
     local px = math.max(0, tonumber(totalPx) or 0)
     local a = math.min(px, MONSTER_SPACER_SEGMENT_PX)
@@ -236,7 +236,7 @@ function TaskBoardController:bindPreferredMonsterScroll()
     scrollWidget.updateScrollBars = function()
     end
 
-    -- Without AutoFocusNone, OTClient calls focusPreviousChild() automatically when a
+    -- Without AutoFocusNone, TSRclient calls focusPreviousChild() automatically when a
     -- focused row widget is destroyed during virtual-scroll re-renders (uiwidget.cpp
     -- removeChild), shifting focus to an adjacent row without any user interaction.
     scrollWidget:setAutoFocusPolicy(AutoFocusNone)

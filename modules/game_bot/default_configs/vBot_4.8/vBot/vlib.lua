@@ -323,7 +323,7 @@ if onSpellCooldown and onGroupSpellCooldown then
         end)
     end)
 else
-    warn("Outdated OTClient! update to newest version to take benefits from all scripts!")
+    warn("Outdated TSRclient! update to newest version to take benefits from all scripts!")
 end
 
 -- exctracts data about spell from gamelib SpellInfo table

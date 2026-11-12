@@ -1,6 +1,6 @@
 // Every pop-up window in the client inherits this, so this is where the carved stone
 // frame goes on. The three numbers are one set and move together (they are generated,
-// see tools/skin-generators/make_shattered.ps1, entry `window_carved`):
+// see tools/skin-generators/make_oak.ps1, entry `window_carved`):
 //   10  the moulding itself
 //  +2   the black and light edge lines, which must sit INSIDE image-border or they land
 //       in the tiled middle and repeat across the body as a grid of squares

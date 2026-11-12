@@ -42,6 +42,10 @@ GameBottomPanel < UIWindow
   image-source: /images/ui/background_dark
   image-repeated: true
   draggable:false
+  border-width-left: 1
+  border-width-top: 1
+  border-width-right: 1
+  border-color: $borderColor
 
   ResizeBorder
     id: bottomResizeBorder

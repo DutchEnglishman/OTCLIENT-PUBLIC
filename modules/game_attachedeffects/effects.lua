@@ -758,19 +758,70 @@ for e, element in ipairs(ELEMENT_FX_ORDER) do
 end
 
 -- King Thorgrim Deepcrown (OTSERV data/scripts/boss_skills/deepcrown_skills.lua).
--- Both are the game's own effects, looped, rather than drawn textures: his
--- Hammerfall and keg blasts are stock magic effects sent per tile by the server.
--- 452: the lit fuse on a blasting keg, the yellow spark (dat effect 4), held on
--- the keg's tile while it burns.
+-- 452: the lit fuse of the blasting kegs he no longer throws, the yellow spark
+-- (dat effect 4); kept for a server from before the throne.
 AttachedEffectManager.register(452, 'Keg fuse', 4, ThingCategoryEffect, {
     speed = 0.6,
     offset = { 0, 0, true }
 })
--- 462: the ward he wears while his Royal Guard lives, the yellow rings (dat
--- effect 8), attached and detached over opcode 71.
+-- 462: the ward he wears while his Royal Guard lives or he sits his throne,
+-- the yellow rings (dat effect 8), attached and detached over opcode 71.
 AttachedEffectManager.register(462, 'Deepcrown ward', 8, ThingCategoryEffect, {
     speed = 0.7,
     offset = { 0, 0, true }
+})
+-- 466-471: his kegs and wine, drawn by make_deepcrown_kegs.ps1.
+-- 466/467: a keg rolling west/east, glided over opcode 73 "glide", 64x64
+-- with the tile as the middle square. In the tile's own turn, not drawOrder 4 like a
+-- missile, so it rolls behind the pillars south of its row.
+for i, side in ipairs({ 'west', 'east' }) do
+    AttachedEffectManager.register(465 + i, 'Deepcrown keg rolling ' .. side, '/images/game/effects/deepcrown_keg_roll_' .. side, ThingExternalTexture, {
+        offset = { 16, 16, true }
+    })
+end
+-- 468: a keg dropping onto the tile and breaking, 64x128 with the tile as
+-- the bottom middle square, over creatures since it lands on them.
+AttachedEffectManager.register(468, 'Deepcrown keg falling', '/images/game/effects/deepcrown_keg_fall', ThingExternalTexture, {
+    offset = { 16, 96, true }
+})
+-- 469: a rolling keg bursting, the glide's landing.
+AttachedEffectManager.register(469, 'Deepcrown keg burst', '/images/game/effects/deepcrown_keg_burst', ThingExternalTexture, {
+    offset = { 16, 16, true },
+    drawOrder = 4
+})
+-- 1000-1255: a tile of the wine a falling keg leaves, under creatures,
+-- held for its 15 s. The server sends 1000 + the mask of the tile's wet
+-- neighbours (N 1, NE 2, E 4, SE 8, S 16, SW 32, W 64, NW 128), so touching
+-- pools run into one splat. Drawn with the floor borders (drawOrder 1), so
+-- it lies under every item, creature and rolling keg on the floor; a tile
+-- draws it right after its own floor and carpet, and a piece never reaches
+-- past its tile, so it also lies on the hall's red carpet.
+for mask = 0, 255 do
+    AttachedEffectManager.register(1000 + mask, 'Deepcrown wine ' .. mask,
+        '/images/game/effects/deepcrown_wine_' .. mask, ThingExternalTexture, {
+        offset = { 0, 0, false },
+        drawOrder = 1
+    })
+end
+
+-- Madareth's Blood Rain (OTSERV data/spells/scripts/bosses/madareth_bloodlust.lua;
+-- textures by tools/effect-generators/make_blood_rain.ps1), all three on the
+-- plain "on" verb of opcode 73.
+-- 463: the warning on a marked tile, 1.5 s, under creatures.
+AttachedEffectManager.register(463, 'Blood rain warning', '/images/game/effects/blood_warning', ThingExternalTexture, {
+    offset = { 0, 0, false }
+})
+-- 464: the blood falling onto it. 32x96 like the falling stones (offset 0,64),
+-- over creatures since it lands on them; the server sends it 300 ms early so
+-- the first splash is the hit.
+AttachedEffectManager.register(464, 'Blood rain', '/images/game/effects/blood_rain', ThingExternalTexture, {
+    offset = { 0, 64, true }
+})
+-- 465: the pool it leaves, looping for the pool's whole life, under creatures.
+-- The server re-sends "on" every second with the time left, so a player who
+-- walks up late still sees it, and "off" when Madareth drinks it.
+AttachedEffectManager.register(465, 'Blood pool', '/images/game/effects/blood_pool', ThingExternalTexture, {
+    offset = { 0, 0, false }
 })
 
 -- The Epic Boss Rift's two bosses (OTSERV data/scripts/boss_skills/

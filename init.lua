@@ -136,7 +136,7 @@ g_app.setOrganizationName("otcr");
 -- Evaluated once: the consumers below test this at both init() and terminate(), and a
 -- value that changed mid-session would leave a connect() without its disconnect().
 local UPDATER_ENABLED = (function()
-    -- A dev build (otclient_dev.exe, windows-dev) runs a working tree as it is. Letting it
+    -- A dev build (TSRclient_dev.exe, windows-dev) runs a working tree as it is. Letting it
     -- self-update would overwrite work in progress with the last release and apply that
     -- release's delete list to the source checkout. Exes from before script signing have no
     -- g_scriptIntegrity and still update, so a player whose exe swap failed is not stranded.
@@ -208,10 +208,9 @@ g_configs.loadSettings('/config.otml')
 -- of data/ and modules/ so any file it carries shadows the stock one and nothing
 -- stock is edited. nil = the stock look. A change needs a restart: images resolve
 -- lazily, but styles are parsed once when client_styles loads.
--- 'slate' is the cold grey matte look (tools/skin-generators/make_slate.ps1); 'carved' the
--- warmer basalt-and-gold one it was cut from (make_carved.ps1); 'shattered' the flat
--- green-black one before that (make_shattered.ps1). Swap back by naming it here.
-local SKIN = 'slate'
+-- 'oak' is the dark wood-and-iron look (tools/skin-generators/make_oak.ps1), the only
+-- skin; nil gives the stock Tibia look.
+local SKIN = 'oak'
 if SKIN then
     if not g_resources.addSearchPath(g_resources.getWorkDir() .. 'data/skins/' .. SKIN, true) then
         g_logger.error('Skin "' .. SKIN .. '" not found under data/skins/ -- using the stock look.')

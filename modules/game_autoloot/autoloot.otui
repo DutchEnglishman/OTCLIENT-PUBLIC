@@ -18,7 +18,7 @@ AutoLootPresetButton < CheckBoxCircle
 MainWindow
   id: autoLootWindow
   !text: tr('Autoloot')
-  size: 340 455
+  size: 340 527
   @onEscape: modules.game_autoloot.hide()
 
   MiniPanel
@@ -391,9 +391,48 @@ MainWindow
         @onCheckChange: AutoLoot.onIgnoreFilterChange(self:isChecked())
 
     MiniPanel
+      id: goldPanel
+      text: Gold
+      anchors.top: filterPanel.bottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      height: 70
+      margin-top: 2
+
+      CheckBoxCircle
+        id: goldToBank
+        text: Bank
+        width: 55
+        checked: true
+        anchors.top: parent.top
+        anchors.left: parent.left
+        margin-left: 12
+        margin-top: 2
+        !tooltip: tr('Looted coins go to your bank, up to the daily limit.')
+        @onCheckChange: AutoLoot.onGoldModeChange('bank', self:isChecked())
+
+      CheckBoxCircle
+        id: goldToBag
+        text: Bag
+        width: 50
+        anchors.top: goldToBank.top
+        anchors.left: goldToBank.right
+        !tooltip: tr('Looted coins go to your loot bags, for sharing on a team hunt. They do not count against the daily bank limit.')
+        @onCheckChange: AutoLoot.onGoldModeChange('bag', self:isChecked())
+
+      CheckBox
+        id: convertGold
+        text: Convert gold
+        width: 110
+        anchors.top: goldToBank.bottom
+        anchors.left: goldToBank.left
+        margin-top: 4
+        @onCheckChange: AutoLoot.onConvertGoldChange(self:isChecked())
+
+    MiniPanel
       id: containersPanel
       text: Containers
-      anchors.top: filterPanel.bottom
+      anchors.top: goldPanel.bottom
       anchors.left: parent.left
       anchors.right: parent.right
       anchors.bottom: parent.bottom

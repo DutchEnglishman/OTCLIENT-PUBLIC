@@ -2501,7 +2501,7 @@ function applyExtendedViewLayout(extendedView)
         if not g_platform.isMobile() then
             gameBottomPanel:breakAnchors()
             gameBottomPanel:bindRectToParent()
-            gameBottomPanel:setDraggable(true)
+            gameBottomPanel:setDraggable(false)
         else
             gameBottomPanel:setWidth(g_window.getWidth() - mobileConfig.mobileWidthJoystick -
                 mobileConfig.mobileWidthShortcuts)

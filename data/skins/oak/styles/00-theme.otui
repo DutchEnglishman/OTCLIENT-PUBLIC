@@ -1,0 +1,38 @@
+// The oak palette. Shadows data/styles/00-theme.otui while the skin is mounted (SKIN
+// in init.lua); same roles, same rule -- chrome only, a colour with meaning never lives
+// here. The fills follow the tone ladder in tools/skin-generators/make_oak.ps1
+// ($Look.Tone) so a Lua-painted panel matches a generated one. Text is parchment on
+// weathered wood and the accent is aged bronze.
+
+&textColor: #e2d6bf
+&textBright: #f6eedc
+&textDim: #a89a84
+&textDisabled: #e2d6bf55
+&textMuted: #7c7062
+
+&panelFill: #4e4338
+&panelFillDark: #3b332a
+&panelFillDeep: #2c241c
+&panelFillRaised: #584c40
+&panelFillLight: #63574a
+
+&borderColor: #6a5c4c
+&borderLight: #8a7a66
+&separatorColor: #1a140f
+
+&selectionFill: #6e5a3e
+&selectionText: #f6eedc
+&hoverOverlay: #f0d8a822
+
+// The three lines the stock mini-window style paints under a container's header: a 1-px
+// highlight, a 1-px shadow and a 1-px border. All off here -- a top bar in this skin is
+// one plain iron plate with the title on it, and the header image draws no line of its
+// own either (make_oak.ps1, $Look.HeaderRing).
+&headerBevelLight: #00000000
+&headerBevelShadow: #00000000
+&headerBorderColor: #00000000
+
+// The wooden rim along the top of a mini-window header, in px: the header image's top
+// border (30-miniwindow.otui). The generated header images in oak carry a 2 px
+// rim (make_*.ps1, trimTop); any other image keeps the 4 px it was drawn with.
+&headerRim: 2

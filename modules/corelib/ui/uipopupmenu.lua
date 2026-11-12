@@ -49,7 +49,7 @@ function UIPopupMenu:onGeometryChange(newRect, oldRect)
 
     -- A menu is positioned before its real size is known: the vertical layout only
     -- fits it to its options a frame later, so until then it still carries the size
-    -- of its border image (256px tall on the slate skin). Re-apply the position it
+    -- of its border image (256px tall in the oak skin). Re-apply the position it
     -- was opened at on every geometry change, so it is pulled back on screen against
     -- the size it actually has rather than against that placeholder.
     local pos = self.displayPos

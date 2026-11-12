@@ -26,6 +26,7 @@ function init()
     AutoLoot.setupItemSlots()
     AutoLoot.setupContainerSlots()
     AutoLoot.refreshFilterUI()
+    AutoLoot.refreshGoldUI()
 
     AutoLoot.window:hide()
 

@@ -106,7 +106,7 @@ local HEADER_BUTTONS = {
 }
 local HEADER_BUTTON_GAP = 2     -- between two buttons
 local HEADER_BUTTON_RIGHT = 3   -- from the window's right edge to the first one
-local HEADER_BUTTON_TOP = 2     -- 12px button in a 15px header
+local HEADER_BUTTON_TOP = 2     -- + MiniWindow's 1px padding-top: rows 3-14 of the 16px header, 1px inside its 2px rim and its bottom
 
 -- Re-anchors the visible header buttons into one evenly spaced row. Safe to call at any
 -- time; call it after changing whether one of them is visible.
@@ -559,7 +559,7 @@ end
 
 function UIMiniWindow:setContentHeight(height)
     local contentsPanel = self:getChildById('contentsPanel')
-    local minHeight = contentsPanel:getMarginTop() + contentsPanel:getMarginBottom() + contentsPanel:getPaddingTop() +
+    local minHeight = self:getPaddingTop() + contentsPanel:getMarginTop() + contentsPanel:getMarginBottom() + contentsPanel:getPaddingTop() +
         contentsPanel:getPaddingBottom()
 
     local resizeBorder = self:getChildById('bottomResizeBorder')
@@ -568,7 +568,7 @@ end
 
 function UIMiniWindow:setContentMinimumHeight(height)
     local contentsPanel = self:getChildById('contentsPanel')
-    local minHeight = contentsPanel:getMarginTop() + contentsPanel:getMarginBottom() + contentsPanel:getPaddingTop() +
+    local minHeight = self:getPaddingTop() + contentsPanel:getMarginTop() + contentsPanel:getMarginBottom() + contentsPanel:getPaddingTop() +
         contentsPanel:getPaddingBottom()
 
     local resizeBorder = self:getChildById('bottomResizeBorder')
@@ -577,7 +577,7 @@ end
 
 function UIMiniWindow:setContentMaximumHeight(height)
     local contentsPanel = self:getChildById('contentsPanel')
-    local minHeight = contentsPanel:getMarginTop() + contentsPanel:getMarginBottom() + contentsPanel:getPaddingTop() +
+    local minHeight = self:getPaddingTop() + contentsPanel:getMarginTop() + contentsPanel:getMarginBottom() + contentsPanel:getPaddingTop() +
         contentsPanel:getPaddingBottom()
 
     local resizeBorder = self:getChildById('bottomResizeBorder')

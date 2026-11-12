@@ -9,8 +9,14 @@ MiniWindow < UIMiniWindow
   image-border-top: 4
   image-border-bottom: 4
   focusable: false
-  &minimizedHeight: 20
-  
+  // The header is 16 px: a $headerRim px rim (2 in oak) over a 14 px bar, the
+  // 12 px buttons centred in the bar with 1 px either side. A parent.top anchor resolves
+  // against the padding rect (uianchorlayout.cpp:48), so padding-top pushes every
+  // module's own parent.top content down by the 1 px the header grew, and the header
+  // pulls back up by it (the buttons: uiminiwindow.lua, HEADER_BUTTON_TOP).
+  padding-top: 1
+  &minimizedHeight: 21
+
   $on:
     image-border-bottom: 2
 
@@ -19,10 +25,11 @@ MiniWindow < UIMiniWindow
     anchors.top: parent.top
     anchors.right: parent.right
     anchors.left: parent.left
-    height: 15
+    margin-top: -1
+    height: 16
     image-source: /images/ui/miniwindow_header
     image-border: 4
-    image-border-top: 4
+    image-border-top: $headerRim
     image-border-bottom: 4
     phantom: true
 
