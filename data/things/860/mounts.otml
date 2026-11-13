@@ -1,0 +1,512 @@
+// Rider offsets for big mounts (read by modules/game_things/things.lua).
+// Mount looktype (clientid in the server's data/XML/mounts.xml), then how far the
+// seated rider is moved in sprite pixels: "x y", + is right / down, - is left / up.
+// Made with the Mount Rider Tuner. Mounts not listed draw exactly as before.
+creatures
+  780
+    // Cranium Spider (mount id 7)
+    // status: done
+    rider-offset-north: -2 0
+    rider-offset-east: 0 -5
+    rider-offset-south: -4 -2
+    rider-offset-west: 0 -4
+  781
+    // Blazebringer (mount id 8)
+    // status: done
+    rider-offset: 0 0
+  782
+    // Brown Bear (mount id 9)
+    // status: done
+    rider-offset: 0 0
+  783
+    // Mole (mount id 10)
+    // status: done
+    rider-offset: 0 0
+  784
+    // Midnight Panther (mount id 11)
+    // status: done
+    rider-offset: 0 0
+  785
+    // Draptor (mount id 12)
+    // status: done
+    rider-offset: 0 0
+  786
+    // Magma Crawler (mount id 13)
+    // status: done
+    rider-offset-north: -3 0
+    rider-offset-east: 0 -3
+    rider-offset-south: -1 0
+    rider-offset-west: 0 0
+  788
+    // Armoured Dragonling (mount id 15)
+    // status: done
+    // checked with: 128
+    rider-offset: 0 0
+  789
+    // Rapid Boar (mount id 16)
+    // status: done
+    rider-offset: 0 0
+  793
+    // Crystal Wolf (mount id 20)
+    // status: done
+    rider-offset: 0 0
+  794
+    // War Horse (mount id 21)
+    // status: done
+    rider-offset: 0 0
+  795
+    // Emperor Deer (mount id 22)
+    // status: done
+    rider-offset-north: -4 -3
+    rider-offset-east: 0 -4
+    rider-offset-south: -2 0
+    rider-offset-west: -4 -4
+  796
+    // Bamboo Panda (mount id 23)
+    // status: done
+    rider-offset: 0 0
+  797
+    // Dromedary (mount id 24)
+    // status: done
+    rider-offset-north: 0 -1
+    rider-offset-east: 0 0
+    rider-offset-south: 0 0
+    rider-offset-west: 0 0
+  798
+    // Scorpion King (mount id 25)
+    // status: done
+    rider-offset: 0 0
+  799
+    // Lady Bug (mount id 26)
+    // status: done
+    rider-offset: 0 0
+  800
+    // Manta Ray (mount id 27)
+    // status: done
+    rider-offset: 0 0
+  801
+    // Ironblight (mount id 28)
+    // status: done
+    rider-offset: 0 0
+  802
+    // Azudocus (mount id 29)
+    // status: done
+    rider-offset: 0 0
+  803
+    // Iron Boar (mount id 30)
+    // status: done
+    rider-offset: 0 0
+  804
+    // Crimson Ray (mount id 31)
+    // status: done
+    rider-offset-north: 0 0
+    rider-offset-east: 0 0
+    rider-offset-south: -1 0
+    rider-offset-west: 0 0
+  807
+    // Bloodcurl (mount id 34)
+    // status: done
+    rider-offset: 0 0
+  810
+    // Noble Lion (mount id 37)
+    // status: done
+    rider-offset: 0 0
+  811
+    // Desert King (mount id 38)
+    // status: done
+    rider-offset: 0 0
+  812
+    // Rift Runner (mount id 39)
+    // status: done
+    rider-offset: 0 0
+  813
+    // Poisonbane (mount id 40)
+    // status: done
+    rider-offset: 0 0
+  814
+    // Jade Lion (mount id 41)
+    // status: done
+    rider-offset: 0 0
+  815
+    // Mouldpincer (mount id 42)
+    // status: done
+    rider-offset: 0 0
+  816
+    // Winter King (mount id 43)
+    // status: done
+    rider-offset: 0 0
+  817
+    // Crimson Hart (mount id 44)
+    // status: done
+    rider-offset: 0 0
+  818
+    // Dusk Hart (mount id 45)
+    // status: done
+    rider-offset: 0 0
+  820
+    // Battle Badger (mount id 47)
+    // status: done
+    rider-offset: 0 0
+  821
+    // Ether Badger (mount id 48)
+    // status: done
+    rider-offset: 0 0
+  822
+    // Zaoan Badger (mount id 49)
+    // status: done
+    rider-offset: 0 0
+  823
+    // Golden Dragonfly (mount id 50)
+    // status: done
+    rider-offset-north: -1 0
+    rider-offset-east: 0 0
+    rider-offset-south: 0 0
+    rider-offset-west: 0 -1
+  825
+    // Copper Fly (mount id 52)
+    // status: done
+    rider-offset: 0 0
+  827
+    // Highland Yak (mount id 54)
+    // status: done
+    rider-offset: 0 0
+  828
+    // Glacier Vagabond (mount id 55)
+    // status: done
+    rider-offset: 0 0
+  829
+    // Flying Divan (mount id 56)
+    // status: done
+    rider-offset-north: -2 0
+    rider-offset-east: 0 0
+    rider-offset-south: 0 0
+    rider-offset-west: 0 0
+  830
+    // Magic Carpet (mount id 57)
+    // status: done
+    rider-offset: 0 0
+  831
+    // Floating Kashmir (mount id 58)
+    // status: done
+    rider-offset-north: -2 0
+    rider-offset-east: 0 0
+    rider-offset-south: 0 0
+    rider-offset-west: 0 -2
+  832
+    // Jackalope (mount id 59)
+    // status: done
+    rider-offset: 0 0
+  833
+    // Dreadhare (mount id 60)
+    // status: done
+    rider-offset-north: -3 -1
+    rider-offset-east: 0 0
+    rider-offset-south: 0 0
+    rider-offset-west: 0 -3
+  834
+    // Wolpertinger (mount id 61)
+    // status: done
+    rider-offset: 0 0
+  835
+    // Sea Devil (mount id 62)
+    // status: done
+    rider-offset: 0 0
+  836
+    // Coralripper (mount id 63)
+    // status: done
+    rider-offset-north: -2 0
+    rider-offset-east: -2 -6
+    rider-offset-south: -4 -2
+    rider-offset-west: 0 0
+  837
+    // Plumfish (mount id 64)
+    // status: done
+    rider-offset: 0 0
+  838
+    // Gorongra (mount id 65)
+    // status: done
+    rider-offset-north: -3 0
+    rider-offset-east: 0 0
+    rider-offset-south: 0 0
+    rider-offset-west: 0 -3
+  839
+    // Noctungra (mount id 66)
+    // status: done
+    rider-offset: 0 0
+  841
+    // Mossback Tortoise (mount id 68)
+    // status: done
+    rider-offset: 0 0
+  842
+    // Night Tortoise (mount id 69)
+    // status: done
+    rider-offset: 0 0
+  843
+    // Ember Tortoise (mount id 70)
+    // status: done
+    rider-offset: 0 0
+  844
+    // Nightstinger (mount id 71)
+    // status: done
+    rider-offset: 0 0
+  845
+    // Razorcreep (mount id 72)
+    // status: done
+    rider-offset: 0 0
+  847
+    // Jungle Saurian (mount id 74)
+    // status: done
+    rider-offset-north: -3 0
+    rider-offset-east: 0 -4
+    rider-offset-south: -5 0
+    rider-offset-west: -1 -4
+  848
+    // Ember Saurian (mount id 75)
+    // status: done
+    rider-offset-north: -4 -2
+    rider-offset-east: 0 -4
+    rider-offset-south: -4 0
+    rider-offset-west: -2 -4
+  849
+    // Lagoon Saurian (mount id 76)
+    // status: done
+    rider-offset-north: 0 0
+    rider-offset-east: 0 -2
+    rider-offset-south: -3 0
+    rider-offset-west: 0 -2
+  850
+    // Blazing Unicorn (mount id 77)
+    // status: done
+    rider-offset-north: -4 0
+    rider-offset-east: 0 -4
+    rider-offset-south: -3 0
+    rider-offset-west: -2 -8
+  851
+    // Arctic Unicorn (mount id 78)
+    // status: done
+    rider-offset-north: -3 0
+    rider-offset-east: 0 0
+    rider-offset-south: 0 0
+    rider-offset-west: 0 -4
+  852
+    // Prismatic Unicorn (mount id 79)
+    // status: done
+    rider-offset-north: -5 -1
+    rider-offset-east: -2 -5
+    rider-offset-south: -7 -2
+    rider-offset-west: 0 -6
+  854
+    // Marsh Toad (mount id 81)
+    // status: done
+    rider-offset-north: -2 0
+    rider-offset-east: 0 -2
+    rider-offset-south: -2 0
+    rider-offset-west: 0 -2
+  855
+    // Sanguine Frog (mount id 82)
+    // status: done
+    rider-offset: 0 0
+  857
+    // Ebony Tiger (mount id 84)
+    // status: done
+    rider-offset-north: -1 0
+    rider-offset-east: 0 0
+    rider-offset-south: 0 0
+    rider-offset-west: 0 -1
+  858
+    // Feral Tiger (mount id 85)
+    // status: done
+    rider-offset-north: -2 0
+    rider-offset-east: 0 0
+    rider-offset-south: 0 0
+    rider-offset-west: 0 -3
+  859
+    // Jungle Tiger (mount id 86)
+    // status: done
+    rider-offset-north: -2 0
+    rider-offset-east: 0 0
+    rider-offset-south: 0 0
+    rider-offset-west: 0 0
+  862
+    // Boreal Owl (mount id 89)
+    // status: done
+    // checked with: 128
+    rider-offset-north: 0 0
+    rider-offset-east: -1 -4
+    rider-offset-south: -4 0
+    rider-offset-west: 0 -2
+  863
+    // Cold Percht Sleigh (mount id 90)
+    // status: done
+    rider-offset: 0 0
+  864
+    // Bright Percht Sleigh (mount id 91)
+    // status: done
+    rider-offset: 0 0
+  865
+    // Dark Percht Sleigh (mount id 92)
+    // status: done
+    rider-offset: 0 0
+  866
+    // River Crocovile (mount id 93)
+    // status: done
+    rider-offset: 0 0
+  868
+    // Nightmarish Crocovile (mount id 95)
+    // status: done
+    rider-offset: 0 0
+  869
+    // Gryphon (mount id 96)
+    // status: done
+    rider-offset-north: -2 0
+    rider-offset-east: 0 -3
+    rider-offset-south: -6 0
+    rider-offset-west: 0 -3
+  871
+    // Gilded War Bear (mount id 98)
+    // status: done
+    rider-offset-north: -4 0
+    rider-offset-east: 0 -5
+    rider-offset-south: -5 0
+    rider-offset-west: 0 -4
+  872
+    // Frostflare (mount id 99)
+    // status: done
+    rider-offset: 0 0
+  873
+    // Cinderhoof (mount id 100)
+    // status: done
+    rider-offset: 0 0
+  874
+    // Emberhound (mount id 101)
+    // status: done
+    rider-offset: 0 0
+  875
+    // Mossclaw (mount id 102)
+    // status: done
+    rider-offset-north: 0 0
+    rider-offset-east: 0 -3
+    rider-offset-south: -3 0
+    rider-offset-west: -1 -2
+  876
+    // Savanna Ostrich (mount id 103)
+    // status: done
+    rider-offset-north: -1 0
+    rider-offset-east: 0 -1
+    rider-offset-south: -2 0
+    rider-offset-west: -1 -1
+  877
+    // Coral Rhea (mount id 104)
+    // status: done
+    rider-offset-north: -1 0
+    rider-offset-east: 3 -6
+    rider-offset-south: -4 4
+    rider-offset-west: -1 -3
+  878
+    // Eventide Nandu (mount id 105)
+    // status: done
+    rider-offset-north: 0 0
+    rider-offset-east: 0 -5
+    rider-offset-south: -3 0
+    rider-offset-west: -1 -5
+  879
+    // Bloodfang (mount id 106)
+    // status: done
+    rider-offset-north: -3 0
+    rider-offset-east: 0 0
+    rider-offset-south: -3 0
+    rider-offset-west: 0 -4
+  881
+    // Dustpelt (mount id 108)
+    // status: done
+    rider-offset-north: 0 0
+    rider-offset-east: 0 -2
+    rider-offset-south: -1 0
+    rider-offset-west: 0 -4
+  882
+    // White Lion (mount id 109)
+    // status: done
+    rider-offset: 0 0
+  883
+    // Gilded Cave Bear (mount id 110)
+    // status: done
+    rider-offset-north: -4 0
+    rider-offset-east: 0 -2
+    rider-offset-south: -5 0
+    rider-offset-west: 0 -4
+  884
+    // Crimson Beetle (mount id 111)
+    // status: done
+    rider-offset: 0 0
+  886
+    // Rose Beetle (mount id 113)
+    // status: done
+    rider-offset: 0 0
+  887
+    // Darkfire Devourer (mount id 114)
+    // status: done
+    rider-offset-north: -12 -2
+    rider-offset-east: -2 -8
+    rider-offset-south: -11 0
+    rider-offset-west: -2 -10
+  888
+    // Grizzly (mount id 115)
+    // status: done
+    rider-offset-north: -9 -5
+    rider-offset-east: -4 -5
+    rider-offset-south: -6 -6
+    rider-offset-west: 0 -7
+  889
+    // War Elephant (mount id 116)
+    // status: done
+    rider-offset-north: -22 -3
+    rider-offset-east: -15 -20
+    rider-offset-south: -13 -17
+    rider-offset-west: -3 -23
+  890
+    // Polar Bear (mount id 117)
+    // status: done
+    rider-offset-north: 0 0
+    rider-offset-east: 0 -1
+    rider-offset-south: -1 -3
+    rider-offset-west: 1 -5
+  891
+    // Black Bear (mount id 118)
+    // status: done
+    rider-offset-north: -7 -8
+    rider-offset-east: -5 -7
+    rider-offset-south: -6 -4
+    rider-offset-west: -9 -7
+  892
+    // Blaze Cub (mount id 119)
+    // status: done
+    rider-offset-north: -2 0
+    rider-offset-east: 0 0
+    rider-offset-south: 0 0
+    rider-offset-west: 0 -3
+  893
+    // Azure Horn (mount id 120)
+    // status: done
+    rider-offset-north: -6 -7
+    rider-offset-east: 0 -7
+    rider-offset-south: 0 0
+    rider-offset-west: -5 -6
+  894
+    // Ember Drake (mount id 121)
+    // status: done
+    rider-offset-north: -1 0
+    rider-offset-east: 0 0
+    rider-offset-south: 0 0
+    rider-offset-west: 0 -2
+  895
+    // Golden Warhound (mount id 122)
+    // status: done
+    rider-offset: 0 0
+  1104
+    // Widow Queen (mount id 2)
+    // status: done
+    rider-offset: 0 0
+  1107
+    // Black Sheep (mount id 5)
+    // status: done
+    rider-offset: 0 0

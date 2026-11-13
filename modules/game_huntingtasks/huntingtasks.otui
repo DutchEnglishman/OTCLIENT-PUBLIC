@@ -417,8 +417,7 @@ HuntingTrackerRow < UIWidget
     margin-top: 2
     background-color: #d39b3a
     border: 1 black
-    font: verdana-11px-rounded
-    text-offset: 0 1
+    font: cipsoftFont
 
 HuntingTrackerEmpty < Label
   height: 18

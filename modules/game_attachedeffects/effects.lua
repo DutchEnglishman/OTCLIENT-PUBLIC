@@ -770,7 +770,7 @@ AttachedEffectManager.register(462, 'Deepcrown ward', 8, ThingCategoryEffect, {
     speed = 0.7,
     offset = { 0, 0, true }
 })
--- 466-471: his kegs and wine, drawn by make_deepcrown_kegs.ps1.
+-- 466-471: his kegs and beer, drawn by make_deepcrown_kegs.ps1.
 -- 466/467: a keg rolling west/east, glided over opcode 73 "glide", 64x64
 -- with the tile as the middle square. In the tile's own turn, not drawOrder 4 like a
 -- missile, so it rolls behind the pillars south of its row.
@@ -789,7 +789,7 @@ AttachedEffectManager.register(469, 'Deepcrown keg burst', '/images/game/effects
     offset = { 16, 16, true },
     drawOrder = 4
 })
--- 1000-1255: a tile of the wine a falling keg leaves, under creatures,
+-- 1000-1255: a tile of the beer a falling keg leaves, under creatures,
 -- held for its 15 s. The server sends 1000 + the mask of the tile's wet
 -- neighbours (N 1, NE 2, E 4, SE 8, S 16, SW 32, W 64, NW 128), so touching
 -- pools run into one splat. Drawn with the floor borders (drawOrder 1), so
@@ -797,12 +797,36 @@ AttachedEffectManager.register(469, 'Deepcrown keg burst', '/images/game/effects
 -- draws it right after its own floor and carpet, and a piece never reaches
 -- past its tile, so it also lies on the hall's red carpet.
 for mask = 0, 255 do
-    AttachedEffectManager.register(1000 + mask, 'Deepcrown wine ' .. mask,
-        '/images/game/effects/deepcrown_wine_' .. mask, ThingExternalTexture, {
+    AttachedEffectManager.register(1000 + mask, 'Deepcrown beer ' .. mask,
+        '/images/game/effects/deepcrown_beer_' .. mask, ThingExternalTexture, {
         offset = { 0, 0, false },
         drawOrder = 1
     })
 end
+
+-- Grakmor the Spiritcaller's fireball (OTSERV data/scripts/boss_skills/
+-- grakmor_skills.lua; textures by tools/effect-generators/make_grakmor.ps1).
+-- 480-495: the ball flying at rotation r * 22.5 degrees clockwise from east,
+-- glided over opcode 73 "glide", 160x160 with the tile as the middle square
+-- (GLIDE_ORIGINS in attachedeffects.lua carries that 64), over creatures.
+for r = 0, 15 do
+    AttachedEffectManager.register(480 + r, 'Grakmor fireball ' .. (r * 22.5),
+        '/images/game/effects/grakmor_fireball_' .. r, ThingExternalTexture, {
+        offset = { 64, 64, true },
+        drawOrder = 4
+    })
+end
+-- 496: his channel, embers spiralling into him, held on his tile with the
+-- plain "on" verb of opcode 73 for the 2 s he is rooted, over creatures.
+AttachedEffectManager.register(496, 'Grakmor channel', '/images/game/effects/grakmor_channel', ThingExternalTexture, {
+    offset = { 16, 16, true },
+    drawOrder = 4
+})
+-- 497: one tile of the smouldering wave, two embers rising, held
+-- by the plain "on" verb for its 490 ms on every tile the wave reaches.
+AttachedEffectManager.register(497, 'Grakmor spark', '/images/game/effects/grakmor_spark', ThingExternalTexture, {
+    offset = { 0, 0, true }
+})
 
 -- Madareth's Blood Rain (OTSERV data/spells/scripts/bosses/madareth_bloodlust.lua;
 -- textures by tools/effect-generators/make_blood_rain.ps1), all three on the

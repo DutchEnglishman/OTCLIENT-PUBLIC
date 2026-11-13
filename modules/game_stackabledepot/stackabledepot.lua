@@ -275,7 +275,6 @@ end
 -- Depot locker client ids (server 2589-2592, the four facings).
 local LOCKER_CLIENT_IDS = {[3497] = true, [3498] = true, [3499] = true, [3500] = true}
 local VIRTUAL_POSITION_X = 65535
-local CONTAINER_POSITION_BASE = 64
 
 -- The server's isAtLocker in data/scripts/stackable_depot/registration.lua:
 -- a locker on one of the eight tiles around the player.
@@ -301,29 +300,21 @@ local function isAtLocker()
     return false
 end
 
--- Worn, or inside a window whose route game_containers recorded from an
--- inventory slot. A window opened off the floor or out of the locker has no
--- such route, and the container item itself carries no position to ask.
-local function isCarried(thing)
+-- Worn, or in any open container window. The server allows what you carry and
+-- what is in your depot locker (chest, mailbox, and bags inside them); this
+-- client cannot tell a locker window from a bag opened off the floor, so the
+-- server is the one that refuses the floor bag.
+local function isInWindowOrWorn(thing)
     local position = thing:getPosition()
-    if not position or position.x ~= VIRTUAL_POSITION_X then
-        return false
-    end
-    if position.y < CONTAINER_POSITION_BASE then
-        return true
-    end
-
-    local restore = modules.game_containers and modules.game_containers.ContainerRestore
-    local container = g_game.getContainer(position.y - CONTAINER_POSITION_BASE)
-    return restore ~= nil and container ~= nil and restore.pathOf(container) ~= nil
+    return position ~= nil and position.x == VIRTUAL_POSITION_X
 end
 
 -- Whether the stash row belongs on this thing's menu: a container or a
--- stackable item you carry, while you stand at a locker. The server checks all
--- of it again.
+-- stackable item you carry or keep in your depot, while you stand at a locker.
+-- The server checks all of it again.
 function canStow(thing)
-    return thing and thing:isItem() and (thing:isContainer() or thing:isStackable()) and isCarried(thing) and
-        isAtLocker()
+    return thing and thing:isItem() and (thing:isContainer() or thing:isStackable()) and
+        isInWindowOrWorn(thing) and isAtLocker()
 end
 
 function getStowLabel(thing)

@@ -1,4 +1,3 @@
-local HOTKEY = 'Ctrl+Y'
 VARIANT_MONSTER_SHADER_CONFIG = {
     enabled = false,
     defaultShader = 'Outfit - Default',
@@ -650,20 +649,6 @@ function ShaderController:onInit()
     })
     
     ProtocolGame.registerExtendedOpcode(ATMOSPHERE_OPCODE, onAtmosphereOpcode)
-
-    Keybind.new('Windows', 'show/hide Shader Windows', HOTKEY, '')
-    Keybind.bind('Windows', 'show/hide Shader Windows', {
-        {
-            type = KEY_DOWN,
-            callback = function()
-                if ShaderController.ui then
-                    ShaderController:unloadHtml()
-                else
-                    ShaderController:open()
-                end
-            end,
-        }
-    })
 end
 
 function ShaderController:onTerminate()
@@ -674,7 +659,6 @@ function ShaderController:onTerminate()
     resetAtmosphere()
     variantShaderCreatures = {}
     g_shaders.clear()
-    Keybind.delete('Windows', 'show/hide Shader Windows')
 end
 
 function ShaderController:onGameStart()
@@ -696,63 +680,4 @@ function ShaderController:onCreatureAppear(creature)
     end, 50)
 end
 
-function ShaderController:onMapComboBoxChange(event)
-    local map = modules.game_interface.getMapPanel()
-    map:setShader(event.text)
-
-    local data = event.target:getCurrentOption().data
-    map:setDrawViewportEdge(data.drawViewportEdge == true)
-end
-
-function ShaderController:onOutfitComboBoxChange(event)
-    local player = g_game.getLocalPlayer()
-    if player then
-        player:setShader(event.text)
-        local data = event.target:getCurrentOption().data
-        player:setDrawOutfitColor(data.drawColor ~= false)
-    end
-end
-
-function ShaderController:onMountComboBoxChange(event)
-    local player = g_game.getLocalPlayer()
-    if player then
-        player:setMountShader(event.text)
-    end
-end
-
-function ShaderController:open()
-    self:loadHtml('shaders.html', modules.game_interface.getMapPanel())
-
-    for _, opts in pairs(MAP_SHADERS) do
-        self.ui.mapComboBox:addOption(opts.name, opts)
-    end
-
-    for _, opts in pairs(OUTFIT_SHADERS) do
-        self.ui.outfitComboBox:addOption(opts.name, opts)
-    end
-
-    for _, opts in pairs(MOUNT_SHADERS) do
-        self.ui.mountComboBox:addOption(opts.name, opts)
-    end
-    for _, opts in pairs(TEXT_SHADERS) do
-        self.ui.textComboBox:addOption(opts.name, opts)
-    end
-end
-
-function ShaderController:onTextComboBoxChange(event)
-    -- Apply text shader to local player's name
-    -- This affects how the player's name is rendered above their character
-    local player = g_game.getLocalPlayer()
-    if player then
-        -- If using widget-based name rendering
-        local infoWidget = player:getWidgetInformation()
-        if infoWidget then
-            infoWidget:setShader(event.text)
-        end
-        -- Apply to engine-level name rendering (requires C++ support)
-        if player.setNameShader then
-            player:setNameShader(event.text)
-        end
-    end
-end
 

@@ -2052,12 +2052,35 @@ function attackNext(previous)
     return true
 end
 
+-- The old target's square can belong to a battle button that onAttack/onFollow skip
+-- (its window is closed: attackNext still fills it), and lastCreatureSelected only
+-- tracks squares shown directly, so neither cleared it and two creatures stayed red.
+function refreshCreatureSquare(creature)
+    if not creature then
+        return
+    end
+
+    local refreshed = false
+    for _, instance in pairs(BattleListManager.instances) do
+        local battleButton = instance.battleButtons[creature:getId()]
+        if battleButton and battleButton.creature then
+            battleButton:update()
+            refreshed = true
+        end
+    end
+
+    if not refreshed then
+        creature:hideStaticSquare()
+    end
+end
+
 -- Connector Callbacks
-function onAttack(creature) -- Update battleButton once you're attacking a target
+function onAttack(creature, oldCreature) -- Update battleButton once you're attacking a target
     if lastCreatureSelected then
         lastCreatureSelected:hideStaticSquare()
         lastCreatureSelected = nil
     end
+    refreshCreatureSquare(oldCreature)
 
     local foundBattleButton = false
     
@@ -2092,11 +2115,12 @@ function onAttack(creature) -- Update battleButton once you're attacking a targe
     lastCreatureSelected = creature
 end
 
-function onFollow(creature) -- Update battleButton once you're following a target
+function onFollow(creature, oldCreature) -- Update battleButton once you're following a target
     if lastCreatureSelected then
         lastCreatureSelected:hideStaticSquare()
         lastCreatureSelected = nil
     end
+    refreshCreatureSquare(oldCreature)
 
     local foundBattleButton = false
     

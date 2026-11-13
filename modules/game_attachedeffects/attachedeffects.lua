@@ -297,6 +297,17 @@ local function onExtendedOpcode(protocol, opcode, buffer)
         end
         return
     end
+    -- "castbar,<id>,<ms>": a bar above the creature's name filling over ms
+    -- (Creature::setCastBar); 0 takes it down. An exe from before the binding
+    -- has no setCastBar and shows nothing.
+    local castId, castMs = buffer:match('^castbar,(%d+),(%d+)$')
+    if castId then
+        local creature = g_map.getCreatureById(tonumber(castId))
+        if creature and creature.setCastBar then
+            creature:setCastBar(tonumber(castMs))
+        end
+        return
+    end
     local hopId, fromDx, fromDy, hopMs, height = buffer:match('^hop,(%d+),(-?%d+),(-?%d+),(%d+),(%d+)$')
     if hopId then
         local creature = g_map.getCreatureById(tonumber(hopId))
@@ -1733,6 +1744,12 @@ end
 -- not restart its animation (only cloning does).
 local GLIDE_LIFT_PX = 8
 local GLIDE_ORIGIN = 16
+-- A glided texture bigger than 64x64 carries its own registered offset:
+-- Grakmor's fireball (480-495) is 160x160, the tile its middle square.
+local GLIDE_ORIGINS = {}
+for id = 480, 495 do
+    GLIDE_ORIGINS[id] = 64
+end
 local glideRuns = {} -- runId -> {event, pos, at, effect}
 
 local function glideRunClear(run)
@@ -1790,7 +1807,8 @@ local function glideRunStep(runId)
         end
         local px = math.floor((run.dx * f - (run.at.x - run.pos.x)) * 32 + 0.5)
         local py = math.floor((run.dy * f - (run.at.y - run.pos.y)) * 32 + 0.5)
-        run.effect:setOffset(GLIDE_ORIGIN - px, GLIDE_ORIGIN - py + GLIDE_LIFT_PX)
+        local origin = GLIDE_ORIGINS[run.effectId] or GLIDE_ORIGIN
+        run.effect:setOffset(origin - px, origin - py + GLIDE_LIFT_PX)
     end
     run.event = scheduleEvent(function() glideRunStep(runId) end, 1)
 end

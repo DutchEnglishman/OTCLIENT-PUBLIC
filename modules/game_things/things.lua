@@ -76,6 +76,13 @@ local function load(version)
         if not g_sprites.loadSpr(sprPath) then
             errorList[#errorList + 1] = tr('Unable to load spr file, please place a valid spr in \'%s.spr\'', sprPath)
         end
+
+        -- Per-mount rider offsets (big mounts like the War Elephant). Optional file;
+        -- a mistake in it is logged and the client keeps running.
+        local mountsOtml = '/data/things/' .. version .. '/mounts.otml'
+        if #errorList == 0 and g_resources.fileExists(mountsOtml) then
+            g_things.loadOtml(mountsOtml)
+        end
         if g_game.getFeature(GameLoadSprInsteadProtobuf) and version >= 1281 then
             local staticPath = resolvepath(string.format('/data/things/%d/appearances', version))
             if not g_things.loadAppearances(staticPath) then

@@ -563,4 +563,6 @@ VARIANT_SPRITE_LOOKTYPES = {
     [2076] = true,
     [2077] = true,
     [2078] = true,
+    [2079] = true,
+    [2080] = true,
 }
