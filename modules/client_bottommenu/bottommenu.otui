@@ -1,3 +1,33 @@
+BoostedSlot < UIWidget
+  size: 48 86
+
+  Creature
+    id: creature
+    size: 48 48
+    anchors.top: parent.top
+    anchors.horizontalCenter: parent.horizontalCenter
+    margin-top: 6
+    phantom: true
+    image-source: ""
+    image-border: 0
+    border-width: 0
+    border-color: alpha
+
+  Label
+    id: label
+    font: small-9px
+    color: #c8c8c8
+    text-align: center
+    anchors.top: creature.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 3
+    phantom: true
+
+BoostedSeparator < VerticalSeparator
+  height: 70
+  margin-top: 4
+
 ShowOffWidget < UIWidget
   size: 1020 1000
   anchors.left: parent.left
@@ -13,7 +43,7 @@ ShowOffWidget < UIWidget
 
   UITextEdit
     id: description
-    size: 465 0
+    size: 145 0
     ttf-font: verdana-bold
     ttf-font-size: 10
     anchors.left: image.right
@@ -44,7 +74,7 @@ Panel
     anchors.bottom: parent.bottom
     anchors.top: parent.top
     anchors.left: parent.left
-    size: 605 116
+    size: 265 116
     draggable: false
 
     Label
@@ -127,10 +157,11 @@ Panel
     anchors.top: parent.top
     anchors.left: eventsWindow.right
     margin-left: 1
-    size: 169 116
+    size: 507 116
     draggable: false
 
     Label
+      id: boostedTitle
       !text: tr('Boosted')
       font: verdana-11px-antialised
       text-offset: 0 2
@@ -142,65 +173,20 @@ Panel
       opacity: 0.5
 
     Panel
+      id: boostedList
       anchors.top: parent.top
-      anchors.left: parent.left
-      margin-left: 12
-      margin-top: 30
-      size: 64 64
-
-      Creature
-        id: creature
-        size: 64 64
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.verticalCenter: parent.verticalCenter
-        image-source: ""
-        image-border: 0
-        border-width: 0
-        border-color: alpha
-
-      UIWidget
-        id: monsterImage
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.verticalCenter: parent.verticalCenter
-        visible: false
+      anchors.bottom: parent.bottom
+      anchors.horizontalCenter: parent.horizontalCenter
+      width: 498
+      margin-top: 24
+      margin-bottom: 6
+      layout:
+        type: horizontalBox
+        spacing: 0
 
     Label
-      id: creatureName
-      !text: tr('Creature')
-      width: 80
+      id: boostedEmpty
+      !text: tr('Waiting for the server...')
       text-align: center
-      anchors.horizontalCenter: prev.horizontalCenter
-      anchors.top: prev.bottom
-      margin-top: 3
-
-    Panel
-      anchors.top: parent.top
-      anchors.right: parent.right
-      margin-right: 12
-      margin-top: 30
-      size: 64 64
-
-      Creature
-        id: boss
-        size: 64 64
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.verticalCenter: parent.verticalCenter
-        image-source: ""
-        image-border: 0
-        border-width: 0
-        border-color: alpha
-        
-      UIWidget
-        id: bossImage
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.verticalCenter: parent.verticalCenter
-        visible: false
-
-    Label
-      id: bossName
-      !text: tr('Boss')
-      width: 80
-      text-align: center
-      anchors.horizontalCenter: prev.horizontalCenter
-      anchors.top: prev.bottom
-      margin-top: 3
+      anchors.fill: boostedList
+      color: #a0a0a0

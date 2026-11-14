@@ -151,3 +151,11 @@ UIWidget
           id: RowLearn
         ArchiveDetailRow
           id: RowRune
+        ArchiveDetailRow
+          id: RowMastery
+        ArchiveDetailRow
+          id: RowNextLevel
+        ArchiveDetailRow
+          id: RowPerCast
+        ArchiveDetailRow
+          id: RowUnlock

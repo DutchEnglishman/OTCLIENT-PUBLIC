@@ -70,6 +70,32 @@ local function extraPanelOpen()
     return extra and extra:isOn() and extra:isExplicitlyVisible()
 end
 
+-- The padding pushes a column's windows down, and fitAll would close whatever
+-- that pushes past the bottom. Minimizing from the bottom up comes first, so a
+-- window only closes if even its title bar has no room.
+local function minimizeOverflow(column)
+    local room = column:getHeight() - column:getPaddingTop() - column:getPaddingBottom()
+    local children = column:getChildren()
+    local used = 0
+    for _, child in ipairs(children) do
+        if child:isVisible() then
+            used = used + child:getHeight()
+        end
+    end
+
+    for i = #children, 1, -1 do
+        if used <= room then
+            return
+        end
+        local child = children[i]
+        if child:isVisible() and not child.keepOpen and child.minimize and not child:isOn() then
+            local before = child:getHeight()
+            child:minimize(true)
+            used = used - before + child:getHeight()
+        end
+    end
+end
+
 -- While spanning, the map is not in either column's stack, so both columns are
 -- padded down by its height and their windows start below it.
 local function updateColumnPadding()
@@ -79,9 +105,20 @@ local function updateColumnPadding()
     for _, column in ipairs(columns) do
         if column:getPaddingTop() ~= pad then
             column:setPaddingTop(pad)
+            minimizeOverflow(column)
             column:fitAll()
         end
     end
+end
+
+-- Open windows in the extra column keep it open when the map goes narrow.
+local function extraPanelHasWindows()
+    for _, child in ipairs(modules.game_interface.getRightExtraPanel():getChildren()) do
+        if child ~= mapController.ui and child:isExplicitlyVisible() then
+            return true
+        end
+    end
+    return false
 end
 
 -- Both columns are children of the root panel, so the map anchors to them by id.
@@ -161,8 +198,9 @@ local function refreshWideLater()
 end
 
 -- One button for both: spanning needs the extra column, so going wide opens it
--- and going narrow closes it again. The side-panel arrows' own handlers do the
--- opening and closing, so their enabled state and the action bars follow.
+-- and going narrow closes it again, unless windows were put in it while it was
+-- open; those stay, moved up into the space the map leaves. The side-panel
+-- arrows' own handlers do the opening and closing, so their enabled state and the action bars follow.
 -- Closing runs while still wide, so the map is not among the windows
 -- onDecreaseRightPanels moves out of the column (its movePanel close()s them).
 function toggleWide()
@@ -174,7 +212,7 @@ function toggleWide()
         if not extraPanelOpen() then
             gameInterface.onIncreaseRightPanels()
         end
-    elseif extraPanelOpen() then
+    elseif extraPanelOpen() and not extraPanelHasWindows() then
         gameInterface.onDecreaseRightPanels()
     end
 

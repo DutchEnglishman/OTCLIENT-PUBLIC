@@ -185,6 +185,16 @@ local function setup()
 
     setupComboBox()
 
+    -- The two opacity sliders replaced the "Transparent side panels" and
+    -- "Transparent side panel windows" checkboxes, whose on was 10% opacity.
+    -- Seeded before the load loop, which reads an unset number as 0.
+    for newKey, oldKey in pairs({ sidePanelOpacity = 'transparentSidePanels', sidePanelWindowOpacity = 'transparentMiniWindows' }) do
+        if not g_settings.exists(newKey) then
+            g_settings.set(newKey, g_settings.getBoolean(oldKey) and 10 or options[newKey].value)
+        end
+        g_settings.remove(oldKey)
+    end
+
     -- load options
     for k, obj in pairs(options) do
         local v = obj.value
@@ -517,10 +527,9 @@ function setupOptionsMainButton()
 end
 
 -- Background opacity of the side-panel furniture (PhantomMiniWindowBackground,
--- data/styles/30-miniwindow.otui): 0.6 is the style's own, 0.1 is the
--- "Transparent side panels" setting's 90% transparency.
+-- data/styles/30-miniwindow.otui), from the "Side panel opacity" slider.
 function getSidePanelOpacity()
-    return options.transparentSidePanels.value and 0.1 or 0.6
+    return options.sidePanelOpacity.value / 100
 end
 
 function getOption(key)

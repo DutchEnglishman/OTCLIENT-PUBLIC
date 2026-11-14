@@ -828,6 +828,46 @@ AttachedEffectManager.register(497, 'Grakmor spark', '/images/game/effects/grakm
     offset = { 0, 0, true }
 })
 
+-- Azerus's two orbs (OTSERV data/scripts/boss_skills/azerus_skills.lua;
+-- textures by tools/effect-generators/make_azerus.ps1, cut from items 15574
+-- and 18912): 860 the Corrupted Orb, 861 the Holy Orb, each glided over
+-- opcode 73 "glide", 32x32 on the tile itself (GLIDE_ORIGINS in
+-- attachedeffects.lua carries that 0), over creatures.
+AttachedEffectManager.register(860, 'Azerus death orb', '/images/game/effects/azerus_death_orb', ThingExternalTexture, {
+    offset = { 0, 0, true },
+    drawOrder = 4
+})
+AttachedEffectManager.register(861, 'Azerus holy orb', '/images/game/effects/azerus_holy_orb', ThingExternalTexture, {
+    offset = { 0, 0, true },
+    drawOrder = 4
+})
+-- 862 the Corrupted Clone rising out of its portal and 863 burning back into
+-- it (96x96, the clone's tile the middle square), 864 the orbs meeting
+-- (64x64, the meeting tile the middle square), each played once on the
+-- plain "on" verb. 865/866 the explosion that leaves 864, the game's own
+-- explosion in violet and gold, played tile by tile by the "shock" verb
+-- (attachedeffects.lua).
+AttachedEffectManager.register(862, 'Azerus clone appear', '/images/game/effects/azerus_clone_appear', ThingExternalTexture, {
+    offset = { 32, 32, true },
+    drawOrder = 4
+})
+AttachedEffectManager.register(863, 'Azerus clone vanish', '/images/game/effects/azerus_clone_vanish', ThingExternalTexture, {
+    offset = { 32, 32, true },
+    drawOrder = 4
+})
+AttachedEffectManager.register(864, 'Azerus clash', '/images/game/effects/azerus_clash', ThingExternalTexture, {
+    offset = { 16, 16, true },
+    drawOrder = 4
+})
+AttachedEffectManager.register(865, 'Azerus wave violet', '/images/game/effects/azerus_wave_violet', ThingExternalTexture, {
+    offset = { 0, 0, true },
+    drawOrder = 4
+})
+AttachedEffectManager.register(866, 'Azerus wave gold', '/images/game/effects/azerus_wave_gold', ThingExternalTexture, {
+    offset = { 0, 0, true },
+    drawOrder = 4
+})
+
 -- Madareth's Blood Rain (OTSERV data/spells/scripts/bosses/madareth_bloodlust.lua;
 -- textures by tools/effect-generators/make_blood_rain.ps1), all three on the
 -- plain "on" verb of opcode 73.

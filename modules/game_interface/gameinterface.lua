@@ -25,6 +25,11 @@ bottomSplitter = nil
 lastManualWalk = 0
 limitedZoom = false
 currentViewMode = 0
+-- 29x15, not 27x14: MapView::calcFramebufferSource crops a column off each side
+-- and the top row, which leaves exactly the 13/13/6/7 creature box on screen.
+-- Width and height must stay odd (MapView::setVisibleDimension rejects even).
+VIEW_DIMENSION = { width = 29, height = 15 }
+VIEW_MODE_SETTING = 'gameViewMode'
 leftIncreaseSidePanels = nil
 leftDecreaseSidePanels = nil
 rightIncreaseSidePanels = nil
@@ -493,7 +498,7 @@ function show()
     end
 
     setupViewMode(0)
-    setupViewMode(2)
+    setupViewMode(savedViewMode())
     -- Ensure normal floor animation behavior even if old settings persisted.
     gameMapPanel:setFloorViewMode(0)
 
@@ -570,12 +575,14 @@ function show()
 end
 
 function hide()
-    -- Before setupViewMode(0), so the handler cannot fight the switch out of
-    -- extended view. It guards on currentViewMode anyway; this is belt and
-    -- braces, and keeps the connect balanced across logins.
     disconnect(gameMapPanel, { onGeometryChange = enforceExtendedView })
 
-    setupViewMode(0)
+    -- No setupViewMode(0) here: show() runs 0 then the saved mode at the next login anyway.
+    -- Leaving extended view resizes the map, and the resize queues a fresh,
+    -- black framebuffer on the render thread at once. The map is never drawn
+    -- again once offline, and the rest of onGameEnd keeps the event thread
+    -- from rebuilding the UI for a few hundred ms, so the old game UI showed
+    -- over a black map until the login screen finally covered it.
 
     disconnect(g_app, {
         onClose = tryExit
@@ -760,21 +767,14 @@ end
 
 function updateStretchShrink()
     local clientOptions = modules.client_options
-    -- Never in extended view. 25x19 is the normal view's shape; mode 2 is pinned
-    -- at 29x15 by enforceExtendedView.
-    --
-    -- This runs from gameRootPanel.onGeometryChange (see init), so every panel
-    -- that settled during login knocked the map back to 25x19 -- a narrower view
-    -- means bigger tiles, which is the "zoomed in" first second. Nothing noticed
-    -- until the 500ms re-assert at the end of show() put it back, because
+    -- Never in extended view, which enforceExtendedView pins. Running there
+    -- from gameRootPanel.onGeometryChange during login used to reshape the view
+    -- before the 500ms re-assert at the end of show() put it back, because
     -- setVisibleDimension does not resize the map widget and so never triggers
     -- the gameMapPanel geometry handler that would have caught it sooner.
     if currentViewMode ~= 2 and clientOptions and clientOptions.getOption
         and clientOptions.getOption('dontStretchShrink') and not alternativeView then
-        gameMapPanel:setVisibleDimension({
-            width = 25,
-            height = 19
-        })
+        gameMapPanel:setVisibleDimension(VIEW_DIMENSION)
     end
     -- Update action bar layout when window geometry changes
     if modules.game_actionbar and modules.game_actionbar.updateVisibleWidgetsExternal then
@@ -2208,22 +2208,43 @@ function getBottomSplitter()
     return bottomSplitter
 end
 
-function findContentPanelAvailable(child, minContentHeight)
-    if gameSelectedPanel and gameSelectedPanel:isVisible() and gameSelectedPanel:fits(child, minContentHeight, 0) >= 0 then
+-- `exclude` is a column about to close: a window handed back into it would be
+-- stranded there, open but drawn nowhere until the next login.
+function findContentPanelAvailable(child, minContentHeight, exclude)
+    local function usable(panel)
+        return panel and panel ~= exclude and panel:isVisible()
+    end
+
+    if usable(gameSelectedPanel) and gameSelectedPanel:fits(child, minContentHeight, 0) >= 0 then
         return gameSelectedPanel
     end
 
     for k, v in pairs(panelsList) do
-        if v.panel ~= gameSelectedPanel and v.panel:isVisible() and v.panel:fits(child, minContentHeight, 0) >= 0 then
+        if v.panel ~= gameSelectedPanel and usable(v.panel) and v.panel:fits(child, minContentHeight, 0) >= 0 then
             return v.panel
         end
     end
 
-    return gameSelectedPanel
+    if usable(gameSelectedPanel) then
+        return gameSelectedPanel
+    end
+    return gameRightPanel ~= exclude and gameRightPanel or nil
 end
 
 function nextViewMode()
     setupViewMode((currentViewMode + 1) % 3)
+    g_settings.set(VIEW_MODE_SETTING, currentViewMode)end
+
+-- Extended view (2) until the player picks another mode with Ctrl+.
+function savedViewMode()
+    if not g_settings.exists(VIEW_MODE_SETTING) then
+        return 2
+    end
+    local mode = g_settings.getNumber(VIEW_MODE_SETTING)
+    if mode ~= 0 and mode ~= 1 and mode ~= 2 then
+        return 2
+    end
+    return mode
 end
 
 -- Holds the extended view at 27x15 -- 13 tiles either side of the player.
@@ -2260,7 +2281,7 @@ function enforceExtendedView()
     -- Width must stay odd -- MapView::setVisibleDimension rejects even values
     -- outright (src/client/mapview.cpp:695).
     local dimension = gameMapPanel:getVisibleDimension()
-    if dimension.width == 29 and dimension.height == 15 then
+    if dimension.width == VIEW_DIMENSION.width and dimension.height == VIEW_DIMENSION.height then
         return
     end
 
@@ -2269,8 +2290,8 @@ function enforceExtendedView()
     -- otherwise cap the height and, through it, the width.
     gameMapPanel:setMaxZoomOut(513)
     gameMapPanel:setLimitVisibleRange(true)
-    gameMapPanel:setZoom(15)
-    gameMapPanel:setVisibleDimension({ width = 29, height = 15 })
+    gameMapPanel:setZoom(VIEW_DIMENSION.height)
+    gameMapPanel:setVisibleDimension(VIEW_DIMENSION)
     reassertingView = false
 end
 
@@ -2282,9 +2303,7 @@ function setupViewMode(mode)
     updateSidePanelButtons()
 
     if currentViewMode == 2 then
-        gameMapPanel:addAnchor(AnchorLeft, 'gameLeftPanel', AnchorRight)
-        gameMapPanel:addAnchor(AnchorRight, 'gameRightPanel', AnchorLeft)
-        gameMapPanel:addAnchor(AnchorBottom, 'bottomSplitter', AnchorTop)
+        gameMapPanel:addAnchor(AnchorBottom, 'bottomSplitter', AnchorBottom)
         gameMapPanel:addAnchor(AnchorTop, 'gameTopPanel', AnchorBottom)
         gameRootPanel:addAnchor(AnchorTop, 'parent', AnchorTop)
         gameLeftPanel:setOn(modules.client_options.getOption('showLeftPanel'))
@@ -2301,38 +2320,7 @@ function setupViewMode(mode)
         gameBottomPanel:setImageColor('white')
     end
 
-    if mode == 0 then
-        gameMapPanel:setKeepAspectRatio(true)
-        gameMapPanel:setLimitVisibleRange(false)
-        gameMapPanel:setZoom(9)
-        gameMapPanel:setVisibleDimension({
-            width = 25,
-            height = 19
-        })
-    elseif mode == 1 then
-        gameMapPanel:setKeepAspectRatio(true)
-        gameMapPanel:setLimitVisibleRange(true)
-        gameMapPanel:setZoom(9)
-        gameMapPanel:setVisibleDimension({
-            width = 25,
-            height = 19
-        })
-    elseif mode == 2 then
-        gameMapPanel:setKeepAspectRatio(false)
-        gameMapPanel:setLimitVisibleRange(true)
-        gameMapPanel:setLimitVisibleDimension(false)
-        gameMapPanel:setZoom(15)
-        -- The width/height ratio is reused by the widget every time it
-        -- recomputes the visible tile count on resize (limitVisibleRange locks
-        -- the aspect ratio instead of using the real window ratio), so height
-        -- must stay matched to the zoom level.
-        --
-        -- Kept identical to enforceExtendedView, which reasserts this on every
-        -- geometry change -- if the two disagree the view flips between them.
-        gameMapPanel:setVisibleDimension({
-            width = 29,
-            height = 15
-        })
+    if mode == 2 then
         gameMapPanel:fill('parent')
         gameRootPanel:fill('parent')
         gameLeftPanel:setImageColor('alpha')
@@ -2342,13 +2330,37 @@ function setupViewMode(mode)
         gameLeftPanel:setOn(true)
         gameLeftPanel:setVisible(true)
         gameRightPanel:setOn(true)
-        -- Every login enters this mode, so the extra columns follow the saved
+        -- Logins usually enter this mode, so the extra columns follow the saved
         -- options here; shutting them left the checkbox ticked over a closed panel.
         gameRightExtraPanel:setOn(modules.client_options.getOption('showRightExtraPanel'))
         gameLeftExtraPanel:setOn(modules.client_options.getOption('showLeftExtraPanel'))
         gameMapPanel:setOn(true)
         gameBottomPanel:setImageColor('#ffffff88')
+    else
+        -- Between the outermost open side panels: a closed panel is 0 wide and
+        -- the extra panels are chained onto the main ones (gameinterface.otui).
+        gameMapPanel:addAnchor(AnchorLeft, 'gameLeftExtraPanel', AnchorRight)
+        gameMapPanel:addAnchor(AnchorRight, 'gameRightExtraPanel', AnchorLeft)
     end
+
+    -- After the anchors, never before: setKeepAspectRatio sizes the drawn map
+    -- from the widget's rect at that moment. Login switches 2 -> 0 -> 2 in one
+    -- frame, and the widget ends where it started, so the engine drops the
+    -- deferred geometry event (UIWidget::setRect) that would have resized it --
+    -- sized before the anchors, the map stayed drawn in the between-panels box.
+    --
+    -- Between the side panels the map is letterboxed to keep every tile; the
+    -- extended view fills the whole screen instead, so a monitor narrower than
+    -- 29:15 crops the outer columns rather than showing bars above and below.
+    if mode == 2 then
+        gameMapPanel:setLimitVisibleDimension(false)
+    end
+    gameMapPanel:setKeepAspectRatio(mode ~= 2)
+    gameMapPanel:setLimitVisibleRange(mode ~= 0)
+    -- The widget recomputes the tile count from the zoom on every zoom change,
+    -- so the zoom must stay equal to the view's height.
+    gameMapPanel:setZoom(VIEW_DIMENSION.height)
+    gameMapPanel:setVisibleDimension(VIEW_DIMENSION)
 
     applyMobileMargins()
     currentViewMode = mode
@@ -2392,19 +2404,19 @@ function onIncreaseLeftPanels()
     end
 end
 
+-- Windows in a closing column move to the others and stay open. One that fits
+-- nowhere at full height goes in minimized, so it is still on screen rather than
+-- cut off below the column's end.
 local function movePanel(mainpanel)
     for _, widget in pairs(mainpanel:getChildren()) do
-        if widget then
-            local panel = modules.game_interface.findContentPanelAvailable(widget, widget:getMinimumHeight())
-            if panel then
-                if not panel:hasChild(widget) then
-                    widget:close()
-                    panel:addChild(widget)
-                else
-                    print("Error: Attempt to add a widget that already exists in the target panel")
-                end
-            else
-                print("Warning: No suitable panel found for widget, unable to move")
+        local panel = findContentPanelAvailable(widget, widget:getMinimumHeight(), mainpanel)
+        if not panel then
+            print("Warning: No open column for " .. widget:getId() .. ", leaving it where it is")
+        else
+            local fits = not widget:isVisible() or panel:fits(widget, widget:getMinimumHeight(), 0) >= 0
+            widget:setParent(panel, true)
+            if not fits and widget.minimize and not widget:isOn() then
+                widget:minimize(true)
             end
         end
     end

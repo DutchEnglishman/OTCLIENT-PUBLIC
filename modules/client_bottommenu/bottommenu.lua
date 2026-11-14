@@ -16,16 +16,6 @@ local eventSchedulerCalendarYearIndex
 local eventSchedulerCalendarMonth
 
 local boostedWindow
-local monsterOutfit
-local monsterImage
-local bossOutfit
-local bossImage
-local creatureName
-local bossName
-local nameFont
-
-local CREATURE_BONUS_TEXT = "Today's boosted creature: %s\n\n\tBoosted creatures yield more experience\n points, carry more loot than usual\n and respawn at a faster rate."
-local BOSS_BONUS_TEXT = "Today's boosted boss: %s\n\n\tBoosted boss contain more loot and\n count more kills for your bosstiary."
 
 -- One is picked at random each time the login screen opens.
 local default_info = {
@@ -61,8 +51,8 @@ local default_info = {
     },
     {
         image = "images/randomhint",
-        Title = "Boosted Creature",
-        description = "Hover the boosted creature and boss on the right to see today's bonuses. Hunting them pays off more than usual."
+        Title = "Boosted Creatures",
+        description = "A new set of creatures is boosted every 6 hours. Hover one on the right for its bonuses, or open the Boosted window in game."
     },
 }
 
@@ -86,11 +76,6 @@ function init()
     eventSchedulerCalendarMonth = tonumber(os.date("%m"))
 
     boostedWindow = bottomMenu:recursiveGetChildById('boostedWindow')
-    monsterOutfit = boostedWindow:recursiveGetChildById('creature')
-    bossOutfit = boostedWindow:recursiveGetChildById('boss')
-    creatureName = boostedWindow:recursiveGetChildById('creatureName')
-    bossName = boostedWindow:recursiveGetChildById('bossName')
-    nameFont = creatureName:getFont()
 
 --  if not Services.status and default_info then
     if default_info then
@@ -105,17 +90,7 @@ function init()
         showOffWindow.title:setText(tr(randomItem.Title))
         image:setImageSource(randomItem.image)
         description:setText(tr(randomItem.description))
-        monsterOutfit:setVisible(false)
-        bossOutfit:setVisible(false)
         widget:resize(widget:getWidth(), description:getHeight())
-
-        monsterImage = boostedWindow:recursiveGetChildById('monsterImage')
-        bossImage = boostedWindow:recursiveGetChildById('bossImage')
-
-        monsterImage:setImageSource("images/icon-questionmark")
-        monsterImage:setVisible(true)
-        bossImage:setImageSource("images/icon-questionmark")
-        bossImage:setVisible(true)
     end
     if g_game.isOnline() then
         hide()
@@ -128,6 +103,7 @@ function terminate()
         scheduleRefreshEvent = nil
     end
     bottomMenu:destroy()
+    boostedWindow = nil
     calendarWindow:destroy()
 end
 
@@ -579,67 +555,43 @@ function onClickOnNextCalendar()
     reloadEventsSchedulerCurrentPage()
 end
 
--- A name too wide for its half of the window drops to the small font, then is cut with "...";
--- the outfit's tooltip still carries the full name.
-local function setBoostedName(label, name)
-    if not label or not name or name == '' then
-        return
-    end
-
-    label:setFont(nameFont)
-    label:setText(name)
-    if label:getTextSize().width <= label:getWidth() then
-        return
-    end
-
-    label:setFont('small-9px')
-    local shown = name
-    while #shown > 1 and label:getTextSize().width > label:getWidth() do
-        shown = shown:sub(1, -2)
-        label:setText(shown:gsub('%s+$', '') .. '...')
-    end
-end
-
--- (internal)
--- set creature/boss to boosted slot
-local function applyToBoostedSlot(raceId, outfitWidget, imageWidget, nameLabel, fileName, tooltipText)
-    -- check if raceId was provided in the JSON response
-    if not raceId then
-        return
-    end
-
-    -- fetch race data
-    local raceData = g_things.getRaceData(raceId)
-
-    -- check if race id is present in the staticdata
-    if raceData.raceId == 0 then
-        local msg = string.format("[%s] Creature with race id %s was not found.", fileName,tostring(raceId))
-        g_logger.warning(msg)
-        return
-    end
-
-    -- apply to selected widget
-    outfitWidget:setOutfit(raceData.outfit)
-    outfitWidget:getCreature():setStaticWalking(1000)
-    outfitWidget:setVisible(true)
-    imageWidget:setVisible(false)
-    outfitWidget:setTooltip(tr(tooltipText, raceData.name or "Unknown"))
-    setBoostedName(nameLabel, raceData.name)
-end
-
--- The Shattered Realms' login.php sends the day's pick as database rows, outfit included
+-- The Shattered Realms' login.php sends the running set as database rows, outfits included
 -- (OTSERV website/patch_myaac.php): an 8.60 client has no race data to look a creature up by.
+-- `boosted` is every slot in draw order; each gets a cell in the Boosted box, its slot under
+-- the outfit and its name and bonuses in the tooltip.
 local BOOSTED_BONUSES = {
-    creature = {{'loot_bonus', 'loot'}, {'variant_bonus', 'Tainted & Corrupted chance'}},
-    boss = {{'exp_bonus', 'experience'}, {'loot_bonus', 'loot'}},
+    {'exp_bonus', 'experience'}, {'loot_bonus', 'loot'},
+    {'variant_bonus', 'Tainted & Corrupted chance'}, {'spawn_bonus', 'monsters'},
 }
 
-local function applyBoostedRow(kind, row, outfitWidget, imageWidget, nameLabel)
-    if type(row) ~= 'table' or (tonumber(row.looktype) or 0) == 0 then
-        return
-    end
+-- What fits under a 50-pixel cell (a two-row login.php names its rows by kind instead);
+-- any other slot shows its own label.
+local BOOSTED_SHORT_LABELS = {variant = 'T & C', rook = 'Rook', creature = 'T & C', boss = 'Boss'}
 
-    outfitWidget:setOutfit({
+-- Left to right on the login screen, by slot (or by kind from a two-row login.php).
+local BOOSTED_ORDER = {
+    rook = 1, low1 = 2, low2 = 3, low3 = 4, medium1 = 5, medium2 = 6,
+    high = 7, veryhigh = 8, variant = 9, creature = 9, boss = 10,
+}
+
+local function boostedBonusText(row)
+    local parts = {}
+    for _, bonus in ipairs(BOOSTED_BONUSES) do
+        local value = tonumber(row[bonus[1]]) or 0
+        if value > 0 then
+            parts[#parts + 1] = string.format('+%d%% %s', value, bonus[2])
+        end
+    end
+    return table.concat(parts, '\n')
+end
+
+local function addBoostedSlot(list, row)
+    if list:getChildCount() > 0 then
+        g_ui.createWidget('BoostedSeparator', list)
+    end
+    local cell = g_ui.createWidget('BoostedSlot', list)
+    local creature = cell:getChildById('creature')
+    creature:setOutfit({
         type = tonumber(row.looktype),
         head = tonumber(row.lookhead) or 0,
         body = tonumber(row.lookbody) or 0,
@@ -647,38 +599,73 @@ local function applyBoostedRow(kind, row, outfitWidget, imageWidget, nameLabel)
         feet = tonumber(row.lookfeet) or 0,
         addons = tonumber(row.lookaddons) or 0,
     })
-    outfitWidget:getCreature():setStaticWalking(1000)
-    outfitWidget:setVisible(true)
-    imageWidget:setVisible(false)
+    creature:getCreature():setStaticWalking(1000)
+    cell:getChildById('label'):setText(BOOSTED_SHORT_LABELS[row.slot or row.kind] or row.label or '')
+    cell:setTooltip(string.format('%s\nBoosted %s\n%s', row.name or 'Unknown', row.label or row.kind or '', boostedBonusText(row)))
+end
 
-    local lines = {string.format("Today's boosted %s: %s", kind, row.name or 'Unknown'), ''}
-    for _, bonus in ipairs(BOOSTED_BONUSES[kind]) do
-        lines[#lines + 1] = string.format('+%d%% %s', tonumber(row[bonus[1]]) or 0, bonus[2])
+-- Central European time for a UTC timestamp, by the EU rule rather than the PC's own zone:
+-- summer time (CEST, UTC+2) from 01:00 UTC on March's last Sunday to 01:00 UTC on
+-- October's, CET (UTC+1) otherwise.
+local function daysFromCivil(y, m, d)
+    if m <= 2 then
+        y = y - 1
     end
-    outfitWidget:setTooltip(table.concat(lines, '\n'))
-    setBoostedName(nameLabel, row.name)
+    local era = math.floor(y / 400)
+    local yoe = y - era * 400
+    local doy = math.floor((153 * ((m + 9) % 12) + 2) / 5) + d - 1
+    return era * 146097 + yoe * 365 + math.floor(yoe / 4) - math.floor(yoe / 100) + doy - 719468
+end
+
+local function euSummerSwitch(year, month)
+    local last = daysFromCivil(year, month, 31)
+    return (last - (last + 4) % 7) * 86400 + 3600
+end
+
+local function centralEuropeanTime(t)
+    local year = os.date('!*t', t).year
+    if t >= euSummerSwitch(year, 3) and t < euSummerSwitch(year, 10) then
+        return os.date('!%H:%M', t + 7200), 'CEST'
+    end
+    return os.date('!%H:%M', t + 3600), 'CET'
 end
 
 function setBoostedCreatureAndBoss(data)
-    if not modules.game_things.isLoaded() then
+    if not modules.game_things.isLoaded() or not boostedWindow then
         return
     end
 
-    if data.creature ~= nil or data.boss ~= nil then
-        applyBoostedRow('creature', data.creature, monsterOutfit, monsterImage, creatureName)
-        applyBoostedRow('boss', data.boss, bossOutfit, bossImage, bossName)
-        return
+    -- A server whose login.php predates the full set still sends the two slots.
+    local rows = type(data.boosted) == 'table' and data.boosted or {data.creature, data.boss}
+
+    -- Weakest to strongest left to right, whatever order the server drew them in.
+    local shown = {}
+    for index, row in ipairs(rows) do
+        if type(row) == 'table' and (tonumber(row.looktype) or 0) > 0 then
+            shown[#shown + 1] = {row = row, index = index, rank = BOOSTED_ORDER[row.slot or row.kind] or 50}
+        end
+    end
+    table.sort(shown, function(a, b)
+        if a.rank ~= b.rank then
+            return a.rank < b.rank
+        end
+        return a.index < b.index
+    end)
+
+    local list = boostedWindow:recursiveGetChildById('boostedList')
+    list:destroyChildren()
+    local endsAt = 0
+    for _, entry in ipairs(shown) do
+        addBoostedSlot(list, entry.row)
+        endsAt = math.max(endsAt, tonumber(entry.row.ends_at) or 0)
     end
 
-    -- file name for error reporting
-    local fileName = debug.getinfo(1, "S").source -- current file name - bottommenu.lua
-
-    -- boosted creature
-    -- before bosstiary was introduced, the webservice was sending creature race in 'raceid' field
-    -- after bosstiary was added, it was changed to 'creatureraceid'
-    -- this 'or' statement ensures backwards compatibility
-    applyToBoostedSlot(data.creatureraceid or data.raceid, monsterOutfit, monsterImage, creatureName, fileName, CREATURE_BONUS_TEXT)
-
-    -- boosted boss
-    applyToBoostedSlot(data.bossraceid, bossOutfit, bossImage, bossName, fileName, BOSS_BONUS_TEXT)
+    boostedWindow:recursiveGetChildById('boostedEmpty'):setVisible(list:getChildCount() == 0)
+    local title = boostedWindow:recursiveGetChildById('boostedTitle')
+    if endsAt > 0 then
+        local cetTime, cetZone = centralEuropeanTime(endsAt)
+        title:setText(tr('Boosted until %s UTC / %s %s', os.date('!%H:%M', endsAt), cetTime, cetZone))
+    else
+        title:setText(tr('Boosted'))
+    end
 end

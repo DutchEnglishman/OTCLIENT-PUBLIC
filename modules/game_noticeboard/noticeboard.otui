@@ -1,0 +1,67 @@
+NoticeBoardHeader < Label
+  font: verdana-11px-rounded
+  color: $textBright
+  text-auto-resize: true
+  margin-top: 10
+  phantom: true
+
+NoticeBoardRow < Label
+  color: $textColor
+  text-wrap: true
+  text-auto-resize: true
+  margin-top: 4
+  phantom: true
+
+NoticeBoardEmpty < NoticeBoardRow
+  color: $textDim
+
+// A weather row: its badge on the left, the text beside it.
+NoticeBoardIconRow < NoticeBoardRow
+  // Padding rather than a text offset, so the wrap leaves room for the badge;
+  // anchors follow the padding, hence the icon's negative margin.
+  padding-left: 26
+  min-height: 20
+
+  UIWidget
+    id: icon
+    size: 20 20
+    anchors.left: parent.left
+    anchors.top: parent.top
+    margin-left: -26
+    phantom: true
+
+NoticeBoardWindow < MainWindow
+  id: noticeBoardWindow
+  !text: tr('Notice Board')
+  size: 460 520
+  @onEscape: modules.game_noticeboard.hide()
+
+  TextList
+    id: content
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: parent.top
+    anchors.bottom: closeButton.top
+    margin-bottom: 8
+    vertical-scrollbar: contentScroll
+    background-color: $panelFill
+    border-width: 1
+    border-color: $separatorColor
+    // The scrollbar is drawn over the list's right edge; the rows stop short of it.
+    padding: 2 16 8 8
+
+  VerticalScrollBar
+    id: contentScroll
+    anchors.top: content.top
+    anchors.bottom: content.bottom
+    anchors.right: content.right
+    step: 24
+    pixels-scroll: true
+
+  Button
+    id: closeButton
+    !text: tr('Close')
+    width: 64
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    @onClick: modules.game_noticeboard.hide()

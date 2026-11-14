@@ -197,7 +197,23 @@ UIWidget
     margin-top: 7
     height: 22
 
-    OptionCheckBox
-      id: transparentSidePanels
-      !text: tr('Transparent side panels (90%%)')
-      !tooltip: tr('Draw the equipment, health and minimap panels almost fully see-through. Off keeps the usual tint.')
+    OptionScaleScroll
+      id: sidePanelOpacity
+      anchors.fill: parent
+      !tooltip: tr('How solid the equipment, health and minimap panels are drawn. 60%% is the usual tint, 0%% fully see-through.')
+      &minimumScrollValue: 0
+      &maximumScrollValue: 100
+
+  SmallReversedQtPanel
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    margin-top: 7
+    height: 22
+
+    OptionScaleScroll
+      id: sidePanelWindowOpacity
+      anchors.fill: parent
+      !tooltip: tr('How solid the frame of every side panel window (skills, battle list, VIP and the rest) is drawn. Titles and contents stay readable; containers keep their usual look.')
+      &minimumScrollValue: 0
+      &maximumScrollValue: 100

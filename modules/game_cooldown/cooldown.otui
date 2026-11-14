@@ -89,15 +89,39 @@ Panel
     margin-top: 2
     margin-bottom: 2
 
+  // As wide as its tiles, so the weather badges can follow right behind them.
   Panel
     id: cooldownPanel
     anchors.top: parent.top
     anchors.bottom: parent.bottom
     anchors.left: separator.right
-    anchors.right: parent.right
     margin-left: 5
     margin-top: 2
     margin-bottom: 2
     phantom: true
     layout:
       type: horizontalBox
+      fit-children: true
+
+  // Shown only while there are both spell tiles and weather badges
+  // (refreshWeatherSeparator); hidden, it takes no room.
+  VerticalSeparator
+    id: weatherSeparator
+    anchors.top: parent.top
+    anchors.bottom: parent.bottom
+    anchors.left: cooldownPanel.right
+    margin-top: 2
+    margin-bottom: 2
+    visible: false
+
+  // game_globalboosts puts one badge per running weather event in here, anchored
+  // one after another, and sets the width.
+  Panel
+    id: weatherPanel
+    anchors.top: parent.top
+    anchors.bottom: parent.bottom
+    anchors.left: weatherSeparator.right
+    width: 0
+    margin-top: 2
+    margin-bottom: 2
+    phantom: true

@@ -1,0 +1,87 @@
+BoostedCreature < Creature
+  size: 40 40
+  phantom: true
+  border-width: 0
+  padding: 0
+
+BoostedRow < UIWidget
+  height: 46
+  focusable: false
+  background-color: #00000033
+
+  BoostedCreature
+    id: creature
+    anchors.left: parent.left
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 4
+
+  Label
+    id: tier
+    font: verdana-11px-monochrome
+    color: #a0a0a0
+    anchors.left: creature.right
+    anchors.right: parent.right
+    anchors.top: parent.top
+    margin-left: 8
+    margin-top: 3
+
+  Label
+    id: name
+    font: verdana-11px-rounded
+    color: #ffffff
+    anchors.left: tier.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    margin-top: 1
+
+  Label
+    id: bonuses
+    font: verdana-11px-monochrome
+    color: #6fae5c
+    anchors.left: tier.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    margin-top: 1
+
+BoostedWindow < MainWindow
+  id: boostedWindow
+  !text: tr('Boosted Creatures')
+  size: 380 560
+
+  Label
+    id: countdown
+    font: verdana-11px-rounded
+    text-align: center
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: parent.top
+
+  TextList
+    id: rows
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: countdown.bottom
+    anchors.bottom: closeButton.top
+    margin-top: 6
+    margin-bottom: 6
+    vertical-scrollbar: rowsScroll
+    padding: 1 14 1 1
+    layout:
+      type: verticalBox
+      spacing: 2
+
+  VerticalScrollBar
+    id: rowsScroll
+    anchors.top: rows.top
+    anchors.bottom: rows.bottom
+    anchors.right: rows.right
+    step: 48
+    pixels-scroll: true
+
+  Button
+    id: closeButton
+    !text: tr('Close')
+    width: 64
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    @onClick: modules.game_boosted.hide()

@@ -1,0 +1,8 @@
+Module
+  name: game_playerinfo
+  description: The character's name, level and vocation in the window title and the Discord status
+  author: TSR
+  sandboxed: true
+  scripts: [ playerinfo ]
+  @onLoad: init()
+  @onUnload: terminate()

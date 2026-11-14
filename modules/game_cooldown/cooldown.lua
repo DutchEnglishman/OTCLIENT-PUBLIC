@@ -7,6 +7,7 @@ local TICK_MS = 50
 
 cooldownWindow = nil
 cooldownPanel = nil
+weatherPanel = nil
 
 local groups = {}
 local spells = {}
@@ -56,6 +57,7 @@ local function tick()
         if now >= entry.endsAt then
             entry.icon:destroy()
             spells[key] = nil
+            refreshWeatherSeparator()
         else
             showProgress(entry, now)
             busy = true
@@ -131,6 +133,7 @@ local function startSpell(ms, runeClientId, words, name)
         rect:fill('parent')
         entry = {icon = icon, rect = rect, timer = createTimer(icon, 'parent')}
         spells[name] = entry
+        refreshWeatherSeparator()
     end
 
     local now = g_clock.millis()
@@ -166,6 +169,7 @@ local function clear()
         entry.icon:destroy()
     end
     spells = {}
+    refreshWeatherSeparator()
 end
 
 local function online()
@@ -187,6 +191,7 @@ end
 function init()
     cooldownWindow = g_ui.loadUI('cooldown', modules.game_interface.getBottomPanel())
     cooldownPanel = cooldownWindow:getChildById('cooldownPanel')
+    weatherPanel = cooldownWindow:getChildById('weatherPanel')
     groups.attack = {
         icon = cooldownWindow:getChildById('groupIconAttack'),
         rect = cooldownWindow:getChildById('progressRectAttack')
@@ -227,11 +232,13 @@ end
 
 local cooldownsVisible = false
 local boostsShown = false
+local weatherShown = false
 
--- The strip also carries game_globalboosts' badges on its right, so it stays up
--- while a boost runs even with the spell cooldowns switched off.
+-- The strip also carries game_globalboosts' badges -- the shop boosts on its
+-- right, the weather after the spell tiles -- so it stays up while either runs,
+-- even with the spell cooldowns switched off.
 function refreshVisibility()
-    local visible = cooldownsVisible or boostsShown
+    local visible = cooldownsVisible or boostsShown or weatherShown
     cooldownWindow:setVisible(visible)
     cooldownWindow:setHeight(visible and 24 or 0)
 end
@@ -241,10 +248,32 @@ function setSpellCooldownsVisible(visible)
     for _, id in ipairs({'groupIconAttack', 'progressRectAttack', 'groupIconHealing', 'progressRectHealing', 'separator', 'cooldownPanel'}) do
         cooldownWindow:getChildById(id):setVisible(visible)
     end
+    refreshWeatherSeparator()
     refreshVisibility()
 end
 
 function setBoostsShown(shown)
     boostsShown = shown
     refreshVisibility()
+end
+
+function setWeatherShown(shown)
+    weatherShown = shown
+    refreshWeatherSeparator()
+    refreshVisibility()
+end
+
+-- The little | between the spell tiles and the weather badges: only while both
+-- are there, and taking no room otherwise, so the badges sit right after the
+-- Attack/Healing separator when no spell is cooling down.
+function refreshWeatherSeparator()
+    if not cooldownWindow then
+        return
+    end
+    local separator = cooldownWindow:getChildById('weatherSeparator')
+    local shown = weatherShown and cooldownsVisible and cooldownPanel:getChildCount() > 0
+    separator:setVisible(shown)
+    separator:setWidth(shown and 2 or 0)
+    separator:setMarginLeft(shown and 5 or 0)
+    weatherPanel:setMarginLeft(shown and 5 or 0)
 end

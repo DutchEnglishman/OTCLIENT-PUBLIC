@@ -1,0 +1,14 @@
+Module
+  name: game_noticeboard
+  description: The depot notice boards' window (OTSERV data/scripts/notice_board/)
+  author: Roel
+  sandboxed: true
+  autoload: true
+
+  dependencies:
+    - game_interface
+    - game_globalboosts
+
+  scripts: [ noticeboard ]
+  @onLoad: init()
+  @onUnload: terminate()

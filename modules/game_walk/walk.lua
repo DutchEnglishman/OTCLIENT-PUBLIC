@@ -30,6 +30,18 @@ local BLOCKED_STEPS_OPCODE = 77
 -- every step we take and again whenever it changes; nil until the first lands.
 local blockedSteps = nil
 
+-- Azerus's Blinding Book reverses the player's walking for a few seconds. The
+-- server flips every keyboard step (Game::playerMove), so the key pressed is
+-- still what is sent and only the prediction is flipped here; flipping both
+-- would cancel out. Payload: the milliseconds left, "0" ends it.
+local REVERSED_WALK_OPCODE = 104
+local reversedUntil = 0
+local REVERSED_DIRS = {
+    [North] = South, [South] = North, [East] = West, [West] = East,
+    [NorthEast] = SouthWest, [SouthWest] = NorthEast,
+    [NorthWest] = SouthEast, [SouthEast] = NorthWest
+}
+
 
 local keys = {
     { "Up",      North },
@@ -165,6 +177,11 @@ local function walk(dir)
         return
     end
 
+    local sentDir = dir
+    if g_clock.millis() < reversedUntil then
+        dir = REVERSED_DIRS[dir] or dir
+    end
+
     if g_game.isFollowing() then
         g_game.cancelFollow()
     end
@@ -186,7 +203,7 @@ local function walk(dir)
         if takeoverDir ~= dir then
             takeoverDir = dir
             modules.game_interface.lastManualWalk = g_clock.millis()
-            g_game.walk(dir)
+            g_game.walk(sentDir)
         end
         return
     end
@@ -199,7 +216,8 @@ local function walk(dir)
 
     if not player:canWalk() then
         if lastWalkDir ~= dir then
-            nextWalkDir = dir
+            -- the key, not the step: walk() flips it again when it is replayed
+            nextWalkDir = sentDir
         end
         return
     end
@@ -247,7 +265,7 @@ local function walk(dir)
         floorChangeSentAt = g_clock.millis()
     end
     modules.game_interface.lastManualWalk = g_clock.millis()
-    g_game.walk(dir)
+    g_game.walk(sentDir)
     return true
 end
 
@@ -401,6 +419,11 @@ function WalkController:onGameStart()
         blockedSteps = #buffer == 8 and buffer or nil
     end)
 
+    reversedUntil = 0
+    ProtocolGame.registerExtendedOpcode(REVERSED_WALK_OPCODE, function(protocol, opcode, buffer)
+        reversedUntil = g_clock.millis() + (tonumber(buffer) or 0)
+    end)
+
     self:registerEvents(g_game, {
         onGameStart = onGameStart,
         onTeleport = onTeleport,
@@ -434,6 +457,8 @@ function WalkController:onGameEnd()
     ProtocolGame.unregisterExtendedOpcode(BLOCKED_STEPS_OPCODE)
     blockedSteps = nil
     blockedStepSentAt = {}
+    ProtocolGame.unregisterExtendedOpcode(REVERSED_WALK_OPCODE)
+    reversedUntil = 0
     stopSmartWalk()
 end
 

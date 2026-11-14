@@ -1,0 +1,13 @@
+Module
+  name: game_boosted
+  description: The boosted creatures window, filled by the server over extended opcode 101
+  author: Roel
+  sandboxed: true
+  autoload: true
+
+  dependencies:
+    - game_interface
+
+  scripts: [ boosted ]
+  @onLoad: init()
+  @onUnload: terminate()

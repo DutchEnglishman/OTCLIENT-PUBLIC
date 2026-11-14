@@ -14,6 +14,45 @@ function UIMiniWindow.create()
     return miniwindow
 end
 
+function UIMiniWindow:onSetup()
+    local options = modules.client_options
+    local percent = options and options.getOption and options.getOption('sidePanelWindowOpacity')
+    self:setFrameOpacity(type(percent) == 'number' and percent or 100)
+end
+
+-- Fades only the frame (body, header bar and its rules) to percent of the
+-- style's own, so titles, buttons and whatever the window shows stay fully
+-- readable. Containers keep their frame.
+function UIMiniWindow:setFrameOpacity(percent)
+    if self:getStyleName() == 'ContainerWindow' then
+        return
+    end
+    -- The style's own tint, kept so only its alpha is ever changed.
+    if not self.frameImageColor then
+        self.frameImageColor = self:getImageColor()
+    end
+    local base = self.frameImageColor
+    local opacity = math.max(0, math.min(100, percent)) / 100
+    self:setImageColor({ r = base.r, g = base.g, b = base.b, a = math.floor(base.a * opacity) })
+    for _, id in ipairs({ 'miniwindowHeader', 'miniwindowHeaderBevel', 'miniwindowHeaderBorder' }) do
+        local child = self:getChildById(id)
+        if child then
+            child:setOpacity(opacity)
+        end
+    end
+end
+
+-- Walks the live widget tree rather than a weak-keyed registry: LuaJIT keeps a
+-- weak key whose userdata has already been finalized, so such a table hands
+-- back widgets whose C++ object is gone, and touching one crashes the client.
+function UIMiniWindow.setAllFramesOpacity(percent)
+    for _, widget in ipairs(rootWidget:recursiveGetChildren()) do
+        if widget.setFrameOpacity then
+            widget:setFrameOpacity(percent)
+        end
+    end
+end
+
 function UIMiniWindow:open(dontSave)
     self:setVisible(true)
     if not dontSave then

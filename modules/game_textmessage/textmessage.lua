@@ -400,12 +400,13 @@ function displayMessage(mode, text)
     -- is always the player's own, and it names neither "you" nor the player.
     -- Autoloot that could not fit everything (OTSERV AutoLootServer.warnLeftBehind,
     -- data/lib/core/autoloot.lua, which sends this prefix): red on screen for
-    -- players who watch loot there, red in the Loot tab for the rest.
+    -- players who watch loot there, red in Local Chat for the rest -- not the
+    -- Loot tab, which nobody hiding loot from the screen is watching either.
     if text:find('^Autoloot: ') then
         if modules.client_options.getOption('showLootOnScreen') then
             showOnScreen(MessageSettings.centerRed, text)
         else
-            modules.game_console.addTabText(text, MessageSettings.centerRed, modules.game_console.ensureLootTab())
+            modules.game_console.addText(text, MessageSettings.centerRed, tr('Local Chat'))
         end
         return
     end

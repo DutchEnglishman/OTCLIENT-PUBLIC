@@ -92,6 +92,44 @@ function MagicalArchive.formatMana(entry)
     return mana .. ' / ' .. entry.soul
 end
 
+local function archiveThousands(number)
+    local text = tostring(number)
+    repeat
+        local replaced
+        text, replaced = text:gsub('^(%d+)(%d%d%d)', '%1,%2')
+    until replaced == 0
+    return text
+end
+
+-- The rows for the server's `mastery` (spell leveling, this character's own
+-- casts); every value is nil for a spell that does not level, hiding its row.
+function MagicalArchive.formatMastery(mastery)
+    if not mastery then
+        return {}
+    end
+    local rows = {}
+    if mastery.level == mastery.maxLevel then
+        rows.level = tr('level %d, MAX', mastery.level) .. ' - ' .. archiveThousands(mastery.casts) .. ' ' .. tr('casts')
+    else
+        rows.level = tr('level %d of %d', mastery.level, mastery.maxLevel) .. ' - ' ..
+            archiveThousands(mastery.casts) .. ' ' .. tr('casts')
+    end
+    if mastery.nextAt then
+        rows.nextLevel = archiveThousands(mastery.nextAt) .. ' ' .. tr('casts') .. ' (' ..
+            archiveThousands(mastery.nextAt - mastery.casts) .. ' ' .. tr('to go') .. ')'
+    end
+    if mastery.perCast then
+        rows.perCast = tostring(mastery.perCast)
+    end
+    if mastery.unlocks then
+        rows.unlock = mastery.casts >= mastery.unlockAt and (mastery.unlocks .. ': ' .. tr('unlocked')) or
+            (mastery.unlocks .. ': ' .. archiveThousands(mastery.unlockAt - mastery.casts) .. ' ' .. tr('casts to go'))
+    elseif mastery.unlockedBy then
+        rows.unlock = tr('learned at MAX %s', mastery.unlockedBy)
+    end
+    return rows
+end
+
 local function archiveSetDetailRow(rowId, value)
     local row = UI.spellAndRune.DetailPanel.DetailRows[rowId]
     row:setVisible(value ~= nil)
@@ -152,6 +190,12 @@ local function archiveSelectSpell(widget)
     local rune = entry.type == 'Conjure' and entry.rune
     archiveSetDetailRow('RowRune', rune and tr('level %d, magic level %d, %s, %s cooldown', rune.level, rune.mlevel,
         rune.group, archiveSeconds(rune.cooldown)) or nil)
+
+    local mastery = MagicalArchive.formatMastery(entry.mastery)
+    archiveSetDetailRow('RowMastery', mastery.level)
+    archiveSetDetailRow('RowNextLevel', mastery.nextLevel)
+    archiveSetDetailRow('RowPerCast', mastery.perCast)
+    archiveSetDetailRow('RowUnlock', mastery.unlock)
 end
 
 local function archiveRebuildList()
@@ -247,7 +291,11 @@ function showMagicalArchives()
         RowMana = tr('Mana / Soul') .. ':',
         RowPremium = tr('Premium') .. ':',
         RowLearn = tr('Learning') .. ':',
-        RowRune = tr('Rune use') .. ':'
+        RowRune = tr('Rune use') .. ':',
+        RowMastery = tr('Spell level') .. ':',
+        RowNextLevel = tr('Next level') .. ':',
+        RowPerCast = tr('Per cast') .. ':',
+        RowUnlock = tr('Upgrade') .. ':'
     }
     for rowId, caption in pairs(captions) do
         detailRows[rowId].caption:setText(caption)

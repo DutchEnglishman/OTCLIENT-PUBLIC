@@ -328,7 +328,7 @@ MiniQtWindow < UIMiniWindow
     phantom: true
 
 // Its own style so client_options can find every copy by style name: the
-// Graphics option "Transparent side panels" sets their opacity, and @onSetup
+// Graphics option "Side panel opacity" sets their opacity, and @onSetup
 // gives a window created after that the same value.
 PhantomMiniWindowBackground < UIWidget
   image-source: /images/ui/background

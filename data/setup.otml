@@ -75,10 +75,10 @@ game
     // defaults (gameconfig.h:135) are 500 / 500 / 75 / 75; invisible sits
     // past its default on purpose, because stock reads as frantic here. Item
     // stays at 500: every 2-frame item CipSoft kept unchanged into 10.98 is
-    // 500 ms there, so that is the classic figure. Effect is 100 for the same
-    // reason: the 8.60 effects whose frame count CipSoft kept into 10.98 are
-    // 100 ms a frame there, and at 75 our effects ran a median 1.47x short of
-    // CipSoft's lengths. Missiles have no timing in any dat (a missile flies
+    // 500 ms there, so that is the classic figure. Effect started at 100, the
+    // figure 10.98 uses for the 8.60 effects whose frame count CipSoft kept
+    // (at 75 ours ran a median 1.47x short of theirs), and is 90 by choice:
+    // spell effects 10% quicker than that. Missiles have no timing in any dat (a missile flies
     // 2 x this x sqrt(tiles) ms, missile.cpp:87), so they keep the stock 75; a
     // slower one only lands further behind the damage the server sent with it.
     //
@@ -88,7 +88,7 @@ game
     // effect    = magic effects, missile = projectiles in flight
     invisible-ticks-per-frame: 750
     item-ticks-per-frame: 500
-    effect-ticks-per-frame: 100
+    effect-ticks-per-frame: 90
     missile-ticks-per-frame: 75
     animated-text-duration: 1000
     static-duration-per-character: 60

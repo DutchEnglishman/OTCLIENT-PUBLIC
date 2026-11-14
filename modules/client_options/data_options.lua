@@ -260,17 +260,26 @@ return {
             -- exists in styles/graphics/effects.otui; the lookup would be nil.
         end
     },
-    -- Equipment, health, minimap and the main options panel. setOption only
-    -- stores option.value after the action, so the opacity is worked out from
-    -- value here rather than through getSidePanelOpacity.
-    transparentSidePanels             = {
-        value = false,
+    -- Equipment, health, minimap and the main options panel, in percent; 60 is
+    -- the style's own opacity. setOption only stores option.value after the
+    -- action, so the opacity is worked out from value here rather than through
+    -- getSidePanelOpacity.
+    sidePanelOpacity                  = {
+        value = 60,
         action = function(value, options, controller, panels, extraWidgets)
-            local opacity = value and 0.1 or 0.6
             local backgrounds = g_ui.getRootWidget():recursiveGetChildrenByStyleName('PhantomMiniWindowBackground')
             for _, background in ipairs(backgrounds) do
-                background:setOpacity(opacity)
+                background:setOpacity(value / 100)
             end
+            panels.graphicsPanel:recursiveGetChildById('sidePanelOpacity'):setText(tr('Side panel opacity: %d%%', value))
+        end
+    },
+    sidePanelWindowOpacity            = {
+        value = 100,
+        action = function(value, options, controller, panels, extraWidgets)
+            UIMiniWindow.setAllFramesOpacity(value)
+            panels.graphicsPanel:recursiveGetChildById('sidePanelWindowOpacity'):setText(tr(
+                'Side panel window opacity: %d%%', value))
         end
     },
     limitVisibleDimension             = {
@@ -485,6 +494,16 @@ return {
         value = true,
         action = function(value, options, controller, panels, extraWidgets)
             g_app.setDrawEffectOnTop(value)
+        end
+    },
+    -- Off hides the faint regional-weather map shaders (OTSERV data/world_events/,
+    -- "<key>:<strength>" on opcode 76). A GM atmosphere toggle still shows.
+    weatherEffects                    = {
+        value = true,
+        action = function(value, options, controller, panels, extraWidgets)
+            if modules.game_shaders then
+                modules.game_shaders.setWeatherEffects(value)
+            end
         end
     },
     -- Local only. Off draws every mounted creature on foot: the mount sprite is

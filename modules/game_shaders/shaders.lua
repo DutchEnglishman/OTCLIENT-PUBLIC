@@ -88,6 +88,30 @@ local MAP_SHADERS = { {
     -- mirror ball's specks drifting over everything. One of the atmospheres below.
     name = 'Map - Disco',
     frag = 'shaders/fragment/disco.frag'
+}, {
+    -- A snowstorm: snow driven almost flat across the world in long streaks, with
+    -- blowing white banks. Regional weather only (OTSERV data/world_events/).
+    name = 'Map - Storm',
+    frag = 'shaders/fragment/storm.frag'
+}, {
+    -- Heavy rain: slanted streaks, duller light, rings popping on the ground.
+    -- Regional weather only (OTSERV data/world_events/).
+    name = 'Map - Downpour',
+    frag = 'shaders/fragment/downpour.frag'
+}, {
+    -- Dense fog: large soft banks rolling through, the map flattened toward grey.
+    -- Regional weather only (OTSERV data/world_events/).
+    name = 'Map - Fog Banks',
+    frag = 'shaders/fragment/fogbank.frag'
+}, {
+    -- The Full Moon: cold silver-blue with moonbeams sweeping across. The moons only
+    -- (OTSERV data/world_events/moons_core.lua).
+    name = 'Map - Full Moon',
+    frag = 'shaders/fragment/fullmoon.frag'
+}, {
+    -- The Blood Moon: the Full Moon's look in red. The moons only.
+    name = 'Map - Blood Moon',
+    frag = 'shaders/fragment/bloodmoon.frag'
 } }
 
 -- Map atmospheres (OTSERV data/scripts/talkactions/atmosphere.lua, /wind, /burn
@@ -121,7 +145,12 @@ local ATMOSPHERE_OPCODE = 76
 local ATMOSPHERE_SHADERS = {
     wind = 'Map - Wind',
     burn = 'Map - Burn',
-    disco = 'Map - Disco'
+    disco = 'Map - Disco',
+    storm = 'Map - Storm',
+    rain = 'Map - Downpour',
+    fog = 'Map - Fog Banks',
+    fullmoon = 'Map - Full Moon',
+    bloodmoon = 'Map - Blood Moon'
 }
 local ATMOSPHERE_FADE_MS = 3000
 local ATMOSPHERE_STEP_MS = 40
@@ -129,7 +158,13 @@ local ATMOSPHERE_STEP_MS = 40
 local atmosphere = nil      -- the key the server last asked for
 local atmosphereShown = nil -- the key whose shader is actually on the map
 local atmosphereFade = 0.0
+local atmosphereStrength = 1.0 -- how far the ramp goes: 1 for a GM toggle, low for weather
 local atmosphereEvent = nil
+-- What the server last asked for, kept so the Weather effects option can be
+-- switched back on mid-storm: {key, strength, weather}. A GM toggle is never
+-- weather and ignores the option.
+local atmosphereRequest = nil
+local weatherEffects = true
 
 local function pushAtmosphereFade()
     local map = modules.game_interface.getMapPanel()
@@ -159,7 +194,7 @@ local function atmosphereStep()
 
     -- Heading for full while the shader on the map is the one wanted, and for
     -- nothing while it is on its way out.
-    local target = (atmosphereShown ~= nil and atmosphereShown == atmosphere) and 1.0 or 0.0
+    local target = (atmosphereShown ~= nil and atmosphereShown == atmosphere) and atmosphereStrength or 0.0
     local step = ATMOSPHERE_STEP_MS / ATMOSPHERE_FADE_MS
 
     if atmosphereFade < target then
@@ -184,11 +219,13 @@ local function atmosphereStep()
     end
 end
 
-local function setAtmosphere(key)
-    if key == atmosphere then
+local function setAtmosphere(key, strength)
+    strength = strength or 1.0
+    if key == atmosphere and strength == atmosphereStrength then
         return
     end
     atmosphere = key
+    atmosphereStrength = strength
 
     -- Nothing showing: put the shader on at once, dark, and ramp it up. Anything
     -- else is handled by the step -- it fades out first, then swaps.
@@ -211,12 +248,36 @@ local function resetAtmosphere()
     atmosphere = nil
     atmosphereShown = nil
     atmosphereFade = 0.0
+    atmosphereStrength = 1.0
+    atmosphereRequest = nil
+end
+
+local function applyAtmosphereRequest()
+    local request = atmosphereRequest
+    if not request or (request.weather and not weatherEffects) then
+        setAtmosphere(nil)
+        return
+    end
+    setAtmosphere(request.key, request.strength)
 end
 
 local function onAtmosphereOpcode(protocol, opcode, buffer)
+    -- "wind" is a GM toggle at full strength; "wind:0.15" is regional weather
+    -- (OTSERV data/world_events/), ramped only that far so it stays faint.
     -- Anything this build does not know about reads as 'off', so an older client
     -- clears rather than sticking on whatever it was showing.
-    setAtmosphere(ATMOSPHERE_SHADERS[buffer] and buffer or nil)
+    local key, strength = buffer:match("^(%w+):([%d.]+)$")
+    local weather = key ~= nil
+    key = key or buffer
+    strength = math.max(0.0, math.min(1.0, tonumber(strength) or 1.0))
+    atmosphereRequest = ATMOSPHERE_SHADERS[key] and {key = key, strength = strength, weather = weather} or nil
+    applyAtmosphereRequest()
+end
+
+-- client_options weatherEffects (Options, Graphics, Effects).
+function setWeatherEffects(enabled)
+    weatherEffects = enabled ~= false
+    applyAtmosphereRequest()
 end
 
 local OUTFIT_SHADERS = {
@@ -648,6 +709,7 @@ function ShaderController:onInit()
         onAppear = onMonsterShaderCreatureAppear
     })
     
+    weatherEffects = not modules.client_options or modules.client_options.getOption('weatherEffects') ~= false
     ProtocolGame.registerExtendedOpcode(ATMOSPHERE_OPCODE, onAtmosphereOpcode)
 end
 

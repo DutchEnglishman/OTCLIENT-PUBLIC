@@ -1750,6 +1750,9 @@ local GLIDE_ORIGINS = {}
 for id = 480, 495 do
     GLIDE_ORIGINS[id] = 64
 end
+-- Azerus's orbs (860-861) are 32x32, the tile itself.
+GLIDE_ORIGINS[860] = 0
+GLIDE_ORIGINS[861] = 0
 local glideRuns = {} -- runId -> {event, pos, at, effect}
 
 local function glideRunClear(run)
@@ -1839,6 +1842,57 @@ local function clearGlideRuns()
     glideRuns = {}
 end
 
+-- "shock,x,y,z": the explosion Azerus's orbs set off over the room when they
+-- meet (OTSERV data/scripts/boss_skills/azerus_skills.lua), sent beside the
+-- clash texture (864) on the same tile. The game's own explosion in violet
+-- (865) or gold (866), mixed tile by tile, ripples out from the meeting tile:
+-- SHOCK_DELAY_MS after the clash starts (its white flash), then one ring of
+-- tiles further every SHOCK_RING_MS, out to SHOCK_TILES. A ring is the tiles
+-- whose rounded distance is that number, so it spreads as a circle; a tile
+-- that is not walkable (a wall) is skipped, as an area spell skips it.
+local SHOCK_EFFECTS = { 865, 866 }
+local SHOCK_DELAY_MS = 300
+local SHOCK_RING_MS = 80
+local SHOCK_TILES = 12
+local SHOCK_PLAY_MS = 600 -- the explosion's 6 frames at 100 ms
+local shockEvents = {}
+
+local function shockOff()
+    for _, event in ipairs(shockEvents) do
+        removeEvent(event)
+    end
+    shockEvents = {}
+end
+
+local function shockRing(centre, ring)
+    for dy = -ring, ring do
+        for dx = -ring, ring do
+            if math.floor(math.sqrt(dx * dx + dy * dy) + 0.5) == ring then
+                local pos = { x = centre.x + dx, y = centre.y + dy, z = centre.z }
+                local tile = g_map.getTile(pos)
+                if tile and tile:isWalkable(true) then
+                    local h = math.sin(pos.x * 12.9898 + pos.y * 78.233) * 43758.5453
+                    holdTileEffect(pos, SHOCK_EFFECTS[h - math.floor(h) < 0.5 and 1 or 2], SHOCK_PLAY_MS)
+                end
+            end
+        end
+    end
+end
+
+local function onShock(buffer)
+    local x, y, z = buffer:match('^shock,(%d+),(%d+),(%d+)$')
+    if not x then
+        return
+    end
+    shockOff()
+    local centre = { x = tonumber(x), y = tonumber(y), z = tonumber(z) }
+    for ring = 0, SHOCK_TILES do
+        table.insert(shockEvents, scheduleEvent(function()
+            shockRing(centre, ring)
+        end, SHOCK_DELAY_MS + ring * SHOCK_RING_MS))
+    end
+end
+
 local function onTileEffectOpcode(protocol, opcode, buffer)
     local idA, idB, ox, oy, flow = buffer:match('^tether,(%d+),(%d+),(-?%d+),(-?%d+),(-?1)$')
     if idA then
@@ -1885,6 +1939,10 @@ local function onTileEffectOpcode(protocol, opcode, buffer)
     end
     if buffer:sub(1, 6) == 'glide,' then
         onGlide(buffer)
+        return
+    end
+    if buffer:sub(1, 6) == 'shock,' then
+        onShock(buffer)
         return
     end
     if buffer:sub(1, 8) == 'daggers,' then
@@ -2006,6 +2064,7 @@ function controller:onGameEnd()
     clearSpearRuns()
     clearDaggerRuns()
     clearGlideRuns()
+    shockOff()
     clearChainRuns()
     clearBloodlust()
     clearLunges()
