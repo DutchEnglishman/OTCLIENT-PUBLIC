@@ -1,61 +1,113 @@
-NoticeBoardHeader < Label
-  font: verdana-11px-rounded
-  color: $textBright
-  text-auto-resize: true
-  margin-top: 10
+// Every piece of the board is placed by noticeboard.lua at an exact offset from its
+// parent's top-left (anchors top/left plus margins), because each note's height is the
+// sum of its measured rows and the notes below it need that height first.
+NbPlaced < UIWidget
+  anchors.top: parent.top
+  anchors.left: parent.left
   phantom: true
 
-NoticeBoardRow < Label
-  color: $textColor
+NbCanvas < NbPlaced
+
+// The pixel-art paper (tools/noticeboard/make_paper.ps1): a 10 px 9-slice, which the
+// engine tiles rather than stretches, so the 2x2 grain stays 2x2 at any size.
+NbNote < NbPlaced
+  image-source: /game_noticeboard/images/paper_a
+  image-border: 10
+
+NbPin < NbPlaced
+  size: 14 14
+  image-source: /game_noticeboard/images/pin
+
+NbRule < NbPlaced
+  height: 1
+  background-color: #8a6a3a77
+
+NbIcon < NbPlaced
+  size: 20 20
+
+NbHover < NbPlaced
+  phantom: false
+
+NbTitle < NbPlaced
+  height: 20
+  ttf-font: almendra-bold
+  ttf-font-size: 15
+  color: #3a2410
+  text-align: center
+
+NbBig < NbTitle
+  ttf-font-size: 16
+  color: #5a1206
+
+NbWanted < NbTitle
+  ttf-font-size: 16
+  color: #6a1a0a
+
+NbBoardHead < NbTitle
+  height: 28
+  ttf-font-size: 22
+  color: #ecd7a8
+
+// Body text. Width is set before the text, so the wrap and the height it gives are
+// known at once.
+NbText < NbPlaced
+  font: verdana-11px-antialised
+  color: #5a4630
+  text-align: left
   text-wrap: true
   text-auto-resize: true
-  margin-top: 4
-  phantom: true
 
-NoticeBoardEmpty < NoticeBoardRow
-  color: $textDim
+NbBold < NbText
+  font: Verdana Bold-11px
+  color: #2a1b0e
 
-// A weather row: its badge on the left, the text beside it.
-NoticeBoardIconRow < NoticeBoardRow
-  // Padding rather than a text offset, so the wrap leaves room for the badge;
-  // anchors follow the padding, hence the icon's negative margin.
-  padding-left: 26
-  min-height: 20
+NbLine < NbPlaced
+  height: 14
+  font: verdana-11px-antialised
+  color: #2a1b0e
+  text-align: left
 
-  UIWidget
-    id: icon
-    size: 20 20
-    anchors.left: parent.left
-    anchors.top: parent.top
-    margin-left: -26
+NbTime < NbLine
+  color: #7a2410
+  text-align: right
+
+NbPortrait < NbPlaced
+  size: 66 66
+  background-color: #a88c62
+  border-width: 1
+  border-color: #6a4a24
+
+  UICreature
+    id: creature
+    size: 64 64
+    anchors.centerIn: parent
     phantom: true
 
 NoticeBoardWindow < MainWindow
   id: noticeBoardWindow
   !text: tr('Notice Board')
-  size: 460 520
+  size: 900 600
   @onEscape: modules.game_noticeboard.hide()
 
-  TextList
-    id: content
+  ScrollablePanel
+    id: board
     anchors.left: parent.left
-    anchors.right: parent.right
+    anchors.right: boardScroll.left
     anchors.top: parent.top
     anchors.bottom: closeButton.top
     margin-bottom: 8
-    vertical-scrollbar: contentScroll
-    background-color: $panelFill
+    image-source: /images/ui/background_dark
+    image-repeated: true
     border-width: 1
     border-color: $separatorColor
-    // The scrollbar is drawn over the list's right edge; the rows stop short of it.
-    padding: 2 16 8 8
+    vertical-scrollbar: boardScroll
 
   VerticalScrollBar
-    id: contentScroll
-    anchors.top: content.top
-    anchors.bottom: content.bottom
-    anchors.right: content.right
-    step: 24
+    id: boardScroll
+    anchors.top: board.top
+    anchors.bottom: board.bottom
+    anchors.right: parent.right
+    step: 40
     pixels-scroll: true
 
   Button

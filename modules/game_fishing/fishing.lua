@@ -136,6 +136,68 @@ local function onMapRelease()
   end
 end
 
+-- The cast animation, drawn by Creature::startFishingCast (src/client/fishingcast.cpp) for every
+-- fisher on screen, this player included. The splash is played here because it is an ordinary
+-- effect; its delay is the C++ timeline's launch (258 ms) plus the bobber's flight.
+local SPLASH_EFFECT = 2 -- CONST_ME_LOSEENERGY, the blue splash
+local castSplashes = {}
+
+-- The four hand points (N E S W) for this outfit, on foot and mounted (rod_hands.lua). On foot a
+-- looktype with no row of its own moves the default by its displacement's difference from 8,8.
+local function handPoints(lookType)
+  local foot = RodHands.foot[lookType]
+  if not foot then
+    local thingType = g_things.getThingType(lookType, ThingCategoryCreature)
+    local dx = thingType and 8 - thingType:getDisplacementX() or 0
+    local dy = thingType and 8 - thingType:getDisplacementY() or 0
+    foot = {}
+    for i, point in ipairs(RodHands.foot.default) do
+      foot[i] = {x = point.x + dx, y = point.y + dy}
+    end
+  end
+  return foot, RodHands.mounted[lookType] or RodHands.mounted.default
+end
+
+local function startCast(data)
+  local creature = g_map.getCreatureById(data.cid)
+  local tones = RodHands.tones[data.tier]
+  if not creature or not tones then
+    return
+  end
+  local target = {x = data.x, y = data.y, z = data.z}
+  local foot, mounted = handPoints(creature:getOutfit().type)
+  creature:startFishingCast(target, tones, foot, mounted)
+
+  local from = creature:getPosition()
+  local distance = math.max(math.abs(target.x - from.x), math.abs(target.y - from.y))
+  if castSplashes[data.cid] then
+    removeEvent(castSplashes[data.cid])
+  end
+  castSplashes[data.cid] = scheduleEvent(function()
+    castSplashes[data.cid] = nil
+    local tile = g_map.getTile(target)
+    if tile then
+      local effect = Effect.create()
+      effect:setId(SPLASH_EFFECT)
+      tile:addThing(effect)
+    end
+  end, 258 + 260 + 45 * distance)
+end
+
+local function pullCast(data)
+  local creature = g_map.getCreatureById(data.cid)
+  if creature then
+    creature:pullFishingCast(tonumber(data.item) or 0)
+  end
+end
+
+local function clearCasts()
+  for _, event in pairs(castSplashes) do
+    removeEvent(event)
+  end
+  castSplashes = {}
+end
+
 function onExtendedOpcode(protocol, opcode, buffer)
   local ok, data = pcall(json.decode, buffer)
   if not ok or type(data) ~= 'table' then
@@ -145,6 +207,10 @@ function onExtendedOpcode(protocol, opcode, buffer)
     show(data)
   elseif data.t == 'end' then
     finish(data)
+  elseif data.t == 'cast' then
+    startCast(data)
+  elseif data.t == 'pull' then
+    pullCast(data)
   end
 end
 
@@ -153,12 +219,15 @@ function init()
   mapPanel = modules.game_interface.getMapPanel()
   connect(mapPanel, {onMousePress = onMapPress, onMouseRelease = onMapRelease}, true)
   connect(g_game, {onGameEnd = close})
+  connect(g_game, {onGameEnd = clearCasts})
   ProtocolGame.registerExtendedOpcode(OPCODE, onExtendedOpcode)
 end
 
 function terminate()
   disconnect(mapPanel, {onMousePress = onMapPress, onMouseRelease = onMapRelease})
   disconnect(g_game, {onGameEnd = close})
+  disconnect(g_game, {onGameEnd = clearCasts})
   ProtocolGame.unregisterExtendedOpcode(OPCODE, onExtendedOpcode)
   close()
+  clearCasts()
 end

@@ -45,6 +45,13 @@ end
 -- repeat.
 local ATTACHED_EFFECT_OPCODE = 71
 
+-- Mark ids are OTSERV's (STATUS_MARK in data/scripts/boss_skills/azerus_skills.lua);
+-- the images come from tools/generate_status_marks.ps1.
+local STATUS_MARKS = {
+    [1] = '/images/game/statusmarks/reversed_controls',
+    [2] = '/images/game/statusmarks/max_health_cut',
+}
+
 -- Bloodlust, Madareth's skill, rides the same opcode as a third verb:
 -- "bloodlust,<creatureId>,1" while it runs and ",0" when it ends. Like attach,
 -- the server repeats the 1 every second, so a player who walks in halfway
@@ -305,6 +312,17 @@ local function onExtendedOpcode(protocol, opcode, buffer)
         local creature = g_map.getCreatureById(tonumber(castId))
         if creature and creature.setCastBar then
             creature:setCastBar(tonumber(castMs))
+        end
+        return
+    end
+    -- "mark,<id>,<markId>,<ms>": a debuff icon above the title for ms
+    -- (Creature::setStatusMark); 0 takes it down. An unknown mark is ignored.
+    local markCreatureId, markId, markMs = buffer:match('^mark,(%d+),(%d+),(%d+)$')
+    if markCreatureId then
+        local texture = STATUS_MARKS[tonumber(markId)]
+        local creature = g_map.getCreatureById(tonumber(markCreatureId))
+        if texture and creature and creature.setStatusMark then
+            creature:setStatusMark(tonumber(markId), texture, tonumber(markMs))
         end
         return
     end
