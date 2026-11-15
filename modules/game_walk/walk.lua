@@ -269,6 +269,59 @@ local function walk(dir)
     return true
 end
 
+local function removeWalkDir(dir)
+    for i = #smartWalkDirs, 1, -1 do
+        if smartWalkDirs[i].dir == dir then
+            table.remove(smartWalkDirs, i)
+        end
+    end
+end
+
+--- Recomputes smartWalkDir from the keys still physically held. A key whose
+--- key-up never reached us (released while the walk keys were unbound for chat,
+--- or while a text field had focus, or put there by a turn) would otherwise sit
+--- in the list for good and steer the next queued step its way.
+local function refreshWalkDir()
+    for i = #smartWalkDirs, 1, -1 do
+        local key = smartWalkDirs[i].key
+        if not key or not g_keyboard.isKeyPressed(key) then
+            table.remove(smartWalkDirs, i)
+        end
+    end
+
+    if #smartWalkDirs == 0 then
+        stopSmartWalk()
+        return
+    end
+
+    smartWalkDir = smartWalkDirs[1].dir
+
+    if modules.client_options.getOption('smartWalk') and #smartWalkDirs > 1 then
+        local diagonalMap = {
+            [North] = { [West] = NorthWest, [East] = NorthEast },
+            [South] = { [West] = SouthWest, [East] = SouthEast },
+            [West]  = { [North] = NorthWest, [South] = SouthWest },
+            [East]  = { [North] = NorthEast, [South] = SouthEast }
+        }
+
+        for _, entry in ipairs(smartWalkDirs) do
+            if diagonalMap[smartWalkDir] and diagonalMap[smartWalkDir][entry.dir] then
+                smartWalkDir = diagonalMap[smartWalkDir][entry.dir]
+                break
+            end
+        end
+    end
+end
+
+--- Changes the current walking direction.
+local function changeWalkDir(dir, pop, key)
+    removeWalkDir(dir)
+    if not pop then
+        table.insert(smartWalkDirs, 1, { dir = dir, key = key })
+    end
+    refreshWalkDir()
+end
+
 --- Adds a walk event with an optional delay.
 local function addWalkEvent(dir, delay)
     if g_clock.millis() - lastCancelWalkTime > 20 then
@@ -278,6 +331,7 @@ local function addWalkEvent(dir, delay)
 
     local action = function()
         if g_keyboard.getModifiers() == KeyboardNoModifier then
+            refreshWalkDir()
             walk(smartWalkDir or dir)
         end
     end
@@ -288,39 +342,6 @@ end
 --- Initiates a smart walk in the given direction.
 function smartWalk(dir)
     addWalkEvent(dir)
-end
-
---- Changes the current walking direction.
-local function changeWalkDir(dir, pop)
-    -- Remove all occurrences of the specified direction
-    while table.removevalue(smartWalkDirs, dir) do end
-
-    if pop then
-        if #smartWalkDirs == 0 then
-            stopSmartWalk()
-            return
-        end
-    else
-        table.insert(smartWalkDirs, 1, dir)
-    end
-
-    smartWalkDir = smartWalkDirs[1]
-
-    if modules.client_options.getOption('smartWalk') and #smartWalkDirs > 1 then
-        local diagonalMap = {
-            [North] = { [West] = NorthWest, [East] = NorthEast },
-            [South] = { [West] = SouthWest, [East] = SouthEast },
-            [West]  = { [North] = NorthWest, [South] = SouthWest },
-            [East]  = { [North] = NorthEast, [South] = SouthEast }
-        }
-
-        for _, d in ipairs(smartWalkDirs) do
-            if diagonalMap[smartWalkDir] and diagonalMap[smartWalkDir][d] then
-                smartWalkDir = diagonalMap[smartWalkDir][d]
-                break
-            end
-        end
-    end
 end
 
 --- Handles turning the player.
@@ -476,7 +497,7 @@ function bindWalkKey(key, dir)
             return
         end
         g_keyboard.setKeyDelay(key, 1)
-        changeWalkDir(dir)
+        changeWalkDir(dir, false, key)
     end, gameRootPanel, true)
 
     g_keyboard.bindKeyUp(key, function()

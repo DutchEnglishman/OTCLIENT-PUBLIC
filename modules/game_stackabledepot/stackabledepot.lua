@@ -180,6 +180,36 @@ local function populate(data)
         usage = usage .. ' (over the limit -- withdraw before stashing more)'
     end
     window:getChildById('usage'):setText(usage)
+
+    local balance = tonumber(data.balance) or 0
+    local carried = tonumber(data.carried) or 0
+    local balanceLabel = window:getChildById('bankBalance')
+    balanceLabel:setText('Balance: ' .. comma_value(balance) .. ' gp')
+    balanceLabel:setTooltip('Carrying ' .. comma_value(carried) .. ' gp')
+end
+
+-- "50000", "50,000", "50k" and "1.5kk" all read as amounts; anything else is
+-- nil and never sent. The server checks the amount again.
+local function parseGold(text)
+    text = text:lower():gsub('[%s,]', '')
+    local number, suffix = text:match('^(%d+%.?%d*)(k*)$')
+    if not number then
+        return nil
+    end
+    local amount = math.floor(tonumber(number) * (1000 ^ #suffix))
+    return amount > 0 and amount or nil
+end
+
+local function sendBank(op, edit)
+    if not edit then
+        send({a = 'bank', op = op})
+        return
+    end
+    local amount = parseGold(edit:getText())
+    if amount then
+        send({a = 'bank', op = op, n = amount})
+        edit:setText('')
+    end
 end
 
 -- Redraws from the payload already in hand. Changing a filter or typing in
@@ -324,21 +354,33 @@ end
 -- The same addressing game_protect uses: a container slot reaches the server as
 -- x = 0xFFFF, y = 0x40 + containerId, z = slot, a worn item as x = 0xFFFF,
 -- y = slot, and anything else as its real map position.
-function stow(thing)
+local function sendStow(thing, action)
     if not canStow(thing) then
-        return
+        return false
     end
 
     local position = thing:getPosition()
     if not position then
-        return
+        return false
     end
 
     send({
-        a = 'stow',
+        a = action,
         p = {x = position.x, y = position.y, z = position.z},
         sp = thing:getStackPos(),
     })
+    return true
+end
+
+function stow(thing)
+    sendStow(thing, 'stow')
+end
+
+-- Ctrl+right-click (processMouseAction in game_interface): Stash without the
+-- menu. False when the thing cannot be stashed here, so the click still opens
+-- the menu.
+function quickStash(thing)
+    return sendStow(thing, 'quick')
 end
 
 function init()
@@ -351,6 +393,21 @@ function init()
         searchText = text:lower()
         redraw()
     end
+    local depositEdit = window:getChildById('depositEdit')
+    local withdrawEdit = window:getChildById('withdrawEdit')
+    window:getChildById('depositAllButton').onClick = function() sendBank('depositAll') end
+    window:getChildById('depositButton').onClick = function() sendBank('deposit', depositEdit) end
+    window:getChildById('withdrawButton').onClick = function() sendBank('withdraw', withdrawEdit) end
+    -- Enter in either box does what its button does. UIWindow turns Enter into
+    -- onEnter on the window itself, so it is routed by which box has focus.
+    window.onEnter = function()
+        if depositEdit:isFocused() then
+            sendBank('deposit', depositEdit)
+        elseif withdrawEdit:isFocused() then
+            sendBank('withdraw', withdrawEdit)
+        end
+    end
+
     window:getChildById('closeButton').onClick = function()
         close()
         send({a = 'close'})

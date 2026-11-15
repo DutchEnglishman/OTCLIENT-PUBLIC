@@ -117,7 +117,7 @@ DepotAmountWindow < MainWindow
 MainWindow
   id: stackableDepotWindow
   text: Stackable Stash
-  size: 780 537
+  size: 780 567
 
   Label
     id: usage
@@ -143,6 +143,59 @@ MainWindow
     width: 180
     height: 20
 
+  // The bank row: its own line, since the header holding it as well as the
+  // tile count and the search box runs past the window's width.
+  Label
+    id: bankBalance
+    anchors.top: parent.top
+    anchors.left: parent.left
+    margin-top: 30
+    width: 190
+    color: $textBright
+
+  Button
+    id: depositAllButton
+    !text: tr('Deposit all')
+    anchors.verticalCenter: bankBalance.verticalCenter
+    anchors.left: bankBalance.right
+    margin-left: 8
+    width: 84
+    height: 20
+
+  TextEdit
+    id: depositEdit
+    anchors.verticalCenter: bankBalance.verticalCenter
+    anchors.left: depositAllButton.right
+    margin-left: 24
+    width: 100
+    height: 20
+
+  Button
+    id: depositButton
+    !text: tr('Deposit')
+    anchors.verticalCenter: bankBalance.verticalCenter
+    anchors.left: depositEdit.right
+    margin-left: 4
+    width: 72
+    height: 20
+
+  TextEdit
+    id: withdrawEdit
+    anchors.verticalCenter: bankBalance.verticalCenter
+    anchors.left: depositButton.right
+    margin-left: 24
+    width: 100
+    height: 20
+
+  Button
+    id: withdrawButton
+    !text: tr('Withdraw')
+    anchors.verticalCenter: bankBalance.verticalCenter
+    anchors.left: withdrawEdit.right
+    margin-left: 4
+    width: 72
+    height: 20
+
   // Scrolls because market deliveries may take a stash past its 120 tiles
   // (StackableDepot.give on the server); at or under 120 the eight rows fit
   // exactly and the bar has nothing to do.
@@ -150,7 +203,7 @@ MainWindow
     id: grid
     anchors.top: parent.top
     anchors.horizontalCenter: parent.horizontalCenter
-    margin-top: 24
+    margin-top: 54
     width: 718
     height: 382
     vertical-scrollbar: gridScrollBar
@@ -192,7 +245,7 @@ MainWindow
     text-wrap: true
     text-auto-resize: true
     color: $textDisabled
-    text: Click a tile to choose an amount, ctrl-click to take it all. Right-click a bag and choose Stash Stackables, or a stackable item and choose Stash, to put them in.
+    text: Click a tile to choose an amount, ctrl-click to take it all. Right-click a bag and choose Stash Stackables, or a stackable item and choose Stash, to put them in; ctrl+right-click does the same. Gold, platinum and crystal always go to the bank. Gold amounts take k for thousands: 50k.
 
   Button
     id: closeButton

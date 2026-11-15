@@ -295,7 +295,7 @@ function Cyclopedia.loadBestiarySelectedCreature(data)
     -- real, always-sent count -- see sendBestiaryMonsterData).
     local seenOnce = data.killCounter >= 1
 
-    UI.ListBase.CreatureInfo:setText(seenOnce and raceData.name or "Unknown")
+    UI.ListBase.CreatureInfo:setText(seenOnce and Cyclopedia.displayName(raceData.name) or "Unknown")
     Cyclopedia.SetBestiaryDiamonds(occurence[data.ocorrence])
     Cyclopedia.SetBestiaryStars(data.difficulty)
     UI.ListBase.CreatureInfo.LeftBase.Sprite:setOutfit(raceData.outfit)
@@ -668,7 +668,7 @@ function Cyclopedia.CreateBestiaryCreaturesItem(data)
     -- currentLevel used for the "X / 3" label below.
     local seenOnce = Cyclopedia.getKillCount(data.id) >= 1
 
-    widget.Name:setText(seenOnce and verify(raceData.name) or "Unknown")
+    widget.Name:setText(seenOnce and verify(Cyclopedia.displayName(raceData.name)) or "Unknown")
     widget.Sprite:setOutfit(raceData.outfit)
     widget.Sprite:getCreature():setStaticWalking(0)
 
@@ -962,7 +962,7 @@ function Cyclopedia.refreshBestiaryTracker()
         -- scrollbar - 10 padding = 155), and verdana-11px averages a touch
         -- under 7px a character, so 15 keeps a caps-heavy name off the edge.
         widget.label:setTextOverflowLength(15)
-        widget.label:setText(race and race.name or titleCaseMonsterName(entry.name))
+        widget.label:setText(Cyclopedia.displayName(race and race.name or titleCaseMonsterName(entry.name)))
 
         -- 100 rather than 0 when finished: the old expression fell to 0 for a
         -- goal of 0, which drew an empty bar beside a full row of gold stars.
@@ -1162,7 +1162,7 @@ function Cyclopedia.onParseCyclopediaTracker(trackerType, data)
         local raceId, kills, uno, dos, maxKills = unpack(entry)
         
         local raceData = Cyclopedia.getRaceData(raceId)
-        local name = raceData.name
+        local name = Cyclopedia.displayName(raceData.name)
 
         local widget = g_ui.createWidget("TrackerButton", window.contentsPanel)
         widget:setId(raceId)

@@ -1,18 +1,31 @@
--- Grizzly Adams' hunting tasks: the task window and the Task Tracker.
+-- Hunting tasks: the task window and the Task Tracker, for two boards that
+-- share this module -- Grizzly Adams' (opcode 98, data/hunting_tasks/ on
+-- OTSERV) and Bram the Old Trapper's Paw and Fur Society on Rookgaard (opcode
+-- 105, data/rook_hunting_tasks/).
 --
--- The server owns all state (data/hunting_tasks/ on OTSERV). Every payload is
--- complete, and every button only asks and waits for the next payload.
+-- The server owns all state. Every payload is complete, and every button only
+-- asks and waits for the next payload, on the opcode of the board shown.
 --   {action = 'window', open, level, maxActive, maxRuns, laterRewards, active, tasks}
 --   {action = 'tracker', active = {{id, name, kills, required, outfit}, ...}}
+-- Bram's adds `npc`, `marks` (spendable hunting marks), `repeatable` (a task
+-- past its last stage can be started again) and per task `stages` (one reward
+-- list per stage, in place of the shared `laterRewards`).
 
 HUNTING_TASKS_OPCODE = 98
+ROOK_HUNTING_TASKS_OPCODE = 105
+local BOARD_OPCODES = {HUNTING_TASKS_OPCODE, ROOK_HUNTING_TASKS_OPCODE}
 
 local window = nil
 local tracker = nil
 local trackerButton = nil
 local protocol = nil
 
+-- The board whose window is on screen, and its last payload.
 local state = nil
+local stateOpcode = HUNTING_TASKS_OPCODE
+-- Last tracker payload per board, and the board the tracker shows.
+local trackers = {}
+local trackerOpcode = nil
 local currentTab = 'active'
 local selectedId = nil
 
@@ -23,8 +36,17 @@ local COLOR_EMPTY = '#2a2b2f'
 
 local function send(request)
     if protocol then
-        protocol:sendExtendedOpcode(HUNTING_TASKS_OPCODE, json.encode(request))
+        protocol:sendExtendedOpcode(stateOpcode, json.encode(request))
     end
+end
+
+-- "Bram the Old Trapper" -> "Bram"; Grizzly's board names no npc.
+local function npcShortName(npc)
+    return type(npc) == 'string' and npc:match('^%S+') or 'Grizzly'
+end
+
+local function canStartAgain(task)
+    return task.runs < state.maxRuns or state.repeatable == true
 end
 
 local function emptyOutfit()
@@ -55,7 +77,7 @@ local function inTab(task, tab)
     elseif tab == 'completed' then
         return task.runs > 0
     end
-    return not activeEntry(task.id) and task.runs < state.maxRuns
+    return not activeEntry(task.id) and canStartAgain(task)
 end
 
 local function matches(task, query)
@@ -121,8 +143,14 @@ local function refreshDetail()
         widget:getChildById('title'):setText(title)
         widget:getChildById('value'):setText(value)
     end
+    local repeating = state.repeatable == true and task.runs >= state.maxRuns
     fact('factKills', tr('Kills'), tostring(task.kills))
-    fact('factLevel', tr('Recommended level'), tostring(task.level))
+    if task.stages then
+        -- Bram's tasks carry no recommended level; the slot shows the stage.
+        fact('factLevel', tr('Next stage'), repeating and tr('Repeat') or string.format('%d / %d', task.runs + 1, state.maxRuns))
+    else
+        fact('factLevel', tr('Recommended level'), tostring(task.level))
+    end
     fact('factRuns', tr('Completed'), string.format('%d / %d', task.runs, state.maxRuns))
 
     local progress = detail:getChildById('progress')
@@ -138,9 +166,21 @@ local function refreshDetail()
     for run = 1, 3 do
         local widget = detail:getChildById('run' .. run)
         widget:setVisible(run <= state.maxRuns)
-        local lines = run == 1 and (task.reward or {}) or (state.laterRewards[run - 1] or {})
-        local status = run <= task.runs and 'done' or (run == task.runs + 1 and 'current' or nil)
-        fillRun(widget, tr('Run %d', run), lines, status)
+        if task.stages then
+            local lines = task.stages[run] or {}
+            local status = run <= task.runs and 'done' or (run == task.runs + 1 and 'current' or nil)
+            local title = tr('Stage %d', run)
+            if repeating and run == state.maxRuns then
+                -- A repeat pays the last stage's hunting marks and nothing else.
+                status = 'current'
+                title = tr('Stage %d - repeat: marks only', run)
+            end
+            fillRun(widget, title, lines, status)
+        else
+            local lines = run == 1 and (task.reward or {}) or (state.laterRewards[run - 1] or {})
+            local status = run <= task.runs and 'done' or (run == task.runs + 1 and 'current' or nil)
+            fillRun(widget, tr('Run %d', run), lines, status)
+        end
     end
 
     local startButton = detail:getChildById('startButton')
@@ -149,7 +189,7 @@ local function refreshDetail()
     startButton:setVisible(entry == nil)
     cancelButton:setVisible(entry ~= nil)
     claimButton:setVisible(entry ~= nil)
-    startButton:setEnabled(task.runs < state.maxRuns and #state.active < state.maxActive)
+    startButton:setEnabled(canStartAgain(task) and #state.active < state.maxActive)
     claimButton:setEnabled(entry ~= nil and entry.kills >= task.kills)
 end
 
@@ -196,7 +236,11 @@ function refreshList()
             row:getChildById('sub'):setText(string.format('%d / %d', math.min(entry.kills, task.kills), task.kills))
             bar:setPercent(math.floor(100 * math.min(entry.kills, task.kills) / math.max(task.kills, 1)))
         else
-            row:getChildById('sub'):setText(string.format('Lv %d  -  %d kills', task.level, task.kills))
+            if task.stages then
+                row:getChildById('sub'):setText(string.format('%d kills', task.kills))
+            else
+                row:getChildById('sub'):setText(string.format('Lv %d  -  %d kills', task.level, task.kills))
+            end
             bar:setVisible(false)
         end
         setPips(row, task.runs, state.maxRuns)
@@ -243,6 +287,11 @@ local function refreshHeader()
         end
     end
     window:recursiveGetChildById('levelLabel'):setText(tr('Your level: %d', state.level))
+    local marksLabel = window:recursiveGetChildById('marksLabel')
+    marksLabel:setVisible(state.marks ~= nil)
+    if state.marks ~= nil then
+        marksLabel:setText(tr('Hunting marks: %d', tonumber(state.marks) or 0))
+    end
 end
 
 function selectTab(tab)
@@ -276,12 +325,13 @@ end
 
 -- Task Tracker --------------------------------------------------------------
 
-local function refreshTracker(active, maxActive)
+local function refreshTracker(active, maxActive, npc)
     if not tracker then
         return
     end
     local panel = tracker:getChildById('contentsPanel')
     panel:destroyChildren()
+    local doneText = tr('Done: report to %s', npcShortName(npc))
     for _, entry in ipairs(active or {}) do
         local row = g_ui.createWidget('HuntingTrackerRow', panel)
         local kills = math.min(entry.kills, entry.required)
@@ -291,7 +341,7 @@ local function refreshTracker(active, maxActive)
         row:getChildById('name'):setColor(done and COLOR_DONE or '#eef2f6')
         local bar = row:getChildById('bar')
         bar:setPercent(math.floor(100 * kills / math.max(entry.required, 1)))
-        bar:setText(done and tr('Done: report to Grizzly') or string.format('%d / %d', kills, entry.required))
+        bar:setText(done and doneText or string.format('%d / %d', kills, entry.required))
         bar:setBackgroundColor(done and COLOR_DONE or COLOR_CURRENT)
     end
     for _ = #(active or {}) + 1, maxActive or 5 do
@@ -331,6 +381,31 @@ end
 
 -- Wiring --------------------------------------------------------------------
 
+-- One tracker for both boards. A player only ever plays one of them (Bram's is
+-- Rookgaard's, Grizzly's wants a vocation), so the tracker follows the board
+-- that last reported running tasks, and an empty report from the other board
+-- never clears it.
+local function onTrackerPayload(code, payload)
+    local active = type(payload.active) == 'table' and payload.active or {}
+    trackers[code] = {active = active, npc = payload.npc}
+    local shown = trackerOpcode and trackers[trackerOpcode]
+    if #active > 0 or not shown or trackerOpcode == code or #shown.active == 0 then
+        trackerOpcode = code
+    end
+    local current = trackers[trackerOpcode]
+    local maxActive = state and stateOpcode == trackerOpcode and state.maxActive or nil
+    refreshTracker(current.active, maxActive, current.npc)
+
+    -- Kills arrive here only, so an open window takes its numbers from it too.
+    if state and stateOpcode == code then
+        state.active = active
+        if window:isVisible() then
+            refreshHeader()
+            refreshList()
+        end
+    end
+end
+
 local function onOpcode(proto, code, buffer)
     protocol = proto
     local ok, payload = pcall(json.decode, buffer)
@@ -339,25 +414,23 @@ local function onOpcode(proto, code, buffer)
     end
 
     if payload.action == 'tracker' then
-        refreshTracker(payload.active, state and state.maxActive)
-        -- Kills arrive here only, so an open window takes its numbers from it too.
-        if state and type(payload.active) == 'table' then
-            state.active = payload.active
-            if window:isVisible() then
-                refreshList()
-            end
-        end
+        onTrackerPayload(code, payload)
         return
     end
 
     if payload.action ~= 'window' then
         return
     end
-    payload = JsonChunks.receive(HUNTING_TASKS_OPCODE, payload, 'tasks')
+    payload = JsonChunks.receive(code, payload, 'tasks')
     if not payload then
         return
     end
 
+    -- A refresh from the board not on screen is dropped; only "open" switches boards.
+    if state and stateOpcode ~= code and not payload.open then
+        return
+    end
+    stateOpcode = code
     state = payload
     state.tasks = type(state.tasks) == 'table' and state.tasks or {}
     state.active = type(state.active) == 'table' and state.active or {}
@@ -386,6 +459,9 @@ end
 local function onGameEnd()
     hide()
     state = nil
+    stateOpcode = HUNTING_TASKS_OPCODE
+    trackers = {}
+    trackerOpcode = nil
     protocol = nil
     if tracker then
         tracker:getChildById('contentsPanel'):destroyChildren()
@@ -419,7 +495,9 @@ function init()
     Keybind.new("Windows", "Show/hide task tracker", "Alt+T", "")
     Keybind.bind("Windows", "Show/hide task tracker", {{type = KEY_DOWN, callback = toggleTracker}})
 
-    ProtocolGame.registerExtendedOpcode(HUNTING_TASKS_OPCODE, onOpcode)
+    for _, code in ipairs(BOARD_OPCODES) do
+        ProtocolGame.registerExtendedOpcode(code, onOpcode)
+    end
     connect(g_game, {onGameStart = onGameStart, onGameEnd = onGameEnd})
     if g_game.isOnline() then
         onGameStart()
@@ -427,7 +505,9 @@ function init()
 end
 
 function terminate()
-    ProtocolGame.unregisterExtendedOpcode(HUNTING_TASKS_OPCODE)
+    for _, code in ipairs(BOARD_OPCODES) do
+        ProtocolGame.unregisterExtendedOpcode(code)
+    end
     disconnect(g_game, {onGameStart = onGameStart, onGameEnd = onGameEnd})
     Keybind.delete("Windows", "Show/hide task tracker")
     if trackerButton then

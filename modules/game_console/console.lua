@@ -378,7 +378,7 @@ function consoleController:onInit()
           callback = sendCurrentMessage,
         }
       }, consolePanel)
-    Keybind.new("Chat", "Toggle WASD chat mode", "", "")
+    Keybind.new("Chat", "Toggle WASD chat mode", "", "", nil, true)
     Keybind.bind("Chat", "Toggle WASD chat mode", {
         {
           type = KEY_DOWN,
@@ -606,7 +606,11 @@ function disableChatOnCall()
         return
     end
 
-    if isChatEnabled() and not consoleToggleChat.isChecked then
+    -- Escape only cancels the temporary chat Enter opened from WASD mode. It
+    -- reaches the root panel even when a window (the NPC trade window) handles
+    -- it to close itself, so leaving persistent chat mode here flipped the
+    -- player's own WASD Off choice every time they closed one.
+    if isChatEnabled() and walkAfterSend then
         toggleChat()
     end
 end

@@ -127,7 +127,22 @@ function Keybind.offline()
   end
 end
 
-function Keybind.new(category, action, primary, secondary, alone)
+local function otherChatMode(chatMode)
+  return chatMode == CHAT_MODE.ON and CHAT_MODE.OFF or CHAT_MODE.ON
+end
+
+local function hasAnyKey(keys)
+  if not keys then
+    return false
+  end
+  local primary = keys.primary and tostring(keys.primary) or ""
+  local secondary = keys.secondary and tostring(keys.secondary) or ""
+  return primary:len() > 0 or secondary:len() > 0
+end
+
+-- bothModes: one key in chat mode and WASD mode alike, for a keybind that
+-- switches between the two and so must be reachable from either side.
+function Keybind.new(category, action, primary, secondary, alone, bothModes)
   local index = category .. '_' .. action
   if Keybind.defaultKeybinds[index] then
     pwarning(string.format("Keybind for [%s: %s] is already in use", category, action))
@@ -207,7 +222,8 @@ function Keybind.new(category, action, primary, secondary, alone)
     category = category,
     action = action,
     keys = keys,
-    alone = alone
+    alone = alone,
+    bothModes = bothModes
   }
 
   if keys[CHAT_MODE.ON].secondary then
@@ -565,6 +581,10 @@ function Keybind.setPrimaryActionKey(category, action, preset, keyCombo, chatMod
     ret = true
   end
 
+  if keybind.bothModes then
+    keys[tostring(otherChatMode(numericChatMode))] = table.recursivecopy(keys[chatMode])
+  end
+
   Keybind.configs.keybinds[preset]:setNode(index, keys)
 
   if keybind.callbacks then
@@ -607,6 +627,10 @@ function Keybind.setSecondaryActionKey(category, action, preset, keyCombo, chatM
   if keys[chatMode].primary == keyCombo then
     keys[chatMode].primary = nil
     ret = true
+  end
+
+  if keybind.bothModes then
+    keys[tostring(otherChatMode(numericChatMode))] = table.recursivecopy(keys[chatMode])
   end
 
   Keybind.configs.keybinds[preset]:setNode(index, keys)
@@ -656,7 +680,13 @@ function Keybind.getKeybindKeys(category, action, chatMode, preset, forceDefault
       secondary = keybind.keys[chatMode].secondary
     }
   else
-    keys = keys[tostring(chatMode)] or keys[chatMode]
+    local stored = keys
+    keys = stored[tostring(chatMode)] or stored[chatMode]
+    -- A shared keybind saved before it was shared holds its key in one mode only.
+    if keybind.bothModes and not hasAnyKey(keys) then
+      local other = otherChatMode(chatMode)
+      keys = stored[tostring(other)] or stored[other] or keys
+    end
   end
 
   if not keys then
@@ -669,7 +699,7 @@ function Keybind.getKeybindKeys(category, action, chatMode, preset, forceDefault
   return keys
 end
 
-function Keybind.isKeyComboUsed(keyCombo, category, action, chatMode)
+function Keybind.isKeyComboUsed(keyCombo, category, action, chatMode, otherModeChecked)
   if not chatMode then
     chatMode = Keybind.chatMode
   end
@@ -679,6 +709,13 @@ function Keybind.isKeyComboUsed(keyCombo, category, action, chatMode)
   end
 
   if category and action then
+    local target = Keybind.defaultKeybinds[category .. '_' .. action]
+    if target and target.bothModes and not otherModeChecked then
+      if Keybind.isKeyComboUsed(keyCombo, category, action, otherChatMode(chatMode), true) then
+        return true
+      end
+    end
+
     local targetKeys = Keybind.getKeybindKeys(category, action, chatMode, Keybind.currentPreset)
 
     for _, keybind in pairs(Keybind.defaultKeybinds) do

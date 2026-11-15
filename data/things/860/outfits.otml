@@ -1,0 +1,24 @@
+// On-foot offsets for outfits (read by modules/game_things/things.lua).
+// Outfit looktype, then how far the body is moved while walking WITHOUT a mount, in sprite
+// pixels: "x y", + is right / down, - is left / up. On a mount these are not used: there the
+// seated pose and the mount's rider-offset in mounts.otml decide.
+// Outfits not listed draw exactly as before.
+creatures
+  1892
+    // Bloodaxe Warrior, male (3x3 outfit)
+    foot-offset-north: 0 12
+    foot-offset-east: 0 1
+    foot-offset-south: 0 0
+    foot-offset-west: 12 0
+  1984
+    // Bone Hunter, male
+    foot-offset-north: 0 3
+    foot-offset-east: 2 0
+    foot-offset-south: 0 2
+    foot-offset-west: 2 0
+  1985
+    // Bone Hunter, female
+    foot-offset-north: -2 1
+    foot-offset-east: 2 0
+    foot-offset-south: 0 0
+    foot-offset-west: 0 -3

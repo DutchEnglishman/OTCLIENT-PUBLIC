@@ -867,6 +867,28 @@ AttachedEffectManager.register(866, 'Azerus wave gold', '/images/game/effects/az
     offset = { 0, 0, true },
     drawOrder = 4
 })
+-- His teleport (OTSERV azerus_skills.lua TELEPORT), 96x96 with his tile the
+-- middle square, 10 frames at 50 ms, played once on the plain "on" verb while
+-- the server hides him: 923 + facing * 8 + travel direction (facing 0 north
+-- to 3 west, direction 0 north clockwise to 7 north-west) dissolves him off
+-- the tile he leaves, 955 + travel direction gathers him on the one he
+-- reaches, ending as him facing south.
+for facing = 0, 3 do
+    for dir = 0, 7 do
+        AttachedEffectManager.register(923 + facing * 8 + dir, 'Azerus teleport leave ' .. facing .. ' ' .. dir,
+            '/images/game/effects/azerus_tp_leave_' .. facing .. '_' .. dir, ThingExternalTexture, {
+            offset = { 32, 32, true },
+            drawOrder = 4
+        })
+    end
+end
+for dir = 0, 7 do
+    AttachedEffectManager.register(955 + dir, 'Azerus teleport arrive ' .. dir,
+        '/images/game/effects/azerus_tp_arrive_' .. dir, ThingExternalTexture, {
+        offset = { 32, 32, true },
+        drawOrder = 4
+    })
+end
 
 -- Madareth's Blood Rain (OTSERV data/spells/scripts/bosses/madareth_bloodlust.lua;
 -- textures by tools/effect-generators/make_blood_rain.ps1), all three on the

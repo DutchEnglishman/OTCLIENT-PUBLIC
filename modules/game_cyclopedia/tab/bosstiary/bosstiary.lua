@@ -343,7 +343,7 @@ function Cyclopedia.CreateBosstiaryCreature(data)
     widget.Sprite:getCreature():setStaticWalking(1000)
     if data.unlocked then
         widget.Sprite:getCreature():setShader("")
-        widget:setText(format(data.name))
+        widget:setText(format(Cyclopedia.displayName(data.name)))
         if g_game.getClientVersion() >= 1320 then
             widget.TrackCheck:enable()
             widget.TrackCheck.raceId = data.raceId

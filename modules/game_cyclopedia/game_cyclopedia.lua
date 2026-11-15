@@ -148,6 +148,19 @@ function Cyclopedia.getRaceData(raceId)
     return g_things.getRaceData(raceId)
 end
 
+-- The name players see. The Rookgaard copies are registered "Rook <name>" so
+-- the server keeps them apart from the mainland ones (own loot, own kills), and
+-- that internal name is what the race cache carries -- and has to keep
+-- carrying, because the loot requests, the Mainland/Rookgaard split and the
+-- name lookups below all go by it. Only what is drawn drops the "Rook ".
+function Cyclopedia.displayName(name)
+    if type(name) ~= "string" then
+        return name
+    end
+    local shown = name:gsub("^[Rr][Oo][Oo][Kk] ", "", 1)
+    return shown
+end
+
 -- The Rookgaard copies are registered "Rook <name>" (OTSERV's
 -- data/monster/rookgaard/), which is also the name the race cache carries.
 function Cyclopedia.isRookgaardRace(raceId)

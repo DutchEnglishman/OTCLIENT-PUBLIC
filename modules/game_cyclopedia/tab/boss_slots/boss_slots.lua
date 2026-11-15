@@ -127,7 +127,7 @@ function Cyclopedia.loadBossSlots(data)
 
     local unlockedBosses = data.bossIdSlotTwo
 
-    UI.MidTitle:setText(string.format("Boosted Boss: %s", format(raceData.name)))
+    UI.MidTitle:setText(string.format("Boosted Boss: %s", format(Cyclopedia.displayName(raceData.name))))
     Cyclopedia.setBosstiarySlotsBossProgress(UI.BoostedProgress, data.todaySlotData.killCount,
         CONFIG[data.todaySlotData.bossRace].MASTERY)
     UI.TypeIcon:setImageSource(ICONS[data.todaySlotData.bossRace])
@@ -225,7 +225,7 @@ function Cyclopedia.setLockedSlot(widget, slot, unlockedBosses)
         local internalWidget = g_ui.createWidget("SelectBossBossSlots", widget.SelectBoss.ListBase.List)
         internalWidget:setId(internalData.bossId)
         internalWidget.Sprite:setOutfit(raceData.outfit)
-        internalWidget:setText(format(raceData.name))
+        internalWidget:setText(format(Cyclopedia.displayName(raceData.name)))
         internalWidget.Sprite:getCreature():setStaticWalking(1000)
         internalWidget.TypeIcon:setImageSource(ICONS[internalData.category])
 
@@ -253,7 +253,7 @@ function Cyclopedia.setActiveSlot(widget, slot, slotData, data, bossId)
     widget.LockLabel:setVisible(false)
     widget.SelectBoss:setVisible(false)
     widget.ActivedBoss:setVisible(true)
-    widget:setText(string.format("Slot %d: %s", slot, raceData.name))
+    widget:setText(string.format("Slot %d: %s", slot, Cyclopedia.displayName(raceData.name)))
     widget.ActivedBoss.TypeIcon:setImageSource(ICONS[slotData.bossRace])
 
     Cyclopedia.setBosstiarySlotsBossProgress(widget.ActivedBoss.Progress, slotData.killCount,
@@ -395,7 +395,7 @@ function Cyclopedia.readjustSelectBoss(selectBoss, text)
             local internalWidget = g_ui.createWidget("SelectBossBossSlots", selectBoss.ListBase.List)
             internalWidget:setId(internalData.bossId)
             internalWidget.Sprite:setOutfit(raceData.outfit)
-            internalWidget:setText(format(raceData.name))
+            internalWidget:setText(format(Cyclopedia.displayName(raceData.name)))
             internalWidget.Sprite:getCreature():setStaticWalking(1000)
             internalWidget.TypeIcon:setImageSource(icons[internalData.category])
 

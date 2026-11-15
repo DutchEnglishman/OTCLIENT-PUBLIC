@@ -371,6 +371,14 @@ HuntingTasksWindow < MainWindow
       anchors.verticalCenter: parent.verticalCenter
       margin-left: 16
 
+    Label
+      id: marksLabel
+      color: $textDim
+      anchors.left: levelLabel.right
+      anchors.verticalCenter: parent.verticalCenter
+      margin-left: 16
+      visible: false
+
     Button
       id: closeButton
       !text: tr('Close')

@@ -1,0 +1,21 @@
+// Item tweaks the dat cannot carry (read by modules/game_things/things.lua). Ids are
+// CLIENT ids.
+//
+// draw-with-tile: a wall hanging is drawn with the tile one step east ("1 0"), south
+// ("0 1") or both ("1 1") instead of its own, when that tile has a wall. The client
+// draws a floor tile by tile, and the 64x64 wall on the next tile reaches back over
+// this one, so a hanging drawn with its own tile is partly hidden behind it
+// (Tile::isDrawnWithNeighbour, src/client/tile.cpp).
+items
+  27479
+    // depot notice board, south wall, west half (server 28307)
+    draw-with-tile: 1 0
+  27480
+    // depot notice board, south wall, east half (server 28308)
+    draw-with-tile: 1 0
+  27481
+    // depot notice board, east wall, north half (server 28309)
+    draw-with-tile: 0 1
+  27482
+    // depot notice board, east wall, south half (server 28310)
+    draw-with-tile: 0 1

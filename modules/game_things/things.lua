@@ -83,6 +83,16 @@ local function load(version)
         if #errorList == 0 and g_resources.fileExists(mountsOtml) then
             g_things.loadOtml(mountsOtml)
         end
+        -- Per-outfit on-foot offsets (big outfits like the Bloodaxe Warrior). Optional too.
+        local outfitsOtml = '/data/things/' .. version .. '/outfits.otml'
+        if #errorList == 0 and g_resources.fileExists(outfitsOtml) then
+            g_things.loadOtml(outfitsOtml)
+        end
+        -- Item tweaks, so far which tile a wall hanging is drawn with. Optional too.
+        local itemsOtml = '/data/things/' .. version .. '/items.otml'
+        if #errorList == 0 and g_resources.fileExists(itemsOtml) then
+            g_things.loadOtml(itemsOtml)
+        end
         if g_game.getFeature(GameLoadSprInsteadProtobuf) and version >= 1281 then
             local staticPath = resolvepath(string.format('/data/things/%d/appearances', version))
             if not g_things.loadAppearances(staticPath) then

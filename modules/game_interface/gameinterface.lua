@@ -1403,6 +1403,14 @@ function processMouseAction(menuPosition, mouseButton, autoWalkPos, lookThing, u
     local contextMenuClick = (mouseButton == MouseLeftButton or mouseButton == MouseRightButton) and
         g_keyboard.isPrimaryModifierOnly(keyboardModifiers)
 
+    -- Ctrl+Right on something stashable while standing at a locker stashes it,
+    -- or banks it when it is a coin stack (the server decides which). Anywhere
+    -- else, and for anything else, it opens the menu as below; Ctrl+Left always does.
+    if contextMenuClick and mouseButton == MouseRightButton and lookThing and
+        modules.game_stackabledepot and modules.game_stackabledepot.quickStash(lookThing) then
+        return true
+    end
+
     -- A player standing on bare ground has no useThing after the ground
     -- filtering above. Handle the click from the creature itself so the player
     -- context menu works in every control/loot mode.

@@ -80,6 +80,12 @@ lastHotkeyTime = {}
 local HOTKEY_REPEAT_MS = 70
 local hotkeysWindowButton = nil
 local previousRootMouseRelease = nil
+local previousRootMousePress = nil
+-- Mouse buttons get no auto-repeat from the platform the way held keys do, so
+-- a held mouse hotkey repeats on its own timer. combo -> mouse button.
+local heldMouseCombos = {}
+-- Combos whose press already fired, so their release must not fire again.
+local pressedMouseCombos = {}
 
 -- Mouse button hotkeys. Left/Right/Middle click rarely reach here in
 -- practice (the game map or some other widget consumes them first), same
@@ -130,11 +136,52 @@ local function isMouseCombo(keyCombo)
     return false
 end
 
+local function repeatHeldMouseCombo(keyCombo)
+    local mouseButton = heldMouseCombos[keyCombo]
+    if not mouseButton then
+        return
+    end
+    if not g_game.isOnline() or not boundMouseCombos[keyCombo] or not g_window.isMouseButtonPressed(mouseButton) then
+        heldMouseCombos[keyCombo] = nil
+        return
+    end
+    doKeyCombo(keyCombo)
+    scheduleEvent(function()
+        repeatHeldMouseCombo(keyCombo)
+    end, HOTKEY_REPEAT_MS)
+end
+
+local function onGlobalMousePress(self, mousePos, mouseButton)
+    -- Left and right click also walk, use and drag on the map, which react to
+    -- the release; a hotkey on them keeps firing on release only.
+    if g_game.isOnline() and mouseButton ~= MouseLeftButton and mouseButton ~= MouseRightButton then
+        local keyCombo = determineMouseComboDesc(mouseButton)
+        if keyCombo and boundMouseCombos[keyCombo] then
+            pressedMouseCombos[keyCombo] = true
+            if not heldMouseCombos[keyCombo] then
+                heldMouseCombos[keyCombo] = mouseButton
+                repeatHeldMouseCombo(keyCombo)
+            end
+            return true
+        end
+    end
+    if previousRootMousePress then
+        return previousRootMousePress(self, mousePos, mouseButton)
+    end
+    return false
+end
+
 local function onGlobalMouseRelease(self, mousePos, mouseButton)
     if g_game.isOnline() then
         local keyCombo = determineMouseComboDesc(mouseButton)
         if keyCombo and boundMouseCombos[keyCombo] then
-            doKeyCombo(keyCombo)
+            heldMouseCombos[keyCombo] = nil
+            if pressedMouseCombos[keyCombo] then
+                pressedMouseCombos[keyCombo] = nil
+            else
+                -- The press was taken by a widget above the root panel.
+                doKeyCombo(keyCombo)
+            end
             return true
         end
     end
@@ -201,6 +248,8 @@ function init()
     local gameRootPanel = modules.game_interface.getRootPanel()
     previousRootMouseRelease = gameRootPanel.onMouseRelease
     gameRootPanel.onMouseRelease = onGlobalMouseRelease
+    previousRootMousePress = gameRootPanel.onMousePress
+    gameRootPanel.onMousePress = onGlobalMousePress
 
     currentHotkeys.onChildFocusChange = function(self, hotkeyLabel)
         onSelectHotkeyLabel(hotkeyLabel)
@@ -241,7 +290,13 @@ function terminate()
     if gameRootPanel and gameRootPanel.onMouseRelease == onGlobalMouseRelease then
         gameRootPanel.onMouseRelease = previousRootMouseRelease
     end
+    if gameRootPanel and gameRootPanel.onMousePress == onGlobalMousePress then
+        gameRootPanel.onMousePress = previousRootMousePress
+    end
     previousRootMouseRelease = nil
+    previousRootMousePress = nil
+    heldMouseCombos = {}
+    pressedMouseCombos = {}
 
     hotkeysWindow:destroy()
 
@@ -281,6 +336,8 @@ function offline()
     -- Logging out mid-pick would otherwise leave the cursor locked to the
     -- crosshair with no grabber left to release it.
     restoreTargetCursor()
+    heldMouseCombos = {}
+    pressedMouseCombos = {}
     unload()
     hide()
 end
