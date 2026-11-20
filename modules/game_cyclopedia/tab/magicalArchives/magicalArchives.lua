@@ -175,6 +175,17 @@ local function archiveSelectSpell(widget)
     archiveSetIcon(entry)
     detail.NameLabel:setText(entry.name)
     detail.FormulaLabel:setText(entry.words and ('\'' .. entry.words .. '\'') or tr('Rune'))
+    detail.CopyWordsButton:setVisible(entry.type ~= 'Rune' and entry.words ~= nil and entry.words ~= '')
+    detail.CopyWordsButton:setText(tr('Copy'))
+    detail.CopyWordsButton.onClick = function(button)
+        g_window.setClipboardText(entry.words)
+        button:setText(tr('Copied'))
+        scheduleEvent(function()
+            if not button:isDestroyed() and detail.NameLabel:getText() == entry.name then
+                button:setText(tr('Copy'))
+            end
+        end, 1500)
+    end
 
     local isRune = entry.type == 'Rune'
     archiveSetDetailRow('RowVocation', MagicalArchive.formatVocations(entry.vocations))

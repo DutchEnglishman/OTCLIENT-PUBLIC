@@ -244,6 +244,25 @@ local STACK_ORDER = { 'hotkeyLabel', 'lowCenterLabel', 'middleCenterLabel', 'hig
 local mapLabels = {}
 messagesPanel = nil
 
+-- Pixels each label is moved up from where it is placed below (negative moves
+-- it down), from the sliders in Settings > Interface > Messages. 0 for all is
+-- the placement as it was before the sliders existed.
+local LABEL_OFFSET_IDS = { 'hotkeyLabel', 'lowCenterLabel', 'middleCenterLabel', 'highCenterLabel', 'raidLabel',
+    'privateLabel', 'statusLabel' }
+local labelOffsets = {}
+local STATUS_MARGIN_BOTTOM = 10
+
+-- What a slider shows on its label while it is dragged, in that label's colour.
+local OFFSET_PREVIEWS = {
+    hotkeyLabel = { 'hotkeyUse', 'Using one of 100 mana potions...' },
+    lowCenterLabel = { 'centerRed', 'Warning messages appear here.' },
+    middleCenterLabel = { 'centerWhite', 'Game messages appear here.' },
+    highCenterLabel = { 'centerGreen', 'Look and loot messages appear here.' },
+    raidLabel = { 'raid', 'Raid messages appear here.' },
+    privateLabel = { 'private', 'Private messages appear here.' },
+    statusLabel = { 'status', 'The status line appears here.' }
+}
+
 function init()
     for messageMode, _ in pairs(MessageTypes) do
         registerMessageMode(messageMode, displayMessage)
@@ -259,9 +278,41 @@ function init()
         mapLabels[id] = label
     end
     mapLabels.privateLabel = g_ui.createWidget('PrivateMessageLabel', map)
+    local options = modules.client_options
+    for _, id in ipairs(LABEL_OFFSET_IDS) do
+        labelOffsets[id] = options and options.getOption('messageOffset_' .. id) or 0
+    end
+    placeStatusLabel()
     -- The map itself does resize in windowed mode, where the chat takes its
     -- height; the character stays on its centre, so the labels follow it.
     connect(map, { onGeometryChange = placeMapLabels })
+end
+
+-- From client_options, whenever a slider moves or the saved value loads.
+-- preview: the settings window is open, so the player is dragging it.
+function setLabelOffset(id, offset, preview)
+    labelOffsets[id] = offset
+    if not messagesPanel then
+        return
+    end
+    if id == 'statusLabel' then
+        placeStatusLabel()
+    else
+        placeMapLabels()
+    end
+    local sample = OFFSET_PREVIEWS[id]
+    if preview and sample and g_game.isOnline() then
+        showOnScreen(MessageSettings[sample[1]], tr(sample[2]))
+    end
+end
+
+-- The status line is anchored to the bottom of messagesPanel (just above the
+-- chat), so its slider moves that anchor's margin; it cannot go below the chat.
+function placeStatusLabel()
+    local status = messagesPanel and messagesPanel:recursiveGetChildById('statusLabel')
+    if status then
+        status:setMarginBottom(math.max(0, STATUS_MARGIN_BOTTOM + (labelOffsets.statusLabel or 0)))
+    end
 end
 
 function terminate()
@@ -519,11 +570,19 @@ function placeMapLabels()
             stackHeight = stackHeight + mapLabels[id]:getHeight() + 2
         end
     end
+    -- Each label's own slider moves it from its place in the stack, and only
+    -- the map's edges stop it.
+    local function placeOnMap(label, x, y)
+        local offsetY = y - (labelOffsets[label:getId()] or 0)
+        offsetY = math.min(math.max(offsetY, rect.y), rect.y + rect.height - label:getHeight())
+        label:setPosition({ x = math.floor(x - label:getWidth() / 2), y = math.floor(offsetY) })
+    end
+
     local y = math.max(rect.y, bottom - stackHeight)
     for _, id in ipairs(STACK_ORDER) do
         local label = mapLabels[id]
         if label:isVisible() then
-            label:setPosition({x = math.floor(centerX - label:getWidth() / 2), y = math.floor(y)})
+            placeOnMap(label, centerX, y)
             y = y + label:getHeight() + 2
         end
     end
@@ -532,10 +591,7 @@ function placeMapLabels()
     -- character, where it sat before the chat could move it.
     local private = mapLabels.privateLabel
     if private:isVisible() then
-        private:setPosition({
-            x = math.floor(centerX - private:getWidth() / 2),
-            y = math.floor((rect.y + centerY) / 2 - private:getHeight() / 2)
-        })
+        placeOnMap(private, centerX, (rect.y + centerY) / 2 - private:getHeight() / 2)
     end
 end
 

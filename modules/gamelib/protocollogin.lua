@@ -34,6 +34,24 @@ function ProtocolLogin:cancelLogin()
     self:disconnect()
 end
 
+-- Sent where the pic signature used to go: this install's release (version.txt's
+-- versionCode), or 0 when the updater found that this exe is not the published one. The login
+-- server refuses anything under its /minclient (OTSERV src/protocollogin.cpp). A dev build
+-- runs no updater and reports its tree's version.txt, 999999.
+local function clientRelease()
+    if Updater and Updater.isExecutableCurrent and not Updater.isExecutableCurrent() then
+        return 0
+    end
+    if not g_resources.fileExistsInWorkDir('version.txt') then
+        return 0
+    end
+    local ok, contents = pcall(g_resources.readFileContentsFromWorkDir, 'version.txt')
+    if not ok or type(contents) ~= 'string' then
+        return 0
+    end
+    return tonumber(contents:match('^[^\r\n]*[\r\n]+(%d+)')) or 0
+end
+
 function ProtocolLogin:sendLoginPacket()
     local msg = OutputMessage.create()
     msg:addU8(ClientOpcodes.ClientEnterAccount)
@@ -52,7 +70,7 @@ function ProtocolLogin:sendLoginPacket()
         msg:addU32(g_things.getDatSignature())
     end
     msg:addU32(g_sprites.getSprSignature())
-    msg:addU32(PIC_SIGNATURE)
+    msg:addU32(clientRelease())
 
     if g_game.getFeature(GamePreviewState) then
         msg:addU8(0)

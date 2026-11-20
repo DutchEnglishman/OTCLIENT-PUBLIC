@@ -114,11 +114,20 @@ UIWidget
         id: FormulaLabel
         anchors.top: NameLabel.bottom
         anchors.left: SpellIcon.right
-        anchors.right: parent.right
         margin-left: 10
         margin-top: 3
         font: verdana-11px-antialised
         color: $textColor
+        text-auto-resize: true
+
+      Button
+        id: CopyWordsButton
+        anchors.left: FormulaLabel.right
+        anchors.verticalCenter: FormulaLabel.verticalCenter
+        margin-left: 8
+        size: 50 18
+        !text: tr('Copy')
+        !tooltip: tr('Copy the spell words, to paste into a hotkey')
 
       Panel
         id: DetailRows

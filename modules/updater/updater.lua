@@ -187,6 +187,76 @@ local function damagedFiles()
   return {}
 end
 
+local function graphicsBackend()
+  return g_app.getGraphicsBackend and g_app.getGraphicsBackend() or 'opengl'
+end
+
+-- File stems (up to the first dash, lowercased) of each backend's exe, under the current
+-- and the pre-rename names. The updater writes "<stem>-<timestamp>.exe", hence the dash rule.
+local BINARY_STEMS = {
+  opengl = { tsrclient = true, otclient = true },
+  directx = { tsrclient_dx = true, otclient_dx = true }
+}
+local CANONICAL_BINARIES = {
+  opengl = { 'TSRclient.exe', 'otclient.exe' },
+  directx = { 'TSRclient_dx.exe', 'otclient_dx.exe' }
+}
+
+-- version.txt is shared by the OpenGL and the DirectX exe, but each exe swaps only itself.
+-- So whichever one runs an update bumps the version for both, and the other is never
+-- replaced: it stays on whatever release it came with, running newer scripts and data than
+-- it was built for. Hence this check, per backend, on every launch: does any exe of this
+-- kind in the folder carry the published hash? Answers true when it cannot tell (no hash
+-- published, nothing found), so an odd install never downloads the exe on every launch.
+local function hasPublishedBinary(sha256)
+  if not isSha256(sha256) then return true end
+  local backend = graphicsBackend()
+  local stems = BINARY_STEMS[backend]
+  if not stems then return true end
+  sha256 = sha256:lower()
+
+  local candidates = {}
+  local ok, names = pcall(g_resources.listDirectoryFiles, '/')
+  if ok and type(names) == 'table' then
+    for _, name in ipairs(names) do
+      local stem = name:lower():match('^([^%-/]+)[^/]*%.exe$')
+      if stem and stems[stem] then
+        table.insert(candidates, name)
+      end
+    end
+  end
+  if #candidates == 0 then
+    candidates = CANONICAL_BINARIES[backend]
+  end
+
+  local found = false
+  for _, name in ipairs(candidates) do
+    if g_resources.fileExistsInWorkDir(name) then
+      found = true
+      if g_resources.fileSha256InWorkDir(name) == sha256 then
+        return true
+      end
+    end
+  end
+  return not found
+end
+
+-- The published hash of this backend's exe, once the version probe or the manifest has said
+-- it, and whether the folder holds it (worked out once, when the login asks).
+local publishedBinarySha
+local executableCurrent
+
+-- The login packet reports 0 instead of the release when this is false, so the login
+-- server's /minclient refuses an install whose exe swap did not take (ProtocolLogin). An
+-- update check that could not reach GitHub never learns the hash, and counts as current.
+function Updater.isExecutableCurrent()
+  if not publishedBinarySha then return true end
+  if executableCurrent == nil then
+    executableCurrent = hasPublishedBinary(publishedBinarySha)
+  end
+  return executableCurrent
+end
+
 local function readLocalVersion()
   -- readFileContentsFromWorkDir throws a C++ exception when the file is missing, and
   -- that exception crosses the Lua binding boundary uncaught (luabinder.h's trampoline
@@ -290,6 +360,13 @@ local function clearBreadcrumb()
 end
 
 local function commit(entries, binaryKey)
+  -- Only the exe was out of date and it could not be fetched. Restarting would find it out
+  -- of date again and loop; start as we are, and the login reports the exe as not current.
+  if #entries == 0 and not binaryKey then
+    clearStaging()
+    return fail('The new executable could not be downloaded; starting with the current one.')
+  end
+
   setStatus(tr('Installing update'))
   setMainProgress(0)
   showDownloadRow(false)
@@ -359,6 +436,12 @@ local function commit(entries, binaryKey)
     if not g_resources.updateExecutable(binaryKey) then
       -- The Lua tree is already updated and consistent; only the binary swap failed.
       logWarning('Binary update failed. The client will keep running the current executable.')
+      if #entries == 0 then
+        -- Same loop as at the top of commit(): nothing else changed, so do not restart.
+        clearBreadcrumb()
+        clearStaging()
+        return fail('The new executable could not be installed; starting with the current one.')
+      end
     end
   end
 
@@ -690,7 +773,7 @@ end
 -- client older than `binaries` reads only that field; an exe that cannot say what it is
 -- predates the DirectX build and so is OpenGL.
 local function manifestBinaryFor(data)
-  local backend = g_app.getGraphicsBackend and g_app.getGraphicsBackend() or 'opengl'
+  local backend = graphicsBackend()
   if type(data.binaries) == 'table' and data.binaries[backend] ~= nil then
     return data.binaries[backend]
   end
@@ -744,9 +827,13 @@ local function validateManifest(data)
 
   local binaryEntry
   local binary = manifestBinaryFor(data)
+  if type(binary) == 'table' and isSha256(binary.sha256) and binary.sha256:lower() ~= publishedBinarySha then
+    publishedBinarySha = binary.sha256:lower()
+    executableCurrent = nil
+  end
   if config.allowExecutableUpdate and type(binary) == 'table'
       and type(binary.asset) == 'string' and binary.asset ~= ''
-      and isSha256(binary.sha256) then
+      and isSha256(binary.sha256) and not Updater.isExecutableCurrent() then
     binaryEntry = { asset = binary.asset, path = binary.path or binary.asset, sha256 = binary.sha256:lower() }
   end
 
@@ -780,6 +867,9 @@ local function applyManifest(data)
   if #damaged > 0 then
     logWarning(string.format('%i client file(s) are missing or modified, starting with %s. Repairing from %s.',
       #damaged, tostring(damaged[1]), manifest.version))
+  elseif localCode == manifest.versionCode and parsed.binary then
+    logWarning(string.format('The %s executable is not the one %s ships. Replacing it.',
+      graphicsBackend(), manifest.version))
   elseif localCode > 0 and localCode >= manifest.versionCode then
     if localCode > manifest.versionCode then
       return finish(true, string.format(
@@ -884,6 +974,13 @@ local function fetchVersionProbe()
       -- This is the branch that actually spares a dev tree, since it runs before any
       -- hashing and so before anything can be overwritten.
       local remoteCode = tonumber(data.versionCode)
+      local published = type(data.binaries) == 'table' and data.binaries[graphicsBackend()]
+      if localCode == remoteCode and isSha256(published) then
+        publishedBinarySha = published:lower()
+        if not Updater.isExecutableCurrent() then
+          return fetchManifest()
+        end
+      end
       if localCode >= remoteCode then
         if localCode > remoteCode then
           return finish(true, string.format(

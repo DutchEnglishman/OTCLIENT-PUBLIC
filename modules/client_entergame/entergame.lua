@@ -60,6 +60,22 @@ local function onError(protocol, message, errorCode)
         EnterGame.clearAccountFields()
     end
 
+    -- The login server's /minclient refusal names the download page (OTSERV
+    -- CLIENT_DOWNLOAD_URL); offer to open it rather than leave the player to copy it.
+    local downloadUrl = type(message) == 'string' and message:match('(https?://%S+/downloads)')
+    if downloadUrl then
+        local box
+        box = displayGeneralBox(tr('Client out of date'), message, {
+            { text = tr('Open download page'), callback = function()
+                g_platform.openUrl(downloadUrl)
+                box:ok()
+            end },
+            { text = tr('Close'), callback = function() box:ok() end }
+        }, function() box:ok() end, function() box:ok() end)
+        connect(box, { onOk = EnterGame.show })
+        return
+    end
+
     local errorBox = displayErrorBox(tr('Login Error'), message)
     connect(errorBox, {
         onOk = EnterGame.show

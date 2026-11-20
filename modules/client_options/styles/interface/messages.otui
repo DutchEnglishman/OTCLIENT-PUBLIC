@@ -1,0 +1,117 @@
+UIWidget
+  anchors.fill: parent
+  visible: false
+
+  Label
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: parent.top
+    margin-left: 18
+    color: $textColor
+    text-wrap: true
+    text-auto-resize: true
+    !text: tr('Moves each kind of on-screen message up or down. Each slider shows a sample while you drag it.')
+
+  SmallReversedQtPanel
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    margin-top: 7
+    height: 22
+
+    OptionScaleScroll
+      id: messageOffset_hotkeyLabel
+      anchors.fill: parent
+      &minimumScrollValue: -200
+      &maximumScrollValue: 200
+
+  SmallReversedQtPanel
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    margin-top: 7
+    height: 22
+
+    OptionScaleScroll
+      id: messageOffset_lowCenterLabel
+      anchors.fill: parent
+      &minimumScrollValue: -200
+      &maximumScrollValue: 200
+
+  SmallReversedQtPanel
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    margin-top: 7
+    height: 22
+
+    OptionScaleScroll
+      id: messageOffset_middleCenterLabel
+      anchors.fill: parent
+      &minimumScrollValue: -200
+      &maximumScrollValue: 200
+
+  SmallReversedQtPanel
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    margin-top: 7
+    height: 22
+
+    OptionScaleScroll
+      id: messageOffset_highCenterLabel
+      anchors.fill: parent
+      &minimumScrollValue: -200
+      &maximumScrollValue: 200
+
+  SmallReversedQtPanel
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    margin-top: 7
+    height: 22
+
+    OptionScaleScroll
+      id: messageOffset_raidLabel
+      anchors.fill: parent
+      &minimumScrollValue: -200
+      &maximumScrollValue: 200
+
+  SmallReversedQtPanel
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    margin-top: 7
+    height: 22
+
+    OptionScaleScroll
+      id: messageOffset_privateLabel
+      anchors.fill: parent
+      &minimumScrollValue: -200
+      &maximumScrollValue: 200
+
+  SmallReversedQtPanel
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    margin-top: 7
+    height: 22
+
+    OptionScaleScroll
+      id: messageOffset_statusLabel
+      anchors.fill: parent
+      &minimumScrollValue: -200
+      &maximumScrollValue: 200
+
+  QtButton
+    id: resetMessageOffsets
+    !text: tr('Reset to default')
+    anchors.top: prev.bottom
+    anchors.left: parent.left
+    margin-top: 12
+    margin-left: 18
+    width: 120
+    @onClick: |
+      for _, id in ipairs({'hotkeyLabel', 'lowCenterLabel', 'middleCenterLabel', 'highCenterLabel', 'raidLabel', 'privateLabel', 'statusLabel'}) do
+        modules.client_options.setOption('messageOffset_' .. id, 0)
+      end

@@ -1,4 +1,33 @@
+-- One slider per on-screen message label (Settings > Interface > Messages):
+-- pixels moved up from where game_textmessage places it, 0 being that place.
+-- The action runs before setOption stores the value, so it hands the value on.
+local function messageOffset(target, label)
+    return {
+        value = 0,
+        action = function(value, options, controller, panels, extraWidgets)
+            local panel = panels.interfaceMessages
+            local widget = panel and panel:recursiveGetChildById('messageOffset_' .. target)
+            if widget then
+                local where = value == 0 and 'default' or
+                    string.format('%d px %s', math.abs(value), value > 0 and 'higher' or 'lower')
+                widget:setText(label .. ': ' .. where)
+            end
+            local textmessage = modules.game_textmessage
+            if textmessage and textmessage.setLabelOffset then
+                textmessage.setLabelOffset(target, value, controller.ui ~= nil and controller.ui:isVisible())
+            end
+        end
+    }
+end
+
 return {
+    messageOffset_hotkeyLabel         = messageOffset('hotkeyLabel', 'Hotkey use'),
+    messageOffset_lowCenterLabel      = messageOffset('lowCenterLabel', 'Warnings'),
+    messageOffset_middleCenterLabel   = messageOffset('middleCenterLabel', 'Game messages'),
+    messageOffset_highCenterLabel     = messageOffset('highCenterLabel', 'Look and loot'),
+    messageOffset_raidLabel           = messageOffset('raidLabel', 'Raids'),
+    messageOffset_privateLabel        = messageOffset('privateLabel', 'Private messages'),
+    messageOffset_statusLabel         = messageOffset('statusLabel', 'Status line'),
     vsync                             = {
         value = true,
         action = function(value, options, controller, panels, extraWidgets)

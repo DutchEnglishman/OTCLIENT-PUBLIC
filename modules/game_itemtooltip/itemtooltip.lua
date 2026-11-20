@@ -30,6 +30,7 @@ local SECTION_COLORS = {
     P = '#7FD4FF', -- what the sockets add up to
     F = '#5FD35F', -- refine rolls
     A = '#2266FF', -- attributes
+    D = '#C8C8C8', -- an ingredient's description (alchemy, cooking)
 }
 
 -- Rarity id -> colour, matching the upgrade system's COMMON..LEGENDARY.
@@ -53,6 +54,7 @@ local SECTION_GROUPS = {
     { 'P' },
     { 'A' },
     { 'F' },
+    { 'D' },
 }
 
 -- Sockets are drawn, not written: the K section carries a count and each one

@@ -36,6 +36,9 @@ local buttons = { {
     }, {
         text = "Console",
         open = "interfaceConsole"
+    }, {
+        text = "Messages",
+        open = "interfaceMessages"
     } }
 }, {
     text = "Graphics",
@@ -366,6 +369,7 @@ function controller:onInit()
     panels.interface = g_ui.loadUI('styles/interface/interface', controller.ui.optionsTabContent)
     panels.interfaceConsole = g_ui.loadUI('styles/interface/console', controller.ui.optionsTabContent)
     panels.interfaceHUD = g_ui.loadUI('styles/interface/HUD', controller.ui.optionsTabContent)
+    panels.interfaceMessages = g_ui.loadUI('styles/interface/messages', controller.ui.optionsTabContent)
 
     panels.soundPanel = g_ui.loadUI('styles/sound/audio', controller.ui.optionsTabContent)
 

@@ -177,7 +177,9 @@ local function refreshDetail()
             end
             fillRun(widget, title, lines, status)
         else
-            local lines = run == 1 and (task.reward or {}) or (state.laterRewards[run - 1] or {})
+            -- A task with its own runs 2 and 3 sends them as `later`.
+            local later = type(task.later) == 'table' and task.later or state.laterRewards
+            local lines = run == 1 and (task.reward or {}) or (later[run - 1] or {})
             local status = run <= task.runs and 'done' or (run == task.runs + 1 and 'current' or nil)
             fillRun(widget, tr('Run %d', run), lines, status)
         end
