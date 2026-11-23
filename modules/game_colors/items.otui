@@ -1,0 +1,175 @@
+// The items of one price range, opened from that row's Items button. Built
+// like the autoloot Search window (game_autoloot/search.otui): the same 32 px
+// Item grids in ScrollablePanels, so both read as one family. The items come
+// from the autoloot item catalog; colors.lua fills both grids. The trader row
+// adds everything one trader buys (item_values.lua traders) at once.
+
+MainWindow
+  id: colorItems
+  !text: tr('Loot items')
+  size: 300 470
+  @onEscape: modules.game_colors.closeItems()
+
+  Label
+    id: listLabel
+    !text: tr('Always this color (click to remove):')
+    anchors.top: parent.top
+    anchors.left: parent.left
+    color: $textColor
+    text-auto-resize: true
+
+  ScrollablePanel
+    id: pinnedPanel
+    anchors.top: listLabel.bottom
+    anchors.left: parent.left
+    anchors.right: pinnedScrollBar.left
+    margin-top: 6
+    margin-right: 4
+    height: 102
+    vertical-scrollbar: pinnedScrollBar
+    layout:
+      type: grid
+      cell-size: 32 32
+      cell-spacing: 2
+      num-columns: 7
+      flow: true
+
+  VerticalScrollBar
+    id: pinnedScrollBar
+    anchors.top: pinnedPanel.top
+    anchors.right: parent.right
+    anchors.bottom: pinnedPanel.bottom
+    step: 34
+    pixels-scroll: true
+
+  Label
+    id: pinnedEmpty
+    !text: tr('No items yet')
+    anchors.centerIn: pinnedPanel
+    color: $textMuted
+    text-auto-resize: true
+
+  HorizontalSeparator
+    id: middleSeparator
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: pinnedPanel.bottom
+    margin-top: 10
+
+  Label
+    id: traderLabel
+    !text: tr('Add everything a trader buys:')
+    anchors.top: middleSeparator.bottom
+    anchors.left: parent.left
+    margin-top: 10
+    color: $textColor
+    text-auto-resize: true
+
+  UIWidget
+    id: traderRow
+    anchors.top: traderLabel.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 4
+    height: 20
+
+    QtComboBox
+      id: traderBox
+      anchors.left: parent.left
+      anchors.right: loadButton.left
+      anchors.verticalCenter: parent.verticalCenter
+      margin-right: 6
+      mouse-scroll: false
+
+    QtButton
+      id: loadButton
+      !text: tr('Load')
+      !tooltip: tr('Puts every item this trader buys in this color. Items in another price range move here.')
+      size: 64 20
+      anchors.right: parent.right
+      anchors.verticalCenter: parent.verticalCenter
+      @onClick: modules.game_colors.loadTrader()
+
+  Label
+    id: searchLabel
+    !text: tr('Or search by name (2 letters or more):')
+    anchors.top: traderRow.bottom
+    anchors.left: parent.left
+    margin-top: 10
+    color: $textColor
+    text-auto-resize: true
+
+  TextEdit
+    id: searchEdit
+    anchors.top: searchLabel.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 4
+    height: 20
+
+  ScrollablePanel
+    id: resultsPanel
+    anchors.top: searchEdit.bottom
+    anchors.left: parent.left
+    anchors.right: resultsScrollBar.left
+    anchors.bottom: count.top
+    margin-top: 8
+    margin-right: 4
+    margin-bottom: 6
+    vertical-scrollbar: resultsScrollBar
+    layout:
+      type: grid
+      cell-size: 32 32
+      cell-spacing: 2
+      num-columns: 7
+      flow: true
+
+  VerticalScrollBar
+    id: resultsScrollBar
+    anchors.top: resultsPanel.top
+    anchors.right: parent.right
+    anchors.bottom: resultsPanel.bottom
+    step: 34
+    pixels-scroll: true
+
+  Label
+    id: resultsHint
+    !text: tr('Click an item to add it')
+    anchors.centerIn: resultsPanel
+    color: $textMuted
+    text-auto-resize: true
+
+  HorizontalSeparator
+    id: bottomSeparator
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: closeButton.top
+    margin-bottom: 8
+
+  // How many items are here, or what the last Load did.
+  Label
+    id: count
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: bottomSeparator.top
+    margin-bottom: 6
+    height: 14
+    color: $textDim
+
+  QtButton
+    id: clearButton
+    !text: tr('Clear')
+    !tooltip: tr('Take every item out of this color')
+    size: 64 20
+    anchors.right: closeButton.left
+    anchors.bottom: parent.bottom
+    margin-right: 6
+    @onClick: modules.game_colors.clearRange()
+
+  QtButton
+    id: closeButton
+    !text: tr('Close')
+    size: 64 20
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    @onClick: modules.game_colors.closeItems()

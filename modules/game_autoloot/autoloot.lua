@@ -229,6 +229,15 @@ function toggle()
     AutoLoot.toggle()
 end
 
+-- The Colors button under the slots. The page itself lives in Settings
+-- (modules/game_colors); this only opens it there.
+function openColors()
+    local colors = modules.game_colors
+    if colors and colors.open then
+        colors.open()
+    end
+end
+
 -- The three entry points game_interface's createThingMenu calls for the
 -- "Add to Autoloot" row. They take a Thing, which carries a CLIENT id, while
 -- the loot list is keyed by SERVER id -- itemCatalog is the only bridge

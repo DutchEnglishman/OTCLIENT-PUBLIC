@@ -1478,8 +1478,14 @@ function addTabText(text, speaktype, tab, creatureName, npcSpeech)
 
     -- Item links (game_itemshare) carry their own colours and their own hover
     -- handler, and an NPC line never contains one, so they are tested first.
-    local shareData = modules.game_itemshare and
-        modules.game_itemshare.buildChatMarkup(text, speaktype.color)
+    -- A line with chat color tags ({red}, Colors page) is built by game_colors,
+    -- which keeps any item link in it working.
+    local shareData = nil
+    if speaktype.chatColors and modules.game_colors and modules.game_colors.chatMarkup then
+        shareData = modules.game_colors.chatMarkup(text, speaktype.color)
+    end
+    shareData = shareData or (modules.game_itemshare and
+        modules.game_itemshare.buildChatMarkup(text, speaktype.color))
 
     -- Overlay for consoleBuffer which shows highlighted words only
     if shareData then
@@ -2028,6 +2034,10 @@ end
 -- The chat tabs keep the full token -- buildChatMarkup is what turns it into a
 -- hoverable word, and that is the one consumer that needs it.
 local function plainForScreen(text)
+    -- Chat color tags ({red}, Colors page) only color the chat tabs.
+    if modules.game_colors and modules.game_colors.stripChatTags then
+        text = modules.game_colors.stripChatTags(text)
+    end
     if modules.game_itemshare then
         return modules.game_itemshare.stripLinkIds(text)
     end
@@ -2072,6 +2082,20 @@ function onTalk(name, level, mode, message, channelId, creaturePos)
 
     if mode == MessageModes.RVRChannel then
         channelId = violationsChannelId
+    end
+
+    -- Chat color tags ({red}selling, Colors page): drawn in the Advertising
+    -- channels and Local Chat, taken out of the line everywhere else (and
+    -- everywhere when the player switched chat colors off). Never on NPC lines:
+    -- their {braces} are keywords.
+    local chatColored = false
+    local colors = modules.game_colors
+    if not npcSpeech and colors and colors.hasChatTags and colors.hasChatTags(message) then
+        if colors.chatColorsAllowed(mode, channelId) then
+            chatColored = true
+        else
+            message = colors.stripChatTags(message)
+        end
     end
 
     if (mode == MessageModes.Say or mode == MessageModes.Whisper or mode == MessageModes.Yell or mode == MessageModes.Spell or
@@ -2126,7 +2150,11 @@ function onTalk(name, level, mode, message, channelId, creaturePos)
         end
 
         if channel then
-            addText(composedMessage, speaktype, channel, name, npcSpeech)
+            local lineType = speaktype
+            if chatColored then
+                lineType = setmetatable({ chatColors = true }, { __index = speaktype })
+            end
+            addText(composedMessage, lineType, channel, name, npcSpeech)
         else
             -- server sent a message on a channel that is not open
             pwarning('message in channel id ' .. channelId ..

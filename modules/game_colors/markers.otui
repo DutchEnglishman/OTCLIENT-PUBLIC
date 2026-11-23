@@ -1,0 +1,77 @@
+// Edit markers: one row per kind of loot in use (filled in colors.lua
+// openMarkers), each with its marker in a box and an example in its color.
+ColorsMarkerRow < SmallReversedQtPanel
+  height: 22
+  margin-bottom: 2
+
+  Label
+    id: caption
+    anchors.left: parent.left
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 6
+    width: 130
+
+  TextEdit
+    id: edit
+    anchors.left: caption.right
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 6
+    width: 44
+    max-length: 4
+
+  Label
+    id: example
+    anchors.left: edit.right
+    anchors.right: parent.right
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 10
+
+MainWindow
+  id: colorMarkers
+  !text: tr('Markers')
+  size: 380 240
+  @onEscape: modules.game_colors.closeMarkers()
+
+  Label
+    id: hint
+    !text: tr('1 to 4 letters, digits or signs. Empty: no marker.')
+    anchors.top: parent.top
+    anchors.left: parent.left
+    anchors.right: parent.right
+    color: $textDim
+    text-wrap: true
+    height: 14
+
+  UIWidget
+    id: list
+    anchors.top: hint.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: bottomSeparator.top
+    margin-top: 8
+    margin-bottom: 8
+    layout:
+      type: verticalBox
+
+  HorizontalSeparator
+    id: bottomSeparator
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: closeButton.top
+    margin-bottom: 8
+
+  QtButton
+    id: defaultButton
+    !text: tr('Default')
+    !tooltip: tr('Back to [C], [R], [E], [L], [M], [!] and the prices')
+    size: 64 20
+    anchors.left: parent.left
+    anchors.bottom: parent.bottom
+
+  QtButton
+    id: closeButton
+    !text: tr('Close')
+    size: 64 20
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    @onClick: modules.game_colors.closeMarkers()

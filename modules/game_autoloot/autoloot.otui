@@ -350,6 +350,29 @@ MainWindow
 
       AutoLootSlot
         id: autoLootSlot20
+
+    // Opens Settings > Interface > Colors (modules/game_colors).
+    // It sits in the free space under the slots: the bottom row has no room
+    // left without squeezing the daily bank amount.
+    HorizontalSeparator
+      id: colorsSeparator
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.bottom: colorsButton.top
+      margin-left: 16
+      margin-right: 16
+      margin-bottom: 10
+
+    QtButton
+      id: colorsButton
+      !text: tr('Colors')
+      !tooltip: tr('Choose the colors of your loot messages, the value prices, loot alerts and backpack frames')
+      size: 90 20
+      anchors.bottom: parent.bottom
+      anchors.horizontalCenter: parent.horizontalCenter
+      margin-bottom: 4
+      @onClick: modules.game_autoloot.openColors()
+
   Panel
     id: rightPanel
     anchors.top: presetsPanel.bottom

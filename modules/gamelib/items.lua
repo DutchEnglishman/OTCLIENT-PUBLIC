@@ -89,8 +89,97 @@ function ItemsDatabase.getClipAndImagePath(item)
     return clip, imagePath, clipObject
 end
 
+-- Frames in the player's own colors (modules/game_colors). One frame image per
+-- frame type, made from rarity_frames / containerslot-coloredges: the slot
+-- art with the frame cut out of it (transparent where the frame is solid,
+-- see-through where it glows). The widget's background color shows through
+-- that hole, so the frame takes any color while staying under the item,
+-- exactly where the old fixed-color frames were drawn.
+local TINT_FRAMES = {
+    frames = '/images/ui/item-frame-tint',
+    corners = '/images/ui/item-corner-tint',
+}
+local TINT_CLIP = '0 0 32 32'
+local NO_BACKGROUND = '#00000000'
+local FRAME_SOURCES = {
+    ['/images/ui/rarity_frames'] = true,
+    ['/images/ui/containerslot-coloredges'] = true,
+    ['/images/ui/item-frame-tint'] = true,
+    ['/images/ui/item-corner-tint'] = true,
+}
+
+-- Whether frames come from the Colors page. Without it (module not loaded)
+-- the old rarity-only frames below are used.
+local function colorFrames()
+    local colors = modules.game_colors
+    return colors and colors.frameColor ~= nil
+end
+
+-- The frame image and color an item gets on the Colors page, or nil: frames
+-- off, an empty slot, or an item its loot line would not color.
+function ItemsDatabase.getFrame(item)
+    if not item or type(item) == "number" or not colorFrames() then
+        return nil
+    end
+    local image = TINT_FRAMES[modules.client_options.getOption('framesRarity')]
+    if not image then
+        return nil
+    end
+    local color = modules.game_colors.frameColor(item)
+    if not color then
+        return nil
+    end
+    return image, color
+end
+
+-- Paints the frame, or clears one left by a previous item back to
+-- `emptySource` (only when one is showing, unless `always`).
+local function applyColorFrame(widget, item, emptySource, always)
+    local image, color = ItemsDatabase.getFrame(item)
+    if image then
+        widget:setImageSource(image)
+        widget:setImageClip(TINT_CLIP)
+        widget:setBackgroundColor(color)
+    elseif always or FRAME_SOURCES[widget:getImageSource()] then
+        widget:setImageClip(nil)
+        widget:setImageSource(emptySource)
+        widget:setBackgroundColor(NO_BACKGROUND)
+    end
+end
+
+-- The equipment slots (game_inventory). Their item widget is a bare UIItem
+-- with no image, so the slot's own art shows through: cleared back to
+-- nothing rather than to /images/ui/item.
+function ItemsDatabase.setInventoryFrame(widget, item)
+    if not widget then
+        return
+    end
+    if colorFrames() then
+        applyColorFrame(widget, item, '', true)
+        return
+    end
+    local rarityClip, rarityImage = ItemsDatabase.getClipAndImagePath(item)
+    if rarityClip and rarityImage and rarityImage ~= '/images/ui/item' then
+        widget:setImageClip(rarityClip)
+        widget:setImageSource(rarityImage)
+    else
+        widget:setImageClip(nil)
+        widget:setImageSource('')
+    end
+end
+
 function ItemsDatabase.setRarityItem(widget, item, style)
     if not g_game.getFeature(GameColorizedLootValue) or not widget then
+        return
+    end
+
+    -- Real items (containers) use the Colors page; the cyclopedia passes
+    -- prices here, which keep the old path below.
+    if type(item) ~= "number" and colorFrames() then
+        applyColorFrame(widget, item, '/images/ui/item', false)
+        if style then
+            widget:setStyle(style)
+        end
         return
     end
 
@@ -119,7 +208,33 @@ function ItemsDatabase.getColorForRarity(rarity)
 end
 
 function ItemsDatabase.setColorLootMessage(text)
+    local colors = modules.game_colors
+    -- "Only show colored items" (Colors page): the rest is counted, not listed.
+    if colors and colors.filterLoot then
+        text = colors.filterLoot(text)
+    end
     local function coloringLootName(match)
+        -- The server already colored this entry ({a sword, #4080FF}, OTSERV
+        -- data/loot_colors/loot_colors.lua). Each code there is a category, and
+        -- the player's Colors page (modules/game_colors) swaps in the color
+        -- they picked for it. A code it does not know comes back unchanged;
+        -- nil means the player switched colored names off, and the name is
+        -- left plain.
+        local entryName, code = match:match("^(.*), (#%x%x%x%x%x%x)$")
+        if entryName then
+            -- Optional marker after the name ("a fire sword [R]").
+            if colors and colors.lootMarker then
+                entryName = entryName .. colors.lootMarker(code)
+            end
+            if colors and colors.mapColor then
+                code = colors.mapColor(code)
+            end
+            if not code then
+                return entryName
+            end
+            return "{" .. entryName .. ", " .. code .. "}"
+        end
+
         local id, itemName = match:match("(%d+)|(.+)")
         if not id or not itemName then
             -- If pattern doesn't match itemId|itemName format, return the original match with braces
@@ -144,7 +259,12 @@ function ItemsDatabase.setColorLootMessage(text)
             return itemName
         end
     end
-    return text:gsub("{(.-)}", coloringLootName)
+    local colored = text:gsub("{(.-)}", coloringLootName)
+    -- "tainted" / "corrupted" in the monster's name, in the player's colors.
+    if colors and colors.colorLootHead then
+        colored = colors.colorLootHead(colored)
+    end
+    return colored
 end
 
 function ItemsDatabase.getTierClip(tier)

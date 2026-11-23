@@ -389,32 +389,87 @@ end
 
 -- A critical hit's number arrives wrapped in SO/SI bytes (OTSERV critDamageText,
 -- src/game.cpp). Returns the line as setColoredText markup with that number in
--- red and the rest in the line's own colour, plus the line with the bytes
--- removed; nil when the line carries no crit.
+-- the crit color and the rest in the line's own color, plus the line with the
+-- bytes removed; nil when there is nothing to color.
+--
+-- With `variants`, the words "tainted" and "corrupted" in a monster's name get
+-- their colors too. Both colors are the player's, from the Colors page
+-- (modules/game_colors); without it the crit stays red and the words plain.
 local CRIT_OPEN, CRIT_CLOSE = '\14', '\15'
 local CRIT_COLOR = '#ff3030'
 
-local function critMarkup(text, color)
-    if not text:find(CRIT_OPEN, 1, true) then
-        return nil
-    end
+local function critColor()
+    local colors = modules.game_colors
+    return colors and colors.colorFor and colors.colorFor('crit') or CRIT_COLOR
+end
 
-    local parts = {}
+-- The player's color for plain console text ('lootText' or 'logText', Colors
+-- page), or nil to keep the message type's own.
+local function textColor(key)
+    local colors = modules.game_colors
+    return colors and colors.colorFor and colors.colorFor(key) or nil
+end
+
+-- A message type with another color, for the console only. The real type is
+-- kept for everything that tells types apart (wantedInServerLog, showOnScreen).
+local function recolored(msgtype, color, colored)
+    if not color and not colored then
+        return msgtype
+    end
+    return setmetatable({ color = color or msgtype.color, colored = colored or msgtype.colored }, { __index = msgtype })
+end
+
+-- Adds `text` (no crit bytes in it) to `parts` in `color`, with any variant
+-- word cut out in its own color. Returns whether it found one.
+local function addPlain(parts, text, color, variants)
+    if text == '' then
+        return false
+    end
+    local colors = modules.game_colors
+    local spans = variants and colors and colors.variantSpans and colors.variantSpans(text, color)
     local pos = 1
-    while true do
-        local open = text:find(CRIT_OPEN, pos, true)
-        local close = open and text:find(CRIT_CLOSE, open + 1, true)
-        if not close then
-            break
+    for _, span in ipairs(spans or {}) do
+        if span.from > pos then
+            parts[#parts + 1] = string.format('{%s, %s}', text:sub(pos, span.from - 1), color)
         end
-        if open > pos then
-            parts[#parts + 1] = string.format('{%s, %s}', text:sub(pos, open - 1), color)
-        end
-        parts[#parts + 1] = string.format('{%s, %s}', text:sub(open + 1, close - 1), CRIT_COLOR)
-        pos = close + 1
+        parts[#parts + 1] = string.format('{%s, %s}', text:sub(span.from, span.to), span.color)
+        pos = span.to + 1
     end
     if pos <= #text then
         parts[#parts + 1] = string.format('{%s, %s}', text:sub(pos), color)
+    end
+    return spans and true or false
+end
+
+local function critMarkup(text, color, variants)
+    local marked = false
+    local parts = {}
+    local pos = 1
+    if text:find(CRIT_OPEN, 1, true) then
+        while true do
+            local open = text:find(CRIT_OPEN, pos, true)
+            local close = open and text:find(CRIT_CLOSE, open + 1, true)
+            if not close then
+                break
+            end
+            if addPlain(parts, text:sub(pos, open - 1), color, variants) then
+                marked = true
+            end
+            local crit = critColor()
+            local colors = modules.game_colors
+            if colors and colors.apartFrom then
+                crit = colors.apartFrom(crit, color) or crit -- kept apart from the line's color
+            end
+            parts[#parts + 1] = string.format('{%s, %s}', text:sub(open + 1, close - 1), crit)
+            marked = true
+            pos = close + 1
+        end
+    end
+    if addPlain(parts, text:sub(pos), color, variants) then
+        marked = true
+    end
+    if not marked then
+        return nil
     end
     return table.concat(parts), (text:gsub('[' .. CRIT_OPEN .. CRIT_CLOSE .. ']', ''))
 end
@@ -464,13 +519,22 @@ function displayMessage(mode, text)
 
     if text:find('^Loot of ') then
         local coloredText = ItemsDatabase.setColorLootMessage(text)
-        modules.game_console.addText(coloredText, MessageSettings.loot, tr('Server Log'))
+        local lootType = recolored(MessageSettings.loot, textColor('lootText'))
+        modules.game_console.addText(coloredText, lootType, tr('Server Log'))
         if mode == MessageModes.Look then
             local lootTab = modules.game_console.ensureLootTab()
-            modules.game_console.addTabText(coloredText, MessageSettings.loot, lootTab)
+            modules.game_console.addTabText(coloredText, lootType, lootTab)
         end
         if modules.client_options.getOption('showLootOnScreen') then
             showOnScreen(MessageSettings.centerGreen, text, coloredText)
+        end
+        -- The Alert ticks on the Colors page (modules/game_colors): the drops
+        -- the player asked to hear about, alone, in the middle of the screen --
+        -- shown whether or not loot itself is shown on screen.
+        local colors = modules.game_colors
+        local alert = colors and colors.lootAlert and colors.lootAlert(text)
+        if alert then
+            showOnScreen(recolored(MessageSettings.centerWhite, textColor('lootText')), alert.plain, alert.colored)
         end
         return
     end
@@ -490,9 +554,31 @@ function displayMessage(mode, text)
         return
     end
 
-    local critText, plainText = critMarkup(text, msgtype.color or TextColors.white)
+    -- Variant words only in Server Log lines (combat, experience, looks):
+    -- that is where a monster's name is the subject.
+    local isLog = msgtype.consoleTab == 'Server Log'
+    local rawText = text
+    local critText, plainText = critMarkup(text, msgtype.color or TextColors.white, isLog)
+    -- "You see ..." about an item: its name in its loot color (Colors page).
+    local colors = modules.game_colors
+    if mode == MessageModes.Look and colors and colors.lookMarkup then
+        local lookText = colors.lookMarkup(text, msgtype.color or TextColors.white)
+        if lookText then
+            critText, plainText = lookText, text
+        end
+    end
     if critText then
         text = plainText
+    end
+
+    -- White Server Log lines in the player's color (Colors page), in the
+    -- console only; the line on the game screen stays white.
+    local logColor = nil
+    if isLog and msgtype.color == TextColors.white then
+        logColor = textColor('logText')
+        if logColor and logColor:lower() == tostring(TextColors.white):lower() then
+            logColor = nil
+        end
     end
 
     if msgtype.consoleTab ~= nil and
@@ -502,12 +588,12 @@ function displayMessage(mode, text)
             local lootColoredText = ItemsDatabase.setColorLootMessage(text)
             local lootTabName = tr(msgtype.consoleTab)
             local targetTab = modules.game_console.getTab(lootTabName) and lootTabName or tr("Server Log")
-            modules.game_console.addText(lootColoredText, msgtype, targetTab)
+            modules.game_console.addText(lootColoredText, recolored(msgtype, textColor('lootText')), targetTab)
         elseif critText then
-            local coloredType = setmetatable({ colored = true }, { __index = msgtype })
-            modules.game_console.addText(critText, coloredType, tr(msgtype.consoleTab))
+            local logText = logColor and critMarkup(rawText, logColor, isLog) or critText
+            modules.game_console.addText(logText, recolored(msgtype, logColor, true), tr(msgtype.consoleTab))
         else
-            modules.game_console.addText(text, msgtype, tr(msgtype.consoleTab))
+            modules.game_console.addText(text, recolored(msgtype, logColor), tr(msgtype.consoleTab))
         end
     end
 

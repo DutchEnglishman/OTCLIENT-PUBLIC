@@ -148,37 +148,13 @@ UIWidget
     anchors.right: parent.right
     anchors.top: prev.bottom
     margin-top: 7
-    height: 86
+    height: 58
 
-    Label
-      !text: 'Colourise Loot Value: '
-      anchors.left: parent.left
-      anchors.top: parent.top
-      margin-left: 10
-      margin-top: -25
-      color: $textColor
-      anchors.verticalCenter: parent.verticalCenter
-
-    QtComboBox
-      id: frames
-      width: 120
-      margin-left: 10
-      anchors.verticalCenter: prev.verticalCenter
-      anchors.left: prev.right
-      mouse-scroll: false
-
-      
-    UIWidget
-      id: toolTipWidget
-      image-source: /images/icons/show_gui_help_grey
-      size: 12 12  
-      anchors.right: parent.right
-      margin-right: 3
-      !tooltip: tr('If you select Frames or Corners, your loot will be marked with \ndifferent colours in loot messages, containers and the Bestiary.\n\nThe colour depends on the loot value, which can be determined in\n the Items Cyclopedia, either using the NPC buy value, the average\n Market price or your own preferred value.')
-      
+    // Colourise Loot Value (the 'frames' box) moved to the Colors page
+    // (modules/game_colors) as Backpack frames > Frame type.
     OptionCheckBoxMarked
       id: showExpiryInInvetory
-      anchors.top: frames.bottom
+      anchors.top: parent.top
       margin-top: 5
       !text: tr('Show Expiry In Inventory')
       !tooltip: tr('Check this box to see how much time or how many charges are left \non your equipped items')

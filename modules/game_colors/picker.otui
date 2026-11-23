@@ -1,0 +1,183 @@
+// The color picker that opens from a row of the Colors page. The grids are filled
+// in colors.lua with the outfit window's ColorBox (10-checkboxes.otui) in
+// a UIRadioGroup, exactly as game_outfit builds its color panel: the top grid
+// is the same 133 outfit colors, 19 x 7, the same 15 px cells.
+
+MainWindow
+  id: colorPicker
+  size: 355 417
+  !text: tr('Color')
+  @onEnter: modules.game_colors.confirmPicker()
+  @onEscape: modules.game_colors.closePicker()
+
+  Label
+    id: outfitTitle
+    !text: tr('Outfit colors')
+    anchors.left: parent.left
+    anchors.top: parent.top
+    color: $textColor
+    text-auto-resize: true
+
+  UIWidget
+    id: outfitGrid
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: outfitTitle.bottom
+    margin-top: 4
+    height: 117
+    layout:
+      type: grid
+      cell-size: 15 15
+      cell-spacing: 2
+      num-columns: 19
+      num-lines: 7
+
+  Label
+    id: lootTitle
+    !text: tr('Set colors')
+    !tooltip: tr('Every color of the Standard and Color-blind friendly sets')
+    anchors.left: parent.left
+    anchors.top: outfitGrid.bottom
+    margin-top: 10
+    color: $textColor
+    text-auto-resize: true
+
+  UIWidget
+    id: lootGrid
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: lootTitle.bottom
+    margin-top: 4
+    height: 32
+    layout:
+      type: grid
+      cell-size: 15 15
+      cell-spacing: 2
+      num-columns: 19
+      num-lines: 2
+
+  Label
+    id: recentTitle
+    !text: tr('Recently used')
+    anchors.left: parent.left
+    anchors.top: lootGrid.bottom
+    margin-top: 10
+    color: $textColor
+    text-auto-resize: true
+
+  UIWidget
+    id: recentGrid
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: recentTitle.bottom
+    margin-top: 4
+    height: 15
+    layout:
+      type: grid
+      cell-size: 15 15
+      cell-spacing: 2
+      num-columns: 19
+      num-lines: 1
+
+  Label
+    id: recentEmpty
+    !text: tr('Nothing yet')
+    anchors.left: recentGrid.left
+    anchors.verticalCenter: recentGrid.verticalCenter
+    color: $textMuted
+    text-auto-resize: true
+
+  HorizontalSeparator
+    id: topSeparator
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: recentGrid.bottom
+    margin-top: 10
+
+  Label
+    id: hexLabel
+    !text: tr('Hex code:')
+    anchors.left: parent.left
+    anchors.top: topSeparator.bottom
+    margin-top: 12
+    color: $textColor
+    text-auto-resize: true
+
+  TextEdit
+    id: hexEdit
+    anchors.verticalCenter: hexLabel.verticalCenter
+    anchors.left: hexLabel.right
+    margin-left: 6
+    width: 70
+    max-length: 7
+
+  UIWidget
+    id: current
+    anchors.verticalCenter: hexLabel.verticalCenter
+    anchors.left: hexEdit.right
+    margin-left: 8
+    size: 34 15
+    border-width: 1
+    border-color: #000000
+
+  Label
+    id: readability
+    !text: tr('Hard to read')
+    !tooltip: tr('This color is very dark against the console background')
+    anchors.verticalCenter: hexLabel.verticalCenter
+    anchors.left: current.right
+    anchors.right: parent.right
+    margin-left: 8
+    color: #ff8060
+    visible: false
+
+  // The console's frame and font, like the page's preview.
+  UIWidget
+    id: preview
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: hexEdit.bottom
+    margin-top: 10
+    height: 22
+    image-source: /images/ui/3pixel_frame_borderimage
+    image-border: 4
+    padding: 4
+    padding-left: 6
+
+    Label
+      id: previewText
+      anchors.fill: parent
+      font: verdana-11px-antialised
+      color: #ffffff
+
+  HorizontalSeparator
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: okButton.top
+    margin-bottom: 10
+
+  QtButton
+    id: defaultButton
+    !text: tr('Default')
+    !tooltip: tr('Use the Standard color for this row')
+    size: 64 20
+    anchors.left: parent.left
+    anchors.bottom: parent.bottom
+    @onClick: modules.game_colors.pickDefault()
+
+  QtButton
+    id: cancelButton
+    !text: tr('Cancel')
+    size: 64 20
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    @onClick: modules.game_colors.closePicker()
+
+  QtButton
+    id: okButton
+    !text: tr('Ok')
+    size: 64 20
+    anchors.right: cancelButton.left
+    anchors.bottom: parent.bottom
+    margin-right: 6
+    @onClick: modules.game_colors.confirmPicker()

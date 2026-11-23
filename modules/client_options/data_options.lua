@@ -811,7 +811,15 @@ return {
             if newValue == 'None' then
                 newValue = nil
             end
-            panels.interface:recursiveGetChildById('frames'):setCurrentOptionByData(newValue, true)
+            -- The box is on the Colors page (modules/game_colors), which
+            -- follows the option and repaints the containers and the
+            -- equipment slots itself. Before it has loaded, reload the
+            -- containers as before.
+            local colors = modules.game_colors
+            if colors and colors.onFramesOption then
+                colors.onFramesOption(newValue)
+                return
+            end
             if options.framesRarity.event ~= nil then
                 removeEvent(options.framesRarity.event)
             end

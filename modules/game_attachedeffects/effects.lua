@@ -999,3 +999,18 @@ AttachedEffectManager.register(922, 'Mining find firework', '/images/game/effect
     offset = { 32, 32, true },
     drawOrder = 4
 })
+
+-- 971-977: sparkles over a corpse holding a drop the player ticked Sparkle on
+-- (Colors page), in that drop's loot color: OTSERV data/loot_colors/
+-- loot_colors.lua (LootColors.SPARKLE_EFFECTS) turns one on with opcode 73
+-- and off once the corpse is opened, emptied or left. The client's own blue
+-- sparkle (effect 13) recolored, one burst and a pause, 32x32 on the tile.
+for id, name in pairs({
+    [971] = 'rare', [972] = 'epic', [973] = 'legendary',
+    [974] = 'very_rare', [975] = 'material', [976] = 'value_green', [977] = 'value_yellow',
+}) do
+    AttachedEffectManager.register(id, 'Loot sparkle ' .. name, '/images/game/effects/loot_sparkle/' .. name, ThingExternalTexture, {
+        offset = { 0, 0, true },
+        drawOrder = 4
+    })
+end

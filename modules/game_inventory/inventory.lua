@@ -208,23 +208,16 @@ local function inventoryEvent(player, slot, item, oldItem)
     slotPanel.item:setShowCharges(modules.client_options.getOption('showExpiryInInvetory'))
     ItemsDatabase.setTier(slotPanel.item, item)
 
-    -- Rarity frame on the equipment slot. Deliberately NOT via
-    -- ItemsDatabase.setRarityItem: that falls back to /images/ui/item when no
-    -- frame applies, which is right for container slots (their Item style
-    -- carries that image by default) but wrong here -- the inventory's item
-    -- widget is a bare UIItem with no image-source, kept transparent so the
-    -- slot's own background art and its empty-slot placeholder icon show
-    -- through. Painting that fallback over it hid both. So: draw a frame only
-    -- when the item actually has a rarity, and otherwise clear the image
-    -- back to nothing.
-    local rarityClip, rarityImage = ItemsDatabase.getClipAndImagePath(item)
-    if rarityClip and rarityImage and rarityImage ~= '/images/ui/item' then
-        slotPanel.item:setImageClip(rarityClip)
-        slotPanel.item:setImageSource(rarityImage)
-    else
-        slotPanel.item:setImageClip(nil)
-        slotPanel.item:setImageSource('')
-    end
+    -- Frame on the equipment slot, in the player's colors (Colors page).
+    -- Deliberately NOT via ItemsDatabase.setRarityItem: that falls back to
+    -- /images/ui/item when no frame applies, which is right for container
+    -- slots (their Item style carries that image by default) but wrong here --
+    -- the inventory's item widget is a bare UIItem with no image-source, kept
+    -- transparent so the slot's own background art and its empty-slot
+    -- placeholder icon show through. Painting that fallback over it hid both.
+    -- setInventoryFrame draws a frame only when the item gets one, and
+    -- otherwise clears the image back to nothing.
+    ItemsDatabase.setInventoryFrame(slotPanel.item, item)
 
     if slot == InventorySlotLeft then
         if item and modules.game_proficiency then

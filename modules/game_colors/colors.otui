@@ -1,0 +1,654 @@
+// Settings > Interface > Colors. Built from the options window's own
+// pieces: SmallReversedQtPanel rows, QtComboBox, QtButton, QtCheckBox and the
+// help icon, the console's 3-pixel frame for the preview, and the HUD page's
+// UIScrollArea + VerticalScrollBar, so it reads like every other page there.
+// The rows and the blocks under them are created in colors.lua (one row per
+// SLOTS entry, a header per group).
+
+// The swatch is the outfit window's color box (ColorBox, 10-checkboxes.otui):
+// the same bordered square, the same frame on hover.
+ColorsSwatch < UIButton
+  size: 13 13
+  image-source: /images/ui/colorbox-border-13
+  image-clip: 0 0 13 13
+  image-color: #dfdfdfff
+  $hover:
+    image-clip: 0 13 13 13
+
+ColorsHeader < UIWidget
+  height: 18
+  margin-top: 4
+
+  Label
+    id: title
+    anchors.left: parent.left
+    anchors.bottom: parent.bottom
+    margin-left: 2
+    color: $textBright
+    text-auto-resize: true
+
+  // The two tick columns, each label centred over its tick box in the rows.
+  Label
+    id: sparkleTitle
+    !text: tr('Sparkle')
+    !tooltip: tr('Sparkle: the corpse of a monster that dropped this sparkles in its color until you open it. Only you (and your party) see it.')
+    anchors.horizontalCenter: parent.right
+    anchors.bottom: parent.bottom
+    margin-left: -27
+    color: $textDim
+    text-auto-resize: true
+
+  Label
+    id: alertTitle
+    !text: tr('Message')
+    !tooltip: tr('Message: when this drops, a line like "Loot alert from a demon: a fire sword" also shows in the middle of your screen.')
+    anchors.horizontalCenter: parent.right
+    anchors.bottom: parent.bottom
+    margin-left: -83
+    color: $textDim
+    text-auto-resize: true
+
+ColorsRow < SmallReversedQtPanel
+  height: 22
+
+  ColorsSwatch
+    id: swatch
+    anchors.left: parent.left
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 4
+
+  Label
+    id: caption
+    anchors.left: swatch.right
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 8
+    text-auto-resize: true
+
+  // Sparkle: the corpse sparkles in this color until opened (server, opcode 120).
+  QtCheckBox
+    id: sparkle
+    anchors.right: parent.right
+    anchors.verticalCenter: parent.verticalCenter
+    margin-right: 20
+    width: 14
+    !tooltip: tr('Make the corpse sparkle in this color until you open it')
+
+  // Message: "Loot alert from ..." in the middle of the screen (client only).
+  QtCheckBox
+    id: alert
+    anchors.right: sparkle.left
+    anchors.verticalCenter: parent.verticalCenter
+    margin-right: 42
+    width: 14
+    !tooltip: tr('Also show this drop as a message in the middle of the screen')
+
+  QtButton
+    id: change
+    anchors.right: alert.left
+    anchors.verticalCenter: parent.verticalCenter
+    margin-right: 14
+    size: 60 18
+    !text: tr('Change')
+
+  // Value rows only: the items the player put in this price range.
+  QtButton
+    id: items
+    anchors.right: amount.left
+    anchors.verticalCenter: parent.verticalCenter
+    margin-right: 8
+    size: 60 18
+    !text: tr('Items')
+    !tooltip: tr('Items you want shown in this color, whatever they sell for')
+    visible: false
+
+  // Value rows only: the lowest NPC price for this color, sent to the server.
+  TextEdit
+    id: amount
+    anchors.right: change.left
+    anchors.verticalCenter: parent.verticalCenter
+    margin-right: 10
+    width: 76
+    max-length: 10
+    visible: false
+    !tooltip: tr('Lowest NPC sell price of one piece for this color')
+
+// Under the value rows: add a price (up to 10), drop the top one, or go back
+// to the five defaults.
+ColorsStepButtons < SmallReversedQtPanel
+  height: 30
+
+  QtButton
+    id: addStep
+    !text: tr('Add price')
+    !tooltip: tr('Add a higher price with its own color (up to 10)')
+    anchors.left: parent.left
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 4
+    size: 80 20
+
+  QtButton
+    id: removeStep
+    !text: tr('Remove price')
+    !tooltip: tr('Remove the highest price')
+    anchors.left: addStep.right
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 6
+    size: 86 20
+
+  QtButton
+    id: resetSteps
+    !text: tr('Default prices')
+    !tooltip: tr('Back to five prices: 500, 3,000, 10,000, 30,000 and 60,000 gp')
+    anchors.left: removeStep.right
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 14
+    size: 100 20
+
+  Label
+    id: count
+    anchors.right: parent.right
+    anchors.verticalCenter: parent.verticalCenter
+    margin-right: 6
+    color: $textDim
+    text-auto-resize: true
+
+// Backpack frames: the frame type (client_options 'framesRarity', which used
+// to sit on the Interface page as "Colourise Loot Value") and whether items
+// without a rarity roll get a value frame too. The colors are the loot colors.
+ColorsFrames < UIWidget
+  height: 77
+  margin-top: 6
+
+  Label
+    id: title
+    !text: tr('Backpack frames')
+    anchors.left: parent.left
+    anchors.top: parent.top
+    margin-left: 2
+    color: $textBright
+    text-auto-resize: true
+
+  SmallReversedQtPanel
+    id: typeRow
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: title.bottom
+    margin-top: 4
+    height: 30
+
+    Label
+      id: typeLabel
+      !text: tr('Frame type:')
+      anchors.left: parent.left
+      anchors.verticalCenter: parent.verticalCenter
+      margin-left: 6
+      color: $textColor
+      text-auto-resize: true
+
+    QtComboBox
+      id: frameType
+      width: 120
+      anchors.left: typeLabel.right
+      anchors.verticalCenter: parent.verticalCenter
+      margin-left: 10
+      mouse-scroll: false
+
+    UIWidget
+      !tooltip: tr('Items in your backpacks and on your character get a frame in the color their loot line would have. Frames: a frame around the slot. Corners: a small corner. None: no frames.')
+      image-source: /images/icons/show_gui_help_grey
+      size: 12 12
+      anchors.right: parent.right
+      anchors.verticalCenter: parent.verticalCenter
+      margin-right: 3
+
+  SmallReversedQtPanel
+    id: valueRow
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: typeRow.bottom
+    margin-top: 3
+    height: 22
+
+    QtCheckBox
+      id: valueFrames
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.verticalCenter: parent.verticalCenter
+      !text: tr('Also frame items by value, materials and very rare')
+      !tooltip: tr('Off: only items with a rarity roll get a frame.')
+      color: $textColor
+
+// Chat colors: how the {gold} tags work, every tag in its own color (filled
+// in colors.lua buildChat; a click puts the tag in the chat box), and the
+// switch for other players' colors.
+ColorsChatTag < UIButton
+  size: 110 16
+  $hover:
+    background-color: #ffffff14
+
+  UIWidget
+    id: swatch
+    size: 10 10
+    anchors.left: parent.left
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 2
+    phantom: true
+
+  Label
+    id: tagName
+    anchors.left: swatch.right
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 6
+    text-auto-resize: true
+    phantom: true
+
+ColorsChat < UIWidget
+  height: 157
+  margin-top: 6
+
+  Label
+    id: title
+    !text: tr('Chat colors')
+    anchors.left: parent.left
+    anchors.top: parent.top
+    margin-left: 2
+    color: $textBright
+    text-auto-resize: true
+
+  SmallReversedQtPanel
+    id: helpRow
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: title.bottom
+    margin-top: 4
+    height: 110
+
+    Label
+      id: help
+      !text: tr('Type a color in braces in Advertising or Local Chat, everyone sees it: {gold}selling {blue}golden armor. {/} = normal again. Click a color to add it.')
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.top: parent.top
+      margin: 6 6 0 6
+      height: 28
+      text-wrap: true
+      color: $textColor
+
+    UIWidget
+      id: tagGrid
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.top: help.bottom
+      anchors.bottom: parent.bottom
+      margin: 6 6 6 6
+      layout:
+        type: grid
+        cell-size: 110 16
+        cell-spacing: 0
+        num-columns: 4
+        flow: true
+
+  SmallReversedQtPanel
+    id: showRow
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: helpRow.bottom
+    margin-top: 3
+    height: 22
+
+    QtCheckBox
+      id: chatColors
+      anchors.left: parent.left
+      anchors.verticalCenter: parent.verticalCenter
+      width: 160
+      !text: tr('Show chat colors')
+      !tooltip: tr('Off: every chat line in its normal color, with the tags left out.')
+      color: $textColor
+
+    // What the last click on a color did.
+    Label
+      id: chatStatus
+      anchors.left: chatColors.right
+      anchors.right: parent.right
+      anchors.verticalCenter: parent.verticalCenter
+      margin-left: 10
+      color: $textDim
+
+// Profiles: pick one (each holds everything on this page), save the page as a
+// new one, delete one, and tie one to the character that is logged in.
+ColorsProfiles < UIWidget
+  height: 117
+  margin-top: 6
+
+  Label
+    id: title
+    !text: tr('Profiles')
+    anchors.left: parent.left
+    anchors.top: parent.top
+    margin-left: 2
+    color: $textBright
+    text-auto-resize: true
+
+  SmallReversedQtPanel
+    id: pickRow
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: title.bottom
+    margin-top: 4
+    height: 30
+
+    Label
+      id: pickLabel
+      !text: tr('Profile:')
+      anchors.left: parent.left
+      anchors.verticalCenter: parent.verticalCenter
+      margin-left: 6
+      color: $textColor
+      text-auto-resize: true
+
+    QtComboBox
+      id: profileBox
+      width: 170
+      anchors.left: pickLabel.right
+      anchors.verticalCenter: parent.verticalCenter
+      margin-left: 10
+      mouse-scroll: false
+
+    QtButton
+      id: deleteProfile
+      !text: tr('Delete')
+      !tooltip: tr('Delete this profile (Default cannot be deleted)')
+      anchors.left: profileBox.right
+      anchors.verticalCenter: parent.verticalCenter
+      margin-left: 10
+      size: 64 20
+
+    UIWidget
+      !tooltip: tr('A profile holds everything on this page: colors, prices, item lists, alerts, markers and switches. Changes save into the profile you are on. Saved on this computer.')
+      image-source: /images/icons/show_gui_help_grey
+      size: 12 12
+      anchors.right: parent.right
+      anchors.verticalCenter: parent.verticalCenter
+      margin-right: 3
+
+  SmallReversedQtPanel
+    id: nameRow
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: pickRow.bottom
+    margin-top: 3
+    height: 30
+
+    TextEdit
+      id: nameEdit
+      anchors.left: parent.left
+      anchors.verticalCenter: parent.verticalCenter
+      margin-left: 6
+      width: 140
+      max-length: 20
+      !tooltip: tr('Name for a new profile')
+
+    QtButton
+      id: saveNew
+      !text: tr('Save as new profile')
+      !tooltip: tr('Copy everything on this page into a new profile with this name')
+      anchors.left: nameEdit.right
+      anchors.verticalCenter: parent.verticalCenter
+      margin-left: 8
+      size: 120 20
+
+    Label
+      id: status
+      anchors.left: saveNew.right
+      anchors.right: parent.right
+      anchors.verticalCenter: parent.verticalCenter
+      margin-left: 10
+      color: $textDim
+
+  SmallReversedQtPanel
+    id: characterRow
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: nameRow.bottom
+    margin-top: 3
+    height: 22
+
+    QtCheckBox
+      id: useForCharacter
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.verticalCenter: parent.verticalCenter
+      !tooltip: tr('This character switches to this profile every time it logs in.')
+      color: $textColor
+
+// The block under the rows: one switch and sharing.
+ColorsExtras < UIWidget
+  height: 127
+  margin-top: 6
+
+  Label
+    id: title
+    !text: tr('Loot messages')
+    anchors.left: parent.left
+    anchors.top: parent.top
+    margin-left: 2
+    color: $textBright
+    text-auto-resize: true
+
+  SmallReversedQtPanel
+    id: namesRow
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: title.bottom
+    margin-top: 4
+    height: 22
+
+    QtCheckBox
+      id: colorNames
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.verticalCenter: parent.verticalCenter
+      !text: tr('Color item names (loot and "You see" lines)')
+      !tooltip: tr('Off shows every item name in the Loot lines color. Messages and sparkles still work.')
+      color: $textColor
+
+  SmallReversedQtPanel
+    id: onlyRow
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: namesRow.bottom
+    margin-top: 3
+    height: 22
+
+    QtCheckBox
+      id: onlyColored
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.verticalCenter: parent.verticalCenter
+      !text: tr('Only show colored items in loot lines (the rest as "+3 more")')
+      !tooltip: tr('Leaves out everything without a color, gold coins too, and counts it at the end. Your prices decide what has a color.')
+      color: $textColor
+
+  SmallReversedQtPanel
+    id: markersRow
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: onlyRow.bottom
+    margin-top: 3
+    height: 22
+
+    QtCheckBox
+      id: markers
+      anchors.left: parent.left
+      anchors.right: editMarkers.left
+      anchors.verticalCenter: parent.verticalCenter
+      margin-right: 6
+      !text: tr('Markers after item names, like [R] for rare')
+      !tooltip: tr('A short tag after each colored item, so you can read what it is without telling colors apart. By default [C] common, [R] rare, [E] epic, [L] legendary, [M] material, [!] very rare, and for value the lowest price of its range, like [3k]. Edit markers to pick your own.')
+      color: $textColor
+
+    QtButton
+      id: editMarkers
+      !text: tr('Edit markers')
+      !tooltip: tr('Pick your own letter or sign for every kind of loot')
+      anchors.right: parent.right
+      anchors.verticalCenter: parent.verticalCenter
+      margin-right: 4
+      size: 90 18
+
+  SmallReversedQtPanel
+    id: buttonsRow
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: markersRow.bottom
+    margin-top: 7
+    height: 30
+
+    QtButton
+      id: copyCode
+      !text: tr('Copy code')
+      !tooltip: tr('Copy your colors and prices as a code you can paste in chat for a friend')
+      anchors.left: parent.left
+      anchors.verticalCenter: parent.verticalCenter
+      margin-left: 4
+      size: 80 20
+
+    QtButton
+      id: pasteCode
+      !text: tr('Paste code')
+      !tooltip: tr('Use a code someone copied: it becomes your Custom set and your prices')
+      anchors.left: copyCode.right
+      anchors.verticalCenter: parent.verticalCenter
+      margin-left: 6
+      size: 80 20
+
+    Label
+      id: status
+      anchors.left: pasteCode.right
+      anchors.right: parent.right
+      anchors.verticalCenter: parent.verticalCenter
+      margin-left: 10
+      color: $textDim
+
+UIWidget
+  anchors.fill: parent
+  visible: false
+
+  SmallReversedQtPanel
+    id: presetRow
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: parent.top
+    height: 30
+
+    Label
+      !text: tr('Color set:')
+      anchors.left: parent.left
+      anchors.verticalCenter: parent.verticalCenter
+      margin-left: 6
+      color: $textColor
+      text-auto-resize: true
+
+    QtComboBox
+      id: presetBox
+      width: 170
+      anchors.left: prev.right
+      anchors.verticalCenter: parent.verticalCenter
+      margin-left: 10
+      mouse-scroll: false
+
+    UIWidget
+      !tooltip: tr('Pick a color for every kind of loot, the monster-name words and critical hits, and the prices that decide the value colors. Standard and Color-blind friendly cannot be changed: changing a color copies the set you are on into Custom. Saved on this computer. New lines use your changes.')
+      image-source: /images/icons/show_gui_help_grey
+      size: 12 12
+      anchors.right: parent.right
+      anchors.verticalCenter: parent.verticalCenter
+      margin-right: 3
+
+  // Its height follows the lines in use (colors.lua refreshPreview): five by
+  // default, more with more prices or with markers on (up to eight).
+  // Drawn like the console (game_console ConsoleTabBarPanel's consoleBuffer):
+  // the same frame, font and white loot text, so it shows how a loot line
+  // will really look.
+  UIWidget
+    id: preview
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: presetRow.bottom
+    margin-top: 7
+    height: 64
+    image-source: /images/ui/3pixel_frame_borderimage
+    image-border: 4
+    padding: 4
+    padding-left: 6
+    layout:
+      type: verticalBox
+
+    Label
+      id: line1
+      font: verdana-11px-antialised
+      height: 14
+      color: #ffffff
+
+    Label
+      id: line2
+      font: verdana-11px-antialised
+      height: 14
+      color: #ffffff
+
+    Label
+      id: line3
+      font: verdana-11px-antialised
+      height: 14
+      color: #ffffff
+
+    Label
+      id: line4
+      font: verdana-11px-antialised
+      height: 14
+      color: #ffffff
+
+    Label
+      id: line5
+      font: verdana-11px-antialised
+      height: 14
+      color: #ffffff
+
+    Label
+      id: line6
+      font: verdana-11px-antialised
+      height: 14
+      color: #ffffff
+
+    Label
+      id: line7
+      font: verdana-11px-antialised
+      height: 14
+      color: #ffffff
+
+    Label
+      id: line8
+      font: verdana-11px-antialised
+      height: 14
+      color: #ffffff
+
+  UIScrollArea
+    id: rows
+    anchors.top: preview.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    margin-top: 2
+    margin-right: 14
+    vertical-scrollbar: rowsScrollBar
+    layout:
+      type: verticalBox
+      spacing: 3
+
+  VerticalScrollBar
+    id: rowsScrollBar
+    anchors.top: rows.top
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    step: 16
+    pixels-scroll: true

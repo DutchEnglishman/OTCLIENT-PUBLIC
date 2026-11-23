@@ -7,8 +7,13 @@ local WORLD_MINIMAP_FILE = '/minimap/world.otmm'
 -- (OTSERV tools/generate_revealed_minimap.ps1 writes it). Bump FORGET_VERSION whenever the
 -- file changes, so every client forgets them once more.
 local FORGET_MINIMAP_FILE = '/minimap/forget.otmm'
-local FORGET_VERSION = 2
+local FORGET_VERSION = 3
 local FORGET_SETTING = 'minimapForgetVersion'
+-- A player's own map keeps whatever an area looked like when they saw it, so an area redrawn
+-- since stays drawn the old way. Once per RESYNC_VERSION, world.otmm overrides every tile it
+-- covers. Bump it whenever world.otmm is regenerated or synced to the map.
+local RESYNC_VERSION = 1
+local RESYNC_SETTING = 'minimapResyncVersion'
 local oldPos = nil
 local fullscreenWidget
 local fullscreenControls
@@ -328,9 +333,18 @@ function mapController:onGameStart()
 
     -- The world as it was when data/minimap/world.otmm was generated
     -- (OTSERV tools/generate_revealed_minimap.ps1), laid under the player's own
-    -- map: a tile they have seen keeps their version.
+    -- map: a tile they have seen keeps their version, except on a resync, where the
+    -- world's version wins. An exe without resyncOtmm leaves the setting unset.
     if otmm and g_resources.fileExists(WORLD_MINIMAP_FILE) then
-        g_minimap.mergeOtmm(WORLD_MINIMAP_FILE)
+        if g_minimap.resyncOtmm and g_settings.getNumber(RESYNC_SETTING) < RESYNC_VERSION then
+            if g_minimap.resyncOtmm(WORLD_MINIMAP_FILE) then
+                g_minimap.saveOtmm(minimapFile)
+                g_settings.set(RESYNC_SETTING, RESYNC_VERSION)
+                g_settings.save()
+            end
+        else
+            g_minimap.mergeOtmm(WORLD_MINIMAP_FILE)
+        end
     end
 
     self.ui.minimapBorder.minimap:load()

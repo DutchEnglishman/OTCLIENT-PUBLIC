@@ -102,7 +102,6 @@ local function setupComboBox()
     local crosshairCombo = panels.interface:recursiveGetChildById('crosshair')
     local antialiasingModeCombobox = panels.graphicsPanel:recursiveGetChildById('antialiasingMode')
     local floorViewModeCombobox = panels.graphicsEffectsPanel:recursiveGetChildById('floorViewMode')
-    local framesRarityCombobox = panels.interface:recursiveGetChildById('frames')
     local mouseControlModeCombobox = panels.generalPanel:recursiveGetChildById('mouseControlMode')
     local lootControlModeCombobox = panels.generalPanel:recursiveGetChildById('lootControlMode')
 
@@ -151,13 +150,8 @@ local function setupComboBox()
         setOption('floorViewMode', comboBox:getCurrentOption().data)
     end
 
-    for k, v in pairs({ { 'None', 'none' }, { 'Frames', 'frames' }, { 'Corners', 'corners' } }) do
-        framesRarityCombobox:addOption(v[1], v[2])
-    end
-
-    framesRarityCombobox.onOptionChange = function(comboBox, option)
-        setOption('framesRarity', comboBox:getCurrentOption().data)
-    end
+    -- The framesRarity box (None / Frames / Corners) is on the Colors page
+    -- now (modules/game_colors), which sets the option itself.
 
     local profileCombobox = panels.misc:recursiveGetChildById('profile')
 

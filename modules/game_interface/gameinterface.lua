@@ -135,6 +135,18 @@ local function onPlotTiles(protocol, opcode, buffer)
     end
 end
 
+-- Tiles holding the player's own laid house rugs, in the same shape. Must match
+-- HouseRugs.opcode in the server's data/scripts/house_rugs/house_rugs.lua.
+local RUGS_OPCODE = 106
+local rugTiles = {}
+
+local function onRugTiles(protocol, opcode, buffer)
+    rugTiles = {}
+    for key in buffer:gmatch('[^;]+') do
+        rugTiles[key] = true
+    end
+end
+
 local function talkToNpc(npc)
     local word = npcConversations[npc:getId()]
     g_game.talk(word and word ~= '' and word or 'hi')
@@ -200,6 +212,7 @@ function init()
     ProtocolGame.registerExtendedOpcode(NPC_FOCUS_OPCODE, onNpcFocus)
     ProtocolGame.registerExtendedOpcode(USABLE_GROUNDS_OPCODE, onUsableGrounds)
     ProtocolGame.registerExtendedOpcode(PLOTS_OPCODE, onPlotTiles)
+    ProtocolGame.registerExtendedOpcode(RUGS_OPCODE, onRugTiles)
 
     -- Call load AFTER game window has been created and
     -- resized to a stable state, otherwise the saved
@@ -386,6 +399,7 @@ function terminate()
     ProtocolGame.unregisterExtendedOpcode(NPC_FOCUS_OPCODE, onNpcFocus)
     ProtocolGame.unregisterExtendedOpcode(USABLE_GROUNDS_OPCODE, onUsableGrounds)
     ProtocolGame.unregisterExtendedOpcode(PLOTS_OPCODE, onPlotTiles)
+    ProtocolGame.unregisterExtendedOpcode(RUGS_OPCODE, onRugTiles)
 
     for k, v in pairs(panelsList) do
         disconnect(v.checkbox, {
@@ -1084,11 +1098,16 @@ function createThingMenu(menuPosition, lookThing, useThing, creatureThing)
         end
 
         local plotPos = useThing:getPosition()
-        if plotPos and plotPos.x ~= 0xffff and plotTiles[groundKey(plotPos)] then
+        local packOpcode = nil
+        if plotPos and plotPos.x ~= 0xffff then
+            local key = groundKey(plotPos)
+            packOpcode = (plotTiles[key] and PLOTS_OPCODE) or (rugTiles[key] and RUGS_OPCODE) or nil
+        end
+        if packOpcode then
             menu:addOption(tr('Pack'), function()
                 local protocol = g_game.getProtocolGame()
                 if protocol then
-                    protocol:sendExtendedOpcode(PLOTS_OPCODE, 'pack|' .. plotPos.x .. '|' .. plotPos.y .. '|' .. plotPos.z)
+                    protocol:sendExtendedOpcode(packOpcode, 'pack|' .. plotPos.x .. '|' .. plotPos.y .. '|' .. plotPos.z)
                 end
             end)
         end

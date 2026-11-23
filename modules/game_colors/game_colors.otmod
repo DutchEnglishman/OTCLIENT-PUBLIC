@@ -1,0 +1,13 @@
+Module
+  name: game_colors
+  description: Lets each player pick the colors of loot, monster names, critical hits and backpack frames
+  author: TSR
+  website: https://github.com/
+
+  autoload: true
+  autoload-priority: 1000
+  sandboxed: true
+  dependencies: [ client_options ]
+  scripts: [ item_values, colors ]
+  @onLoad: init()
+  @onUnload: terminate()

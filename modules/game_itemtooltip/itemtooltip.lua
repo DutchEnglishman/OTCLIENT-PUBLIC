@@ -33,13 +33,21 @@ local SECTION_COLORS = {
     D = '#C8C8C8', -- an ingredient's description (alchemy, cooking)
 }
 
--- Rarity id -> colour, matching the upgrade system's COMMON..LEGENDARY.
+-- Rarity id -> colour, matching the upgrade system's COMMON..LEGENDARY. Only
+-- used without the Colors page (modules/game_colors): with it, the player's
+-- own rarity colours are used, so the tooltip matches their loot lines.
 local RARITY_COLORS = {
     [1] = '#00C000', -- common green
     [2] = '#4080FF', -- rare blue
     [3] = '#A020F0', -- epic purple
     [4] = '#DF7010', -- legendary
 }
+
+local function rarityColorOf(rarityId)
+    local colors = modules.game_colors
+    local color = colors and colors.rarityColor and colors.rarityColor(rarityId)
+    return color or RARITY_COLORS[rarityId]
+end
 
 -- Render order, and the separator boundaries: one hairline between each pair
 -- of adjacent groups that both have content, none within a group. N is absent
@@ -430,7 +438,7 @@ function renderTooltip(payload, item)
     tooltipWindow:destroyChildren()
 
     local sections, rarityId, weight = parseSections(payload)
-    local rarityColor = RARITY_COLORS[rarityId]
+    local rarityColor = rarityColorOf(rarityId)
 
     -- Alt shows each roll's ceiling: the highest that attribute could roll at
     -- the item's current level, already in the line's own unit ("15", "4%").
@@ -870,7 +878,7 @@ end
 -- Exposed so other windows paint rarity the same colour this tooltip does,
 -- rather than keeping a second copy of the palette that can drift from it.
 function getRarityColor(rarityId)
-    return RARITY_COLORS[rarityId]
+    return rarityColorOf(rarityId)
 end
 
 -- Exposed for the chat item-link module (game_itemshare), which has to address
