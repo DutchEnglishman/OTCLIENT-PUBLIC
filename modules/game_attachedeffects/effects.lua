@@ -856,7 +856,7 @@ AttachedEffectManager.register(863, 'Azerus clone vanish', '/images/game/effects
     drawOrder = 4
 })
 AttachedEffectManager.register(864, 'Azerus clash', '/images/game/effects/azerus_clash', ThingExternalTexture, {
-    offset = { 16, 16, true },
+    offset = { 16, 24, true },
     drawOrder = 4
 })
 AttachedEffectManager.register(865, 'Azerus wave violet', '/images/game/effects/azerus_wave_violet', ThingExternalTexture, {
@@ -886,6 +886,43 @@ for dir = 0, 7 do
     AttachedEffectManager.register(955 + dir, 'Azerus teleport arrive ' .. dir,
         '/images/game/effects/azerus_tp_arrive_' .. dir, ThingExternalTexture, {
         offset = { 32, 32, true },
+        drawOrder = 4
+    })
+end
+-- His clock and his bolts (OTSERV azerus_skills.lua CLOCK, BOLT, PHANTOMS;
+-- textures by make_azerus.ps1,
+-- AzerusClockFx in azerus_clock_fx.cs). Directions are 0 north clockwise to
+-- 7 north-west.
+-- 1256 + direction: a warning pointer, the boss warning tile (287) with
+-- chevrons pointing the way the arm on it will sweep, held under creatures on
+-- the plain "on" verb until the arms appear.
+for dir = 0, 7 do
+    AttachedEffectManager.register(1256 + dir, 'Azerus clock pointer ' .. dir,
+        '/images/game/effects/azerus_clock_pointer_' .. dir, ThingExternalTexture, {
+        offset = { 0, 0, false }
+    })
+end
+-- 1264/1265: a tile of the holy and the death arm, the game's yellow energy
+-- in gold and in violet, played on every arm tile each step.
+AttachedEffectManager.register(1264, 'Azerus arm holy', '/images/game/effects/azerus_arm_holy', ThingExternalTexture, {
+    offset = { 0, 0, true },
+    drawOrder = 4
+})
+AttachedEffectManager.register(1265, 'Azerus arm death', '/images/game/effects/azerus_arm_death', ThingExternalTexture, {
+    offset = { 0, 0, true },
+    drawOrder = 4
+})
+-- 1266: the game's teleport effect in gold, on players he moves.
+AttachedEffectManager.register(1266, 'Azerus gold teleport', '/images/game/effects/azerus_gold_teleport', ThingExternalTexture, {
+    offset = { 0, 0, true },
+    drawOrder = 4
+})
+-- 1267 + direction: the death missile in violet, glided (opcode 73 "glide")
+-- in place of the stock missile for his death bolt and the Profane Eye's.
+for dir = 0, 7 do
+    AttachedEffectManager.register(1267 + dir, 'Azerus death shot ' .. dir,
+        '/images/game/effects/azerus_death_shot_' .. dir, ThingExternalTexture, {
+        offset = { 0, 0, true },
         drawOrder = 4
     })
 end

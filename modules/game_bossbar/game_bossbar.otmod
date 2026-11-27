@@ -1,0 +1,10 @@
+Module
+  name: game_bossbar
+  description: The boss's name and HP at the top of the game screen in a private boss room
+  author: Shattered Realms
+  website: None
+  sandboxed: true
+  autoload: true
+  scripts: [ bossbar ]
+  @onLoad: init()
+  @onUnload: terminate()

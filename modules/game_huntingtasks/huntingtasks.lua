@@ -7,9 +7,10 @@
 -- asks and waits for the next payload, on the opcode of the board shown.
 --   {action = 'window', open, level, maxActive, maxRuns, laterRewards, active, tasks}
 --   {action = 'tracker', active = {{id, name, kills, required, outfit}, ...}}
--- Bram's adds `npc`, `marks` (spendable hunting marks), `repeatable` (a task
--- past its last stage can be started again) and per task `stages` (one reward
--- list per stage, in place of the shared `laterRewards`).
+-- Bram's adds `npc`, `marks` (spendable hunting marks), `marksTotal` (every
+-- mark ever earned), `repeatable` (false: a task done to its last stage is
+-- finished for good) and per task `stages` (one reward list per stage, in place
+-- of the shared `laterRewards`).
 
 HUNTING_TASKS_OPCODE = 98
 ROOK_HUNTING_TASKS_OPCODE = 105
@@ -75,6 +76,11 @@ local function inTab(task, tab)
     if tab == 'active' then
         return activeEntry(task.id) ~= nil
     elseif tab == 'completed' then
+        -- Bram's tasks count as completed once every stage is claimed; Grizzly's
+        -- from the first run.
+        if task.stages and state.repeatable ~= true then
+            return task.runs >= state.maxRuns
+        end
         return task.runs > 0
     end
     return not activeEntry(task.id) and canStartAgain(task)
@@ -147,7 +153,13 @@ local function refreshDetail()
     fact('factKills', tr('Kills'), tostring(task.kills))
     if task.stages then
         -- Bram's tasks carry no recommended level; the slot shows the stage.
-        fact('factLevel', tr('Next stage'), repeating and tr('Repeat') or string.format('%d / %d', task.runs + 1, state.maxRuns))
+        local nextStage = string.format('%d / %d', task.runs + 1, state.maxRuns)
+        if repeating then
+            nextStage = tr('Repeat')
+        elseif task.runs >= state.maxRuns then
+            nextStage = tr('None, finished')
+        end
+        fact('factLevel', tr('Next stage'), nextStage)
     else
         fact('factLevel', tr('Recommended level'), tostring(task.level))
     end
@@ -288,11 +300,16 @@ local function refreshHeader()
             slot:setBackgroundColor(COLOR_CURRENT)
         end
     end
-    window:recursiveGetChildById('levelLabel'):setText(tr('Your level: %d', state.level))
+    -- Bram's board shows marks in place of the level: earned (never lowered by
+    -- spending, the quest log's total) and current (what the shop can spend).
+    local levelLabel = window:recursiveGetChildById('levelLabel')
     local marksLabel = window:recursiveGetChildById('marksLabel')
     marksLabel:setVisible(state.marks ~= nil)
     if state.marks ~= nil then
-        marksLabel:setText(tr('Hunting marks: %d', tonumber(state.marks) or 0))
+        levelLabel:setText(tr('Gained hunting marks: %d', tonumber(state.marksTotal) or 0))
+        marksLabel:setText(tr('Current hunting marks: %d', tonumber(state.marks) or 0))
+    else
+        levelLabel:setText(tr('Your level: %d', state.level))
     end
 end
 

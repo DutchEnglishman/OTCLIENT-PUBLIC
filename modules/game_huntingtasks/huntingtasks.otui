@@ -364,12 +364,15 @@ HuntingTasksWindow < MainWindow
         fit-children: true
       phantom: true
 
+    // Grizzly's board: "Your level". Bram's: "Gained hunting marks" here and
+    // "Current hunting marks" in marksLabel, right of it.
     Label
       id: levelLabel
       color: $textDim
       anchors.left: slots.right
       anchors.verticalCenter: parent.verticalCenter
       margin-left: 16
+      text-auto-resize: true
 
     Label
       id: marksLabel
@@ -377,6 +380,7 @@ HuntingTasksWindow < MainWindow
       anchors.left: levelLabel.right
       anchors.verticalCenter: parent.verticalCenter
       margin-left: 16
+      text-auto-resize: true
       visible: false
 
     Button

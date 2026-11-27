@@ -78,12 +78,19 @@ local nextSourceId = 1
 -- potion together and one of them simply stopped, depending on press phase.
 lastHotkeyTime = {}
 local HOTKEY_REPEAT_MS = 70
+-- A held key fires once, then waits the widget auto-repeat delay (UIWidget
+-- m_autoRepeatDelay, 500 ms) before it repeats. A held mouse hotkey waits just
+-- as long, so holding a mouse button is never faster than holding a key.
+local HOTKEY_FIRST_REPEAT_MS = 500
 local hotkeysWindowButton = nil
 local previousRootMouseRelease = nil
 local previousRootMousePress = nil
 -- Mouse buttons get no auto-repeat from the platform the way held keys do, so
 -- a held mouse hotkey repeats on its own timer. combo -> mouse button.
 local heldMouseCombos = {}
+-- Counts presses per combo, so a repeat scheduled by an earlier press (released
+-- and pressed again within HOTKEY_FIRST_REPEAT_MS) stops instead of doubling up.
+local heldMouseGen = {}
 -- Combos whose press already fired, so their release must not fire again.
 local pressedMouseCombos = {}
 
@@ -136,9 +143,9 @@ local function isMouseCombo(keyCombo)
     return false
 end
 
-local function repeatHeldMouseCombo(keyCombo)
+local function repeatHeldMouseCombo(keyCombo, gen)
     local mouseButton = heldMouseCombos[keyCombo]
-    if not mouseButton then
+    if not mouseButton or heldMouseGen[keyCombo] ~= gen then
         return
     end
     if not g_game.isOnline() or not boundMouseCombos[keyCombo] or not g_window.isMouseButtonPressed(mouseButton) then
@@ -147,7 +154,7 @@ local function repeatHeldMouseCombo(keyCombo)
     end
     doKeyCombo(keyCombo)
     scheduleEvent(function()
-        repeatHeldMouseCombo(keyCombo)
+        repeatHeldMouseCombo(keyCombo, gen)
     end, HOTKEY_REPEAT_MS)
 end
 
@@ -160,7 +167,13 @@ local function onGlobalMousePress(self, mousePos, mouseButton)
             pressedMouseCombos[keyCombo] = true
             if not heldMouseCombos[keyCombo] then
                 heldMouseCombos[keyCombo] = mouseButton
-                repeatHeldMouseCombo(keyCombo)
+                local gen = (heldMouseGen[keyCombo] or 0) + 1
+                heldMouseGen[keyCombo] = gen
+                -- Fires now, then repeats only after the same wait a held key has.
+                doKeyCombo(keyCombo)
+                scheduleEvent(function()
+                    repeatHeldMouseCombo(keyCombo, gen)
+                end, HOTKEY_FIRST_REPEAT_MS)
             end
             return true
         end

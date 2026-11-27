@@ -50,6 +50,7 @@ local ATTACHED_EFFECT_OPCODE = 71
 local STATUS_MARKS = {
     [1] = '/images/game/statusmarks/reversed_controls',
     [2] = '/images/game/statusmarks/max_health_cut',
+    [3] = '/images/game/statusmarks/blinded',
 }
 
 -- Bloodlust, Madareth's skill, rides the same opcode as a third verb:
@@ -315,7 +316,7 @@ local function onExtendedOpcode(protocol, opcode, buffer)
         end
         return
     end
-    -- "mark,<id>,<markId>,<ms>": a debuff icon above the title for ms
+    -- "mark,<id>,<markId>,<ms>": a debuff icon to the right of the name for ms
     -- (Creature::setStatusMark); 0 takes it down. An unknown mark is ignored.
     local markCreatureId, markId, markMs = buffer:match('^mark,(%d+),(%d+),(%d+)$')
     if markCreatureId then
@@ -1771,6 +1772,10 @@ end
 -- Azerus's orbs (860-861) are 32x32, the tile itself.
 GLIDE_ORIGINS[860] = 0
 GLIDE_ORIGINS[861] = 0
+-- Azerus's violet death shots (1267-1274) are 32x32 too.
+for id = 1267, 1274 do
+    GLIDE_ORIGINS[id] = 0
+end
 local glideRuns = {} -- runId -> {event, pos, at, effect}
 
 local function glideRunClear(run)
@@ -1963,6 +1968,13 @@ local function onTileEffectOpcode(protocol, opcode, buffer)
         onShock(buffer)
         return
     end
+    -- "blind,<ms>": Azerus's Blinding Book; for ms the round round this
+    -- player shows only the map (Map::isBlindedAt). 0 ends it.
+    local blindMs = buffer:match('^blind,(%d+)$')
+    if blindMs then
+        g_map.setBlind(tonumber(blindMs))
+        return
+    end
     if buffer:sub(1, 8) == 'daggers,' then
         onDaggers(buffer)
         return
@@ -2073,6 +2085,7 @@ function controller:onGameEnd()
     ProtocolGame.unregisterExtendedOpcode(TILE_EFFECT_OPCODE)
     shines = {}
     heldTileEffects = {}
+    g_map.setBlind(0)
     clearSpawnPortals()
     TileBars.clear()
     tetherOff()

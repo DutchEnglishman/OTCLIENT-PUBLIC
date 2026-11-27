@@ -104,9 +104,10 @@ NoticeBoardWindow < MainWindow
 
   VerticalScrollBar
     id: boardScroll
-    anchors.top: board.top
-    anchors.bottom: board.bottom
+    anchors.top: parent.top
+    anchors.bottom: closeButton.top
     anchors.right: parent.right
+    margin-bottom: 8
     step: 40
     pixels-scroll: true
 

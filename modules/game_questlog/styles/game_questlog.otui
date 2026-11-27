@@ -48,7 +48,12 @@ MultiLineQuestLog < Panel
     anchors.fill: parent
     padding: 1
     width: 10
-    focusable: false
+    focusable: true
+    editable: false
+    selectable: true
+    cursor-visible: false
+    selection-color: $selectionText
+    selection-background-color: $selectionFill
     text-wrap: true
     background-color: $panelFillRaised
 

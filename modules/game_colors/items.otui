@@ -36,9 +36,10 @@ MainWindow
 
   VerticalScrollBar
     id: pinnedScrollBar
-    anchors.top: pinnedPanel.top
+    anchors.top: listLabel.bottom
     anchors.right: parent.right
-    anchors.bottom: pinnedPanel.bottom
+    margin-top: 6
+    height: 102
     step: 34
     pixels-scroll: true
 
@@ -126,9 +127,11 @@ MainWindow
 
   VerticalScrollBar
     id: resultsScrollBar
-    anchors.top: resultsPanel.top
+    anchors.top: searchEdit.bottom
     anchors.right: parent.right
-    anchors.bottom: resultsPanel.bottom
+    anchors.bottom: count.top
+    margin-top: 8
+    margin-bottom: 6
     step: 34
     pixels-scroll: true
 

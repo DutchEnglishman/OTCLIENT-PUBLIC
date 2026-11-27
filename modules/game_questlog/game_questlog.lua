@@ -1276,6 +1276,21 @@ function questLogController:onInit()
     UITextList.questLogLine = questLogController.ui.panelQuestLineSelected.ScrollAreaQuestList.questList
     UITextList.questLogInfo = questLogController.ui.panelQuestLineSelected.panelQuestInfo.questList
     UITextList.questLogInfo:setBackgroundColor(g_ui.getVariable('panelFill'))
+    -- The description is read-only but selectable (drag, Ctrl+A, Ctrl+C); the
+    -- right-click menu is for players who do not know the shortcuts.
+    UITextList.questLogInfo.onMouseRelease = function(widget, mousePos, mouseButton)
+        if mouseButton ~= MouseRightButton or widget:getText() == '' then
+            return false
+        end
+        local menu = g_ui.createWidget('PopupMenu')
+        menu:setGameMenu(true)
+        if widget:hasSelection() then
+            menu:addOption(tr('Copy'), function() g_window.setClipboardText(widget:getSelection()) end)
+        end
+        menu:addOption(tr('Copy all'), function() g_window.setClipboardText(widget:getText()) end)
+        menu:display(mousePos)
+        return true
+    end
 
     UITextEdit.search = questLogController.ui.panelQuestLog.textEditSearchQuest
     UIlabel.numberQuestComplete = questLogController:findWidget("#lblCompleteNumber")

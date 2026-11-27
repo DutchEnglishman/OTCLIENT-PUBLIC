@@ -1,0 +1,96 @@
+BossBarLabel < UILabel
+  phantom: true
+  focusable: false
+  text-auto-resize: true
+
+BossBarSkull < UIWidget
+  phantom: true
+  focusable: false
+  size: 11 11
+  image-source: /images/game/skulls/skull_black
+
+BossBarPart < UIWidget
+  phantom: true
+  focusable: false
+
+BossBar < UIWidget
+  id: bossBar
+  phantom: true
+  focusable: false
+  size: 330 44
+  anchors.top: parent.top
+  anchors.horizontalCenter: parent.horizontalCenter
+  margin-top: 6
+
+  BossBarLabel
+    id: name
+    anchors.top: parent.top
+    anchors.horizontalCenter: parent.horizontalCenter
+    ttf-font: almendra-bold
+    ttf-font-size: 17
+    ttf-stroke: 1 #000000
+    color: #f0cf7a
+
+  BossBarSkull
+    id: skullLeft
+    anchors.right: name.left
+    anchors.verticalCenter: name.verticalCenter
+    margin-right: 6
+
+  BossBarSkull
+    id: skullRight
+    anchors.left: name.right
+    anchors.verticalCenter: name.verticalCenter
+    margin-left: 6
+
+  BossBarPart
+    id: track
+    anchors.top: parent.top
+    anchors.horizontalCenter: parent.horizontalCenter
+    margin-top: 24
+    size: 312 18
+    background-color: #000000
+
+    BossBarPart
+      id: frame
+      anchors.fill: parent
+      margin: 1
+      background-color: #140808
+      border-width: 1
+      border-color: #c9a24a
+
+      BossBarPart
+        id: fill
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        margin-top: 1
+        margin-bottom: 1
+        margin-left: 1
+        width: 0
+        background-color: #a3201a
+
+        BossBarPart
+          id: shine
+          anchors.top: parent.top
+          anchors.left: parent.left
+          anchors.right: parent.right
+          height: 5
+          background-color: #d0473a
+
+        BossBarPart
+          id: shade
+          anchors.bottom: parent.bottom
+          anchors.left: parent.left
+          anchors.right: parent.right
+          height: 4
+          background-color: #6e120e
+
+      UILabel
+        id: text
+        phantom: true
+        focusable: false
+        anchors.fill: parent
+        text-align: center
+        font: verdana-11px-rounded
+        color: #ffffff
